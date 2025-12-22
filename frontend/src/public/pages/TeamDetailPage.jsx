@@ -1,10 +1,66 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Users, MapPin, Trophy, Share2, Calendar } from 'lucide-react';
+import { Loader2, Users, MapPin, Trophy, Share2, Calendar, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
+
+// Table of Contents component for teams
+function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
+  const items = useMemo(() => {
+    const effectiveMode = mode === 'auto' ? 'sections' : mode;
+    
+    if (effectiveMode === 'timeline') {
+      const timelineModule = modules?.find(m => m.type === 'timeline');
+      return timelineModule?.data?.items?.map(item => ({
+        id: `timeline-${item.year}`,
+        label: item.year,
+        title: item.title
+      })) || [];
+    } else {
+      // Get titles from text_block modules
+      return modules?.filter(m => m.type === 'text_block' && m.data?.title)
+        .map(m => ({
+          id: `section-${m.id}`,
+          label: m.data.title,
+          title: m.data.title
+        })) || [];
+    }
+  }, [modules, mode, contentType]);
+
+  if (items.length === 0) return null;
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <List className="h-5 w-5" /> Оглавление
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <nav className="space-y-1">
+          {items.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToSection(item.id)}
+              className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function TeamDetailPage() {
   const { category = 'kvn', slug } = useParams();
