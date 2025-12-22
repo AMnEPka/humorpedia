@@ -270,32 +270,12 @@ export default function TeamEditPage() {
               <CardHeader>
                 <CardTitle>Теги</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    placeholder="Добавить тег..."
-                  />
-                  <Button type="button" variant="outline" onClick={addTag}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {team.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="pr-1">
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => setTeam(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }))}
-                        className="ml-1 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
+              <CardContent>
+                <TagSelector
+                  value={team.tags}
+                  onChange={(tags) => setTeam(prev => ({ ...prev, tags }))}
+                  placeholder="Выберите или добавьте тег..."
+                />
               </CardContent>
             </Card>
           </div>
