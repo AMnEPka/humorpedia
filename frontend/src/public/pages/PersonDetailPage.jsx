@@ -209,6 +209,9 @@ export default function PersonDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Table of Contents */}
+          <TableOfContents modules={person.modules} contentType="person" />
         </div>
 
         {/* Main content */}
