@@ -30,7 +30,7 @@ export default function TagSelector({ value = [], onChange, placeholder = "До�
     const fetchTags = async () => {
       setLoading(true);
       try {
-        const res = await tagsApi.list({ limit: 1000 });
+        const res = await tagsApi.list({ limit: 500 });
         setAllTags(res.data.items?.map(t => t.name) || []);
       } catch (err) {
         console.error('Error loading tags:', err);
