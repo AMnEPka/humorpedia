@@ -76,6 +76,11 @@ export default function ShowEditPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!isNew && show.slug && (
+            <Button variant="outline" onClick={() => window.open(`/shows/${show.slug}`, '_blank')}>
+              <ExternalLink className="mr-2 h-4 w-4" />Предпросмотр
+            </Button>
+          )}
           <Select value={show.status} onValueChange={(v) => setShow(p => ({ ...p, status: v }))}>
             <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>
