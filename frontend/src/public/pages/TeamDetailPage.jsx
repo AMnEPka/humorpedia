@@ -211,6 +211,9 @@ export default function TeamDetailPage() {
           <Button variant="outline" className="w-full" onClick={() => navigator.share?.({ url: window.location.href, title: team.title })}>
             <Share2 className="mr-2 h-4 w-4" /> Поделиться
           </Button>
+
+          {/* Table of Contents */}
+          <TableOfContents modules={team.modules} contentType="team" />
         </div>
 
         {/* Main content */}
