@@ -3,28 +3,28 @@ import { AuthProvider, useAuth } from './admin/hooks/useAuth';
 import AdminLayout from './admin/components/AdminLayout';
 import LoginPage from './admin/pages/LoginPage';
 import DashboardPage from './admin/pages/DashboardPage';
-// People
-import PeopleListPage from './admin/pages/PeopleListPage';
+// Admin - People
+import AdminPeopleListPage from './admin/pages/PeopleListPage';
 import PersonEditPage from './admin/pages/PersonEditPage';
-// Teams
-import TeamsListPage from './admin/pages/TeamsListPage';
+// Admin - Teams
+import AdminTeamsListPage from './admin/pages/TeamsListPage';
 import TeamEditPage from './admin/pages/TeamEditPage';
-// Shows
-import ShowsListPage from './admin/pages/ShowsListPage';
+// Admin - Shows
+import AdminShowsListPage from './admin/pages/ShowsListPage';
 import ShowEditPage from './admin/pages/ShowEditPage';
-// Articles
-import ArticlesListPage from './admin/pages/ArticlesListPage';
+// Admin - Articles
+import AdminArticlesListPage from './admin/pages/ArticlesListPage';
 import ArticleEditPage from './admin/pages/ArticleEditPage';
-// News
-import NewsListPage from './admin/pages/NewsListPage';
+// Admin - News
+import AdminNewsListPage from './admin/pages/NewsListPage';
 import NewsEditPage from './admin/pages/NewsEditPage';
-// Quizzes
-import QuizzesListPage from './admin/pages/QuizzesListPage';
+// Admin - Quizzes
+import AdminQuizzesListPage from './admin/pages/QuizzesListPage';
 import QuizEditPage from './admin/pages/QuizEditPage';
-// Wiki
+// Admin - Wiki
 import WikiListPage from './admin/pages/WikiListPage';
 import WikiEditPage from './admin/pages/WikiEditPage';
-// Management
+// Admin - Management
 import MediaPage from './admin/pages/MediaPage';
 import TagsPage from './admin/pages/TagsPage';
 import CommentsPage from './admin/pages/CommentsPage';
@@ -32,10 +32,26 @@ import UsersPage from './admin/pages/UsersPage';
 import TemplatesPage from './admin/pages/TemplatesPage';
 import TemplateEditPage from './admin/pages/TemplateEditPage';
 
+// Public pages
+import PublicLayout from './public/components/Layout';
+import HomePage from './public/pages/HomePage';
+import NewsListPage from './public/pages/NewsListPage';
+import NewsDetailPage from './public/pages/NewsDetailPage';
+import ArticlesListPage from './public/pages/ArticlesListPage';
+import ArticleDetailPage from './public/pages/ArticleDetailPage';
+import PeopleListPage from './public/pages/PeopleListPage';
+import PersonDetailPage from './public/pages/PersonDetailPage';
+import TeamsListPage from './public/pages/TeamsListPage';
+import TeamDetailPage from './public/pages/TeamDetailPage';
+import ShowsListPage from './public/pages/ShowsListPage';
+import QuizzesListPage from './public/pages/QuizzesListPage';
+import ContactsPage from './public/pages/ContactsPage';
+import PolicyPage from './public/pages/PolicyPage';
+
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
 
-// Protected route wrapper
+// Protected route wrapper for admin
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -54,78 +70,88 @@ function ProtectedRoute({ children }) {
   return <AdminLayout>{children}</AdminLayout>;
 }
 
-// Public home page (placeholder)
-function HomePage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-5xl font-bold mb-4">Humorpedia</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Энциклопедия российского юмора и КВН
-        </p>
-        <a
-          href="/admin"
-          className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
-        >
-          Войти в админ-панель
-        </a>
-      </div>
-    </div>
-  );
-}
-
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<HomePage />} />
+      {/* Public routes with Layout */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<HomePage />} />
+        
+        {/* News */}
+        <Route path="/news" element={<NewsListPage />} />
+        <Route path="/news/:slug" element={<NewsDetailPage />} />
+        
+        {/* Articles */}
+        <Route path="/articles" element={<ArticlesListPage />} />
+        <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+        
+        {/* People */}
+        <Route path="/people" element={<PeopleListPage />} />
+        <Route path="/people/:slug" element={<PersonDetailPage />} />
+        
+        {/* Teams with categories */}
+        <Route path="/teams" element={<Navigate to="/teams/kvn" replace />} />
+        <Route path="/teams/:category" element={<TeamsListPage />} />
+        <Route path="/teams/:category/:slug" element={<TeamDetailPage />} />
+        
+        {/* Shows */}
+        <Route path="/shows" element={<ShowsListPage />} />
+        <Route path="/shows/:slug" element={<ShowsListPage />} />
+        
+        {/* Quizzes */}
+        <Route path="/quizzes" element={<QuizzesListPage />} />
+        
+        {/* Static pages */}
+        <Route path="/contacts" element={<ContactsPage />} />
+        <Route path="/policy" element={<PolicyPage />} />
+      </Route>
       
       {/* Admin routes */}
       <Route path="/admin/login" element={<LoginPage />} />
       
       <Route path="/admin" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       
-      {/* People */}
-      <Route path="/admin/people" element={<ProtectedRoute><PeopleListPage /></ProtectedRoute>} />
+      {/* Admin - People */}
+      <Route path="/admin/people" element={<ProtectedRoute><AdminPeopleListPage /></ProtectedRoute>} />
       <Route path="/admin/people/:id" element={<ProtectedRoute><PersonEditPage /></ProtectedRoute>} />
       
-      {/* Teams */}
-      <Route path="/admin/teams" element={<ProtectedRoute><TeamsListPage /></ProtectedRoute>} />
+      {/* Admin - Teams */}
+      <Route path="/admin/teams" element={<ProtectedRoute><AdminTeamsListPage /></ProtectedRoute>} />
       <Route path="/admin/teams/:id" element={<ProtectedRoute><TeamEditPage /></ProtectedRoute>} />
       
-      {/* Shows */}
-      <Route path="/admin/shows" element={<ProtectedRoute><ShowsListPage /></ProtectedRoute>} />
+      {/* Admin - Shows */}
+      <Route path="/admin/shows" element={<ProtectedRoute><AdminShowsListPage /></ProtectedRoute>} />
       <Route path="/admin/shows/:id" element={<ProtectedRoute><ShowEditPage /></ProtectedRoute>} />
       
-      {/* Articles */}
-      <Route path="/admin/articles" element={<ProtectedRoute><ArticlesListPage /></ProtectedRoute>} />
+      {/* Admin - Articles */}
+      <Route path="/admin/articles" element={<ProtectedRoute><AdminArticlesListPage /></ProtectedRoute>} />
       <Route path="/admin/articles/:id" element={<ProtectedRoute><ArticleEditPage /></ProtectedRoute>} />
       
-      {/* News */}
-      <Route path="/admin/news" element={<ProtectedRoute><NewsListPage /></ProtectedRoute>} />
+      {/* Admin - News */}
+      <Route path="/admin/news" element={<ProtectedRoute><AdminNewsListPage /></ProtectedRoute>} />
       <Route path="/admin/news/:id" element={<ProtectedRoute><NewsEditPage /></ProtectedRoute>} />
       
-      {/* Quizzes */}
-      <Route path="/admin/quizzes" element={<ProtectedRoute><QuizzesListPage /></ProtectedRoute>} />
+      {/* Admin - Quizzes */}
+      <Route path="/admin/quizzes" element={<ProtectedRoute><AdminQuizzesListPage /></ProtectedRoute>} />
       <Route path="/admin/quizzes/:id" element={<ProtectedRoute><QuizEditPage /></ProtectedRoute>} />
       
-      {/* Wiki */}
+      {/* Admin - Wiki */}
       <Route path="/admin/wiki" element={<ProtectedRoute><WikiListPage /></ProtectedRoute>} />
       <Route path="/admin/wiki/:id" element={<ProtectedRoute><WikiEditPage /></ProtectedRoute>} />
       
-      {/* Media */}
+      {/* Admin - Media */}
       <Route path="/admin/media" element={<ProtectedRoute><MediaPage /></ProtectedRoute>} />
       
-      {/* Tags */}
+      {/* Admin - Tags */}
       <Route path="/admin/tags" element={<ProtectedRoute><TagsPage /></ProtectedRoute>} />
       
-      {/* Comments */}
+      {/* Admin - Comments */}
       <Route path="/admin/comments" element={<ProtectedRoute><CommentsPage /></ProtectedRoute>} />
       
-      {/* Users */}
+      {/* Admin - Users */}
       <Route path="/admin/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
       
-      {/* Templates */}
+      {/* Admin - Templates */}
       <Route path="/admin/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
       <Route path="/admin/templates/:id" element={<ProtectedRoute><TemplateEditPage /></ProtectedRoute>} />
       
