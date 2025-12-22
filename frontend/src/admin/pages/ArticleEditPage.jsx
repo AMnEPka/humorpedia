@@ -74,9 +74,8 @@ export default function ArticleEditPage() {
               <div className="space-y-2"><Label>Краткое описание</Label><Textarea value={article.excerpt || ''} onChange={(e) => setArticle(p => ({ ...p, excerpt: e.target.value }))} rows={3} /></div>
               <div className="flex items-center gap-2"><Switch checked={article.featured} onCheckedChange={(v) => setArticle(p => ({ ...p, featured: v }))} /><Label>Избранная статья</Label></div>
             </CardContent></Card>
-            <Card><CardHeader><CardTitle>Теги</CardTitle></CardHeader><CardContent className="space-y-4">
-              <div className="flex gap-2"><Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), tagInput.trim() && !article.tags.includes(tagInput.trim()) && (setArticle(p => ({ ...p, tags: [...p.tags, tagInput.trim()] })), setTagInput('')))} placeholder="Добавить тег..." /><Button type="button" variant="outline" onClick={() => tagInput.trim() && !article.tags.includes(tagInput.trim()) && (setArticle(p => ({ ...p, tags: [...p.tags, tagInput.trim()] })), setTagInput(''))}><Plus className="h-4 w-4" /></Button></div>
-              <div className="flex flex-wrap gap-2">{article.tags.map(tag => <Badge key={tag} variant="secondary" className="pr-1">{tag}<button onClick={() => setArticle(p => ({ ...p, tags: p.tags.filter(t => t !== tag) }))} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button></Badge>)}</div>
+            <Card><CardHeader><CardTitle>Теги</CardTitle></CardHeader><CardContent>
+              <TagSelector value={article.tags} onChange={(tags) => setArticle(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." />
             </CardContent></Card>
           </div>
         </TabsContent>
