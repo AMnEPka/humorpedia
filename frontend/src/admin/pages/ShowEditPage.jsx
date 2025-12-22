@@ -31,7 +31,6 @@ export default function ShowEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tagInput, setTagInput] = useState('');
   const [hostInput, setHostInput] = useState('');
   const [genreInput, setGenreInput] = useState('');
 
