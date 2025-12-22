@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Save, ArrowLeft, Loader2, Plus, X } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 
 const emptyShow = {

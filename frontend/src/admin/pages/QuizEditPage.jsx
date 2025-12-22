@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Save, ArrowLeft, Loader2, Plus, X, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, Plus, X, Trash2, ExternalLink } from 'lucide-react';
 
 const emptyQuiz = { title: '', slug: '', status: 'draft', description: '', cover_image: null, modules: [], tags: [], seo: { meta_title: '', meta_description: '' } };
 

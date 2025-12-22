@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-import { Save, ArrowLeft, Loader2, Plus, X } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 
 const emptyNews = { title: '', slug: '', status: 'draft', excerpt: '', content: '', cover_image: null, important: false, tags: [], seo: { meta_title: '', meta_description: '' } };
 
