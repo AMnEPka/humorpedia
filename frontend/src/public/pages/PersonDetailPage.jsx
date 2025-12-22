@@ -151,20 +151,13 @@ export default function PersonDetailPage() {
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Tags section */}
+          {/* Tags */}
           {person.tags?.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Теги</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {person.tags.map((tag, i) => (
-                    <Badge key={i} variant="secondary" className="text-sm px-3 py-1">{tag}</Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-wrap gap-2">
+              {person.tags.map((tag, i) => (
+                <Badge key={i} variant="secondary" className="text-sm px-3 py-1">{tag}</Badge>
+              ))}
+            </div>
           )}
 
           {/* Modules */}
