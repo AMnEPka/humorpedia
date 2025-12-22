@@ -172,6 +172,15 @@ export default function TeamEditPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!isNew && team.slug && (
+            <Button 
+              variant="outline" 
+              onClick={() => window.open(`/teams/${team.team_type || 'kvn'}/${team.slug}`, '_blank')}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Предпросмотр
+            </Button>
+          )}
           <Select 
             value={team.status} 
             onValueChange={(v) => setTeam(prev => ({ ...prev, status: v }))}
