@@ -93,39 +93,39 @@ function AppRoutes() {
       <Route path="/admin/teams/:id" element={<ProtectedRoute><TeamEditPage /></ProtectedRoute>} />
       
       {/* Shows */}
-      <Route path="/admin/shows" element={<ProtectedRoute><PlaceholderPage title="Шоу" /></ProtectedRoute>} />
-      <Route path="/admin/shows/:id" element={<ProtectedRoute><PlaceholderPage title="Редактирование шоу" /></ProtectedRoute>} />
+      <Route path="/admin/shows" element={<ProtectedRoute><ShowsListPage /></ProtectedRoute>} />
+      <Route path="/admin/shows/:id" element={<ProtectedRoute><ShowEditPage /></ProtectedRoute>} />
       
       {/* Articles */}
-      <Route path="/admin/articles" element={<ProtectedRoute><PlaceholderPage title="Статьи" /></ProtectedRoute>} />
-      <Route path="/admin/articles/:id" element={<ProtectedRoute><PlaceholderPage title="Редактирование статьи" /></ProtectedRoute>} />
+      <Route path="/admin/articles" element={<ProtectedRoute><ArticlesListPage /></ProtectedRoute>} />
+      <Route path="/admin/articles/:id" element={<ProtectedRoute><ArticleEditPage /></ProtectedRoute>} />
       
       {/* News */}
-      <Route path="/admin/news" element={<ProtectedRoute><PlaceholderPage title="Новости" /></ProtectedRoute>} />
-      <Route path="/admin/news/:id" element={<ProtectedRoute><PlaceholderPage title="Редактирование новости" /></ProtectedRoute>} />
+      <Route path="/admin/news" element={<ProtectedRoute><NewsListPage /></ProtectedRoute>} />
+      <Route path="/admin/news/:id" element={<ProtectedRoute><NewsEditPage /></ProtectedRoute>} />
       
       {/* Quizzes */}
-      <Route path="/admin/quizzes" element={<ProtectedRoute><PlaceholderPage title="Квизы" /></ProtectedRoute>} />
-      <Route path="/admin/quizzes/:id" element={<ProtectedRoute><PlaceholderPage title="Редактирование квиза" /></ProtectedRoute>} />
+      <Route path="/admin/quizzes" element={<ProtectedRoute><QuizzesListPage /></ProtectedRoute>} />
+      <Route path="/admin/quizzes/:id" element={<ProtectedRoute><QuizEditPage /></ProtectedRoute>} />
       
       {/* Wiki */}
-      <Route path="/admin/wiki" element={<ProtectedRoute><PlaceholderPage title="Вики" /></ProtectedRoute>} />
-      <Route path="/admin/wiki/:id" element={<ProtectedRoute><PlaceholderPage title="Редактирование вики" /></ProtectedRoute>} />
+      <Route path="/admin/wiki" element={<ProtectedRoute><WikiListPage /></ProtectedRoute>} />
+      <Route path="/admin/wiki/:id" element={<ProtectedRoute><WikiEditPage /></ProtectedRoute>} />
       
       {/* Media */}
-      <Route path="/admin/media" element={<ProtectedRoute><PlaceholderPage title="Медиабиблиотека" /></ProtectedRoute>} />
+      <Route path="/admin/media" element={<ProtectedRoute><MediaPage /></ProtectedRoute>} />
       
       {/* Tags */}
-      <Route path="/admin/tags" element={<ProtectedRoute><PlaceholderPage title="Теги" /></ProtectedRoute>} />
+      <Route path="/admin/tags" element={<ProtectedRoute><TagsPage /></ProtectedRoute>} />
       
       {/* Comments */}
-      <Route path="/admin/comments" element={<ProtectedRoute><PlaceholderPage title="Комментарии" /></ProtectedRoute>} />
+      <Route path="/admin/comments" element={<ProtectedRoute><CommentsPage /></ProtectedRoute>} />
       
       {/* Users */}
-      <Route path="/admin/users" element={<ProtectedRoute><PlaceholderPage title="Пользователи" /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
       
       {/* Templates */}
-      <Route path="/admin/templates" element={<ProtectedRoute><PlaceholderPage title="Шаблоны" /></ProtectedRoute>} />
+      <Route path="/admin/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
       
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
