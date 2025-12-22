@@ -56,7 +56,6 @@ export default function TeamEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tagInput, setTagInput] = useState('');
   const [achievementInput, setAchievementInput] = useState('');
 
   useEffect(() => {
