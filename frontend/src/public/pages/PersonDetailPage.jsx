@@ -60,7 +60,7 @@ export default function PersonDetailPage() {
       </nav>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Sidebar with photo and info */}
+        {/* Sidebar with photo and bio */}
         <div className="lg:col-span-1">
           <Card>
             <CardContent className="p-6">
@@ -82,30 +82,40 @@ export default function PersonDetailPage() {
               
               <h1 className="text-2xl font-bold text-gray-900 mb-4">{person.title}</h1>
               
-              {/* Quick info */}
+              {/* Biography info */}
               <div className="space-y-3 text-sm">
-                {person.birth_date && (
+                {person.bio?.birth_date && (
                   <div className="flex items-center gap-2 text-gray-600">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(person.birth_date).toLocaleDateString('ru-RU')}</span>
+                    <Calendar className="h-4 w-4 flex-shrink-0" />
+                    <span>
+                      {new Date(person.bio.birth_date).toLocaleDateString('ru-RU')}
+                      {person.bio?.death_date && ` — ${new Date(person.bio.death_date).toLocaleDateString('ru-RU')}`}
+                    </span>
                   </div>
                 )}
-                {person.birth_place && (
+                {person.bio?.birth_place && (
                   <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="h-4 w-4" />
-                    <span>{person.birth_place}</span>
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <span>{person.bio.birth_place}</span>
+                  </div>
+                )}
+                {person.bio?.occupation?.length > 0 && (
+                  <div className="text-gray-600">
+                    <span className="font-medium">Род деятельности:</span>
+                    <div className="mt-1">{person.bio.occupation.join(', ')}</div>
+                  </div>
+                )}
+                {person.bio?.achievements?.length > 0 && (
+                  <div className="text-gray-600">
+                    <span className="font-medium">Достижения:</span>
+                    <ul className="mt-1 list-disc list-inside">
+                      {person.bio.achievements.map((a, i) => (
+                        <li key={i}>{a}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
-
-              {/* Tags */}
-              {person.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {person.tags.map((tag, i) => (
-                    <Badge key={i} variant="secondary">{tag}</Badge>
-                  ))}
-                </div>
-              )}
 
               {/* Share */}
               <Button variant="outline" className="w-full mt-4" onClick={() => navigator.share?.({ url: window.location.href, title: person.title })}>
