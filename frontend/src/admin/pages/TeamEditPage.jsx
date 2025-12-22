@@ -127,13 +127,6 @@ export default function TeamEditPage() {
     }
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !team.tags.includes(tagInput.trim())) {
-      setTeam(prev => ({ ...prev, tags: [...prev.tags, tagInput.trim()] }));
-      setTagInput('');
-    }
-  };
-
   const addAchievement = () => {
     if (achievementInput.trim() && !team.facts.achievements.includes(achievementInput.trim())) {
       setTeam(prev => ({
