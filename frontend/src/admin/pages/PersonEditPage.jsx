@@ -59,7 +59,6 @@ export default function PersonEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tagInput, setTagInput] = useState('');
   const [occupationInput, setOccupationInput] = useState('');
   const [achievementInput, setAchievementInput] = useState('');
 
