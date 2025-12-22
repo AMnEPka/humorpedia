@@ -440,6 +440,10 @@ async def update_show(id: str, data: ShowUpdate):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
+    # Sync tags to tags collection
+    if data.tags:
+        await sync_tags_to_collection(data.tags)
+    
     result = await db.shows.update_one({"_id": id}, {"$set": update_data})
     
     if result.matched_count == 0:
