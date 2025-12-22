@@ -7,11 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Save, ArrowLeft, Loader2, Plus, X, Trash2, ExternalLink } from 'lucide-react';
+import TagSelector from '../components/TagSelector';
 
 const emptyQuiz = { title: '', slug: '', status: 'draft', description: '', cover_image: null, modules: [], tags: [], seo: { meta_title: '', meta_description: '' } };
 
@@ -25,7 +25,6 @@ export default function QuizEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tagInput, setTagInput] = useState('');
 
   // Quiz questions state
   const [questions, setQuestions] = useState([]);
