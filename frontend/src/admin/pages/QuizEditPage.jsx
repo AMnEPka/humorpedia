@@ -96,8 +96,7 @@ export default function QuizEditPage() {
             <div className="space-y-2"><Label>Название квиза</Label><Input value={quiz.title} onChange={(e) => setQuiz(p => ({ ...p, title: e.target.value, slug: p.slug || generateSlug(e.target.value) }))} placeholder="Угадай команду по шутке" /></div>
             <div className="space-y-2"><Label>URL (slug)</Label><Input value={quiz.slug} onChange={(e) => setQuiz(p => ({ ...p, slug: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Описание</Label><Textarea value={quiz.description || ''} onChange={(e) => setQuiz(p => ({ ...p, description: e.target.value }))} rows={3} /></div>
-            <div className="space-y-2"><Label>Теги</Label><div className="flex gap-2"><Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), tagInput.trim() && !quiz.tags.includes(tagInput.trim()) && (setQuiz(p => ({ ...p, tags: [...p.tags, tagInput.trim()] })), setTagInput('')))} /><Button variant="outline" onClick={() => tagInput.trim() && !quiz.tags.includes(tagInput.trim()) && (setQuiz(p => ({ ...p, tags: [...p.tags, tagInput.trim()] })), setTagInput(''))}><Plus className="h-4 w-4" /></Button></div></div>
-            <div className="flex flex-wrap gap-2">{quiz.tags.map(tag => <Badge key={tag} variant="secondary" className="pr-1">{tag}<button onClick={() => setQuiz(p => ({ ...p, tags: p.tags.filter(t => t !== tag) }))} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button></Badge>)}</div>
+            <div className="space-y-2"><Label>Теги</Label><TagSelector value={quiz.tags} onChange={(tags) => setQuiz(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." /></div>
           </CardContent></Card>
         </TabsContent>
 
