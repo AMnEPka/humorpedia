@@ -451,6 +451,48 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
             </Button>
           </div>
         );
+
+      case 'table_of_contents':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Режим оглавления</Label>
+              <Select
+                value={data.mode || 'auto'}
+                onValueChange={(v) => updateData({ ...data, mode: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Автоматический</SelectItem>
+                  <SelectItem value="timeline">По хронологии (timeline)</SelectItem>
+                  <SelectItem value="sections">По разделам (текстовые блоки)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                <strong>Автоматический:</strong> определяет режим по типу контента<br/>
+                <strong>По хронологии:</strong> берёт заголовки из модуля timeline (для людей)<br/>
+                <strong>По разделам:</strong> берёт заголовки из текстовых блоков (для команд)
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Позиция на странице</Label>
+              <Select
+                value={data.position || 'sidebar'}
+                onValueChange={(v) => updateData({ ...data, position: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sidebar">В боковой панели</SelectItem>
+                  <SelectItem value="inline">В основном контенте</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
       
       default:
         // Generic JSON editor for other types
