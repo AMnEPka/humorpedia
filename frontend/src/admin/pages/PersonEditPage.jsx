@@ -131,23 +131,6 @@ export default function PersonEditPage() {
     }
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !person.tags.includes(tagInput.trim())) {
-      setPerson(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tag) => {
-    setPerson(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tag)
-    }));
-  };
-
   const addOccupation = () => {
     if (occupationInput.trim() && !person.bio.occupation.includes(occupationInput.trim())) {
       setPerson(prev => ({
