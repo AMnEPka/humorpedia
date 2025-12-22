@@ -3,10 +3,34 @@ import { AuthProvider, useAuth } from './admin/hooks/useAuth';
 import AdminLayout from './admin/components/AdminLayout';
 import LoginPage from './admin/pages/LoginPage';
 import DashboardPage from './admin/pages/DashboardPage';
+// People
 import PeopleListPage from './admin/pages/PeopleListPage';
 import PersonEditPage from './admin/pages/PersonEditPage';
+// Teams
 import TeamsListPage from './admin/pages/TeamsListPage';
 import TeamEditPage from './admin/pages/TeamEditPage';
+// Shows
+import ShowsListPage from './admin/pages/ShowsListPage';
+import ShowEditPage from './admin/pages/ShowEditPage';
+// Articles
+import ArticlesListPage from './admin/pages/ArticlesListPage';
+import ArticleEditPage from './admin/pages/ArticleEditPage';
+// News
+import NewsListPage from './admin/pages/NewsListPage';
+import NewsEditPage from './admin/pages/NewsEditPage';
+// Quizzes
+import QuizzesListPage from './admin/pages/QuizzesListPage';
+import QuizEditPage from './admin/pages/QuizEditPage';
+// Wiki
+import WikiListPage from './admin/pages/WikiListPage';
+import WikiEditPage from './admin/pages/WikiEditPage';
+// Management
+import MediaPage from './admin/pages/MediaPage';
+import TagsPage from './admin/pages/TagsPage';
+import CommentsPage from './admin/pages/CommentsPage';
+import UsersPage from './admin/pages/UsersPage';
+import TemplatesPage from './admin/pages/TemplatesPage';
+
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
 
