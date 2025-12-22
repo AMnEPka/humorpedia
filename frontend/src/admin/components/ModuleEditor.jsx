@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { 
   DndContext, closestCenter, KeyboardSensor, 
   PointerSensor, useSensor, useSensors, DragOverlay
@@ -141,125 +141,370 @@ function SortableModule({ module, onEdit, onDelete }) {
   );
 }
 
-function TextBlockEditor({ data, onChange }) {
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Заголовок</Label>
-        <Input
-          value={data.title || ''}
-          onChange={(e) => onChange({ ...data, title: e.target.value })}
-          placeholder="Биография"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Содержимое (HTML)</Label>
-        <Textarea
-          value={data.content || ''}
-          onChange={(e) => onChange({ ...data, content: e.target.value })}
-          placeholder="<p>Текст...</p>"
-          rows={10}
-          className="font-mono text-sm"
-        />
-      </div>
-    </div>
-  );
-}
+// Separate component for editing module to manage its own state
+function ModuleEditDialog({ module, open, onClose, onSave }) {
+  const [localModule, setLocalModule] = useState(null);
 
-function TimelineEditor({ data, onChange }) {
-  const items = data.items || [];
+  // Initialize local state when module changes
+  useEffect(() => {
+    if (module) {
+      setLocalModule({ ...module, data: { ...module.data } });
+    } else {
+      setLocalModule(null);
+    }
+  }, [module]);
 
-  const addItem = () => {
-    onChange({
-      ...data,
-      items: [...items, { year: new Date().getFullYear(), title: '', description: '' }]
-    });
-  };
+  const handleSave = useCallback(() => {
+    if (localModule) {
+      onSave(localModule);
+    }
+    onClose();
+  }, [localModule, onSave, onClose]);
 
-  const updateItem = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    onChange({ ...data, items: newItems });
-  };
+  const updateLocalModule = useCallback((updates) => {
+    setLocalModule(prev => prev ? { ...prev, ...updates } : null);
+  }, []);
 
-  const removeItem = (index) => {
-    onChange({ ...data, items: items.filter((_, i) => i !== index) });
-  };
+  const updateData = useCallback((newData) => {
+    setLocalModule(prev => prev ? { ...prev, data: newData } : null);
+  }, []);
 
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Заголовок блока</Label>
-        <Input
-          value={data.title || ''}
-          onChange={(e) => onChange({ ...data, title: e.target.value })}
-          placeholder="Хронология"
-        />
-      </div>
-      
-      <div className="space-y-3">
-        {items.map((item, index) => (
-          <div key={index} className="border rounded-lg p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Событие {index + 1}</span>
-              <Button variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+  if (!localModule) return null;
+
+  const data = localModule.data || {};
+
+  const renderEditor = () => {
+    switch (localModule.type) {
+      case 'text_block':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
               <Input
-                type="number"
-                value={item.year || ''}
-                onChange={(e) => updateItem(index, 'year', parseInt(e.target.value))}
-                placeholder="Год"
-              />
-              <Input
-                value={item.title || ''}
-                onChange={(e) => updateItem(index, 'title', e.target.value)}
-                placeholder="Заголовок"
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Биография"
               />
             </div>
-            <Textarea
-              value={item.description || ''}
-              onChange={(e) => updateItem(index, 'description', e.target.value)}
-              placeholder="Описание"
-              rows={2}
-            />
+            <div className="space-y-2">
+              <Label>Содержимое (HTML)</Label>
+              <Textarea
+                value={data.content || ''}
+                onChange={(e) => updateData({ ...data, content: e.target.value })}
+                placeholder="<p>Текст...</p>"
+                rows={10}
+                className="font-mono text-sm"
+              />
+            </div>
           </div>
-        ))}
-      </div>
+        );
       
-      <Button type="button" variant="outline" onClick={addItem} className="w-full">
-        <Plus className="mr-2 h-4 w-4" /> Добавить событие
-      </Button>
-    </div>
-  );
-}
+      case 'timeline':
+        const items = data.items || [];
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Заголовок блока</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Хронология"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              {items.map((item, index) => (
+                <div key={index} className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Событие {index + 1}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => updateData({ ...data, items: items.filter((_, i) => i !== index) })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      value={item.year || ''}
+                      onChange={(e) => {
+                        const newItems = [...items];
+                        newItems[index] = { ...newItems[index], year: parseInt(e.target.value) || '' };
+                        updateData({ ...data, items: newItems });
+                      }}
+                      placeholder="Год"
+                    />
+                    <Input
+                      value={item.title || ''}
+                      onChange={(e) => {
+                        const newItems = [...items];
+                        newItems[index] = { ...newItems[index], title: e.target.value };
+                        updateData({ ...data, items: newItems });
+                      }}
+                      placeholder="Заголовок"
+                    />
+                  </div>
+                  <Textarea
+                    value={item.description || ''}
+                    onChange={(e) => {
+                      const newItems = [...items];
+                      newItems[index] = { ...newItems[index], description: e.target.value };
+                      updateData({ ...data, items: newItems });
+                    }}
+                    placeholder="Описание"
+                    rows={2}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => updateData({ 
+                ...data, 
+                items: [...items, { year: new Date().getFullYear(), title: '', description: '' }] 
+              })} 
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Добавить событие
+            </Button>
+          </div>
+        );
+      
+      case 'hero_card':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>URL изображения</Label>
+              <Input
+                value={data.image || ''}
+                onChange={(e) => updateData({ ...data, image: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Подпись</Label>
+              <Input
+                value={data.caption || ''}
+                onChange={(e) => updateData({ ...data, caption: e.target.value })}
+                placeholder="Описание фото"
+              />
+            </div>
+          </div>
+        );
 
-function GenericEditor({ data, onChange }) {
+      case 'gallery':
+        const galleryItems = data.images || [];
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Заголовок галереи</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Фотогалерея"
+              />
+            </div>
+            <div className="space-y-3">
+              {galleryItems.map((img, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <Input
+                    value={img.url || ''}
+                    onChange={(e) => {
+                      const newImages = [...galleryItems];
+                      newImages[index] = { ...newImages[index], url: e.target.value };
+                      updateData({ ...data, images: newImages });
+                    }}
+                    placeholder="URL изображения"
+                    className="flex-1"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => updateData({ ...data, images: galleryItems.filter((_, i) => i !== index) })}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => updateData({ 
+                ...data, 
+                images: [...galleryItems, { url: '', caption: '' }] 
+              })} 
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Добавить изображение
+            </Button>
+          </div>
+        );
+
+      case 'video':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>URL видео (YouTube, VK)</Label>
+              <Input
+                value={data.url || ''}
+                onChange={(e) => updateData({ ...data, url: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Название видео"
+              />
+            </div>
+          </div>
+        );
+
+      case 'quote':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Текст цитаты</Label>
+              <Textarea
+                value={data.text || ''}
+                onChange={(e) => updateData({ ...data, text: e.target.value })}
+                placeholder="Цитата..."
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Автор</Label>
+              <Input
+                value={data.author || ''}
+                onChange={(e) => updateData({ ...data, author: e.target.value })}
+                placeholder="Имя автора"
+              />
+            </div>
+          </div>
+        );
+
+      case 'team_members':
+        const members = data.members || [];
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Состав команды"
+              />
+            </div>
+            <div className="space-y-3">
+              {members.map((member, index) => (
+                <div key={index} className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Участник {index + 1}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => updateData({ ...data, members: members.filter((_, i) => i !== index) })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    value={member.name || ''}
+                    onChange={(e) => {
+                      const newMembers = [...members];
+                      newMembers[index] = { ...newMembers[index], name: e.target.value };
+                      updateData({ ...data, members: newMembers });
+                    }}
+                    placeholder="Имя"
+                  />
+                  <Input
+                    value={member.role || ''}
+                    onChange={(e) => {
+                      const newMembers = [...members];
+                      newMembers[index] = { ...newMembers[index], role: e.target.value };
+                      updateData({ ...data, members: newMembers });
+                    }}
+                    placeholder="Роль в команде"
+                  />
+                </div>
+              ))}
+            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => updateData({ 
+                ...data, 
+                members: [...members, { name: '', role: '' }] 
+              })} 
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Добавить участника
+            </Button>
+          </div>
+        );
+      
+      default:
+        // Generic JSON editor for other types
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Данные модуля (JSON)</Label>
+              <Textarea
+                value={JSON.stringify(data, null, 2)}
+                onChange={(e) => {
+                  try {
+                    updateData(JSON.parse(e.target.value));
+                  } catch (err) {
+                    // Invalid JSON, ignore
+                  }
+                }}
+                rows={15}
+                className="font-mono text-sm"
+              />
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Данные модуля (JSON)</Label>
-        <Textarea
-          value={JSON.stringify(data, null, 2)}
-          onChange={(e) => {
-            try {
-              onChange(JSON.parse(e.target.value));
-            } catch (err) {
-              // Invalid JSON, ignore
-            }
-          }}
-          rows={15}
-          className="font-mono text-sm"
-        />
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSave()}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            Редактирование: {moduleNames[localModule.type]}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Название блока (опционально)</Label>
+              <Input
+                value={localModule.title || ''}
+                onChange={(e) => updateLocalModule({ title: e.target.value })}
+                placeholder={moduleNames[localModule.type]}
+              />
+            </div>
+            {renderEditor()}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleSave}>Сохранить</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 export default function ModuleEditor({ modules = [], onChange, contentType = 'page' }) {
-  const [editingModule, setEditingModule] = useState(null);
+  const [editingModuleId, setEditingModuleId] = useState(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const sensors = useSensors(
@@ -270,8 +515,12 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
   );
 
   const availableModules = modulesByType[contentType] || modulesByType.page;
+  
+  const editingModule = useMemo(() => {
+    return modules.find(m => m.id === editingModuleId) || null;
+  }, [modules, editingModuleId]);
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = useCallback((event) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = modules.findIndex((m) => m.id === active.id);
@@ -282,9 +531,9 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
       }));
       onChange(newModules);
     }
-  };
+  }, [modules, onChange]);
 
-  const addModule = (type) => {
+  const addModule = useCallback((type) => {
     const newModule = {
       id: crypto.randomUUID(),
       type,
@@ -294,34 +543,27 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
     };
     onChange([...modules, newModule]);
     setAddDialogOpen(false);
-    setEditingModule(newModule);
-  };
+    // Open edit dialog for the new module
+    setEditingModuleId(newModule.id);
+  }, [modules, onChange]);
 
-  const updateModule = (moduleData) => {
+  const saveModule = useCallback((updatedModule) => {
     onChange(modules.map((m) => 
-      m.id === editingModule.id ? { ...m, ...moduleData } : m
+      m.id === updatedModule.id ? updatedModule : m
     ));
-  };
+  }, [modules, onChange]);
 
-  const deleteModule = (id) => {
+  const deleteModule = useCallback((id) => {
     onChange(modules.filter((m) => m.id !== id));
-  };
+  }, [onChange]);
 
-  const renderEditor = () => {
-    if (!editingModule) return null;
+  const openEditDialog = useCallback((module) => {
+    setEditingModuleId(module.id);
+  }, []);
 
-    const data = editingModule.data || {};
-    const setData = (newData) => updateModule({ data: newData });
-
-    switch (editingModule.type) {
-      case 'text_block':
-        return <TextBlockEditor data={data} onChange={setData} />;
-      case 'timeline':
-        return <TimelineEditor data={data} onChange={setData} />;
-      default:
-        return <GenericEditor data={data} onChange={setData} />;
-    }
-  };
+  const closeEditDialog = useCallback(() => {
+    setEditingModuleId(null);
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -355,7 +597,7 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
                 <SortableModule
                   key={module.id}
                   module={module}
-                  onEdit={setEditingModule}
+                  onEdit={openEditDialog}
                   onDelete={deleteModule}
                 />
               ))}
@@ -385,38 +627,18 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
                   <span className="text-sm font-medium">{moduleNames[type]}</span>
                 </button>
               );
-            })}          </div>
+            })}
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Edit module dialog */}
-      <Dialog open={!!editingModule} onOpenChange={() => setEditingModule(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Редактирование: {editingModule && moduleNames[editingModule.type]}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            {editingModule && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Название блока (опционально)</Label>
-                  <Input
-                    value={editingModule.title || ''}
-                    onChange={(e) => updateModule({ title: e.target.value })}
-                    placeholder={moduleNames[editingModule.type]}
-                  />
-                </div>
-                {renderEditor()}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setEditingModule(null)}>Готово</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Edit module dialog - separate component with own state */}
+      <ModuleEditDialog
+        module={editingModule}
+        open={!!editingModuleId}
+        onClose={closeEditDialog}
+        onSave={saveModule}
+      />
     </div>
   );
 }
