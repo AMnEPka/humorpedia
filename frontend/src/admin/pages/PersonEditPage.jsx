@@ -201,6 +201,15 @@ export default function PersonEditPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!isNew && person.slug && (
+            <Button 
+              variant="outline" 
+              onClick={() => window.open(`/people/${person.slug}`, '_blank')}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Предпросмотр
+            </Button>
+          )}
           <Select 
             value={person.status} 
             onValueChange={(v) => setPerson(prev => ({ ...prev, status: v }))}
