@@ -127,6 +127,7 @@ function AppRoutes() {
       
       {/* Templates */}
       <Route path="/admin/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
+      <Route path="/admin/templates/:id" element={<ProtectedRoute><TemplateEditPage /></ProtectedRoute>} />
       
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
