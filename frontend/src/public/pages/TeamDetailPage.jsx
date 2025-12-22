@@ -248,7 +248,7 @@ function ModuleRenderer({ module }) {
   switch (module.type) {
     case 'text_block':
       return (
-        <Card>
+        <Card id={`section-${module.id}`} className="scroll-mt-20">
           {module.data?.title && (
             <CardHeader>
               <CardTitle>{module.data.title}</CardTitle>
@@ -272,7 +272,7 @@ function ModuleRenderer({ module }) {
           <CardContent>
             <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
               {module.data?.items?.map((item, i) => (
-                <div key={i} className="relative">
+                <div key={i} id={`timeline-${item.year}`} className="relative scroll-mt-20">
                   <div className="absolute -left-[25px] w-4 h-4 bg-blue-600 rounded-full border-4 border-white" />
                   <div className="text-sm text-blue-600 font-semibold">{item.year}</div>
                   <div className="font-medium">{item.title}</div>
