@@ -7,11 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 
 const emptyNews = { title: '', slug: '', status: 'draft', excerpt: '', content: '', cover_image: null, important: false, tags: [], seo: { meta_title: '', meta_description: '' } };
 
@@ -25,7 +25,7 @@ export default function NewsEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tagInput, setTagInput] = useState('');
+  
 
   useEffect(() => {
     if (!isNew) {
