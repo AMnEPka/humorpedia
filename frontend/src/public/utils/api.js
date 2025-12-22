@@ -11,30 +11,30 @@ const api = axios.create({
 export const publicApi = {
   // News
   getNews: (params) => api.get('/content/news', { params }),
-  getNewsItem: (slug) => api.get(`/content/news/slug/${slug}`),
+  getNewsItem: (slug) => api.get(`/content/news/${slug}`),
   
   // Articles
   getArticles: (params) => api.get('/content/articles', { params }),
-  getArticle: (slug) => api.get(`/content/articles/slug/${slug}`),
+  getArticle: (slug) => api.get(`/content/articles/${slug}`),
   getPopularArticles: (limit = 5) => api.get('/content/articles', { params: { limit, sort: '-rating' } }),
   getRandomArticle: () => api.get('/content/articles/random'),
   
   // People
   getPeople: (params) => api.get('/content/people', { params }),
-  getPerson: (slug) => api.get(`/content/people/slug/${slug}`),
+  getPerson: (slug) => api.get(`/content/people/${slug}`),
   
   // Teams
   getTeams: (params) => api.get('/content/teams', { params }),
-  getTeam: (slug) => api.get(`/content/teams/slug/${slug}`),
+  getTeam: (slug) => api.get(`/content/teams/${slug}`),
   getTeamsByCategory: (category, params) => api.get('/content/teams', { params: { ...params, category } }),
   
   // Shows
   getShows: (params) => api.get('/content/shows', { params }),
-  getShow: (slug) => api.get(`/content/shows/slug/${slug}`),
+  getShow: (slug) => api.get(`/content/shows/${slug}`),
   
   // Quizzes
   getQuizzes: (params) => api.get('/content/quizzes', { params }),
-  getQuiz: (slug) => api.get(`/content/quizzes/slug/${slug}`),
+  getQuiz: (slug) => api.get(`/content/quizzes/${slug}`),
   
   // Search
   search: (query, params) => api.get('/search', { params: { q: query, ...params } }),
