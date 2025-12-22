@@ -53,18 +53,6 @@ function ProtectedRoute({ children }) {
   return <AdminLayout>{children}</AdminLayout>;
 }
 
-// Placeholder pages for content types not yet implemented
-function PlaceholderPage({ title }) {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">{title}</h1>
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-        <p className="text-yellow-800">Эта страница в разработке</p>
-      </div>
-    </div>
-  );
-}
-
 // Public home page (placeholder)
 function HomePage() {
   return (
