@@ -15,7 +15,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Save, ArrowLeft, Loader2, Plus, X, GripVertical,
-  Image as ImageIcon, Trash2
+  Image as ImageIcon, Trash2, ExternalLink
 } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 
