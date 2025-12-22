@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { templatesApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,18 +22,36 @@ const contentTypes = [
   { value: 'page', label: 'Страница', description: 'Общий шаблон страницы' }
 ];
 
-const emptyTemplate = {
-  name: '',
-  description: '',
-  content_type: 'person',
-  modules: [],
-  is_default: false
+const defaultTemplateNames = {
+  person: 'Базовый шаблон: Человек',
+  team: 'Базовый шаблон: Команда',
+  show: 'Базовый шаблон: Шоу',
+  article: 'Базовый шаблон: Статья',
+  news: 'Базовый шаблон: Новость',
+  quiz: 'Базовый шаблон: Квиз',
+  wiki: 'Базовый шаблон: Вики',
+  page: 'Базовый шаблон: Страница'
 };
 
 export default function TemplateEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isNew = id === 'new';
+  
+  // Get type from query param for new templates
+  const typeFromQuery = searchParams.get('type');
+  const initialType = typeFromQuery && contentTypes.find(t => t.value === typeFromQuery) 
+    ? typeFromQuery 
+    : 'person';
+
+  const emptyTemplate = {
+    name: isNew && typeFromQuery ? defaultTemplateNames[initialType] || '' : '',
+    description: '',
+    content_type: initialType,
+    modules: [],
+    is_default: false
+  };
 
   const [template, setTemplate] = useState(emptyTemplate);
   const [loading, setLoading] = useState(!isNew);
