@@ -132,6 +132,9 @@ async def create_person(data: PersonCreate):
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
     
+    # Sync tags to tags collection
+    await sync_tags_to_collection(data.tags)
+    
     await db.people.insert_one(doc)
     return {"id": doc["_id"], "slug": doc["slug"]}
 
