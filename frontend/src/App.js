@@ -30,6 +30,7 @@ import TagsPage from './admin/pages/TagsPage';
 import CommentsPage from './admin/pages/CommentsPage';
 import UsersPage from './admin/pages/UsersPage';
 import TemplatesPage from './admin/pages/TemplatesPage';
+import TemplateEditPage from './admin/pages/TemplateEditPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
