@@ -80,6 +80,7 @@ export default function QuizEditPage() {
           <div><h1 className="text-2xl font-bold">{isNew ? 'Новый квиз' : quiz.title || 'Редактирование'}</h1>{!isNew && <p className="text-sm text-muted-foreground">/{quiz.slug}</p>}</div>
         </div>
         <div className="flex items-center gap-2">
+          {!isNew && quiz.slug && <Button variant="outline" onClick={() => window.open(`/quizzes/${quiz.slug}`, '_blank')}><ExternalLink className="mr-2 h-4 w-4" />Предпросмотр</Button>}
           <Select value={quiz.status} onValueChange={(v) => setQuiz(p => ({ ...p, status: v }))}><SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Черновик</SelectItem><SelectItem value="published">Опубликовать</SelectItem></SelectContent></Select>
           <Button onClick={handleSave} disabled={saving}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Сохранить</Button>
         </div>
