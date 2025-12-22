@@ -376,6 +376,9 @@ async def create_show(data: ShowCreate):
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
     
+    # Sync tags to tags collection
+    await sync_tags_to_collection(data.tags)
+    
     await db.shows.insert_one(doc)
     return {"id": doc["_id"], "slug": doc["slug"]}
 
