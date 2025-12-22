@@ -1,10 +1,72 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
+
+// Table of Contents component
+function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
+  const items = useMemo(() => {
+    const effectiveMode = mode === 'auto' 
+      ? (contentType === 'person' ? 'timeline' : 'sections')
+      : mode;
+    
+    if (effectiveMode === 'timeline') {
+      // Get items from timeline module
+      const timelineModule = modules?.find(m => m.type === 'timeline');
+      return timelineModule?.data?.items?.map(item => ({
+        id: `timeline-${item.year}`,
+        label: item.year,
+        title: item.title
+      })) || [];
+    } else {
+      // Get titles from text_block modules
+      return modules?.filter(m => m.type === 'text_block' && m.data?.title)
+        .map(m => ({
+          id: `section-${m.id}`,
+          label: m.data.title,
+          title: m.data.title
+        })) || [];
+    }
+  }, [modules, mode, contentType]);
+
+  if (items.length === 0) return null;
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <List className="h-5 w-5" /> Оглавление
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <nav className="space-y-1">
+          {items.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToSection(item.id)}
+              className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors flex items-start gap-2"
+            >
+              <span className="text-blue-600 font-medium whitespace-nowrap">{item.label}</span>
+              {item.title !== item.label && (
+                <span className="text-gray-600 truncate">{item.title}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function PersonDetailPage() {
   const { slug } = useParams();
