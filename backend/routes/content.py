@@ -559,6 +559,10 @@ async def update_article(id: str, data: ArticleUpdate):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
+    # Sync tags to tags collection
+    if data.tags:
+        await sync_tags_to_collection(data.tags)
+    
     # Set published_at if status changed to published
     if data.status == ContentStatus.PUBLISHED:
         article = await db.articles.find_one({"_id": id})
