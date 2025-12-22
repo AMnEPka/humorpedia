@@ -78,3 +78,4 @@ agenthub/agents/youtube/db
 
 # Mobile development
 android-sdk/ modx_dump.sql
+modx_dump.sql
