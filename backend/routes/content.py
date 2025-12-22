@@ -495,6 +495,9 @@ async def create_article(data: ArticleCreate):
     if data.status == ContentStatus.PUBLISHED:
         doc["published_at"] = datetime.now(timezone.utc).isoformat()
     
+    # Sync tags to tags collection
+    await sync_tags_to_collection(data.tags)
+    
     await db.articles.insert_one(doc)
     return {"id": doc["_id"], "slug": doc["slug"]}
 
