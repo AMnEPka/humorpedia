@@ -141,8 +141,8 @@ export default function PersonDetailPage() {
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Bio */}
-          {person.bio && (
+          {/* Bio text if available */}
+          {person.bio?.text && (
             <Card>
               <CardHeader>
                 <CardTitle>Биография</CardTitle>
@@ -150,7 +150,7 @@ export default function PersonDetailPage() {
               <CardContent>
                 <div 
                   className="prose prose-blue max-w-none"
-                  dangerouslySetInnerHTML={{ __html: person.bio }}
+                  dangerouslySetInnerHTML={{ __html: person.bio.text }}
                 />
               </CardContent>
             </Card>
