@@ -46,7 +46,8 @@ const moduleIcons = {
   quiz_results: Award,
   best_articles: Star,
   interesting: Zap,
-  random_page: Shuffle
+  random_page: Shuffle,
+  table_of_contents: List
 };
 
 const moduleNames = {
@@ -67,17 +68,18 @@ const moduleNames = {
   quiz_results: 'Результаты квиза',
   best_articles: 'Лучшие статьи',
   interesting: 'Интересное',
-  random_page: 'Случайная страница'
+  random_page: 'Случайная страница',
+  table_of_contents: 'Оглавление'
 };
 
 const modulesByType = {
-  person: ['hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
-  team: ['hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
+  person: ['table_of_contents', 'hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
+  team: ['table_of_contents', 'hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
   show: ['hero_card', 'text_block', 'timeline', 'episodes_list', 'participants', 'tags', 'table', 'gallery', 'video'],
-  article: ['text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
+  article: ['table_of_contents', 'text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
   news: ['text_block', 'gallery', 'video', 'tags'],
   quiz: ['quiz_questions', 'quiz_results', 'text_block'],
-  wiki: ['text_block', 'table', 'gallery', 'video', 'tags'],
+  wiki: ['table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
   page: ['text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery']
 };
 
