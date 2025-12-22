@@ -130,14 +130,8 @@ export default function ShowEditPage() {
             </Card>
             <Card>
               <CardHeader><CardTitle>Теги</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), tagInput.trim() && !show.tags.includes(tagInput.trim()) && (setShow(p => ({ ...p, tags: [...p.tags, tagInput.trim()] })), setTagInput('')))} placeholder="Добавить тег..." />
-                  <Button type="button" variant="outline" onClick={() => tagInput.trim() && !show.tags.includes(tagInput.trim()) && (setShow(p => ({ ...p, tags: [...p.tags, tagInput.trim()] })), setTagInput(''))}><Plus className="h-4 w-4" /></Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {show.tags.map(tag => <Badge key={tag} variant="secondary" className="pr-1">{tag}<button onClick={() => setShow(p => ({ ...p, tags: p.tags.filter(t => t !== tag) }))} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button></Badge>)}
-                </div>
+              <CardContent>
+                <TagSelector value={show.tags} onChange={(tags) => setShow(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." />
               </CardContent>
             </Card>
           </div>
