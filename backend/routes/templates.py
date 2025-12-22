@@ -291,5 +291,12 @@ async def list_module_types():
             "description": "Ссылка на случайную страницу",
             "icon": "shuffle",
             "for_types": ["page"]
+        },
+        {
+            "type": "table_of_contents",
+            "name": "Оглавление",
+            "description": "Навигация по странице (по timeline или секциям)",
+            "icon": "list",
+            "for_types": ["person", "team", "article", "wiki"]
         }
     ]
