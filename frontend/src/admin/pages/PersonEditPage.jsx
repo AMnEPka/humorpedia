@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { contentApi, tagsApi } from '../utils/api';
+import { contentApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, 
   SelectTrigger, SelectValue
@@ -18,6 +17,7 @@ import {
   Image as ImageIcon, Trash2, ExternalLink
 } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
+import TagSelector from '../components/TagSelector';
 
 const emptyPerson = {
   title: '',
