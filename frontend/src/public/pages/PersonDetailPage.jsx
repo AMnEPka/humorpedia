@@ -155,6 +155,17 @@ export default function PersonDetailPage() {
                         month: 'long', 
                         day: 'numeric' 
                       })}
+                      {' '}
+                      ({(() => {
+                        const birthDate = new Date(person.birth_date);
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = today.getMonth() - birthDate.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                          age--;
+                        }
+                        return `${age} ${age % 10 === 1 && age % 100 !== 11 ? 'год' : age % 10 >= 2 && age % 10 <= 4 && (age % 100 < 10 || age % 100 >= 20) ? 'года' : 'лет'}`;
+                      })()})
                     </span>
                   </div>
                 )}
