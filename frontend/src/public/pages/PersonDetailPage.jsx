@@ -313,24 +313,49 @@ function ModuleRenderer({ module, index }) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <div className="text-sm font-medium text-blue-600 mb-1">
-                  {module.data?.period}
-                </div>
-                <CardTitle className="text-xl">{module.data?.title}</CardTitle>
+                {module.data?.period && (
+                  <div className="text-sm font-medium text-blue-600 mb-1">
+                    {module.data.period}
+                  </div>
+                )}
+                <CardTitle className="text-xl">{module.data?.title || 'Хронология'}</CardTitle>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {module.data?.content_html ? (
+            {/* Render events array if present */}
+            {module.data?.events && module.data.events.length > 0 ? (
+              <div className="space-y-4">
+                {module.data.events.map((event, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
+                      {i < module.data.events.length - 1 && (
+                        <div className="w-0.5 flex-1 bg-gray-200 mt-1" />
+                      )}
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <div className="text-sm font-medium text-blue-600">
+                        {event.date || event.year}
+                      </div>
+                      <div className="font-medium">{event.title}</div>
+                      {event.description && (
+                        <p className="text-gray-600 text-sm mt-1">{event.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : module.data?.content_html ? (
               <div 
                 className="prose prose-sm max-w-none text-gray-700"
                 dangerouslySetInnerHTML={{ __html: module.data.content_html }}
               />
-            ) : (
+            ) : module.data?.content ? (
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {module.data?.content}
+                {module.data.content}
               </p>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       );
