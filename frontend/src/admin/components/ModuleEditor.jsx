@@ -494,6 +494,174 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
           </div>
         );
       
+      case 'table':
+        // Table editor
+        const rows = data.rows || [['', '']];
+        const headers = data.headers || [];
+        const hasHeaders = data.hasHeaders !== false;
+        
+        const addRow = () => {
+          const colCount = rows[0]?.length || 2;
+          updateData({ ...data, rows: [...rows, Array(colCount).fill('')] });
+        };
+        
+        const removeRow = (rowIdx) => {
+          if (rows.length > 1) {
+            updateData({ ...data, rows: rows.filter((_, i) => i !== rowIdx) });
+          }
+        };
+        
+        const addColumn = () => {
+          const newRows = rows.map(row => [...row, '']);
+          const newHeaders = hasHeaders ? [...headers, ''] : headers;
+          updateData({ ...data, rows: newRows, headers: newHeaders });
+        };
+        
+        const removeColumn = (colIdx) => {
+          if ((rows[0]?.length || 0) > 1) {
+            const newRows = rows.map(row => row.filter((_, i) => i !== colIdx));
+            const newHeaders = hasHeaders ? headers.filter((_, i) => i !== colIdx) : headers;
+            updateData({ ...data, rows: newRows, headers: newHeaders });
+          }
+        };
+        
+        const updateCell = (rowIdx, colIdx, value) => {
+          const newRows = rows.map((row, ri) => 
+            ri === rowIdx ? row.map((cell, ci) => ci === colIdx ? value : cell) : row
+          );
+          updateData({ ...data, rows: newRows });
+        };
+        
+        const updateHeader = (colIdx, value) => {
+          const newHeaders = headers.map((h, i) => i === colIdx ? value : h);
+          updateData({ ...data, headers: newHeaders });
+        };
+        
+        // Initialize headers if needed
+        if (hasHeaders && headers.length === 0 && rows[0]) {
+          updateData({ ...data, headers: Array(rows[0].length).fill('') });
+        }
+        
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Заголовок таблицы</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Название таблицы (опционально)"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={hasHeaders}
+                onCheckedChange={(v) => {
+                  if (v && headers.length === 0 && rows[0]) {
+                    updateData({ ...data, hasHeaders: v, headers: Array(rows[0].length).fill('') });
+                  } else {
+                    updateData({ ...data, hasHeaders: v });
+                  }
+                }}
+              />
+              <Label>Заголовки столбцов</Label>
+            </div>
+            
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  {hasHeaders && headers.length > 0 && (
+                    <thead className="bg-muted">
+                      <tr>
+                        {headers.map((header, colIdx) => (
+                          <th key={colIdx} className="p-1 border-r last:border-r-0">
+                            <Input
+                              value={header}
+                              onChange={(e) => updateHeader(colIdx, e.target.value)}
+                              placeholder={`Колонка ${colIdx + 1}`}
+                              className="h-8 text-center font-medium"
+                            />
+                          </th>
+                        ))}
+                        <th className="w-10 p-1">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={addColumn}
+                            className="h-8 w-8"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </th>
+                      </tr>
+                    </thead>
+                  )}
+                  <tbody>
+                    {rows.map((row, rowIdx) => (
+                      <tr key={rowIdx} className="border-t">
+                        {row.map((cell, colIdx) => (
+                          <td key={colIdx} className="p-1 border-r last:border-r-0">
+                            <Input
+                              value={cell}
+                              onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
+                              className="h-8"
+                            />
+                          </td>
+                        ))}
+                        <td className="w-10 p-1">
+                          <div className="flex gap-1">
+                            {rows.length > 1 && (
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => removeRow(rowIdx)}
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={addRow} className="flex-1">
+                <Plus className="mr-2 h-4 w-4" /> Добавить строку
+              </Button>
+              {!hasHeaders && (
+                <Button type="button" variant="outline" onClick={addColumn} className="flex-1">
+                  <Plus className="mr-2 h-4 w-4" /> Добавить столбец
+                </Button>
+              )}
+            </div>
+            
+            {(rows[0]?.length || 0) > 1 && (
+              <div className="flex gap-2 flex-wrap">
+                <span className="text-sm text-muted-foreground">Удалить столбец:</span>
+                {rows[0]?.map((_, colIdx) => (
+                  <Button
+                    key={colIdx}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeColumn(colIdx)}
+                    className="h-7 px-2"
+                  >
+                    {colIdx + 1} <X className="ml-1 h-3 w-3" />
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      
       default:
         // Generic JSON editor for other types
         return (
