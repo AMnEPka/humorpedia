@@ -4,12 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import {
   Users, FileText, Newspaper, HelpCircle, BookOpen, Tv, 
   UsersRound, Tags, MessageSquare, Image, LayoutTemplate,
-  Home, Menu, X, LogOut, ChevronDown, Settings
+  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
   { path: '/admin', icon: Home, label: 'Главная', exact: true },
+  { path: '/admin/sections', icon: FolderTree, label: 'Разделы' },
   { path: '/admin/people', icon: Users, label: 'Люди' },
   { path: '/admin/teams', icon: UsersRound, label: 'Команды' },
   { path: '/admin/shows', icon: Tv, label: 'Шоу' },
