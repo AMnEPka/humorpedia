@@ -52,6 +52,7 @@ import QuizzesListPage from './public/pages/QuizzesListPage';
 import QuizDetailPage from './public/pages/QuizDetailPage';
 import ContactsPage from './public/pages/ContactsPage';
 import PolicyPage from './public/pages/PolicyPage';
+import SectionDetailPage from './public/pages/SectionDetailPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
@@ -110,6 +111,9 @@ function AppRoutes() {
         {/* Static pages */}
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/policy" element={<PolicyPage />} />
+        
+        {/* Dynamic sections - catch-all for hierarchical URLs */}
+        <Route path="/*" element={<SectionDetailPage />} />
       </Route>
       
       {/* Admin routes */}
@@ -164,9 +168,6 @@ function AppRoutes() {
       {/* Admin - Templates */}
       <Route path="/admin/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
       <Route path="/admin/templates/:id" element={<ProtectedRoute><TemplateEditPage /></ProtectedRoute>} />
-      
-      {/* Catch all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
