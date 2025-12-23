@@ -275,6 +275,7 @@ async def import_person_with_tv():
     
     if existing:
         print(f"⚠️  Обновляем существующую запись...")
+        person['_id'] = existing['_id']  # Keep existing ID
         await db.people.replace_one({"_id": existing['_id']}, person)
         print(f"✅ ОБНОВЛЕНО!")
         print(f"   ID: {existing['_id']}")
