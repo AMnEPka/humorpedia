@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import publicApi from '../utils/api';
+import { ModuleList } from '../components/ModuleRenderer';
 
 export default function NewsDetailPage() {
   const { slug } = useParams();
@@ -49,6 +50,8 @@ export default function NewsDetailPage() {
 
   const formattedDate = news.published_at 
     ? formatDistanceToNow(new Date(news.published_at), { addSuffix: true, locale: ru })
+    : news.created_at
+    ? formatDistanceToNow(new Date(news.created_at), { addSuffix: true, locale: ru })
     : '';
 
   return (
@@ -71,10 +74,12 @@ export default function NewsDetailPage() {
         </h1>
         
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>{formattedDate}</span>
-          </div>
+          {formattedDate && (
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>{formattedDate}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4" />
             <span>{news.comments_count || 0} комментариев</span>
@@ -90,26 +95,50 @@ export default function NewsDetailPage() {
         )}
       </header>
 
-      {/* Image */}
-      {news.image && (
+      {/* Cover image */}
+      {news.cover_image?.url && (
         <div className="mb-8 rounded-xl overflow-hidden">
           <img 
-            src={news.image} 
+            src={news.cover_image.url} 
             alt={news.title}
             className="w-full h-auto"
           />
         </div>
       )}
 
-      {/* Content */}
-      <div 
-        className="prose prose-lg prose-blue max-w-none"
-        dangerouslySetInnerHTML={{ __html: news.content || '' }}
-      />
+      {/* Excerpt */}
+      {news.excerpt && (
+        <p className="text-lg text-gray-600 mb-8 font-medium">
+          {news.excerpt}
+        </p>
+      )}
+
+      {/* Modules content */}
+      {news.modules && news.modules.length > 0 ? (
+        <ModuleList modules={news.modules} />
+      ) : news.content ? (
+        /* Fallback to HTML content */
+        <div 
+          className="prose prose-lg prose-blue max-w-none"
+          dangerouslySetInnerHTML={{ __html: news.content }}
+        />
+      ) : (
+        <p className="text-gray-500">Содержимое отсутствует</p>
+      )}
 
       {/* Share */}
       <div className="mt-12 pt-8 border-t">
-        <Button variant="outline" onClick={() => navigator.share?.({ url: window.location.href, title: news.title })}>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({ url: window.location.href, title: news.title });
+            } else {
+              navigator.clipboard.writeText(window.location.href);
+              alert('Ссылка скопирована!');
+            }
+          }}
+        >
           <Share2 className="mr-2 h-4 w-4" /> Поделиться
         </Button>
       </div>
