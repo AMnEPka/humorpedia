@@ -53,6 +53,8 @@ import QuizDetailPage from './public/pages/QuizDetailPage';
 import ContactsPage from './public/pages/ContactsPage';
 import PolicyPage from './public/pages/PolicyPage';
 import SectionDetailPage from './public/pages/SectionDetailPage';
+import SearchPage from './public/pages/SearchPage';
+import TagSearchPage from './public/pages/TagSearchPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
@@ -111,6 +113,10 @@ function AppRoutes() {
         {/* Static pages */}
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/policy" element={<PolicyPage />} />
+        
+        {/* Search */}
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/tags/:tag" element={<TagSearchPage />} />
         
         {/* Dynamic sections - catch-all for hierarchical URLs */}
         <Route path="/*" element={<SectionDetailPage />} />
