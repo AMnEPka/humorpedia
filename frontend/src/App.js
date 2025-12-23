@@ -44,7 +44,9 @@ import PersonDetailPage from './public/pages/PersonDetailPage';
 import TeamsListPage from './public/pages/TeamsListPage';
 import TeamDetailPage from './public/pages/TeamDetailPage';
 import ShowsListPage from './public/pages/ShowsListPage';
+import ShowDetailPage from './public/pages/ShowDetailPage';
 import QuizzesListPage from './public/pages/QuizzesListPage';
+import QuizDetailPage from './public/pages/QuizDetailPage';
 import ContactsPage from './public/pages/ContactsPage';
 import PolicyPage from './public/pages/PolicyPage';
 
