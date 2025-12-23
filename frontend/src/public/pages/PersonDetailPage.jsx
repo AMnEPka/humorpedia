@@ -212,6 +212,37 @@ export default function PersonDetailPage() {
                   </div>
                 )}
               </div>
+              
+              {/* Rating */}
+              {person.rating && (
+                <div className="pt-4 border-t">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-5 w-5 ${
+                            star <= Math.round(person.rating.average / 2)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {person.rating.average > 0 ? (
+                      <>
+                        <span className="font-semibold">{person.rating.average.toFixed(1)}</span> из 10
+                        <span className="text-gray-400"> • </span>
+                        {person.rating.count} {person.rating.count === 1 ? 'оценка' : person.rating.count < 5 ? 'оценки' : 'оценок'}
+                      </>
+                    ) : (
+                      <span>Ещё нет оценок</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Share */}
               <Button variant="outline" className="w-full mt-4" onClick={() => navigator.share?.({ url: window.location.href, title: person.title })}>
