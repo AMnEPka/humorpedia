@@ -74,23 +74,26 @@ export default function QuizDetailPage() {
 
   const handleNext = () => {
     // Save text answer if applicable
+    let updatedAnswers = { ...answers };
     if (currentQ?.type === 'text' && textAnswer.trim()) {
-      setAnswers({ ...answers, [currentQuestion]: textAnswer.trim() });
+      updatedAnswers[currentQuestion] = textAnswer.trim();
+      setAnswers(updatedAnswers);
     }
     
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setTextAnswer('');
     } else {
-      calculateScore();
+      // Calculate score with updated answers
+      calculateScoreWithAnswers(updatedAnswers);
     }
   };
 
-  const calculateScore = useCallback(() => {
+  const calculateScoreWithAnswers = (finalAnswers) => {
     let correct = 0;
     
     questions.forEach((q, idx) => {
-      const answer = answers[idx];
+      const answer = finalAnswers[idx];
       
       if (q.type === 'text') {
         // Text comparison (case-insensitive)
@@ -115,6 +118,10 @@ export default function QuizDetailPage() {
     
     setScore(correct);
     setShowResult(true);
+  };
+
+  const calculateScore = useCallback(() => {
+    calculateScoreWithAnswers(answers);
   }, [questions, answers]);
 
   const getResultForScore = () => {
