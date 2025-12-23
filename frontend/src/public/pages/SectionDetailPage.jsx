@@ -100,9 +100,11 @@ export default function SectionDetailPage() {
         {section.tags && section.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {section.tags.map((tag) => (
-              <Badge key={tag} variant="secondary">
-                {tag}
-              </Badge>
+              <Link key={tag} to={`/tags/${encodeURIComponent(tag)}`}>
+                <Badge variant="secondary" className="cursor-pointer hover:bg-blue-100">
+                  {tag}
+                </Badge>
+              </Link>
             ))}
           </div>
         )}
