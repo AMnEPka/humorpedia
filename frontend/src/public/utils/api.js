@@ -36,6 +36,17 @@ export const publicApi = {
   getQuizzes: (params) => api.get('/content/quizzes', { params }),
   getQuiz: (slug) => api.get(`/content/quizzes/${slug}`),
   
+  // Sections
+  getSections: (params) => api.get('/sections', { params }),
+  getSectionsTree: (params) => api.get('/sections/tree', { params }),
+  getSection: (idOrSlug) => api.get(`/sections/${idOrSlug}`),
+  getSectionByPath: (path) => {
+    // Remove leading slash if present
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return api.get(`/sections/path/${cleanPath}`);
+  },
+  getSectionChildren: (sectionId, params) => api.get(`/sections/${sectionId}/children`, { params }),
+  
   // Search
   search: (query, params) => api.get('/search', { params: { q: query, ...params } }),
   
