@@ -9,28 +9,28 @@ import publicApi from '../utils/api';
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
   const items = useMemo(() => {
-    const effectiveMode = mode === 'auto' 
-      ? (contentType === 'person' ? 'timeline' : 'sections')
-      : mode;
+    if (!modules || modules.length === 0) return [];
     
-    if (effectiveMode === 'timeline') {
-      // Get items from timeline module
-      const timelineModule = modules?.find(m => m.type === 'timeline');
-      return timelineModule?.data?.items?.map(item => ({
-        id: `timeline-${item.year}`,
-        label: item.year,
-        title: item.title
-      })) || [];
-    } else {
-      // Get titles from text_block modules
-      return modules?.filter(m => m.type === 'text_block' && m.data?.title)
-        .map(m => ({
-          id: `section-${m.id}`,
-          label: m.data.title,
-          title: m.data.title
-        })) || [];
+    // For person pages, extract from timeline modules
+    if (contentType === 'person') {
+      return modules
+        .filter(m => m.type === 'timeline')
+        .map((m, idx) => ({
+          id: `timeline-${idx}`,
+          label: m.data?.period || `Период ${idx + 1}`,
+          title: m.data?.title || 'Без названия'
+        }));
     }
-  }, [modules, mode, contentType]);
+    
+    // For other content, extract from text_block modules with titles
+    return modules
+      .filter(m => m.type === 'text_block' && m.data?.title)
+      .map((m, idx) => ({
+        id: `section-${idx}`,
+        label: m.data.title,
+        title: m.data.title
+      }));
+  }, [modules, contentType]);
 
   if (items.length === 0) return null;
 
