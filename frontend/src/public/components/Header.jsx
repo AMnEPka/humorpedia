@@ -34,12 +34,18 @@ export default function Header() {
     publicApi.getSections({ in_main_menu: true, status: 'published' })
       .then(res => {
         const sections = res.data.items || [];
-        setMenuSections(sections.map(s => ({
+        const sectionLinks = sections.map(s => ({
           name: s.menu_title || s.title,
-          href: s.full_path
-        })));
+          href: s.full_path,
+          order: s.order || 0
+        }));
+        console.log('Loaded menu sections:', sectionLinks);
+        setMenuSections(sectionLinks.sort((a, b) => a.order - b.order));
       })
-      .catch(err => console.error('Error loading menu sections:', err));
+      .catch(err => {
+        console.error('Error loading menu sections:', err);
+        setMenuSections([]);
+      });
   }, []);
 
   const navigation = [...menuSections, ...staticNavigation];
