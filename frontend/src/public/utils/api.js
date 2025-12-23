@@ -48,7 +48,9 @@ export const publicApi = {
   getSectionChildren: (sectionId, params) => api.get(`/sections/${sectionId}/children`, { params }),
   
   // Search
-  search: (query, params) => api.get('/search', { params: { q: query, ...params } }),
+  search: (query, params) => api.get('/content/search', { params: { q: query, ...params } }),
+  searchAutocomplete: (query) => api.get('/content/search/autocomplete', { params: { q: query, limit: 5 } }),
+  searchByTag: (tag, params) => api.get(`/content/search/by-tag/${tag}`, { params }),
   
   // Stats
   getStats: () => api.get('/stats'),
