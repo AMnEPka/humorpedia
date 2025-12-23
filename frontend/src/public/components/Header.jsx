@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Menu, X, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import publicApi from '../utils/api';
 
-const navigation = [
+const staticNavigation = [
   { name: 'Новости', href: '/news' },
   { name: 'Статьи', href: '/articles' },
   { name: 'Люди', href: '/people' },
@@ -25,7 +26,23 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [menuSections, setMenuSections] = useState([]);
   const location = useLocation();
+
+  useEffect(() => {
+    // Load sections that should appear in main menu
+    publicApi.getSections({ in_main_menu: true, status: 'published' })
+      .then(res => {
+        const sections = res.data.items || [];
+        setMenuSections(sections.map(s => ({
+          name: s.menu_title || s.title,
+          href: s.full_path
+        })));
+      })
+      .catch(err => console.error('Error loading menu sections:', err));
+  }, []);
+
+  const navigation = [...menuSections, ...staticNavigation];
 
   const handleSearch = (e) => {
     e.preventDefault();
