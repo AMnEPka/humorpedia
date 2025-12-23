@@ -162,6 +162,45 @@ export default function ModuleRenderer({ module }) {
       // This is usually auto-generated from other modules
       return null;
 
+    case 'table':
+      const rows = data?.rows || [];
+      const headers = data?.headers || [];
+      const hasHeaders = data?.hasHeaders !== false && headers.length > 0;
+      
+      if (rows.length === 0) return null;
+      
+      return (
+        <div className="my-6">
+          {data?.title && <h3 className="text-lg font-bold mb-3">{data.title}</h3>}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-200 text-sm">
+              {hasHeaders && (
+                <thead className="bg-gray-100">
+                  <tr>
+                    {headers.map((header, i) => (
+                      <th key={i} className="border border-gray-200 px-4 py-2 text-left font-medium">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {rows.map((row, rowIdx) => (
+                  <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    {row.map((cell, cellIdx) => (
+                      <td key={cellIdx} className="border border-gray-200 px-4 py-2">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+
     case 'html':
       return (
         <div
