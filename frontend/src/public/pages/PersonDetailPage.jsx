@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List } from 'lucide-react';
+import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
