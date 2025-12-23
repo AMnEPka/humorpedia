@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import publicApi from '../utils/api';
+import { ModuleList } from '../components/ModuleRenderer';
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
