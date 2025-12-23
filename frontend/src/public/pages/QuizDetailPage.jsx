@@ -106,8 +106,9 @@ export default function QuizDetailPage() {
         const correctIndices = q.options
           .map((o, i) => o.correct ? i : -1)
           .filter(i => i !== -1);
-        const userIndices = Array.isArray(answer) ? answer.sort() : [];
-        if (JSON.stringify(correctIndices.sort()) === JSON.stringify(userIndices)) {
+        const userIndices = Array.isArray(answer) ? [...answer] : [];
+        // Compare sorted copies
+        if (JSON.stringify([...correctIndices].sort()) === JSON.stringify([...userIndices].sort())) {
           correct++;
         }
       } else {
