@@ -24,6 +24,9 @@ import QuizEditPage from './admin/pages/QuizEditPage';
 // Admin - Wiki
 import WikiListPage from './admin/pages/WikiListPage';
 import WikiEditPage from './admin/pages/WikiEditPage';
+// Admin - Sections
+import SectionsListPage from './admin/pages/SectionsListPage';
+import SectionEditPage from './admin/pages/SectionEditPage';
 // Admin - Management
 import MediaPage from './admin/pages/MediaPage';
 import TagsPage from './admin/pages/TagsPage';
@@ -141,6 +144,10 @@ function AppRoutes() {
       {/* Admin - Wiki */}
       <Route path="/admin/wiki" element={<ProtectedRoute><WikiListPage /></ProtectedRoute>} />
       <Route path="/admin/wiki/:id" element={<ProtectedRoute><WikiEditPage /></ProtectedRoute>} />
+      
+      {/* Admin - Sections */}
+      <Route path="/admin/sections" element={<ProtectedRoute><SectionsListPage /></ProtectedRoute>} />
+      <Route path="/admin/sections/:id" element={<ProtectedRoute><SectionEditPage /></ProtectedRoute>} />
       
       {/* Admin - Media */}
       <Route path="/admin/media" element={<ProtectedRoute><MediaPage /></ProtectedRoute>} />
