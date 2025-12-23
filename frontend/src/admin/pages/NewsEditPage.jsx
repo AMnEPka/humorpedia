@@ -7,11 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Save, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
+import TagSelector from '../components/TagSelector';
 
 const emptyNews = { title: '', slug: '', status: 'draft', excerpt: '', content: '', cover_image: null, important: false, tags: [], seo: { meta_title: '', meta_description: '' } };
 
