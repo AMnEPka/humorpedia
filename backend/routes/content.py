@@ -533,7 +533,7 @@ async def search_all(
     """Search across all content types"""
     db = await get_db()
     
-    search_types = types.split(",") if types else ["person", "team", "show", "article", "news", "wiki"]
+    search_types = types.split(",") if types else ["person", "team", "show", "article", "news", "wiki", "section"]
     
     results = {}
     collection_map = {
@@ -543,6 +543,7 @@ async def search_all(
         "article": ("articles", ["title"]),
         "news": ("news", ["title"]),
         "wiki": ("wiki", ["title"]),
+        "section": ("sections", ["title", "description"]),
     }
     
     for content_type in search_types:
@@ -552,7 +553,12 @@ async def search_all(
         coll_name, fields = collection_map[content_type]
         collection = getattr(db, coll_name)
         
-        query = {"$or": [{f: {"$regex": q, "$options": "i"}} for f in fields]}
+        query = {
+            "$and": [
+                {"status": "published"},
+                {"$or": [{f: {"$regex": q, "$options": "i"}} for f in fields]}
+            ]
+        }
         cursor = collection.find(query, {"modules": 0}).limit(limit)
         items = await cursor.to_list(limit)
         
@@ -560,3 +566,99 @@ async def search_all(
             results[content_type] = items
     
     return results
+
+
+@router.get("/search/autocomplete", response_model=list)
+async def search_autocomplete(
+    q: str = Query(..., min_length=2),
+    limit: int = Query(5, ge=1, le=20)
+):
+    """Fast autocomplete search across all content"""
+    db = await get_db()
+    
+    suggestions = []
+    
+    # Search in different collections
+    collections_config = [
+        ("people", "full_name", "person"),
+        ("teams", "name", "team"),
+        ("shows", "name", "show"),
+        ("articles", "title", "article"),
+        ("news", "title", "news"),
+        ("sections", "title", "section"),
+    ]
+    
+    for coll_name, field, content_type in collections_config:
+        collection = getattr(db, coll_name)
+        query = {
+            "status": "published",
+            field: {"$regex": q, "$options": "i"}
+        }
+        
+        cursor = collection.find(query, {"_id": 1, field: 1, "slug": 1, "full_path": 1}).limit(limit)
+        items = await cursor.to_list(limit)
+        
+        for item in items:
+            suggestions.append({
+                "id": item["_id"],
+                "title": item.get(field, item.get("title", "")),
+                "type": content_type,
+                "slug": item.get("slug"),
+                "path": item.get("full_path") if content_type == "section" else f"/{content_type}s/{item.get('slug', item['_id'])}"
+            })
+        
+        if len(suggestions) >= limit:
+            break
+    
+    return suggestions[:limit]
+
+
+@router.get("/search/by-tag/{tag}", response_model=dict)
+async def search_by_tag(
+    tag: str,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100)
+):
+    """Search all content by tag"""
+    db = await get_db()
+    
+    results = {}
+    total_count = 0
+    
+    collection_map = {
+        "people": "person",
+        "teams": "team",
+        "shows": "show",
+        "articles": "article",
+        "news": "news",
+        "wiki": "wiki",
+        "quizzes": "quiz",
+        "sections": "section",
+    }
+    
+    for coll_name, content_type in collection_map.items():
+        collection = getattr(db, coll_name)
+        
+        query = {
+            "status": "published",
+            "tags": tag
+        }
+        
+        count = await collection.count_documents(query)
+        total_count += count
+        
+        if count > 0:
+            cursor = collection.find(query, {"modules": 0}).sort("created_at", -1).limit(limit)
+            items = await cursor.to_list(limit)
+            results[content_type] = {
+                "count": count,
+                "items": items
+            }
+    
+    return {
+        "tag": tag,
+        "total": total_count,
+        "results": results,
+        "skip": skip,
+        "limit": limit
+    }
