@@ -25,7 +25,7 @@ import {
 import { 
   Plus, GripVertical, Trash2, Edit, ChevronDown, ChevronUp,
   FileText, Clock, Users, Tv, Table, Image, Play, Quote,
-  HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag
+  HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
