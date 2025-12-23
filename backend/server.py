@@ -126,6 +126,16 @@ async def create_indexes(db):
         await db.templates.create_index("name", unique=True)
         await db.templates.create_index("content_type")
         
+        # Sections indexes
+        await db.sections.create_index("slug")
+        await db.sections.create_index("full_path", unique=True)
+        await db.sections.create_index("parent_id")
+        await db.sections.create_index("level")
+        await db.sections.create_index("status")
+        await db.sections.create_index("in_main_menu")
+        await db.sections.create_index("tags")
+        await db.sections.create_index([("title", "text")])
+        
         logger.info("MongoDB indexes created successfully")
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
@@ -162,6 +172,7 @@ from routes.tags import router as tags_router
 from routes.comments import router as comments_router
 from routes.media import router as media_router
 from routes.templates import router as templates_router
+from routes.sections import router as sections_router
 
 api_router.include_router(content_router)
 api_router.include_router(auth_router)
@@ -170,6 +181,7 @@ api_router.include_router(tags_router)
 api_router.include_router(comments_router)
 api_router.include_router(media_router)
 api_router.include_router(templates_router)
+api_router.include_router(sections_router)
 
 
 # Statistics endpoint
