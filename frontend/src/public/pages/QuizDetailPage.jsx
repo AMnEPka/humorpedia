@@ -90,11 +90,11 @@ export default function QuizDetailPage() {
     }
   };
 
-  const calculateScoreWithAnswers = (finalAnswers) => {
+  const calculateScoreWithAnswers = (finalAns) => {
     let correct = 0;
     
     questions.forEach((q, idx) => {
-      const answer = finalAnswers[idx];
+      const answer = finalAns[idx];
       
       if (q.type === 'text') {
         // Text comparison (case-insensitive)
@@ -117,6 +117,7 @@ export default function QuizDetailPage() {
       }
     });
     
+    setFinalAnswers(finalAns); // Save for display
     setScore(correct);
     setShowResult(true);
   };
