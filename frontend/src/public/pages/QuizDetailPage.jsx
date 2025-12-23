@@ -139,6 +139,7 @@ export default function QuizDetailPage() {
   const restart = () => {
     setCurrentQuestion(0);
     setAnswers({});
+    setFinalAnswers({});
     setTextAnswer('');
     setShowResult(false);
     setScore(0);
