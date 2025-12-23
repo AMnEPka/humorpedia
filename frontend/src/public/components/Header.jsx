@@ -101,9 +101,11 @@ export default function Header() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      const query = searchQuery.trim();
+      setSearchQuery(''); // Очистить поле после поиска
       setSearchOpen(false);
       setShowSuggestions(false);
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(query)}`);
     }
   };
 
