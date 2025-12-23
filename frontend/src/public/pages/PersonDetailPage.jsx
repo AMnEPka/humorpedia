@@ -272,11 +272,57 @@ export default function PersonDetailPage() {
 }
 
 // Module renderer component
-function ModuleRenderer({ module }) {
+function ModuleRenderer({ module, index }) {
   switch (module.type) {
+    case 'timeline':
+      return (
+        <Card id={`timeline-${index}`} className="scroll-mt-4">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="text-sm font-medium text-blue-600 mb-1">
+                  {module.data?.period}
+                </div>
+                <CardTitle className="text-xl">{module.data?.title}</CardTitle>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {module.data?.content_html ? (
+              <div 
+                className="prose prose-sm max-w-none text-gray-700"
+                dangerouslySetInnerHTML={{ __html: module.data.content_html }}
+              />
+            ) : (
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {module.data?.content}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      );
+    
+    case 'text':
+      return (
+        <Card id={`text-${index}`}>
+          <CardContent className="p-6">
+            {module.data?.content_html ? (
+              <div 
+                className="prose prose-sm max-w-none text-gray-700"
+                dangerouslySetInnerHTML={{ __html: module.data.content_html }}
+              />
+            ) : (
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {module.data?.content}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      );
+    
     case 'text_block':
       return (
-        <Card id={`section-${module.id}`}>
+        <Card id={`section-${index}`}>
           {module.data?.title && (
             <CardHeader>
               <CardTitle>{module.data.title}</CardTitle>
@@ -284,6 +330,17 @@ function ModuleRenderer({ module }) {
           )}
           <CardContent>
             <div 
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
+            />
+          </CardContent>
+        </Card>
+      );
+    
+    default:
+      return null;
+  }
+}
               className="prose prose-blue max-w-none"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
             />
