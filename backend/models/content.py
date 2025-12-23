@@ -262,6 +262,9 @@ class News(BaseContent):
     content: Optional[str] = None  # HTML content
     important: bool = False  # Highlight as important
     
+    # Content modules
+    modules: List[PageModule] = Field(default_factory=list)
+    
     # Relations
     related_person_ids: List[str] = Field(default_factory=list)
     related_team_ids: List[str] = Field(default_factory=list)
