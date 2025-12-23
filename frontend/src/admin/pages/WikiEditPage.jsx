@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Save, ArrowLeft, Loader2, Plus, X } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
+import TagSelector from '../components/TagSelector';
 
 const emptyWiki = { title: '', slug: '', status: 'draft', content: '', cover_image: null, has_header: false, header_image: null, header_facts: [], modules: [], tags: [], seo: { meta_title: '', meta_description: '' } };
 
