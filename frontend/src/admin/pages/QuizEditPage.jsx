@@ -296,45 +296,6 @@ export default function QuizEditPage() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Question Type Selector */}
-                <div className="space-y-2">
-                  <Label>Тип вопроса</Label>
-                  <Select
-                    value={q.type || QUESTION_TYPES.SINGLE}
-                    onValueChange={(v) => {
-                      const newQ = { ...q, type: v };
-                      if (v === QUESTION_TYPES.TEXT) {
-                        delete newQ.options;
-                        newQ.correct_answer = '';
-                      } else if (!newQ.options) {
-                        newQ.options = [{ id: 'a', text: '', correct: false }];
-                        delete newQ.correct_answer;
-                      }
-                      updateQuestion(qIdx, 'type', v);
-                      if (v === QUESTION_TYPES.TEXT && q.options) {
-                        const updated = [...questions];
-                        delete updated[qIdx].options;
-                        updated[qIdx].correct_answer = '';
-                        setQuestions(updated);
-                      } else if (v !== QUESTION_TYPES.TEXT && !q.options) {
-                        const updated = [...questions];
-                        updated[qIdx].options = [{ id: 'a', text: '', correct: false }];
-                        delete updated[qIdx].correct_answer;
-                        setQuestions(updated);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={QUESTION_TYPES.SINGLE}>Один правильный ответ</SelectItem>
-                      <SelectItem value={QUESTION_TYPES.MULTIPLE}>Несколько правильных</SelectItem>
-                      <SelectItem value={QUESTION_TYPES.TEXT}>Текстовый ответ</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Question Text */}
                 <div className="space-y-2">
                   <Label>Текст вопроса</Label>
