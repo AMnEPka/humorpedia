@@ -215,6 +215,15 @@ async def import_person_with_tv():
     except FileNotFoundError:
         print("⚠️  Image mapping не найден, будут использованы старые URL\n")
     
+    # Load ratings
+    ratings = {}
+    try:
+        with open('/app/migration/ratings.json', 'r', encoding='utf-8') as f:
+            ratings = json.load(f)
+        print(f"✅ Загружен ratings: {len(ratings)} записей\n")
+    except FileNotFoundError:
+        print("⚠️  Ratings не найдены\n")
+    
     # Load raw MODX record
     with open('/app/migration/person_350_raw_line.txt', 'r', encoding='utf-8') as f:
         line = f.read()
@@ -279,6 +288,21 @@ async def import_person_with_tv():
     
     # Convert
     person = convert_to_person(modx_record, tv_data, image_mapping)
+    
+    # Add rating if exists
+    modx_id = str(modx_record['id'])
+    if modx_id in ratings:
+        rating_data = ratings[modx_id]
+        person['rating'] = {
+            'average': rating_data['average_rating'],
+            'count': rating_data['vote_count']
+        }
+        print(f"✅ Добавлен рейтинг: {rating_data['average_rating']} ★ ({rating_data['vote_count']} голосов)")
+    else:
+        person['rating'] = {
+            'average': 0,
+            'count': 0
+        }
     
     print(json.dumps(person, ensure_ascii=False, indent=2))
     
