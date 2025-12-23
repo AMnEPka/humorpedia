@@ -378,7 +378,8 @@ async def create_news(data: NewsCreate):
     await check_slug_unique("news", data.slug)
     
     news = News(
-        title=data.title, slug=data.slug, excerpt=data.excerpt, cover=data.cover,
+        title=data.title, slug=data.slug, excerpt=data.excerpt,
+        cover_image=data.cover_image, content=data.content, important=data.important,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
     
