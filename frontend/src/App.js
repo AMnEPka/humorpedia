@@ -98,10 +98,11 @@ function AppRoutes() {
         
         {/* Shows */}
         <Route path="/shows" element={<ShowsListPage />} />
-        <Route path="/shows/:slug" element={<ShowsListPage />} />
+        <Route path="/shows/:slug" element={<ShowDetailPage />} />
         
         {/* Quizzes */}
         <Route path="/quizzes" element={<QuizzesListPage />} />
+        <Route path="/quizzes/:slug" element={<QuizDetailPage />} />
         
         {/* Static pages */}
         <Route path="/contacts" element={<ContactsPage />} />
