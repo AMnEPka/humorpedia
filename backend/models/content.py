@@ -229,6 +229,7 @@ class ArticleCreate(BaseModel):
     cover_image: Optional[MediaFile] = None
     author_id: Optional[str] = None
     author_name: Optional[str] = None
+    featured: bool = False
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
