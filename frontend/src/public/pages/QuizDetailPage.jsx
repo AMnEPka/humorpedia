@@ -250,7 +250,7 @@ export default function QuizDetailPage() {
             <div className="space-y-3 pt-4 border-t">
               <h4 className="font-medium">Ваши ответы:</h4>
               {questions.map((q, idx) => {
-                const answer = answers[idx];
+                const answer = finalAnswers[idx];
                 let isCorrect = false;
                 let userAnswerText = '';
                 let correctAnswerText = '';
