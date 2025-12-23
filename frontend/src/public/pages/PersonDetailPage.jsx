@@ -127,54 +127,77 @@ export default function PersonDetailPage() {
           <Card>
             <CardContent className="p-6">
               <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                {person.photo ? (
+                {person.cover_image?.url ? (
                   <img 
-                    src={person.photo} 
-                    alt={person.title}
+                    src={person.cover_image.url} 
+                    alt={person.cover_image.alt || person.full_name || person.title}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <span className="text-6xl font-bold">
-                      {person.title?.charAt(0)?.toUpperCase()}
+                      {person.full_name?.charAt(0)?.toUpperCase() || person.title?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
                 )}
               </div>
               
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{person.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">{person.full_name || person.title}</h1>
               
               {/* Biography info */}
               <div className="space-y-3 text-sm">
-                {person.bio?.birth_date && (
+                {person.birth_date && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Calendar className="h-4 w-4 flex-shrink-0" />
                     <span>
-                      {new Date(person.bio.birth_date).toLocaleDateString('ru-RU')}
-                      {person.bio?.death_date && ` — ${new Date(person.bio.death_date).toLocaleDateString('ru-RU')}`}
+                      {new Date(person.birth_date).toLocaleDateString('ru-RU', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
                     </span>
                   </div>
                 )}
-                {person.bio?.birth_place && (
+                {person.birth_place && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
-                    <span>{person.bio.birth_place}</span>
+                    <span>{person.birth_place}</span>
                   </div>
                 )}
-                {person.bio?.occupation?.length > 0 && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Род деятельности:</span>
-                    <div className="mt-1">{person.bio.occupation.join(', ')}</div>
-                  </div>
-                )}
-                {person.bio?.achievements?.length > 0 && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Достижения:</span>
-                    <ul className="mt-1 list-disc list-inside">
-                      {person.bio.achievements.map((a, i) => (
-                        <li key={i}>{a}</li>
-                      ))}
-                    </ul>
+                {person.social_links && Object.keys(person.social_links).length > 0 && (
+                  <div className="pt-2 border-t">
+                    <div className="flex gap-2">
+                      {person.social_links.vk && (
+                        <a 
+                          href={person.social_links.vk} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 text-sm"
+                        >
+                          VK
+                        </a>
+                      )}
+                      {person.social_links.instagram && (
+                        <a 
+                          href={person.social_links.instagram} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-pink-600 hover:text-pink-700 text-sm"
+                        >
+                          Instagram
+                        </a>
+                      )}
+                      {person.social_links.youtube && (
+                        <a 
+                          href={person.social_links.youtube} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-red-600 hover:text-red-700 text-sm"
+                        >
+                          YouTube
+                        </a>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
