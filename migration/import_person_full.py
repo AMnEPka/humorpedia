@@ -105,7 +105,7 @@ def create_timeline_modules(tv_data):
     
     return modules
 
-def convert_to_person(modx_record, tv_data):
+def convert_to_person(modx_record, tv_data, image_mapping=None):
     """Convert MODX + TV data to MongoDB person"""
     
     # Parse dates
@@ -147,14 +147,25 @@ def convert_to_person(modx_record, tv_data):
     created_at = datetime.fromtimestamp(createdon, tz=timezone.utc) if createdon > 0 else datetime.now(timezone.utc)
     updated_at = datetime.fromtimestamp(editedon, tz=timezone.utc) if editedon > 0 else created_at
     
-    # Cover image
+    # Cover image with mapping
     cover_image = None
     img_url = tv_data.get('table-image', '') or tv_data.get('img_seo', '')
     if img_url:
-        cover_image = {
-            "url": f"https://humorpedia.ru/{img_url}",
-            "alt": tv_data.get('table-image-tags', '') or modx_record.get('pagetitle', '')
-        }
+        # Check mapping
+        if image_mapping and img_url in image_mapping:
+            new_url = image_mapping[img_url]
+            if new_url:
+                cover_image = {
+                    "url": new_url,
+                    "alt": tv_data.get('table-image-tags', '') or modx_record.get('pagetitle', '')
+                }
+        
+        # Fallback to old URL if no mapping
+        if not cover_image:
+            cover_image = {
+                "url": f"https://humorpedia.ru/{img_url}",
+                "alt": tv_data.get('table-image-tags', '') or modx_record.get('pagetitle', '')
+            }
     
     person = {
         "_id": str(uuid4()),
@@ -188,6 +199,15 @@ def convert_to_person(modx_record, tv_data):
 
 async def import_person_with_tv():
     """Import person with TV data"""
+    
+    # Load image mapping
+    image_mapping = {}
+    try:
+        with open('/app/migration/image_mapping.json', 'r', encoding='utf-8') as f:
+            image_mapping = json.load(f)
+        print(f"✅ Загружен image mapping: {len(image_mapping)} записей\n")
+    except FileNotFoundError:
+        print("⚠️  Image mapping не найден, будут использованы старые URL\n")
     
     # Load raw MODX record
     with open('/app/migration/person_350_raw_line.txt', 'r', encoding='utf-8') as f:
@@ -252,7 +272,7 @@ async def import_person_with_tv():
     print("="*80)
     
     # Convert
-    person = convert_to_person(modx_record, tv_data)
+    person = convert_to_person(modx_record, tv_data, image_mapping)
     
     print(json.dumps(person, ensure_ascii=False, indent=2))
     
