@@ -263,15 +263,6 @@ export default function PersonDetailPage() {
             </div>
           )}
 
-          {/* Bio */}
-          {person.bio && (
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-700 leading-relaxed">{person.bio}</p>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Modules */}
           {person.modules?.map((module, i) => (
             <ModuleRenderer key={i} module={module} index={i} />
