@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from .base import ContentStatus, MediaFile, SEOData, PageModule
+from .base import ContentStatus, MediaFile, SEOData
+from .modules import PageModule
 
 
 class Section(BaseModel):
