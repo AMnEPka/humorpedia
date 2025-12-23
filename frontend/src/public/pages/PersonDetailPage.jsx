@@ -341,23 +341,6 @@ function ModuleRenderer({ module, index }) {
       return null;
   }
 }
-              className="prose prose-blue max-w-none"
-              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
-            />
-          </CardContent>
-        </Card>
-      );
-    
-    case 'timeline':
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle>{module.data?.title || 'Хронология'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
-              {module.data?.items?.map((item, i) => (
-                <div key={i} id={`timeline-${item.year}`} className="relative scroll-mt-20">
                   <div className="absolute -left-[25px] w-4 h-4 bg-blue-600 rounded-full border-4 border-white" />
                   <div className="text-sm text-blue-600 font-semibold">{item.year}</div>
                   <div className="font-medium">{item.title}</div>
