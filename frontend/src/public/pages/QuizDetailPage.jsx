@@ -269,7 +269,10 @@ export default function QuizDetailPage() {
                       ? answer.map(i => q.options[i]?.text).join(', ') || '(не отвечено)'
                       : '(не отвечено)';
                     correctAnswerText = correctIndices.map(i => q.options[i]?.text).join(', ');
-                    isCorrect = JSON.stringify(correctIndices.sort()) === JSON.stringify((answer || []).sort());
+                    // Compare sorted copies
+                    const sortedCorrect = [...correctIndices].sort();
+                    const sortedUser = [...(answer || [])].sort();
+                    isCorrect = JSON.stringify(sortedCorrect) === JSON.stringify(sortedUser);
                   } else {
                     userAnswerText = answer !== undefined ? q.options[answer]?.text : '(не отвечено)';
                     correctAnswerText = q.options[correctIdx]?.text;
