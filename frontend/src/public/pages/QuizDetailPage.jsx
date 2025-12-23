@@ -92,14 +92,18 @@ export default function QuizDetailPage() {
 
   const calculateScoreWithAnswers = (finalAns) => {
     let correct = 0;
+    console.log('=== CALCULATE SCORE ===');
+    console.log('finalAns:', JSON.stringify(finalAns));
     
     questions.forEach((q, idx) => {
       const answer = finalAns[idx];
+      console.log(`Q${idx}: type=${q.type}, answer=`, answer);
       
       if (q.type === 'text') {
         // Text comparison (case-insensitive)
         const userAnswer = (typeof answer === 'string' ? answer : '').toLowerCase().trim();
         const correctAnswer = (q.correct_answer || '').toLowerCase().trim();
+        console.log(`  text: user="${userAnswer}" correct="${correctAnswer}" match=${userAnswer === correctAnswer}`);
         if (userAnswer === correctAnswer) correct++;
       } else if (q.type === 'multiple') {
         // Check if all correct options are selected
@@ -107,17 +111,22 @@ export default function QuizDetailPage() {
           .map((o, i) => o.correct ? i : -1)
           .filter(i => i !== -1);
         const userIndices = Array.isArray(answer) ? [...answer] : [];
+        const sortedCorrect = [...correctIndices].sort();
+        const sortedUser = [...userIndices].sort();
+        console.log(`  multiple: correct=${JSON.stringify(sortedCorrect)} user=${JSON.stringify(sortedUser)} match=${JSON.stringify(sortedCorrect) === JSON.stringify(sortedUser)}`);
         // Compare sorted copies
-        if (JSON.stringify([...correctIndices].sort()) === JSON.stringify([...userIndices].sort())) {
+        if (JSON.stringify(sortedCorrect) === JSON.stringify(sortedUser)) {
           correct++;
         }
       } else {
         // Single choice
         const correctIdx = q.options?.findIndex(o => o.correct);
+        console.log(`  single: correctIdx=${correctIdx} answer=${answer} match=${answer === correctIdx}`);
         if (answer === correctIdx) correct++;
       }
     });
     
+    console.log(`Total correct: ${correct}/${questions.length}`);
     setFinalAnswers(finalAns); // Save for display
     setScore(correct);
     setShowResult(true);
