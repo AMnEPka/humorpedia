@@ -275,6 +275,7 @@ class NewsCreate(BaseModel):
     cover_image: Optional[MediaFile] = None
     content: Optional[str] = None
     important: bool = False
+    modules: List[ContentModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
@@ -288,6 +289,7 @@ class NewsUpdate(BaseModel):
     cover_image: Optional[MediaFile] = None
     content: Optional[str] = None
     important: Optional[bool] = None
+    modules: Optional[List[ContentModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None
     status: Optional[ContentStatus] = None
