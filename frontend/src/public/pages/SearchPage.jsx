@@ -46,7 +46,10 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (query && query.length >= 2) {
+      setSearchInput(query); // Синхронизировать input с query из URL
       performSearch(query);
+    } else {
+      setSearchInput(query || ''); // Обновить input даже если query пустой
     }
   }, [query]);
 
