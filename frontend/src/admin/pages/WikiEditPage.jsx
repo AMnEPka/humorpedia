@@ -27,7 +27,6 @@ export default function WikiEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tagInput, setTagInput] = useState('');
   const [factLabel, setFactLabel] = useState('');
   const [factValue, setFactValue] = useState('');
 
