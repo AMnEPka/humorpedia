@@ -92,18 +92,14 @@ export default function QuizDetailPage() {
 
   const calculateScoreWithAnswers = (finalAns) => {
     let correct = 0;
-    let debugInfo = [];
     
     questions.forEach((q, idx) => {
       const answer = finalAns[idx];
-      let isCorrect = false;
       
       if (q.type === 'text') {
         const userAnswer = (typeof answer === 'string' ? answer : '').toLowerCase().trim();
         const correctAnswer = (q.correct_answer || '').toLowerCase().trim();
-        isCorrect = userAnswer === correctAnswer;
-        debugInfo.push(`Q${idx}(text): user="${userAnswer}" correct="${correctAnswer}" => ${isCorrect}`);
-        if (isCorrect) correct++;
+        if (userAnswer === correctAnswer) correct++;
       } else if (q.type === 'multiple') {
         const correctIndices = q.options
           .map((o, i) => o.correct ? i : -1)
@@ -111,20 +107,14 @@ export default function QuizDetailPage() {
         const userIndices = Array.isArray(answer) ? [...answer] : [];
         const sortedCorrect = [...correctIndices].sort();
         const sortedUser = [...userIndices].sort();
-        isCorrect = JSON.stringify(sortedCorrect) === JSON.stringify(sortedUser);
-        debugInfo.push(`Q${idx}(multi): user=${JSON.stringify(sortedUser)} correct=${JSON.stringify(sortedCorrect)} => ${isCorrect}`);
-        if (isCorrect) correct++;
+        if (JSON.stringify(sortedCorrect) === JSON.stringify(sortedUser)) {
+          correct++;
+        }
       } else {
         const correctIdx = q.options?.findIndex(o => o.correct);
-        isCorrect = answer === correctIdx;
-        debugInfo.push(`Q${idx}(single): user=${answer} correct=${correctIdx} => ${isCorrect}`);
-        if (isCorrect) correct++;
+        if (answer === correctIdx) correct++;
       }
     });
-    
-    // Debug: output to console and set to window for inspection
-    console.log('DEBUG:', debugInfo.join(' | '), `Total: ${correct}/${questions.length}`);
-    window.__quizDebug = { finalAns, debugInfo, correct, total: questions.length };
     
     setFinalAnswers(finalAns);
     setScore(correct);
