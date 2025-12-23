@@ -380,11 +380,14 @@ export default function QuizEditPage() {
 
           {/* Add Question Buttons */}
           <div className="flex gap-2">
-            <Button onClick={() => addQuestion(QUESTION_TYPES.SINGLE)} className="flex-1">
-              <Plus className="mr-2 h-4 w-4" /> С выбором ответа
+            <Button onClick={() => addQuestion(QUESTION_TYPES.SINGLE)} variant="outline" className="flex-1">
+              <Plus className="mr-2 h-4 w-4" /> Один ответ
+            </Button>
+            <Button onClick={() => addQuestion(QUESTION_TYPES.MULTIPLE)} variant="outline" className="flex-1">
+              <Plus className="mr-2 h-4 w-4" /> Несколько ответов
             </Button>
             <Button onClick={() => addQuestion(QUESTION_TYPES.TEXT)} variant="outline" className="flex-1">
-              <Plus className="mr-2 h-4 w-4" /> С текстовым ответом
+              <Plus className="mr-2 h-4 w-4" /> Текстовый ответ
             </Button>
           </div>
         </TabsContent>
