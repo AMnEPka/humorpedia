@@ -158,3 +158,15 @@ export const templatesApi = {
   delete: (id) => api.delete(`/templates/${id}`),
   getModuleTypes: () => api.get('/templates/modules/types'),
 };
+
+// Sections API
+export const sectionsApi = {
+  list: (params) => api.get('/sections', { params }),
+  getTree: (params) => api.get('/sections/tree', { params }),
+  getSection: (id) => api.get(`/sections/${id}`),
+  getByPath: (path) => api.get(`/sections/path/${path}`),
+  getChildren: (id, params) => api.get(`/sections/${id}/children`, { params }),
+  createSection: (data) => api.post('/sections', data),
+  updateSection: (id, data) => api.put(`/sections/${id}`, data),
+  deleteSection: (id, cascade = false) => api.delete(`/sections/${id}`, { params: { cascade } }),
+};
