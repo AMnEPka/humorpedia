@@ -436,8 +436,9 @@ async def create_quiz(data: QuizCreate):
     await check_slug_unique("quizzes", data.slug)
     
     quiz = Quiz(
-        title=data.title, slug=data.slug, description=data.description, cover=data.cover,
-        questions=data.questions, tags=data.tags, seo=data.seo or {}, status=data.status
+        title=data.title, slug=data.slug, description=data.description,
+        cover_image=data.cover_image, modules=data.modules,
+        tags=data.tags, seo=data.seo or {}, status=data.status
     )
     return await create_content("quizzes", quiz, data.tags)
 
