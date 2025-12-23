@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, User, LogIn } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, Menu, X, User, LogIn, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,12 +22,26 @@ const staticNavigation = [
   { name: 'Контакты', href: '/contacts' },
 ];
 
+const contentTypeLabels = {
+  person: 'Персона',
+  team: 'Команда',
+  show: 'Шоу',
+  article: 'Статья',
+  news: 'Новость',
+  section: 'Раздел',
+};
+
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [menuSections, setMenuSections] = useState([]);
+  const searchRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Load sections that should appear in main menu
@@ -48,13 +62,56 @@ export default function Header() {
       });
   }, []);
 
+  useEffect(() => {
+    // Load autocomplete suggestions
+    if (searchQuery.length >= 2) {
+      setLoadingSuggestions(true);
+      const timer = setTimeout(() => {
+        publicApi.searchAutocomplete(searchQuery)
+          .then(res => {
+            setSuggestions(res.data);
+            setShowSuggestions(true);
+          })
+          .catch(err => {
+            console.error('Autocomplete error:', err);
+            setSuggestions([]);
+          })
+          .finally(() => setLoadingSuggestions(false));
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    // Close suggestions when clicking outside
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navigation = [...menuSections, ...staticNavigation];
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+      setSearchOpen(false);
+      setShowSuggestions(false);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchOpen(false);
+    setShowSuggestions(false);
+    setSearchQuery('');
+    navigate(suggestion.path);
   };
 
   return (
@@ -90,27 +147,60 @@ export default function Header() {
           {/* Search & User Actions */}
           <div className="flex items-center gap-2">
             {/* Search */}
-            <div className="relative">
+            <div className="relative" ref={searchRef}>
               {searchOpen ? (
-                <form onSubmit={handleSearch} className="flex items-center">
-                  <Input
-                    type="search"
-                    placeholder="Поиск..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-48 sm:w-64"
-                    autoFocus
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSearchOpen(false)}
-                    className="ml-1"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </form>
+                <div className="relative">
+                  <form onSubmit={handleSearch} className="flex items-center">
+                    <Input
+                      type="search"
+                      placeholder="Поиск..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-48 sm:w-64 pr-8"
+                      autoFocus
+                    />
+                    {loadingSuggestions && (
+                      <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        setShowSuggestions(false);
+                        setSearchQuery('');
+                      }}
+                      className="ml-1"
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </form>
+                  
+                  {/* Autocomplete suggestions */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full mt-2 w-full sm:w-96 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto">
+                      {suggestions.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleSuggestionClick(item)}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 truncate">
+                                {item.title}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {contentTypeLabels[item.type] || item.type}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Button
                   variant="ghost"
