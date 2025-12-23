@@ -89,7 +89,11 @@ export default function NewsDetailPage() {
         {news.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {news.tags.map((tag, i) => (
-              <Badge key={i} variant="secondary">{tag}</Badge>
+              <Link key={i} to={`/tags/${encodeURIComponent(tag)}`}>
+                <Badge variant="secondary" className="cursor-pointer hover:bg-blue-100">
+                  {tag}
+                </Badge>
+              </Link>
             ))}
           </div>
         )}
