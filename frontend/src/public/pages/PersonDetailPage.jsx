@@ -243,14 +243,27 @@ export default function PersonDetailPage() {
           {person.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {person.tags.map((tag, i) => (
-                <Badge key={i} variant="secondary" className="text-sm px-3 py-1">{tag}</Badge>
+                <Link key={i} to={`/tags/${encodeURIComponent(tag)}`}>
+                  <Badge variant="secondary" className="text-sm px-3 py-1 cursor-pointer hover:bg-blue-100">
+                    {tag}
+                  </Badge>
+                </Link>
               ))}
             </div>
           )}
 
+          {/* Bio */}
+          {person.bio && (
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-gray-700 leading-relaxed">{person.bio}</p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Modules */}
           {person.modules?.map((module, i) => (
-            <ModuleRenderer key={i} module={module} />
+            <ModuleRenderer key={i} module={module} index={i} />
           ))}
         </div>
       </div>
