@@ -24,6 +24,7 @@ export default function QuizDetailPage() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [finalAnswers, setFinalAnswers] = useState({}); // Store final answers for results display
 
   useEffect(() => {
     publicApi.getQuiz(slug)
