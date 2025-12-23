@@ -122,52 +122,32 @@ export default function ArticleDetailPage() {
         </div>
       )}
 
-      {/* Content */}
-      <div 
-        className="prose prose-lg prose-blue max-w-none"
-        dangerouslySetInnerHTML={{ __html: article.content || '' }}
-      />
-
       {/* Modules */}
-      {article.modules?.map((module, i) => (
-        <div key={i} className="mt-8">
-          <ModuleRenderer module={module} />
-        </div>
-      ))}
+      {article.modules && article.modules.length > 0 ? (
+        <ModuleList modules={article.modules} />
+      ) : article.content ? (
+        <div 
+          className="prose prose-lg prose-blue max-w-none"
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
+      ) : null}
 
       {/* Share */}
       <div className="mt-12 pt-8 border-t">
-        <Button variant="outline" onClick={() => navigator.share?.({ url: window.location.href, title: article.title })}>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({ url: window.location.href, title: article.title });
+            } else {
+              navigator.clipboard.writeText(window.location.href);
+              alert('Ссылка скопирована!');
+            }
+          }}
+        >
           <Share2 className="mr-2 h-4 w-4" /> Поделиться
         </Button>
       </div>
     </article>
   );
-}
-
-function ModuleRenderer({ module }) {
-  switch (module.type) {
-    case 'gallery':
-      return (
-        <div className="not-prose">
-          <h3 className="text-xl font-bold mb-4">{module.data?.title || 'Галерея'}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {module.data?.images?.map((img, i) => (
-              <img key={i} src={img.url} alt={img.caption || ''} className="rounded-lg" />
-            ))}
-          </div>
-        </div>
-      );
-    case 'quote':
-      return (
-        <blockquote className="border-l-4 border-blue-500 pl-6 my-8 italic text-gray-700">
-          {module.data?.text}
-          {module.data?.author && (
-            <cite className="block mt-2 text-sm text-gray-500 not-italic">— {module.data.author}</cite>
-          )}
-        </blockquote>
-      );
-    default:
-      return null;
-  }
 }
