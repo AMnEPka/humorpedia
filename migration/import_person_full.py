@@ -43,10 +43,15 @@ def parse_date(date_str):
     return None
 
 def strip_html(html):
-    """Strip HTML tags"""
+    """Strip HTML tags and clean text"""
     if not html:
         return ""
+    # Remove HTML tags
     clean = re.sub(r'<[^>]+>', '', html)
+    # Replace &nbsp; and other entities
+    clean = clean.replace('&nbsp;', ' ').replace('&mdash;', '—').replace('&ndash;', '–')
+    # Remove \r\n and normalize whitespace
+    clean = clean.replace('\\r\\n', ' ').replace('\r\n', ' ').replace('\\n', ' ').replace('\n', ' ')
     clean = re.sub(r'\s+', ' ', clean).strip()
     return clean
 
@@ -127,13 +132,14 @@ def convert_to_person(modx_record, tv_data, image_mapping=None):
     
     modules = []
     
-    # Add bio module
+    # Add bio module with title if there's content
     if bio_text:
         modules.append({
-            "type": "text",
+            "type": "text_block",
             "data": {
-                "content": bio_text,
-                "content_html": bio_html
+                "title": "Биография",
+                "content": bio_html,
+                "content_text": bio_text
             }
         })
     
@@ -174,7 +180,7 @@ def convert_to_person(modx_record, tv_data, image_mapping=None):
         "title": modx_record.get('pagetitle', '').strip(),
         "slug": modx_record.get('alias', '').strip(),
         "description": modx_record.get('description', '').strip(),
-        "bio": bio_text[:500] if bio_text else "",
+        "bio": "",  # Don't duplicate bio in separate field
         "birth_date": birth_date,
         "birth_place": tv_data.get('table-value3', ''),
         "cover_image": cover_image,
