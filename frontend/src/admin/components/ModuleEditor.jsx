@@ -154,7 +154,6 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalModule({ ...module, data: { ...module.data } });
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalModule(null);
     }
   }, [module]);
