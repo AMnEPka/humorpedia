@@ -235,7 +235,7 @@ def create_person_document(
         'image': image_url,
         'seo': {
             'meta_title': title,
-            'meta_description': bio_content[:160] if bio_content else ''
+            'meta_description': normalize_rich_text(bio_content)[:160] if bio_content else ''
         }
     }
 
