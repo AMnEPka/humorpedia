@@ -127,10 +127,10 @@ export default function PersonDetailPage() {
           <Card>
             <CardContent className="p-6">
               <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                {person.cover_image?.url ? (
+                {(person.cover_image?.url || person.image) ? (
                   <img 
-                    src={person.cover_image.url} 
-                    alt={person.cover_image.alt || person.full_name || person.title}
+                    src={person.cover_image?.url || person.image} 
+                    alt={person.cover_image?.alt || person.full_name || person.title}
                     className="w-full h-full object-cover"
                   />
                 ) : (
