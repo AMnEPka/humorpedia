@@ -177,7 +177,7 @@ def create_person_document(
             'visible': True,
             'data': {
                 'title': 'Биография',
-                'content': bio_content
+                'content': normalize_rich_text(bio_content)
             }
         })
     
