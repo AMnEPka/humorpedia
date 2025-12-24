@@ -776,7 +776,7 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
 
   const deleteModule = useCallback((id) => {
     onChange(modules.filter((m) => m.id !== id));
-  }, [onChange]);
+  }, [modules, onChange]);
 
   const openEditDialog = useCallback((module) => {
     setEditingModuleId(module.id);
