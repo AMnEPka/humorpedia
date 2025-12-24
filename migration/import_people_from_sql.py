@@ -666,7 +666,7 @@ def main():
 
     print(f"Собрано документов: {len(docs)}")
 
-    if not args.apply:
+    if args.dry_run or not args.apply:
         # короткий отчёт
         for cid, doc in docs[:10]:
             tl = [m for m in doc.get("modules", []) if m.get("type") == "timeline"]
