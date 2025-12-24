@@ -622,7 +622,8 @@ def main():
     parser.add_argument("--ids", nargs="*", type=int, help="MODX content IDs")
     parser.add_argument("--from-list", action="store_true", help="Взять IDs из people_list.json")
     parser.add_argument("--limit", type=int, default=10, help="Сколько взять из списка")
-    parser.add_argument("--apply", action="store_true", help="Записать в MongoDB (иначе dry-run)")
+    parser.add_argument("--apply", action="store_true", help="Записать в MongoDB")
+    parser.add_argument("--dry-run", action="store_true", help="Только собрать и показать краткий отчёт (по умолчанию)")
     parser.add_argument("--update", action="store_true", help="Обновлять существующие записи")
 
     args = parser.parse_args()
