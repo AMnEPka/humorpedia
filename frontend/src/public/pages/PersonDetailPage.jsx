@@ -479,7 +479,7 @@ function ModuleRenderer({ module, index }) {
           <CardContent>
             <div 
               className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
+              dangerouslySetInnerHTML={{ __html: normalizeRichText(module.data?.content || '') }}
             />
           </CardContent>
         </Card>
