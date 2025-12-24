@@ -11,15 +11,21 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
   const items = useMemo(() => {
     if (!modules || modules.length === 0) return [];
     
-    // For person pages, extract from timeline modules
+    // For person pages, extract events from timeline modules
     if (contentType === 'person') {
-      return modules
-        .filter(m => m.type === 'timeline')
-        .map((m, idx) => ({
-          id: `timeline-${idx}`,
-          label: m.data?.period || `Период ${idx + 1}`,
-          title: m.data?.title || 'Без названия'
-        }));
+      const timelineItems = [];
+      modules.forEach((m, moduleIdx) => {
+        if (m.type === 'timeline' && m.data?.events) {
+          m.data.events.forEach((event, eventIdx) => {
+            timelineItems.push({
+              id: `timeline-${moduleIdx}-event-${eventIdx}`,
+              label: event.year || event.date || `Событие ${eventIdx + 1}`,
+              title: event.title || 'Без названия'
+            });
+          });
+        }
+      });
+      return timelineItems;
     }
     
     // For other content, extract from text_block modules with titles
