@@ -36,7 +36,7 @@
     "slug": "sergey-drobotenko",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/anshlag/sergey-drobotenko.png"
   },
   {
@@ -46,7 +46,7 @@
     "slug": "shastun-i-makar",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/shastun-makar.jpg"
   },
   {
@@ -56,7 +56,7 @@
     "slug": "anton-shastun",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/improv-teams/anton-shastun1.jpg"
   },
   {
@@ -66,7 +66,7 @@
     "slug": "phil-voronin",
     "parent": 102,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/kvn/phil-voronin1.jpg"
   },
   {
@@ -76,7 +76,7 @@
     "slug": "timur-babyak",
     "parent": 102,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/babyak.jpg"
   },
   {
@@ -86,7 +86,7 @@
     "slug": "angelina-doroshenkova",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/doroshenkova.jpg"
   },
   {
@@ -96,7 +96,7 @@
     "slug": "mark-sergienko",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/mark-sergienko1.jpg"
   },
   {
@@ -106,7 +106,7 @@
     "slug": "dmitry-zhuravlev",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/kvn/dmitry-zhuravlev1.jpg"
   },
   {
@@ -116,7 +116,7 @@
     "slug": "igor-pimenov",
     "parent": 30,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/kvn/pimenov2.png"
   },
   {
@@ -126,7 +126,7 @@
     "slug": "alexander-shabanov",
     "parent": 102,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/kvn/alexander-shabanov1.jpg"
   },
   {
@@ -2056,7 +2056,7 @@
     "slug": "alexander-maslyakov",
     "parent": 102,
     "published": true,
-    "status": "imported",
+    "status": "pending",
     "image": "images/people/kvn/maslyakov2.jpeg"
   },
   {
