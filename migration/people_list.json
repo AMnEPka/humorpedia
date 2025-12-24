@@ -6,7 +6,7 @@
     "slug": "kvn-people",
     "parent": 30,
     "published": false,
-    "status": "pending",
+    "status": "imported",
     "image": null
   },
   {
@@ -16,7 +16,7 @@
     "slug": "liga-gorodov-people",
     "parent": 30,
     "published": false,
-    "status": "pending",
+    "status": "imported",
     "image": null
   },
   {
@@ -26,7 +26,7 @@
     "slug": "kvn-vyisshaya-liga-2024",
     "parent": 30,
     "published": false,
-    "status": "pending",
+    "status": "imported",
     "image": null
   },
   {
@@ -36,7 +36,7 @@
     "slug": "sergey-drobotenko",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/anshlag/sergey-drobotenko.png"
   },
   {
@@ -56,7 +56,7 @@
     "slug": "anton-shastun",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/improv-teams/anton-shastun1.jpg"
   },
   {
@@ -66,7 +66,7 @@
     "slug": "phil-voronin",
     "parent": 102,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/kvn/phil-voronin1.jpg"
   },
   {
@@ -76,7 +76,7 @@
     "slug": "timur-babyak",
     "parent": 102,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/babyak.jpg"
   },
   {
@@ -86,7 +86,7 @@
     "slug": "angelina-doroshenkova",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/doroshenkova.jpg"
   },
   {
@@ -96,7 +96,7 @@
     "slug": "mark-sergienko",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/mark-sergienko1.jpg"
   },
   {
@@ -106,7 +106,7 @@
     "slug": "dmitry-zhuravlev",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/kvn/dmitry-zhuravlev1.jpg"
   },
   {
