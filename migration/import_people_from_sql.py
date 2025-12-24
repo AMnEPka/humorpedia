@@ -503,12 +503,17 @@ def _social_from_migx_sections(sections: list[dict]) -> dict[str, str]:
         raw = sec.get("list_social")
         if not raw:
             return {}
-        s = normalize_rich_text(raw)
-        s = s.replace("\\\"", '"').replace("\\/", "/")
-        try:
-            arr = json.loads(s)
-        except Exception:
-            return {}
+
+        if isinstance(raw, list):
+            arr = raw
+        else:
+            s = normalize_rich_text(str(raw))
+            s = s.replace("\\\"", '"').replace("\\/", "/")
+            try:
+                arr = json.loads(s)
+            except Exception:
+                return {}
+
         links = {}
         for item in arr:
             if not isinstance(item, dict):
