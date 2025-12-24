@@ -148,112 +148,158 @@ export default function PersonDetailPage() {
                 )}
               </div>
               
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{person.full_name || person.title}</h1>
+              {/* Short name without patronymic */}
+              <h1 className="text-2xl font-bold text-gray-900 mb-3">{person.title}</h1>
               
-              {/* Biography info */}
-              <div className="space-y-3 text-sm">
-                {person.birth_date && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Calendar className="h-4 w-4 flex-shrink-0" />
-                    <span>
-                      {new Date(person.birth_date).toLocaleDateString('ru-RU', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                      {' '}
-                      ({(() => {
-                        const birthDate = new Date(person.birth_date);
-                        const today = new Date();
-                        let age = today.getFullYear() - birthDate.getFullYear();
-                        const monthDiff = today.getMonth() - birthDate.getMonth();
-                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                          age--;
-                        }
-                        return `${age} ${age % 10 === 1 && age % 100 !== 11 ? 'год' : age % 10 >= 2 && age % 10 <= 4 && (age % 100 < 10 || age % 100 >= 20) ? 'года' : 'лет'}`;
-                      })()})
-                    </span>
-                  </div>
-                )}
-                {person.birth_place && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="h-4 w-4 flex-shrink-0" />
-                    <span>{person.birth_place}</span>
-                  </div>
-                )}
-                {person.social_links && Object.keys(person.social_links).length > 0 && (
-                  <div className="pt-2 border-t">
-                    <div className="flex gap-2">
-                      {person.social_links.vk && (
-                        <a 
-                          href={person.social_links.vk} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700 text-sm"
-                        >
-                          VK
-                        </a>
-                      )}
-                      {person.social_links.instagram && (
-                        <a 
-                          href={person.social_links.instagram} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-pink-600 hover:text-pink-700 text-sm"
-                        >
-                          Instagram
-                        </a>
-                      )}
-                      {person.social_links.youtube && (
-                        <a 
-                          href={person.social_links.youtube} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-red-600 hover:text-red-700 text-sm"
-                        >
-                          YouTube
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Social links as icons */}
+              {person.social_links && Object.keys(person.social_links).length > 0 && (
+                <div className="flex gap-3 mb-4">
+                  {person.social_links.vk && (
+                    <a 
+                      href={person.social_links.vk} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors"
+                      title="VKontakte"
+                    >
+                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.596-.19 1.365 1.26 2.18 1.817.616.422 1.084.33 1.084.33l2.177-.03s1.137-.07.598-.964c-.044-.073-.314-.661-1.618-1.869-1.366-1.264-1.183-1.06.462-3.246.998-1.328 1.398-2.139 1.273-2.485-.12-.33-.856-.243-.856-.243l-2.453.015s-.182-.025-.317.056c-.132.078-.217.26-.217.26s-.39 1.04-.91 1.924c-1.097 1.867-1.536 1.966-1.716 1.85-.42-.271-.315-1.087-.315-1.666 0-1.812.275-2.568-.533-2.764-.27-.065-.467-.108-1.154-.115-.882-.009-1.628.003-2.05.209-.28.138-.497.443-.365.46.163.022.532.099.728.365.253.343.244 1.114.244 1.114s.145 2.132-.34 2.397c-.333.181-.788-.189-1.767-1.884-.502-.867-.88-1.826-.88-1.826s-.073-.179-.203-.275c-.158-.118-.378-.155-.378-.155l-2.334.015s-.35.01-.478.162c-.115.136-.009.417-.009.417s1.838 4.302 3.92 6.47c1.907 1.987 4.073 1.857 4.073 1.857l.988-.001z"/>
+                      </svg>
+                    </a>
+                  )}
+                  {person.social_links.telegram && (
+                    <a 
+                      href={person.social_links.telegram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#26A5E4] hover:bg-[#1E96D1] transition-colors"
+                      title="Telegram"
+                    >
+                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                      </svg>
+                    </a>
+                  )}
+                  {person.social_links.instagram && (
+                    <a 
+                      href={person.social_links.instagram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#FFDC80] via-[#F56040] to-[#C13584] hover:opacity-90 transition-opacity"
+                      title="Instagram"
+                    >
+                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                    </a>
+                  )}
+                  {person.social_links.youtube && (
+                    <a 
+                      href={person.social_links.youtube} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FF0000] hover:bg-[#CC0000] transition-colors"
+                      title="YouTube"
+                    >
+                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                    </a>
+                  )}
+                  {person.social_links.twitter && (
+                    <a 
+                      href={person.social_links.twitter} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-black hover:bg-gray-800 transition-colors"
+                      title="X (Twitter)"
+                    >
+                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              )}
               
-              {/* Rating */}
-              {person.rating && (
-                <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-5 w-5 ${
-                            star <= Math.round(person.rating.average / 2)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
+              {/* Rating display */}
+              {person.rating && person.rating.average > 0 && (
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-5 w-5 ${
+                          star <= Math.round(person.rating.average / 2)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {person.rating.average > 0 ? (
-                      <>
-                        <span className="font-semibold">{person.rating.average.toFixed(1)}</span> из 10
-                        <span className="text-gray-400"> • </span>
-                        {person.rating.count} {person.rating.count === 1 ? 'оценка' : person.rating.count < 5 ? 'оценки' : 'оценок'}
-                      </>
-                    ) : (
-                      <span>Ещё нет оценок</span>
-                    )}
-                  </div>
+                  <span className="text-sm text-gray-600">
+                    <span className="font-semibold">{person.rating.average.toFixed(1)}</span> из 10
+                    <span className="text-gray-400"> • </span>
+                    {person.rating.count} {person.rating.count === 1 ? 'оценка' : person.rating.count < 5 ? 'оценки' : 'оценок'}
+                  </span>
                 </div>
               )}
 
               {/* Share */}
-              <Button variant="outline" className="w-full mt-4" onClick={() => navigator.share?.({ url: window.location.href, title: person.title })}>
+              <Button variant="outline" className="w-full mb-4" onClick={() => navigator.share?.({ url: window.location.href, title: person.title })}>
                 <Share2 className="mr-2 h-4 w-4" /> Поделиться
               </Button>
+
+              {/* Info table */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y">
+                    {person.full_name && (
+                      <tr>
+                        <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium w-1/3">Полное имя</td>
+                        <td className="px-3 py-2">{person.full_name}</td>
+                      </tr>
+                    )}
+                    {(person.birth_date || person.bio?.birth_date) && (
+                      <tr>
+                        <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Дата рождения</td>
+                        <td className="px-3 py-2">
+                          {(() => {
+                            const dateStr = person.birth_date || person.bio?.birth_date;
+                            const birthDate = new Date(dateStr);
+                            const today = new Date();
+                            let age = today.getFullYear() - birthDate.getFullYear();
+                            const monthDiff = today.getMonth() - birthDate.getMonth();
+                            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                              age--;
+                            }
+                            const ageText = `${age} ${age % 10 === 1 && age % 100 !== 11 ? 'год' : age % 10 >= 2 && age % 10 <= 4 && (age % 100 < 10 || age % 100 >= 20) ? 'года' : 'лет'}`;
+                            const dateText = birthDate.toLocaleDateString('ru-RU', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            });
+                            return `${dateText} (${ageText})`;
+                          })()}
+                        </td>
+                      </tr>
+                    )}
+                    {(person.birth_place || person.bio?.birth_place) && (
+                      <tr>
+                        <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Место рождения</td>
+                        <td className="px-3 py-2">г. {person.birth_place || person.bio?.birth_place}</td>
+                      </tr>
+                    )}
+                    {/* Custom fields from bio.extra_fields */}
+                    {person.bio?.extra_fields && Object.entries(person.bio.extra_fields).map(([key, value]) => (
+                      <tr key={key}>
+                        <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">{key}</td>
+                        <td className="px-3 py-2">{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
 
