@@ -433,11 +433,11 @@ function ModuleRenderer({ module, index }) {
               hasHtmlTags(module.data.content) ? (
                 <div
                   className="prose prose-sm max-w-none text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: module.data.content }}
+                  dangerouslySetInnerHTML={{ __html: normalizeRichText(module.data.content) }}
                 />
               ) : (
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {module.data.content}
+                  {normalizeRichText(module.data.content)}
                 </p>
               )
             ) : null}
