@@ -470,12 +470,18 @@ def _timeline_from_migx_sections(sections: list[dict]) -> list[dict]:
         if isinstance(list_triple, list):
             arr = list_triple
         else:
-            raw = normalize_rich_text(str(list_triple))
-            raw = raw.replace("\\\"", '"').replace("\\/", "/")
+            # list_triple обычно валидный JSON, но внутри есть HTML с экранированием \".
+            # НЕЛЬЗЯ делать replace(\\\" -> ") до json.loads — это ломает JSON.
+            raw = str(list_triple)
             try:
                 arr = json.loads(raw)
             except Exception:
-                return []
+                # fallback: иногда встречаются реальные CRLF
+                raw = raw.replace("\r\n", "\\n").replace("\r", "\\n").replace("\n", "\\n")
+                try:
+                    arr = json.loads(raw)
+                except Exception:
+                    return []
 
         events = []
         for item in arr:
