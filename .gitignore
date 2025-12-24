@@ -94,3 +94,7 @@ frontend/node_modules/.cache/default-development/7.pack
 modx_new.sql
 modx_new.sql.gz
 humorbd.sql
+-e 
+# Environment files
+*.env
+*.env.*
