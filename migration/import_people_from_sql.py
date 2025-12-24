@@ -559,9 +559,8 @@ def build_person_doc(
         if tv_name:
             tv_named[tv_name] = val
 
-    sections = []
-    if "migx" in tv_named:
-        sections = _parse_migx(tv_named.get("migx", ""))
+    # В этом дампе MIGX-страницы людей лежат в TV `config`
+    sections = _parse_migx(tv_named.get("config", ""))
 
     # биография
     bio_html, bd, bp, social = _bio_from_migx_sections(sections)
