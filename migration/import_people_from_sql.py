@@ -623,6 +623,7 @@ def build_person_doc(
     if image_url and not image_url.startswith("/"):
         image_url = image_map.get(image_url)
 
+    # базовый документ (биография + хронология)
     doc = create_person_document(
         title=sc.pagetitle,
         slug=sc.alias,
@@ -637,12 +638,39 @@ def build_person_doc(
         image_url=image_url,
     )
 
+    # дополнительный текстовый модуль (например "Личная жизнь")
+    if personal_html:
+        modules = doc.get('modules') or []
+        # вставляем вторым блоком, перед таймлайном
+        modules.insert(
+            1,
+            {
+                'id': str(__import__('uuid').uuid4()),
+                'type': 'text_block',
+                'order': 2,
+                'title': None,
+                'visible': True,
+                'data': {
+                    'title': 'Личная жизнь',
+                    'content': personal_html,
+                },
+            },
+        )
+        # поправим order, чтобы шёл текст, текст, таймлайн...
+        for idx, m in enumerate(modules):
+            m['order'] = idx + 1
+        doc['modules'] = modules
+
     # create_person_document кладёт birth_date/birth_place внутрь bio; для совместимости
     # дублируем поля наверх, как в текущих данных
     if bd:
         doc["birth_date"] = bd
     if bp:
-        doc["birth_place"] = bp
+        # убираем ведущие "г." (город) из места рождения
+        bp_clean = bp.strip()
+        if bp_clean.lower().startswith('г.'):
+            bp_clean = bp_clean[2:].strip()
+        doc["birth_place"] = bp_clean
 
     return doc
 
