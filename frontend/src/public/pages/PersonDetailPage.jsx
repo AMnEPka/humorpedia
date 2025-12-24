@@ -351,6 +351,8 @@ export default function PersonDetailPage() {
 
 // Module renderer component
 function ModuleRenderer({ module, index }) {
+  const hasHtmlTags = (value) => typeof value === 'string' && /<[^>]+>/.test(value);
+
   switch (module.type) {
     case 'timeline':
       return (
@@ -389,7 +391,14 @@ function ModuleRenderer({ module, index }) {
                       </div>
                       <div className="font-medium">{event.title}</div>
                       {event.description && (
-                        <p className="text-gray-600 text-sm mt-1">{event.description}</p>
+                        hasHtmlTags(event.description) ? (
+                          <div
+                            className="prose prose-sm max-w-none text-gray-600 mt-1"
+                            dangerouslySetInnerHTML={{ __html: event.description }}
+                          />
+                        ) : (
+                          <p className="text-gray-600 text-sm mt-1 whitespace-pre-line">{event.description}</p>
+                        )
                       )}
                     </div>
                   </div>
@@ -401,9 +410,16 @@ function ModuleRenderer({ module, index }) {
                 dangerouslySetInnerHTML={{ __html: module.data.content_html }}
               />
             ) : module.data?.content ? (
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {module.data.content}
-              </p>
+              hasHtmlTags(module.data.content) ? (
+                <div
+                  className="prose prose-sm max-w-none text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: module.data.content }}
+                />
+              ) : (
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {module.data.content}
+                </p>
+              )
             ) : null}
           </CardContent>
         </Card>
@@ -417,6 +433,11 @@ function ModuleRenderer({ module, index }) {
               <div 
                 className="prose prose-sm max-w-none text-gray-700"
                 dangerouslySetInnerHTML={{ __html: module.data.content_html }}
+              />
+            ) : hasHtmlTags(module.data?.content) ? (
+              <div
+                className="prose prose-sm max-w-none text-gray-700"
+                dangerouslySetInnerHTML={{ __html: module.data.content }}
               />
             ) : (
               <p className="text-gray-700 leading-relaxed whitespace-pre-line">
