@@ -450,3 +450,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Завершил подключение всех страниц админ-панели в App.js. Все страницы (Shows, Articles, News, Quizzes, Wiki, Media, Tags, Comments, Users, Templates) теперь используют реальные компоненты вместо PlaceholderPage. Проверил через скриншоты - Dashboard, Shows, Media, Users, Templates - все работают. Нужно полное тестирование CRUD операций для всех типов контента."
+  - agent: "testing"
+    message: "Протестировал публичные страницы людей после реимпорта. Страницы /people/shastun-i-makar и /people/irina-chesnokova загружаются корректно. Биография и хронология отображаются с правильным HTML-форматированием без литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP запросы с HTTPS страницы), но это не влияет на основной контент страниц."
