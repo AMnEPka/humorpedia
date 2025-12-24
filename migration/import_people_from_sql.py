@@ -409,12 +409,10 @@ def _parse_migx(value: str) -> list[dict]:
     # нормализуем самые частые артефакты
     raw = raw.replace("\\r\\n", "\n").replace("\\r", "\n")
 
-    # иногда строка уже JSON; иногда закодирована как строка JSON внутри SQL
-    # попробуем несколько раз раскодировать.
-    for _ in range(3):
+    # иногда строка уже JSON; иногда JSON сохранён как строка с экранированием
+    for _ in range(5):
         try:
             data = json.loads(raw)
-            # если вдруг это строка, а не массив — продолжаем
             if isinstance(data, str):
                 raw = data
                 continue
@@ -424,8 +422,8 @@ def _parse_migx(value: str) -> list[dict]:
         except Exception:
             pass
 
-        # попытка «разэкранировать»
-        raw = raw.replace("\\\"", '"').replace("\\/", "/")
+        # Разэкраниваем кавычки/слеши (типичный формат: [{\"key\":...}])
+        raw = raw.replace('\\"', '"').replace('\\/', '/')
 
     return []
 
