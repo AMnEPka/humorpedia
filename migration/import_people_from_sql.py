@@ -696,7 +696,11 @@ def main():
         for cid, doc in docs[:10]:
             tl = [m for m in doc.get("modules", []) if m.get("type") == "timeline"]
             tl_count = len((tl[0].get("data", {}) or {}).get("events", [])) if tl else 0
-            print(f"- id={cid} slug={doc.get('slug')} bio={'text_block' in [m.get('type') for m in doc.get('modules', [])]} timeline_events={tl_count}")
+            has_bio = any(
+                m.get("type") == "text_block" and (m.get("data", {}) or {}).get("title") == "Биография"
+                for m in doc.get("modules", [])
+            )
+            print(f"- id={cid} slug={doc.get('slug')} bio={has_bio} timeline_events={tl_count}")
         print("DRY RUN (ничего не записано)")
         return
 
