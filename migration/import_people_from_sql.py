@@ -566,8 +566,15 @@ def build_person_doc(
     # биография
     bio_html, bd, bp, social = _bio_from_migx_sections(sections)
     if not bio_html:
-        # fallback: description
-        if sc.description:
+        # У части карточек bio лежит в subtitle (а content пустой)
+        subtitle = ""
+        for sec in sections:
+            if sec.get("MIGX_formname") == "info" and sec.get("subtitle"):
+                subtitle = normalize_rich_text(str(sec.get("subtitle")))
+                break
+        if subtitle:
+            bio_html = subtitle
+        elif sc.description:
             bio_html = f"<p>{normalize_rich_text(sc.description)}</p>"
 
     # birth_date/birth_place fallback: иногда прямыми TV
