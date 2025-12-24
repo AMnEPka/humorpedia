@@ -27,9 +27,16 @@ def normalize_rich_text(value: str) -> str:
     value = value.replace('\\r\\n', '\n').replace('\\r', '\n')
     value = value.replace('\\n', '\n')
 
+    # Иногда HTML-кусок приходит со слешами как "</p>\<p>" или "</p>\\<p>"
+    value = value.replace('>\\<', '><')
+
+    # Иногда встречается "\n" в виде "\\\n" (обратный слеш + перевод строки)
+    value = value.replace('\\\n', '\n')
+
     # 3) Экранированные кавычки и слеши внутри HTML-атрибутов/тегов
-    value = value.replace('\\"', '"')
-    value = value.replace("\\'", "'")
+    #    (встречается одинарное и двойное экранирование)
+    value = value.replace('\\\\"', '"').replace('\\"', '"')
+    value = value.replace("\\\\'", "'").replace("\\'", "'")
     value = value.replace('\\/', '/')
 
     # 4) Иногда попадаются лишние обратные слэши перед < или >
