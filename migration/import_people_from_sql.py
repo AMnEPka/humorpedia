@@ -532,17 +532,36 @@ def _social_from_migx_sections(sections: list[dict]) -> dict[str, str]:
     return {}
 
 
-def _bio_from_migx_sections(sections: list[dict]) -> tuple[str, str | None, str | None, dict[str, str]]:
-    """Возвращает: (bio_html, birth_date_iso, birth_place, social_links)."""
+def _bio_from_migx_sections(sections: list[dict]) -> tuple[str, str, str | None, str | None, dict[str, str]]:
+    """Возвращает: (bio_html, personal_html, birth_date_iso, birth_place, social_links).
+
+    В дампе часто бывает 2 блока текста:
+    - info.content (часто это "личная жизнь" или краткий абзац)
+    - info.subtitle (часто это "биография" / основной текст)
+
+    Мы сохраняем оба отдельными модулями, чтобы их можно было редактировать.
+    """
     for sec in sections:
         if sec.get("MIGX_formname") != "info":
             continue
-        bio_html = sec.get("content") or ""
+
+        content_html = normalize_rich_text(sec.get("content") or "")
+        subtitle_html = normalize_rich_text(sec.get("subtitle") or "")
+
+        # эвристика:
+        # - subtitle обычно длиннее и чаще является "биографией"
+        # - content часто короче и может быть "личной жизнью" или доп. блоком
+        bio_html = subtitle_html or content_html
+        personal_html = ""
+        if subtitle_html and content_html and content_html != subtitle_html:
+            personal_html = content_html
+
         table_html = sec.get("table") or ""
         birth_date, birth_place = _parse_table_birth(table_html)
-        return normalize_rich_text(bio_html), birth_date, birth_place, _social_from_migx_sections(sections)
 
-    return "", None, None, {}
+        return bio_html, personal_html, birth_date, birth_place, _social_from_migx_sections(sections)
+
+    return "", "", None, None, {}
 
 
 def _tags_from_keywords(keywords: str) -> list[str]:
