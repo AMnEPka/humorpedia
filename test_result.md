@@ -262,6 +262,18 @@ backend:
         comment: "Templates CRUD for content types"
 
 frontend:
+  - task: "Public Person Pages"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/public/pages/PersonDetailPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Протестированы страницы /people/shastun-i-makar и /people/irina-chesnokova. Биография и хронология отображаются корректно с HTML-форматированием. Нет литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP/HTTPS), но основной контент работает."
+
   - task: "Login Page"
     implemented: true
     working: true
