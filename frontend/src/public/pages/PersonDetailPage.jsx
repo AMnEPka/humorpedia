@@ -223,39 +223,18 @@ export default function PersonDetailPage() {
                 </div>
               )}
               
-              {/* Rating display with 10 emoji faces */}
+              {/* Rating display with EmojiRating component */}
               {person.rating && (
                 <div className="mb-4">
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    {['😢', '😞', '😕', '😐', '🙂', '😊', '😄', '😁', '🤩', '🥳'].map((emoji, index) => {
-                      const score = index + 1;
-                      const isActive = score <= Math.round(person.rating.average);
-                      return (
-                        <button
-                          key={score}
-                          className={`w-7 h-7 flex items-center justify-center rounded transition-all ${
-                            isActive 
-                              ? 'opacity-100 scale-110' 
-                              : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-0'
-                          }`}
-                          title={`Оценка ${score}`}
-                        >
-                          <span className="text-lg">{emoji}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="text-sm text-gray-600 text-center">
-                    {person.rating.average > 0 ? (
-                      <>
-                        <span className="font-semibold">{person.rating.average.toFixed(1)}</span> из 10
-                        <span className="text-gray-400"> • </span>
-                        {person.rating.count} {person.rating.count === 1 ? 'оценка' : person.rating.count < 5 ? 'оценки' : 'оценок'}
-                      </>
-                    ) : (
-                      <span>Ещё нет оценок</span>
-                    )}
-                  </div>
+                  <EmojiRating
+                    value={person.rating.average}
+                    readOnly
+                    count={person.rating.count}
+                    size={24}
+                    emojis={['😡', '😠', '😟', '😕', '😐', '🙂', '😊', '😃', '😄', '🤩']}
+                    showValue={true}
+                    valueFormat="fraction"
+                  />
                 </div>
               )}
 
