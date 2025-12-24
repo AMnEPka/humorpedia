@@ -373,7 +373,8 @@ function ModuleRenderer({ module, index }) {
 
   const hasHtmlTags = (value) => {
     const v = normalizeRichText(value);
-    return typeof v === 'string' && /<[^>]+>/.test(v);
+    // Detect both real tags and leftovers like <a> or </p>
+    return typeof v === 'string' && /<\s*\/?\s*[a-zA-Z][^>]*>/.test(v);
   };
 
   switch (module.type) {
