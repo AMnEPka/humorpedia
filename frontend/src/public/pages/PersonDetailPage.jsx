@@ -333,7 +333,11 @@ function ModuleRenderer({ module, index }) {
             {module.data?.events && module.data.events.length > 0 ? (
               <div className="space-y-4">
                 {module.data.events.map((event, i) => (
-                  <div key={i} className="flex gap-4">
+                  <div 
+                    key={i} 
+                    id={`timeline-${index}-event-${i}`}
+                    className="flex gap-4 scroll-mt-4"
+                  >
                     <div className="flex flex-col items-center">
                       <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
                       {i < module.data.events.length - 1 && (
