@@ -45,17 +45,13 @@ MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'humorpedia')
 
 def clean_html(text):
-    """Очистка HTML-сущностей и нормализация текста"""
-    if not text:
-        return ""
-    text = unescape(text)
-    text = text.replace('\\r\\n', '\n').replace('\\r', '\n').replace('\\n', '\n')
-    text = text.replace('&nbsp;', ' ')
-    text = text.replace('&ndash;', '–')
-    text = text.replace('&mdash;', '—')
-    text = text.replace('&laquo;', '«')
-    text = text.replace('&raquo;', '»')
-    return text.strip()
+    """Очистка HTML-сущностей и нормализация текста.
+
+    NB: В миграции мы часто получаем HTML как строку с экранированиями (\\r\\n, \\" и т.п.).
+    Для этого используем normalize_rich_text.
+    """
+    return normalize_rich_text(text)
+
 
 
 def extract_ratings_from_sql(sql_file, resource_id):
