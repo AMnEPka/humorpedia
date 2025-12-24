@@ -138,7 +138,7 @@ export default function PersonDetailPage() {
                   <img 
                     src={person.cover_image?.url || person.image} 
                     alt={person.cover_image?.alt || person.full_name || person.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
