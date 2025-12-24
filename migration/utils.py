@@ -9,6 +9,37 @@ from uuid import uuid4
 from html import unescape
 from datetime import datetime, timezone
 
+
+def normalize_rich_text(value: str) -> str:
+    """Нормализует HTML/текст из SQL/TV, где часто встречаются экранированные последовательности.
+
+    Цель: на выходе получить валидный HTML без артефактов вида \\r\\n, \\" и \\/,
+    чтобы React мог безопасно рендерить его через dangerouslySetInnerHTML.
+    """
+    if not value:
+        return ""
+
+    # 1) HTML entities (&lt; &gt; &amp; ...)
+    value = unescape(value)
+
+    # 2) Частые SQL/JSON-экранирования (двойные слеши)
+    #    Важно: порядок имеет значение (сначала \\r\\n, потом \\n и т.д.)
+    value = value.replace('\\r\\n', '\n').replace('\\r', '\n')
+    value = value.replace('\\n', '\n')
+
+    # 3) Экранированные кавычки и слеши внутри HTML-атрибутов/тегов
+    value = value.replace('\\"', '"')
+    value = value.replace("\\'", "'")
+    value = value.replace('\\/', '/')
+
+    # 4) Иногда попадаются лишние обратные слэши перед < или >
+    value = value.replace('\\<', '<').replace('\\>', '>')
+
+    # 5) Неразрывные пробелы
+    value = value.replace('\u00a0', ' ').replace('&nbsp;', ' ')
+
+    return value.strip()
+
 # MongoDB настройки
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'humorpedia')
