@@ -203,7 +203,15 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
         );
       
       case 'timeline':
-        const items = data.items || [];
+        // В контенте timeline хранится в data.events.
+        // Ранее редактор использовал data.items — поддерживаем оба формата.
+        const events = data.events || data.items || [];
+        const setEvents = (newEvents) => {
+          const nextData = { ...data, events: newEvents };
+          if (nextData.items) delete nextData.items;
+          updateData(nextData);
+        };
+
         return (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -216,35 +224,34 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
             </div>
             
             <div className="space-y-3">
-              {items.map((item, index) => (
+              {events.map((item, index) => (
                 <div key={index} className="border rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Событие {index + 1}</span>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => updateData({ ...data, items: items.filter((_, i) => i !== index) })}
+                      onClick={() => setEvents(events.filter((_, i) => i !== index))}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
-                      type="number"
-                      value={item.year || ''}
+                      value={item.year || item.date || ''}
                       onChange={(e) => {
-                        const newItems = [...items];
-                        newItems[index] = { ...newItems[index], year: parseInt(e.target.value) || '' };
-                        updateData({ ...data, items: newItems });
+                        const newEvents = [...events];
+                        newEvents[index] = { ...newEvents[index], year: e.target.value };
+                        setEvents(newEvents);
                       }}
-                      placeholder="Год"
+                      placeholder="Год / период (например 2007-2013)"
                     />
                     <Input
                       value={item.title || ''}
                       onChange={(e) => {
-                        const newItems = [...items];
-                        newItems[index] = { ...newItems[index], title: e.target.value };
-                        updateData({ ...data, items: newItems });
+                        const newEvents = [...events];
+                        newEvents[index] = { ...newEvents[index], title: e.target.value };
+                        setEvents(newEvents);
                       }}
                       placeholder="Заголовок"
                     />
@@ -252,11 +259,11 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                   <Textarea
                     value={item.description || ''}
                     onChange={(e) => {
-                      const newItems = [...items];
-                      newItems[index] = { ...newItems[index], description: e.target.value };
-                      updateData({ ...data, items: newItems });
+                      const newEvents = [...events];
+                      newEvents[index] = { ...newEvents[index], description: e.target.value };
+                      setEvents(newEvents);
                     }}
-                    placeholder="Описание"
+                    placeholder="Описание (HTML)"
                     rows={2}
                   />
                 </div>
@@ -266,10 +273,10 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => updateData({ 
-                ...data, 
-                items: [...items, { year: new Date().getFullYear(), title: '', description: '' }] 
-              })} 
+              onClick={() => setEvents([
+                ...events,
+                { year: '', title: '', description: '' }
+              ])} 
               className="w-full"
             >
               <Plus className="mr-2 h-4 w-4" /> Добавить событие
