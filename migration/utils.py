@@ -183,6 +183,18 @@ def create_person_document(
     
     # Таймлайн
     if timeline_events:
+        normalized_events = []
+        for ev in timeline_events:
+            if not isinstance(ev, dict):
+                continue
+            normalized_events.append({
+                **ev,
+                'title': normalize_rich_text(ev.get('title')) if ev.get('title') else ev.get('title'),
+                'description': normalize_rich_text(ev.get('description')) if ev.get('description') else ev.get('description'),
+                'year': normalize_rich_text(ev.get('year')) if ev.get('year') else ev.get('year'),
+                'date': normalize_rich_text(ev.get('date')) if ev.get('date') else ev.get('date'),
+            })
+
         modules.append({
             'id': str(uuid4()),
             'type': 'timeline',
@@ -191,7 +203,7 @@ def create_person_document(
             'visible': True,
             'data': {
                 'title': 'Хронология',
-                'events': timeline_events
+                'events': normalized_events
             }
         })
     
