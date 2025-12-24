@@ -414,10 +414,10 @@ function ModuleRenderer({ module, index }) {
                         hasHtmlTags(event.description) ? (
                           <div
                             className="prose prose-sm max-w-none text-gray-600 mt-1"
-                            dangerouslySetInnerHTML={{ __html: event.description }}
+                            dangerouslySetInnerHTML={{ __html: normalizeRichText(event.description) }}
                           />
                         ) : (
-                          <p className="text-gray-600 text-sm mt-1 whitespace-pre-line">{event.description}</p>
+                          <p className="text-gray-600 text-sm mt-1 whitespace-pre-line">{normalizeRichText(event.description)}</p>
                         )
                       )}
                     </div>
