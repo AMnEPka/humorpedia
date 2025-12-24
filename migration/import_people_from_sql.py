@@ -401,31 +401,41 @@ def _parse_table_birth(html: str) -> tuple[str | None, str | None]:
 
 
 def _parse_migx(value: str) -> list[dict]:
-    """MIGX хранится как JSON-список секций, часто с двойным экранированием."""
+    """MIGX хранится как JSON-список секций.
+
+    В дампе часто встречается формат, где весь JSON экранирован (например: [{\"k\":\"v\"}]),
+    но внутри полей могут быть "\\\"" (для HTML атрибутов). Важно *снять только один уровень*
+    экранирования, чтобы не сломать внутренние строки.
+    """
     if not value:
         return []
+
     raw = value
 
-    # нормализуем самые частые артефакты
-    raw = raw.replace("\\r\\n", "\n").replace("\\r", "\n")
+    # Если внутри TV оказались реальные переводы строк, JSON их не любит
+    raw = raw.replace("\r\n", "\\n").replace("\r", "\\n").replace("\n", "\\n")
 
-    # иногда строка уже JSON; иногда JSON сохранён как строка с экранированием
-    for _ in range(5):
-        try:
-            data = json.loads(raw)
-            if isinstance(data, str):
-                raw = data
-                continue
-            if isinstance(data, list):
-                return data
-            return []
-        except Exception:
-            pass
-
-        # Разэкраниваем кавычки/слеши (типичный формат: [{\"key\":...}])
+    # Снимаем один уровень экранирования, если похоже на "[{\"...".
+    stripped = raw.lstrip()
+    if stripped.startswith('[{\\"') or stripped.startswith('{\\"'):
         raw = raw.replace('\\"', '"').replace('\\/', '/')
 
-    return []
+    # Теперь пробуем распарсить
+    try:
+        data = json.loads(raw)
+    except Exception:
+        return []
+
+    # Иногда хранится как строка JSON внутри JSON
+    if isinstance(data, str):
+        try:
+            data2 = json.loads(data)
+            if isinstance(data2, list):
+                return data2
+        except Exception:
+            return []
+
+    return data if isinstance(data, list) else []
 
 
 def _timeline_from_tv_named(tv_named: dict[str, str]) -> list[dict]:
