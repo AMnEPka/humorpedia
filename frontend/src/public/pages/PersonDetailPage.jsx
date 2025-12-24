@@ -355,18 +355,21 @@ function ModuleRenderer({ module, index }) {
     if (typeof value !== 'string') return value || '';
     let v = value;
 
-    // Common SQL/JSON escape artifacts
-    v = v.replace(/\\r\\n/g, '\n').replace(/\\r/g, '\n').replace(/\\n/g, '\n');
+    // Common SQL/JSON escape artifacts (может быть одинарное/двойное экранирование)
+    v = v
+      .replace(/\\+r\\+n/g, '\n')
+      .replace(/\\+r/g, '\n')
+      .replace(/\\+n/g, '\n');
 
-    // Расэкраниваем кавычки и слеши
-    v = v.replace(/\\"/g, '"').replace(/\\'/g, "'");
-    v = v.replace(/\\\//g, '/'); // "\/" -> "/"
+    // Расэкраниваем кавычки и слеши ("\\\"" и "\\\\\"" и т.п.)
+    v = v.replace(/\\+"/g, '"').replace(/\\+'/g, "'");
+    v = v.replace(/\\+\//g, '/'); // "\/"/"\\/" -> "/"
 
-    // Иногда попадается "<\/p>" вместо "</p>" и т.п.
-    v = v.replace(/<\\\//g, '</');
+    // Иногда попадается "<\/p>" / "<\\/p>" вместо "</p>" и т.п.
+    v = v.replace(/<\\+\//g, '</');
 
     // Иногда лишние слэши перед угловыми скобками
-    v = v.replace(/\\</g, '<').replace(/\\>/g, '>');
+    v = v.replace(/\\+</g, '<').replace(/\\+>/g, '>');
 
     return v;
   };
