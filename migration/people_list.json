@@ -6,7 +6,7 @@
     "slug": "kvn-people",
     "parent": 30,
     "published": false,
-    "status": "imported",
+    "status": "ignored",
     "image": null
   },
   {
@@ -16,7 +16,7 @@
     "slug": "liga-gorodov-people",
     "parent": 30,
     "published": false,
-    "status": "imported",
+    "status": "ignored",
     "image": null
   },
   {
@@ -26,7 +26,7 @@
     "slug": "kvn-vyisshaya-liga-2024",
     "parent": 30,
     "published": false,
-    "status": "imported",
+    "status": "ignored",
     "image": null
   },
   {
