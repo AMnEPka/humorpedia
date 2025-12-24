@@ -351,7 +351,27 @@ export default function PersonDetailPage() {
 
 // Module renderer component
 function ModuleRenderer({ module, index }) {
-  const hasHtmlTags = (value) => typeof value === 'string' && /<[^>]+>/.test(value);
+  const normalizeRichText = (value) => {
+    if (typeof value !== 'string') return value || '';
+    let v = value;
+
+    // Common SQL/JSON escape artifacts
+    v = v.replace(/\\r\\n/g, '\n').replace(/\\r/g, '\n').replace(/\\n/g, '\n');
+    v = v.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\//g, '/');
+
+    // Occasionally встречается "<\\/p>" вместо "</p>" и т.п.
+    v = v.replace(/<\\\//g, '</');
+
+    // Иногда лишние слэши перед угловыми скобками
+    v = v.replace(/\\</g, '<').replace(/\\>/g, '>');
+
+    return v;
+  };
+
+  const hasHtmlTags = (value) => {
+    const v = normalizeRichText(value);
+    return typeof v === 'string' && /<[^>]+>/.test(v);
+  };
 
   switch (module.type) {
     case 'timeline':
