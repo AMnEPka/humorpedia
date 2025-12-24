@@ -464,13 +464,18 @@ def _timeline_from_migx_sections(sections: list[dict]) -> list[dict]:
         if not list_triple:
             continue
 
-        # list_triple сам является JSON-строкой
-        raw = normalize_rich_text(list_triple)
-        raw = raw.replace("\\\"", '"').replace("\\/", "/")
-        try:
-            arr = json.loads(raw)
-        except Exception:
-            return []
+        # list_triple может быть:
+        #  - уже массивом объектов
+        #  - JSON-строкой
+        if isinstance(list_triple, list):
+            arr = list_triple
+        else:
+            raw = normalize_rich_text(str(list_triple))
+            raw = raw.replace("\\\"", '"').replace("\\/", "/")
+            try:
+                arr = json.loads(raw)
+            except Exception:
+                return []
 
         events = []
         for item in arr:
