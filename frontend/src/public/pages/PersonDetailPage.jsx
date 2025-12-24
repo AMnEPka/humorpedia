@@ -357,9 +357,12 @@ function ModuleRenderer({ module, index }) {
 
     // Common SQL/JSON escape artifacts
     v = v.replace(/\\r\\n/g, '\n').replace(/\\r/g, '\n').replace(/\\n/g, '\n');
-    v = v.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\//g, '/');
 
-    // Occasionally встречается "<\\/p>" вместо "</p>" и т.п.
+    // Расэкраниваем кавычки и слеши
+    v = v.replace(/\\"/g, '"').replace(/\\'/g, "'");
+    v = v.replace(/\\\//g, '/'); // "\/" -> "/"
+
+    // Иногда попадается "<\/p>" вместо "</p>" и т.п.
     v = v.replace(/<\\\//g, '</');
 
     // Иногда лишние слэши перед угловыми скобками
