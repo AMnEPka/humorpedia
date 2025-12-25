@@ -214,8 +214,6 @@ async def browse_imported_media(
 
     return MediaBrowseResponse(items=items, total=len(items))
 
-    }
-
 
 @router.get("/{media_id}", response_model=dict)
 async def get_media(media_id: str):
