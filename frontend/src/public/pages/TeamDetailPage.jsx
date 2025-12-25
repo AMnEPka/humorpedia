@@ -152,6 +152,29 @@ export default function TeamDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Facts Table */}
+          {team.facts && Object.keys(team.facts).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" /> Информация
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {Object.entries(team.facts).map(([key, value], i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="py-2 pr-4 text-gray-600 font-medium">{key}</td>
+                        <td className="py-2" dangerouslySetInnerHTML={{ __html: value }} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Team Members */}
           {team.members?.length > 0 && (
             <Card>
