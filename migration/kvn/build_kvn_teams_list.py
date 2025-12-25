@@ -60,8 +60,8 @@ def main():
                 if not parts or parts[0] is None:
                     continue
 
-                # parent is at index 14 in this dump
-                if len(parts) <= 14 or str(parts[14]).strip() != parent_id:
+                # parent is at index 12 in this dump
+                if len(parts) <= 12 or str(parts[12]).strip() != parent_id:
                     continue
 
                 try:
@@ -77,7 +77,7 @@ def main():
                     {
                         "id": rid,
                         "title": s(3),
-                        "slug": s(8),  # alias is at index 8
+                        "slug": s(6),  # alias is at index 6
                         "status": "pending",
                     }
                 )
