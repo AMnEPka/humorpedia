@@ -617,11 +617,20 @@ def build_person_doc(
 
     # image
     image_url = None
+
+    # 1) Приоритет: image_hint из people_list.json
     if image_hint:
         image_url = image_map.get(image_hint) or image_hint
-    # если image_hint — старый относительный путь, а в mapping нет, пробуем оставить как есть
-    if image_url and not image_url.startswith("/"):
-        image_url = image_map.get(image_url)
+
+    # 2) Fallback: TV img из дампа
+    if not image_url:
+        tv_img = tv_named.get('img')
+        if tv_img:
+            image_url = image_map.get(tv_img) or tv_img
+
+    # если путь относительный — пытаемся смэппить через image_mapping
+    if image_url and not str(image_url).startswith("/"):
+        image_url = image_map.get(str(image_url)) or image_url
 
     # базовый документ (биография + хронология)
     doc = create_person_document(
