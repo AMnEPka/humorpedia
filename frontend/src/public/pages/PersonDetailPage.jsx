@@ -227,7 +227,7 @@ export default function PersonDetailPage() {
               {person.rating && (
                 <div className="mb-4">
                   <EmojiRating
-                    value={person.rating.average}
+                    value={Math.min(10, Math.max(0, person.rating.average || 0))}
                     readOnly
                     count={person.rating.count}
                     size={24}
