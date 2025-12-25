@@ -49,7 +49,7 @@ async def upload_file(
     if not user:
         raise HTTPException(status_code=401, detail="Необходима авторизация")
     
-    if not user.get("role") in ["admin", "editor", "moderator"]:
+    if user.get("role") not in ["admin", "editor", "moderator"]:
         raise HTTPException(status_code=403, detail="Недостаточно прав")
     
     # Validate file type
