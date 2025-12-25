@@ -44,6 +44,33 @@ from utils import DB_NAME, MONGO_URL, normalize_rich_text
 SQL_FILE = "/app/humorbd.sql"
 KVN_TEAMS_LIST_FILE = "/app/migration/kvn/kvn_teams_list.json"
 IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+TAG_MAP_FILE = "/app/migration/tag_mapping.json"
+
+
+def _load_tag_map():
+    """Загружает маппинг tag_id -> tag_name из JSON файла."""
+    if not os.path.exists(TAG_MAP_FILE):
+        print(f"⚠️  Tag mapping file not found: {TAG_MAP_FILE}")
+        return {}
+    
+    with open(TAG_MAP_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def _tags_from_tv(tv_tags_str: str, tag_map: dict) -> list[str]:
+    """Преобразует строку TV 'tags' в список названий тегов."""
+    if not tv_tags_str:
+        return []
+    
+    tag_ids = tv_tags_str.split('||')
+    tag_names = []
+    
+    for tag_id in tag_ids:
+        tag_id = tag_id.strip()
+        if tag_id in tag_map:
+            tag_names.append(tag_map[tag_id])
+    
+    return tag_names
 
 
 def create_team_document(
@@ -171,7 +198,7 @@ def _parse_facts_table(table_html: str) -> dict:
     return facts
 
 
-def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str]):
+def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str], tag_map: dict[str, str]):
     """Строит документ команды из данных SQL."""
     tv_named = {}
     for tv_id, val in tv_by_id.items():
@@ -273,8 +300,8 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     # Таймлайн
     timeline_events = _timeline_from_migx_sections(sections)
 
-    # Tags
-    tags = _tags_from_keywords(sc.keywords)
+    # Tags - из TV переменной
+    tags = _tags_from_tv(tv_named.get('tags', ''), tag_map)
 
     # Rating
     avg = float(sc.rating or 0.0)
@@ -355,6 +382,7 @@ def main():
     # Загружаем данные
     tv_map = _load_tv_map()
     image_map = _load_image_map()
+    tag_map = _load_tag_map()
     site_content, tv_values = _extract_for_ids(target_ids)
 
     # Подключение к MongoDB
@@ -376,7 +404,7 @@ def main():
         tv_by_id = tv_values.get(team_id, {})
         
         try:
-            doc = build_team_doc(sc, tv_by_id, tv_map, image_map)
+            doc = build_team_doc(sc, tv_by_id, tv_map, image_map, tag_map)
             
             print(f"\n{'='*60}")
             print(f"ID {team_id}: {doc['title']} ({doc['slug']})")
