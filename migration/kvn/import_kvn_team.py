@@ -272,12 +272,15 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         avg = 10.0
     rating = {"average": avg, "count": int(sc.votes or 0)}
 
-    # Image - убираем префикс /media/imported/
+    # Image - добавляем префикс /media/imported/
     image_url = None
     tv_img = tv_named.get('img')
     if tv_img:
-        # Просто берём путь как есть, без префикса
-        image_url = str(tv_img).lstrip('/')
+        # Добавляем префикс /media/imported/ если путь относительный
+        if not str(tv_img).startswith('/'):
+            image_url = f"/media/imported/{str(tv_img).lstrip('/')}"
+        else:
+            image_url = tv_img
 
     # Social links - добавляем веб-сайт для Уральских пельменей
     social_links = {}
