@@ -158,6 +158,7 @@ async def list_media(
         "total": total,
         "skip": skip,
         "limit": limit
+    }
 
 
 @router.get("/browse", response_model=MediaBrowseResponse)
