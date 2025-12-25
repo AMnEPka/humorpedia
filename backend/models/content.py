@@ -69,17 +69,6 @@ class PersonUpdate(BaseModel):
 
 # === TEAM ===
 
-class TeamFacts(BaseModel):
-    """Quick facts about a team"""
-    founded_year: Optional[int] = None
-    disbanded_year: Optional[int] = None
-    captain_id: Optional[str] = None
-    captain_name: Optional[str] = None
-    city: Optional[str] = None
-    status: str = "active"  # active, disbanded, reformed
-    achievements: List[str] = Field(default_factory=list)
-
-
 class Team(BaseContent):
     """Team page (universal for KVN, Liga Smeha, Improv, etc.)"""
     content_type: ContentType = ContentType.TEAM
@@ -90,7 +79,7 @@ class Team(BaseContent):
     # Basic info
     name: str
     logo: Optional[MediaFile] = None
-    facts: TeamFacts = Field(default_factory=TeamFacts)
+    facts: Dict[str, str] = Field(default_factory=dict)  # Flexible key-value pairs for team info
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     
     # Modular content
