@@ -8,6 +8,7 @@ import aiofiles
 from pathlib import Path
 
 from models.user import Media, MediaCreate
+from models.media_browser import MediaBrowseResponse, MediaBrowseItem
 from utils.database import get_db
 from routes.auth import get_current_user
 
