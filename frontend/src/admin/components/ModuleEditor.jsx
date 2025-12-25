@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { 
   DndContext, closestCenter, KeyboardSensor, 
   PointerSensor, useSensor, useSensors, DragOverlay
@@ -146,16 +146,10 @@ function SortableModule({ module, onEdit, onDelete }) {
 
 // Separate component for editing module to manage its own state
 function ModuleEditDialog({ module, open, onClose, onSave }) {
-  const [localModule, setLocalModule] = useState(null);
-
-  // Initialize local state when module changes
-  useEffect(() => {
-    if (module) {
-      setLocalModule({ ...module, data: { ...module.data } });
-    } else {
-      setLocalModule(null);
-    }
-  }, [module]);
+  const [localModule, setLocalModule] = useState(() => {
+    if (!module) return null;
+    return { ...module, data: { ...module.data } };
+  });
 
   const handleSave = useCallback(() => {
     if (localModule) {
@@ -865,6 +859,7 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
 
       {/* Edit module dialog - separate component with own state */}
       <ModuleEditDialog
+        key={editingModuleId || 'no-module'}
         module={editingModule}
         open={!!editingModuleId}
         onClose={closeEditDialog}
