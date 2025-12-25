@@ -188,7 +188,8 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     for sec in sections:
         if sec.get("MIGX_formname") == "text":
             title = sec.get("section_name", "")
-            content = sec.get("subtitle", "")
+            # Контент может быть в 'content' или 'subtitle'
+            content = sec.get("content", "") or sec.get("subtitle", "")
             if content:
                 text_blocks.append({
                     'title': title,
