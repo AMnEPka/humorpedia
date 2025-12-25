@@ -496,6 +496,11 @@ def main():
                     print(f"⚠️  Команда с slug '{doc['slug']}' уже существует, пропускаем")
                     continue
                 
+                # Синхронизируем теги в коллекцию tags
+                if doc['tags']:
+                    print(f"  📌 Syncing {len(doc['tags'])} tags...")
+                    sync_tags_to_collection(doc['tags'], db)
+                
                 collection.insert_one(doc)
                 imported_count += 1
                 print(f"✅ Импортирован")
