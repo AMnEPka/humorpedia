@@ -116,7 +116,7 @@
     "slug": "igor-pimenov",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/kvn/pimenov2.png"
   },
   {
@@ -126,7 +126,7 @@
     "slug": "alexander-shabanov",
     "parent": 102,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/kvn/alexander-shabanov1.jpg"
   },
   {
@@ -136,7 +136,7 @@
     "slug": "yuliya-akhmedova",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/ahmedova.jpg"
   },
   {
@@ -146,7 +146,7 @@
     "slug": "ekaterina-varnava",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/comedy/ekaterina-varnava1.jpg"
   },
   {
@@ -156,7 +156,7 @@
     "slug": "maria-kravchenko",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/comedy-woman/maria-kravchenko1.jpg"
   },
   {
@@ -166,7 +166,7 @@
     "slug": "nadezhda-angarskaya",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/angarskaya.png"
   },
   {
@@ -176,7 +176,7 @@
     "slug": "evgeniy-borodenko",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/borodenko.jpg"
   },
   {
@@ -186,7 +186,7 @@
     "slug": "alexander-ptashenchuk",
     "parent": 102,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/alexanderptashenchuk.jpg"
   },
   {
@@ -196,7 +196,7 @@
     "slug": "ilya-makarov",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/ilya-makarov1.jpg"
   },
   {
@@ -206,7 +206,7 @@
     "slug": "chekhov-i-kukota",
     "parent": 30,
     "published": true,
-    "status": "pending",
+    "status": "imported",
     "image": "images/people/kukota-i-chehov.jpg"
   },
   {
