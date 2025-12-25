@@ -1,0 +1,55 @@
+services:
+  mongodb:
+    image: mongo:6
+    container_name: humorpedia-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: humorpedia-backend
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override for docker network
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=humorpedia
+      - CORS_ORIGINS=*
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+      # Important: allow backend to serve /media/imported/* from frontend public folder
+      - ./frontend/public/media:/app/frontend/public/media:ro
+    depends_on:
+      - mongodb
+    ports:
+      - "8001:8001"
+    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: humorpedia-frontend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    command: yarn start
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
