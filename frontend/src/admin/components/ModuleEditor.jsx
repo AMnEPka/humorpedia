@@ -152,6 +152,7 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (module) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalModule({ ...module, data: { ...module.data } });
     } else {
       setLocalModule(null);
