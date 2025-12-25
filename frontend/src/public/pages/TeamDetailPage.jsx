@@ -27,7 +27,7 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
           title: m.data.title
         })) || [];
     }
-  }, [modules, mode, contentType]);
+  }, [modules, mode]);
 
   if (items.length === 0) return null;
 
