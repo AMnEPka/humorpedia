@@ -100,7 +100,7 @@ function AppRoutes() {
         {/* Teams with categories */}
         <Route path="/teams" element={<Navigate to="/teams/kvn" replace />} />
         <Route path="/teams/:category" element={<TeamsListPage />} />
-        <Route path="/teams/:category/:slug" element={<TeamDetailPage />} />
+        <Route path="/kvn/teams/:slug" element={<TeamDetailPage />} />
         
         {/* Shows */}
         <Route path="/shows" element={<ShowsListPage />} />
