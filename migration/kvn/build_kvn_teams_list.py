@@ -11,9 +11,14 @@ Usage:
 import argparse
 import json
 import re
+import sys
+import os
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Reuse robust SQL tuple parsing from people importer
-from migration.import_people_from_sql import _split_rows, _split_fields, _unescape_sql_string
+from import_people_from_sql import _split_rows, _split_fields, _unescape_sql_string
 
 
 def main():
