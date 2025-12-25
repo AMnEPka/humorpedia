@@ -280,7 +280,7 @@ function ModuleRenderer({ module }) {
           )}
           <CardContent>
             <div 
-              className="prose prose-blue max-w-none"
+              className="prose prose-blue max-w-none prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-gray-300 prose-td:p-2 prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-th:font-semibold"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
             />
           </CardContent>
