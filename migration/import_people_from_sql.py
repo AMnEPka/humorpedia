@@ -768,6 +768,11 @@ def main():
         if existing:
             if not args.update:
                 continue
+
+            # Не затираем фото при update, если новое не удалось вычислить
+            if not doc.get('image') and existing.get('image'):
+                doc['image'] = existing.get('image')
+
             doc["_id"] = existing["_id"]
             db.people.replace_one({"slug": doc.get("slug")}, doc)
             updated += 1
