@@ -56,6 +56,7 @@ def create_team_document(
     timeline_events: list[dict] = None,
     tags: list[str] = None,
     rating: dict = None,
+    social_links: dict = None,
 ):
     """Создаёт документ команды для MongoDB."""
     modules = []
@@ -115,6 +116,7 @@ def create_team_document(
         'created_at': datetime.now(timezone.utc).isoformat(),
         'updated_at': datetime.now(timezone.utc).isoformat(),
         'facts': facts or {},
+        'social_links': social_links or {},
         'modules': modules,
         'rating': rating or {'average': 0.0, 'count': 0},
         'votes_count': rating.get('count', 0) if rating else 0,
