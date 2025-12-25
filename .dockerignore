@@ -1,0 +1,11 @@
+**/.git
+**/.emergent
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+
+frontend/node_modules
+backend/.venv
+
+uploads
