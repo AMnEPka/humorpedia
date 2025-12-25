@@ -1,103 +1,143 @@
-# Скрипты миграции Humorpedia
+# Миграция Humorpedia (актуальный процесс)
 
-## Описание
+## Что это
+В папке `/migration` лежат утилиты и основной скрипт импорта контента типа **people** из дампа MODX:
+- источник: **`/app/humorbd.sql`**
+- приёмник: MongoDB (по переменным `MONGO_URL`, `DB_NAME`)
 
-Набор скриптов для импорта данных из MODX SQL-дампа в MongoDB.
+Цели импорта:
+- корректный HTML в текстовых блоках (без `\\n`, `\\"`, `\\/` и т.п.)
+- 2 текстовых блока перед хронологией, если они есть в источнике:
+  - **Биография**
+  - **Личная жизнь**
+- корректная хронология (timeline) для редактирования в админке
+- корректные фото в формате URL: **`/media/imported/...`**
+- корректный рейтинг: `average` (0..10) и `count` (кол-во голосов)
 
-## Структура
+---
+
+## Основные файлы
 
 ```
-/app/migration/
-├── README.md              # Этот файл
-├── import_people.py       # Импорт персон
-├── extract_from_sql.py    # Извлечение данных из SQL через grep
-├── import_images.py       # Импорт изображений
-└── utils.py               # Общие утилиты
+/migration/
+├── README.md                  # этот файл
+├── people_list.json           # мастер-список people для импорта (status=pending/imported/ignored)
+├── image_mapping.json         # маппинг исходных путей images/... -> /media/imported/...
+├── import_people_from_sql.py  # ✅ основной быстрый импорт people из humorbd.sql
+├── utils.py                   # общие утилиты и сборка схемы person
+└── ... (вспомогательные/старые скрипты)
 ```
 
-## Формат данных
+**Важно:** старые скрипты `import_people.py` / `extract_from_sql.py` больше не являются основным путём. Используйте `import_people_from_sql.py`.
 
-### Персона (Person)
-```json
-{
-    "_id": "uuid-string",
-    "content_type": "person",
-    "title": "Фамилия Имя",
-    "slug": "slug-in-latin",
-    "full_name": "Полное имя с отчеством",
-    "status": "published",
-    "tags": ["тег1", "тег2"],
-    "bio": {
-        "birth_date": "YYYY-MM-DD",
-        "birth_place": "Город",
-        "occupation": ["профессия1", "профессия2"],
-        "achievements": ["достижение1"]
-    },
-    "social_links": {
-        "vk": "url",
-        "telegram": "url",
-        "instagram": "url",
-        "youtube": "url"
-    },
-    "modules": [
-        {
-            "id": "uuid",
-            "type": "text_block",
-            "order": 1,
-            "visible": true,
-            "data": {
-                "title": "Биография",
-                "content": "<p>HTML контент</p>"
-            }
-        },
-        {
-            "id": "uuid",
-            "type": "timeline",
-            "order": 2,
-            "visible": true,
-            "data": {
-                "title": "Хронология",
-                "events": [
-                    {
-                        "year": "2010-2013",
-                        "title": "Заголовок события",
-                        "description": "Описание"
-                    }
-                ]
-            }
-        }
-    ],
-    "rating": {
-        "average": 4.5,
-        "count": 10
-    }
-}
-```
+---
 
-## Использование
+## Модель данных (важные поля)
 
-### 1. Извлечение ID и рейтингов из SQL
-```bash
-# Найти ID персоны по имени
-grep -o "([0-9]*,'document','text/html','Фамилия Имя" modx_new.sql
+### Person (people)
+Ключевые поля:
+- `content_type: "person"`
+- `slug`
+- `title`, `full_name`
+- `image` — URL картинки (должен быть **`/media/imported/...`**)
+- `modules[]` — модульный контент
+- `rating: { average, count }`
 
-# Найти рейтинги для ID=148
-grep -oE "\([0-9]+,148,[0-9]+,[0-9]+\)" modx_new.sql
-```
+### modules
+Важное:
+- `module.title` — показывается в админке в списке модулей
+- `module.data.title` — заголовок внутри текстового блока
 
-### 2. Импорт персоны
+Типичный набор модулей для people:
+1) `text_block` (Биография)
+2) `text_block` (Личная жизнь) — если есть
+3) `timeline` (Хронология)
+
+---
+
+## Подготовка
+
+1) Убедитесь, что дамп лежит здесь:
+- `/app/humorbd.sql`
+
+2) Убедитесь, что картинки лежат здесь:
+- `frontend/public/media/imported/...`
+
+3) Проверьте наличие `image_mapping.json`:
+- `/migration/image_mapping.json`
+
+---
+
+## Как импортировать
+
+### Вариант A — импорт из people_list.json (рекомендуется)
+Скрипт берёт первые `pending` записи из `people_list.json`.
+
 ```bash
 cd /app/migration
-python3 import_people.py --slug irina-chesnokova
+python3 import_people_from_sql.py --from-list --limit 10 --apply
 ```
 
-### 3. Импорт изображений
+После этого обычно нужно пометить их как `imported` в `people_list.json`.
+(В нашей сборке это делалось отдельным шагом, чтобы можно было контролировать процесс.)
+
+### Вариант B — импорт конкретных id
 ```bash
-python3 import_images.py --source ./images/ --dest /app/frontend/public/media/
+cd /app/migration
+python3 import_people_from_sql.py --ids 115 116 117 --apply
 ```
 
-## Требования
+### Обновление уже импортированных записей
+Полная перезапись документа (replace) используется для того, чтобы «подтянуть» улучшения парсинга (хронология, 2 текстовых блока, фото URL, рейтинг/votes).
 
-- Python 3.11+
-- pymongo
-- MongoDB доступен по MONGO_URL
+```bash
+cd /app/migration
+python3 import_people_from_sql.py --ids 115 116 117 --apply --update
+```
+
+**Важно:** `--update` не должен затирать фото — скрипт умеет сохранять старое `image`, если новое не найдено.
+
+---
+
+## Игнорирование «не-людей» в people_list.json
+Иногда в `people_list.json` могут попасть страницы-разделы/лендинги, которые не являются персоной.
+В таком случае:
+- удалите такую запись из MongoDB (коллекция `people`)
+- поставьте ей `status: "ignored"` в `people_list.json`, чтобы она не попадала в следующие пачки.
+
+---
+
+## Docker (DEV)
+Если запускаете проект через docker compose (dev):
+
+- Frontend: http://localhost:3000
+- Backend:  http://localhost:8001
+
+Импорт можно запускать:
+
+### С хоста
+```bash
+python3 migration/import_people_from_sql.py --from-list --limit 10 --apply
+```
+
+### Внутри контейнера backend
+```bash
+docker compose exec backend python3 /app/migration/import_people_from_sql.py --from-list --limit 10 --apply
+```
+
+---
+
+## Быстрые проверки после импорта
+
+1) Открыть публичную страницу:
+- `http://localhost:3000/people/<slug>`
+
+2) Проверить админку:
+- `http://localhost:3000/admin/people/<_id>` → вкладка «Модули»
+
+3) Проверить, что картинка имеет вид:
+- `/media/imported/...`
+
+4) Проверить рейтинг:
+- `rating.average` в диапазоне 0..10
+- `rating.count` — число голосов
