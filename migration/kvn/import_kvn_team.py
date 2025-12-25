@@ -237,7 +237,7 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     # 3. Сторонние проекты
     projects = None
     for block in all_text_sections:
-        if 'Сторонние проекты' in block['title'] or 'проекты' in block['title'].lower():
+        if 'Сторонние проекты' in block['title']:
             projects = block
             break
     if projects:
@@ -249,7 +249,7 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     # 4. Список игр команды
     games = None
     for block in all_text_sections:
-        if 'Список игр' in block['title'] or 'игр' in block['title'].lower():
+        if 'Список игр' in block['title']:
             games = block
             break
     if games:
