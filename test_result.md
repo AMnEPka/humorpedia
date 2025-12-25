@@ -304,11 +304,14 @@ frontend:
     file: "/app/frontend/src/admin/pages/PeopleListPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "List and edit pages with ModuleEditor"
+      - working: true
+        agent: "testing"
+        comment: "Протестирован admin module list после обновлений. ✅ Логин работает корректно с admin@humorpedia.com/adminpassword. ✅ Навигация к /admin/people/a7876d88-115a-4000-a27e-0fbd72dc2cea работает. ✅ Модули tab доступен и показывает модули. ✅ Найдены модули 'Биография' и 'Хронология' (отсутствует 'Личная жизнь'). ✅ Редактирование модуля 'Биография' работает - успешно изменен заголовок на 'Биография TEST'. ✅ Сохранение модуля и персоны работает. ✅ Список модулей обновляется корректно - показывает 'Биография TEST'. Исправлена ошибка компиляции в ModuleEditor.jsx (убрал проблемный ESLint комментарий). Основная функциональность module editing работает корректно."
 
   - task: "Teams Management (List/Edit)"
     implemented: true
