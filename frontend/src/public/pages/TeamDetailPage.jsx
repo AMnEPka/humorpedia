@@ -63,7 +63,8 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
 }
 
 export default function TeamDetailPage() {
-  const { category = 'kvn', slug } = useParams();
+  const { slug } = useParams();
+  const category = 'kvn';
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
