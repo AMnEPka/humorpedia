@@ -240,8 +240,13 @@ def _extract_for_ids(target_ids: set[int]):
             return
         rows = _split_rows(m.group(1))
 
-        # В humorbd.sql в конце у site_content есть extra поля: old_id, keywords, popular, rating, votes
-        # Нам нужны: id(0), pagetitle(3), longtitle(4), description(5), alias(6), keywords(45), rating(48), votes(49)
+        # В humorbd.sql структура modx_site_content отличается: в конце есть old_id, keywords, popular, rating, votes.
+        # При этом количество колонок может быть 49 (индексы 0..48). В таком случае votes отсутствует.
+        # Мы берём:
+        #  - keywords: 45
+        #  - popular: 46
+        #  - rating: 47 (иногда бывает 12 и т.п. — потом нормализуем)
+        #  - votes: 48 (если есть)
         for r in rows:
             parts = _split_fields(r)
             if not parts or parts[0] is None:
