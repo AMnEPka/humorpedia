@@ -180,7 +180,8 @@ def create_person_document(
             'id': str(uuid4()),
             'type': 'text_block',
             'order': 1,
-            'title': None,
+            # title используется в админке в списке модулей
+            'title': 'Биография',
             'visible': True,
             'data': {
                 'title': 'Биография',
@@ -206,7 +207,7 @@ def create_person_document(
             'id': str(uuid4()),
             'type': 'timeline',
             'order': 2,
-            'title': None,
+            'title': 'Хронология',
             'visible': True,
             'data': {
                 'title': 'Хронология',

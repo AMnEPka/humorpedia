@@ -648,7 +648,7 @@ def build_person_doc(
                 'id': str(__import__('uuid').uuid4()),
                 'type': 'text_block',
                 'order': 2,
-                'title': None,
+                'title': 'Личная жизнь',
                 'visible': True,
                 'data': {
                     'title': 'Личная жизнь',
