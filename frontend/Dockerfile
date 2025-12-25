@@ -2,7 +2,7 @@ FROM node:20-slim
 
 WORKDIR /app
 
-COPY package.json yarn.lock /app/
+COPY package.json /app/
 RUN yarn install
 
 COPY . /app
