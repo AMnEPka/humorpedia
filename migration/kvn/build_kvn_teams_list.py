@@ -77,7 +77,7 @@ def main():
                     {
                         "id": rid,
                         "title": s(3),
-                        "slug": s(6),
+                        "slug": s(8),  # alias is at index 8
                         "status": "pending",
                     }
                 )
