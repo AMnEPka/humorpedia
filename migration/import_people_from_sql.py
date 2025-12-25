@@ -628,9 +628,10 @@ def build_person_doc(
         if tv_img:
             image_url = image_map.get(tv_img) or tv_img
 
-    # если путь относительный — пытаемся смэппить через image_mapping
+    # если путь относительный — сначала пытаемся смэппить через image_mapping,
+    # а если маппинга нет, то считаем, что файл лежит в public/media/imported
     if image_url and not str(image_url).startswith("/"):
-        image_url = image_map.get(str(image_url)) or image_url
+        image_url = image_map.get(str(image_url)) or f"/media/imported/{str(image_url).lstrip('/')}"
 
     # базовый документ (биография + хронология)
     doc = create_person_document(
