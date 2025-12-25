@@ -175,6 +175,19 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
             break
 
     # Извлекаем текстовые блоки
+    all_text_sections = []
+    for sec in sections:
+        if sec.get("MIGX_formname") == "text":
+            title = sec.get("section_name", "")
+            # Контент может быть в 'content' или 'subtitle'
+            content = sec.get("content", "") or sec.get("subtitle", "")
+            if content:
+                all_text_sections.append({
+                    'title': title,
+                    'content': content,
+                })
+    
+    # Формируем стандартные 4 блока для команд КВН
     text_blocks = []
     
     # Добавляем основной контент как первый блок (без заголовка)
@@ -184,17 +197,47 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
             'content': main_content,
         })
     
-    # Добавляем остальные текстовые секции
-    for sec in sections:
-        if sec.get("MIGX_formname") == "text":
-            title = sec.get("section_name", "")
-            # Контент может быть в 'content' или 'subtitle'
-            content = sec.get("content", "") or sec.get("subtitle", "")
-            if content:
-                text_blocks.append({
-                    'title': title,
-                    'content': content,
-                })
+    # 1. Состав команды КВН
+    sostav = None
+    for block in all_text_sections:
+        if 'Состав' in block['title']:
+            sostav = block
+            break
+    if sostav:
+        text_blocks.append(sostav)
+    
+    # 2. История команды - объединяем все блоки с "История"
+    history_blocks = [b for b in all_text_sections if 'История' in b['title']]
+    if history_blocks:
+        combined_history = '\n\n'.join([b['content'] for b in history_blocks])
+        text_blocks.append({
+            'title': 'История команды',
+            'content': combined_history,
+        })
+    
+    # 3. Сторонние проекты
+    projects = None
+    for block in all_text_sections:
+        if 'Сторонние проекты' in block['title'] or 'проекты' in block['title'].lower():
+            projects = block
+            break
+    if projects:
+        text_blocks.append({
+            'title': 'Сторонние проекты команды после/во время игры в КВН',
+            'content': projects['content'],
+        })
+    
+    # 4. Список игр команды
+    games = None
+    for block in all_text_sections:
+        if 'Список игр' in block['title'] or 'игр' in block['title'].lower():
+            games = block
+            break
+    if games:
+        text_blocks.append({
+            'title': 'Список игр команды',
+            'content': games['content'],
+        })
 
     # Таймлайн
     timeline_events = _timeline_from_migx_sections(sections)
@@ -210,15 +253,17 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         avg = 10.0
     rating = {"average": avg, "count": int(sc.votes or 0)}
 
-    # Image
+    # Image - убираем префикс /media/imported/
     image_url = None
     tv_img = tv_named.get('img')
     if tv_img:
-        # Если путь относительный, добавляем префикс
-        if not str(tv_img).startswith('/'):
-            image_url = image_map.get(str(tv_img)) or f"/media/imported/{str(tv_img).lstrip('/')}"
-        else:
-            image_url = tv_img
+        # Просто берём путь как есть, без префикса
+        image_url = str(tv_img).lstrip('/')
+
+    # Social links - добавляем веб-сайт для Уральских пельменей
+    social_links = {}
+    if sc.alias == 'uralskie-pelmeni':
+        social_links['website'] = 'https://pelmeny.net/'
 
     doc = create_team_document(
         title=sc.pagetitle,
@@ -230,6 +275,7 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         timeline_events=timeline_events,
         tags=tags,
         rating=rating,
+        social_links=social_links,
     )
 
     return doc
