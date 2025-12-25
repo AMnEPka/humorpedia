@@ -206,6 +206,13 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
                     'content': content,
                 })
     
+    # Извлекаем таблицу игр
+    games_table_html = ""
+    for sec in sections:
+        if sec.get("MIGX_formname") == "table":
+            games_table_html = sec.get("content", "")
+            break
+    
     # Формируем стандартные 4 блока для команд КВН
     text_blocks = []
     
@@ -246,16 +253,21 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
             'content': projects['content'],
         })
     
-    # 4. Список игр команды
+    # 4. Список игр команды (легенда + таблица)
     games = None
     for block in all_text_sections:
         if 'Список игр' in block['title']:
             games = block
             break
     if games:
+        # Добавляем легенду и таблицу
+        games_content = games['content']
+        if games_table_html:
+            games_content = games_content + "\n\n" + games_table_html
+        
         text_blocks.append({
             'title': 'Список игр команды',
-            'content': games['content'],
+            'content': games_content,
         })
 
     # Таймлайн
