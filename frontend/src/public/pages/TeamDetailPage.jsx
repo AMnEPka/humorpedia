@@ -269,6 +269,28 @@ export default function TeamDetailPage() {
 
 // Module renderer component (same as PersonDetailPage)
 function ModuleRenderer({ module }) {
+  // Add table styles
+  const tableStyles = `
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin: 1rem 0;
+      border: 1px solid #e5e7eb;
+    }
+    th, td { 
+      border: 1px solid #e5e7eb; 
+      padding: 0.5rem 0.75rem; 
+      text-align: left;
+    }
+    th { 
+      background-color: #f3f4f6; 
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+  `;
+
   switch (module.type) {
     case 'text_block':
       return (
@@ -279,8 +301,9 @@ function ModuleRenderer({ module }) {
             </CardHeader>
           )}
           <CardContent>
+            <style>{tableStyles}</style>
             <div 
-              className="prose prose-blue max-w-none prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-gray-300 prose-td:p-2 prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:p-2 prose-th:font-semibold"
+              className="prose prose-blue max-w-none"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
             />
           </CardContent>
