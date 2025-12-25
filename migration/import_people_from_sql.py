@@ -263,12 +263,18 @@ def _extract_for_ids(target_ids: set[int]):
                 return _unescape_sql_string(v) if isinstance(v, str) else ""
 
             keywords = s(45)
+
+            # rating/votes: индексы зависят от длины строки
+            rating_idx = 47 if len(parts) > 47 else None
+            votes_idx = 48 if len(parts) > 48 else None
+
             try:
-                rating = float(str(parts[48]).strip()) if parts[48] is not None else 0.0
+                rating = float(str(parts[rating_idx]).strip()) if rating_idx is not None and parts[rating_idx] is not None else 0.0
             except Exception:
                 rating = 0.0
+
             try:
-                votes = int(str(parts[49]).strip()) if parts[49] is not None else 0
+                votes = int(str(parts[votes_idx]).strip()) if votes_idx is not None and parts[votes_idx] is not None else 0
             except Exception:
                 votes = 0
 
