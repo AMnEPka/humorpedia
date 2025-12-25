@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -36,7 +37,6 @@ from import_people_from_sql import (
     _load_image_map,
     _load_tv_map,
     _parse_migx,
-    _tags_from_keywords,
     _timeline_from_migx_sections,
 )
 from utils import DB_NAME, MONGO_URL, normalize_rich_text
