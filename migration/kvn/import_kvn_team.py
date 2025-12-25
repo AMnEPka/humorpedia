@@ -283,7 +283,7 @@ def main():
     if args.apply:
         client = pymongo.MongoClient(MONGO_URL)
         db = client[DB_NAME]
-        collection = db["content"]
+        collection = db["teams"]  # Store teams in 'teams' collection
 
     imported_count = 0
     
