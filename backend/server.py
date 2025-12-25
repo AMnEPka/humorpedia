@@ -252,6 +252,12 @@ uploads_dir = Path(os.environ.get("UPLOAD_DIR", "/app/uploads"))
 uploads_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
+# Static files for imported media (from migration)
+# Frontend references files like: /media/imported/images/people/...
+imported_media_dir = Path("/app/frontend/public/media")
+if imported_media_dir.exists():
+    app.mount("/media", StaticFiles(directory=str(imported_media_dir)), name="media")
+
 
 # CORS middleware
 app.add_middleware(
