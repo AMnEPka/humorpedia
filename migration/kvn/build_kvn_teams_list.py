@@ -60,8 +60,8 @@ def main():
                 if not parts or parts[0] is None:
                     continue
 
-                # parent is at index 11 in this dump (same as MODX evo/revo schema)
-                if len(parts) <= 11 or str(parts[11]).strip() != parent_id:
+                # parent is at index 14 in this dump
+                if len(parts) <= 14 or str(parts[14]).strip() != parent_id:
                     continue
 
                 try:
