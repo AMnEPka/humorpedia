@@ -99,7 +99,7 @@ class TeamCreate(BaseModel):
     name: str
     team_type: TeamType = TeamType.KVN
     logo: Optional[MediaFile] = None
-    facts: Optional[TeamFacts] = None
+    facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -114,7 +114,7 @@ class TeamUpdate(BaseModel):
     name: Optional[str] = None
     team_type: Optional[TeamType] = None
     logo: Optional[MediaFile] = None
-    facts: Optional[TeamFacts] = None
+    facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
