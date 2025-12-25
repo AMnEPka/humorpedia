@@ -167,7 +167,7 @@ export default function TeamEditPage() {
           {!isNew && team.slug && (
             <Button 
               variant="outline" 
-              onClick={() => window.open(`/teams/${team.team_type || 'kvn'}/${team.slug}`, '_blank')}
+              onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               Предпросмотр
