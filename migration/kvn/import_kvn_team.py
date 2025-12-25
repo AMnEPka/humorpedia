@@ -62,24 +62,23 @@ def create_team_document(
     modules = []
     order = 1
 
-    # Текстовые блоки (Состав, История и т.п.)
-    if text_blocks:
-        for block in text_blocks:
-            if block.get('content'):
-                modules.append({
-                    'id': str(uuid4()),
-                    'type': 'text_block',
-                    'order': order,
-                    'title': block.get('title', 'Без названия'),
-                    'visible': True,
-                    'data': {
-                        'title': block.get('title', 'Без названия'),
-                        'content': normalize_rich_text(block['content']),
-                    }
-                })
-                order += 1
+    # Первый блок - основной текст (без заголовка)
+    if text_blocks and len(text_blocks) > 0 and not text_blocks[0].get('title'):
+        modules.append({
+            'id': str(uuid4()),
+            'type': 'text_block',
+            'order': order,
+            'title': '',
+            'visible': True,
+            'data': {
+                'title': '',
+                'content': normalize_rich_text(text_blocks[0]['content']),
+            }
+        })
+        order += 1
+        text_blocks = text_blocks[1:]  # Убираем первый блок из списка
 
-    # Таймлайн
+    # Таймлайн идёт вторым
     if timeline_events:
         normalized_events = []
         for ev in timeline_events:
@@ -103,6 +102,24 @@ def create_team_document(
                     'items': normalized_events,
                 }
             })
+            order += 1
+
+    # Остальные текстовые блоки (4 стандартных)
+    if text_blocks:
+        for block in text_blocks:
+            if block.get('content'):
+                modules.append({
+                    'id': str(uuid4()),
+                    'type': 'text_block',
+                    'order': order,
+                    'title': block.get('title', 'Без названия'),
+                    'visible': True,
+                    'data': {
+                        'title': block.get('title', 'Без названия'),
+                        'content': normalize_rich_text(block['content']),
+                    }
+                })
+                order += 1
 
     return {
         '_id': str(uuid4()),
