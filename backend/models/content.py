@@ -69,17 +69,6 @@ class PersonUpdate(BaseModel):
 
 # === TEAM ===
 
-class TeamFacts(BaseModel):
-    """Quick facts about a team"""
-    founded_year: Optional[int] = None
-    disbanded_year: Optional[int] = None
-    captain_id: Optional[str] = None
-    captain_name: Optional[str] = None
-    city: Optional[str] = None
-    status: str = "active"  # active, disbanded, reformed
-    achievements: List[str] = Field(default_factory=list)
-
-
 class Team(BaseContent):
     """Team page (universal for KVN, Liga Smeha, Improv, etc.)"""
     content_type: ContentType = ContentType.TEAM
@@ -90,7 +79,7 @@ class Team(BaseContent):
     # Basic info
     name: str
     logo: Optional[MediaFile] = None
-    facts: TeamFacts = Field(default_factory=TeamFacts)
+    facts: Dict[str, str] = Field(default_factory=dict)  # Flexible key-value pairs for team info
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     
     # Modular content
@@ -110,7 +99,7 @@ class TeamCreate(BaseModel):
     name: str
     team_type: TeamType = TeamType.KVN
     logo: Optional[MediaFile] = None
-    facts: Optional[TeamFacts] = None
+    facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -125,7 +114,7 @@ class TeamUpdate(BaseModel):
     name: Optional[str] = None
     team_type: Optional[TeamType] = None
     logo: Optional[MediaFile] = None
-    facts: Optional[TeamFacts] = None
+    facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None

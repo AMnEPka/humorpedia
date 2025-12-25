@@ -27,7 +27,7 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
           title: m.data.title
         })) || [];
     }
-  }, [modules, mode, contentType]);
+  }, [modules, mode]);
 
   if (items.length === 0) return null;
 
@@ -63,7 +63,8 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
 }
 
 export default function TeamDetailPage() {
-  const { category = 'kvn', slug } = useParams();
+  const { slug } = useParams();
+  const category = 'kvn';
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -151,6 +152,29 @@ export default function TeamDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Facts Table */}
+          {team.facts && Object.keys(team.facts).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" /> Информация
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {Object.entries(team.facts).map(([key, value], i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="py-2 pr-4 text-gray-600 font-medium">{key}</td>
+                        <td className="py-2" dangerouslySetInnerHTML={{ __html: value }} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Team Members */}
           {team.members?.length > 0 && (
             <Card>
@@ -208,6 +232,61 @@ export default function TeamDetailPage() {
             </Card>
           )}
 
+          {/* Social Links */}
+          {team.social_links && Object.keys(team.social_links).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="h-5 w-5" /> Ссылки
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="space-y-2">
+                  {team.social_links.website && (
+                    <a 
+                      href={team.social_links.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      🌐 Официальный сайт
+                    </a>
+                  )}
+                  {team.social_links.vk && (
+                    <a 
+                      href={team.social_links.vk} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      VK
+                    </a>
+                  )}
+                  {team.social_links.youtube && (
+                    <a 
+                      href={team.social_links.youtube} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      YouTube
+                    </a>
+                  )}
+                  {team.social_links.instagram && (
+                    <a 
+                      href={team.social_links.instagram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      Instagram
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Button variant="outline" className="w-full" onClick={() => navigator.share?.({ url: window.location.href, title: team.title })}>
             <Share2 className="mr-2 h-4 w-4" /> Поделиться
           </Button>
@@ -245,6 +324,50 @@ export default function TeamDetailPage() {
 
 // Module renderer component (same as PersonDetailPage)
 function ModuleRenderer({ module }) {
+  // Add table and heading styles
+  const contentStyles = `
+    /* Таблицы */
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin: 1rem 0;
+      border: 1px solid #e5e7eb;
+    }
+    th, td { 
+      border: 1px solid #e5e7eb; 
+      padding: 0.5rem 0.75rem; 
+      text-align: left;
+    }
+    th { 
+      background-color: #f3f4f6; 
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    
+    /* Заголовки h3 в тексте - жирные и увеличенные */
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #1f2937;
+      line-height: 1.4;
+    }
+    
+    /* Также стилизуем strong на случай других заголовков */
+    p strong:only-child,
+    p > strong:first-child {
+      font-size: 1.125rem;
+      font-weight: 700;
+      display: block;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
+  `;
+
   switch (module.type) {
     case 'text_block':
       return (
@@ -255,6 +378,7 @@ function ModuleRenderer({ module }) {
             </CardHeader>
           )}
           <CardContent>
+            <style>{contentStyles}</style>
             <div 
               className="prose prose-blue max-w-none"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
