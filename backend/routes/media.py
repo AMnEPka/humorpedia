@@ -158,6 +158,61 @@ async def list_media(
         "total": total,
         "skip": skip,
         "limit": limit
+
+
+@router.get("/browse", response_model=MediaBrowseResponse)
+async def browse_imported_media(
+    request: Request,
+    prefix: str = Query("images/people", description="Path prefix under /media/imported"),
+    query: Optional[str] = Query(None, description="Case-insensitive substring filter"),
+    limit: int = Query(200, ge=1, le=2000),
+):
+    """Browse local imported media files from frontend/public/media/imported.
+
+    Returns URLs usable directly in <img src="...">.
+    """
+    user = await get_current_user(request)
+    if not user or user.get("role") not in ["admin", "editor", "moderator"]:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    base_dir = Path("/app/frontend/public/media/imported").resolve()
+    target_dir = (base_dir / prefix).resolve()
+
+    # prevent path traversal
+    if base_dir not in target_dir.parents and target_dir != base_dir:
+        raise HTTPException(status_code=400, detail="Некорректный prefix")
+
+    if not target_dir.exists() or not target_dir.is_dir():
+        return MediaBrowseResponse(items=[], total=0)
+
+    q = (query or "").lower() if query else None
+    items: list[MediaBrowseItem] = []
+
+    exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
+    for p in target_dir.rglob("*"):
+        if not p.is_file():
+            continue
+        if p.suffix.lower() not in exts:
+            continue
+
+        rel = p.relative_to(base_dir).as_posix()  # e.g. images/people/kvn/x.jpg
+        name = p.name
+        if q and q not in rel.lower() and q not in name.lower():
+            continue
+
+        items.append(
+            MediaBrowseItem(
+                path=rel,
+                url=f"/media/imported/{rel}",
+                name=name,
+            )
+        )
+        if len(items) >= limit:
+            break
+
+    return MediaBrowseResponse(items=items, total=len(items))
+
     }
 
 
