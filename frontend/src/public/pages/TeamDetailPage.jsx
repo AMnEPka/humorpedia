@@ -346,7 +346,17 @@ function ModuleRenderer({ module }) {
       background-color: #f9fafb;
     }
     
-    /* Заголовки в тексте - жирные и увеличенные */
+    /* Заголовки h3 в тексте - жирные и увеличенные */
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: #1f2937;
+      line-height: 1.4;
+    }
+    
+    /* Также стилизуем strong на случай других заголовков */
     p strong:only-child,
     p > strong:first-child {
       font-size: 1.125rem;
