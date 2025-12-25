@@ -169,7 +169,18 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
   }, []);
 
   const updateData = useCallback((newData) => {
-    setLocalModule(prev => prev ? { ...prev, data: newData } : null);
+    setLocalModule(prev => {
+      if (!prev) return null;
+      const next = { ...prev, data: newData };
+
+      // Для text_block хотим, чтобы название модуля в списке совпадало с заголовком блока
+      // (data.title), чтобы админка была удобнее.
+      if (prev.type === 'text_block' && typeof newData?.title === 'string') {
+        next.title = newData.title;
+      }
+
+      return next;
+    });
   }, []);
 
   if (!localModule) return null;
