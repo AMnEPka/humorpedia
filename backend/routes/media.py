@@ -89,7 +89,7 @@ async def upload_file(
             import io
             img = Image.open(io.BytesIO(content))
             width, height = img.size
-        except:
+        except Exception:
             pass
     
     # Create media record
