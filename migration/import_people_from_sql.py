@@ -613,7 +613,13 @@ def build_person_doc(
     tags = _tags_from_keywords(sc.keywords)
 
     # rating
-    rating = {"average": float(sc.rating or 0.0), "count": int(sc.votes or 0)}
+    avg = float(sc.rating or 0.0)
+    # В источнике встречаются кривые значения (например 12.0). Нормализуем.
+    if avg < 0:
+        avg = 0.0
+    if avg > 10:
+        avg = 10.0
+    rating = {"average": avg, "count": int(sc.votes or 0)}
 
     # image
     image_url = None
