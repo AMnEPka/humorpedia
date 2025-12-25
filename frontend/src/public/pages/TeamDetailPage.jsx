@@ -324,8 +324,9 @@ export default function TeamDetailPage() {
 
 // Module renderer component (same as PersonDetailPage)
 function ModuleRenderer({ module }) {
-  // Add table styles
-  const tableStyles = `
+  // Add table and heading styles
+  const contentStyles = `
+    /* Таблицы */
     table { 
       border-collapse: collapse; 
       width: 100%; 
@@ -344,6 +345,17 @@ function ModuleRenderer({ module }) {
     tr:nth-child(even) {
       background-color: #f9fafb;
     }
+    
+    /* Заголовки в тексте - жирные и увеличенные */
+    p strong:only-child,
+    p > strong:first-child {
+      font-size: 1.125rem;
+      font-weight: 700;
+      display: block;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
   `;
 
   switch (module.type) {
@@ -356,7 +368,7 @@ function ModuleRenderer({ module }) {
             </CardHeader>
           )}
           <CardContent>
-            <style>{tableStyles}</style>
+            <style>{contentStyles}</style>
             <div 
               className="prose prose-blue max-w-none"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
