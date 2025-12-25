@@ -232,6 +232,61 @@ export default function TeamDetailPage() {
             </Card>
           )}
 
+          {/* Social Links */}
+          {team.social_links && Object.keys(team.social_links).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="h-5 w-5" /> Ссылки
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="space-y-2">
+                  {team.social_links.website && (
+                    <a 
+                      href={team.social_links.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      🌐 Официальный сайт
+                    </a>
+                  )}
+                  {team.social_links.vk && (
+                    <a 
+                      href={team.social_links.vk} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      VK
+                    </a>
+                  )}
+                  {team.social_links.youtube && (
+                    <a 
+                      href={team.social_links.youtube} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      YouTube
+                    </a>
+                  )}
+                  {team.social_links.instagram && (
+                    <a 
+                      href={team.social_links.instagram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                    >
+                      Instagram
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Button variant="outline" className="w-full" onClick={() => navigator.share?.({ url: window.location.href, title: team.title })}>
             <Share2 className="mr-2 h-4 w-4" /> Поделиться
           </Button>
