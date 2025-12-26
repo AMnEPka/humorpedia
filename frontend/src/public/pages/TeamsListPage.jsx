@@ -8,9 +8,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import publicApi from '../utils/api';
 
 const teamCategories = [
-  { id: 'kvn', name: 'КВН', path: '/teams/kvn' },
-  { id: 'lg', name: 'Лига смеха', path: '/teams/lg' },
-  { id: 'improv', name: 'Импровизация', path: '/teams/improv' },
+  { id: 'kvn', name: 'КВН', path: '/kvn/teams' },
+  { id: 'lg', name: 'Лига смеха', path: '/kvn/teams' },
+  { id: 'improv', name: 'Импровизация', path: '/kvn/teams' },
 ];
 
 export default function TeamsListPage() {
@@ -60,9 +60,9 @@ export default function TeamsListPage() {
         <ol className="flex items-center gap-2 text-sm text-gray-500">
           <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
           <li>/</li>
-          <li><Link to="/teams/kvn" className="hover:text-blue-600">Команды</Link></li>
+          <li><Link to="/kvn/teams" className="hover:text-blue-600">КВН</Link></li>
           <li>/</li>
-          <li className="text-gray-900">{currentCategory.name}</li>
+          <li className="text-gray-900">Команды</li>
         </ol>
       </nav>
 
@@ -107,7 +107,7 @@ export default function TeamsListPage() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {teams.map((team) => (
-              <Link key={team.id} to={`/teams/${category}/${team.slug}`}>
+              <Link key={team.id} to={`/kvn/teams/${team.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="aspect-square bg-gray-100 overflow-hidden">
                     {team.logo ? (

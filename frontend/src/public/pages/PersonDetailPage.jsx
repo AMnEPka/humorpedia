@@ -309,7 +309,7 @@ export default function PersonDetailPage() {
                   {person.teams.map((team, i) => (
                     <Link 
                       key={i} 
-                      to={`/teams/kvn/${team.slug}`}
+                      to={`/kvn/teams/${team.slug}`}
                       className="block p-2 rounded hover:bg-gray-100 transition-colors"
                     >
                       {team.title || team.name}

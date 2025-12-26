@@ -97,7 +97,7 @@ export default function TeamDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
         <p className="text-gray-500 mb-4">{error || 'Команда не найдена'}</p>
         <Button asChild>
-          <Link to={`/teams/${category}`}>Вернуться к списку</Link>
+          <Link to="/kvn/teams">Вернуться к списку</Link>
         </Button>
       </div>
     );
@@ -112,7 +112,7 @@ export default function TeamDetailPage() {
         <ol className="flex items-center gap-2 text-sm text-gray-500">
           <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
           <li>/</li>
-          <li><Link to={`/teams/${category}`} className="hover:text-blue-600">{categoryNames[category] || 'Команды'}</Link></li>
+          <li><Link to="/kvn/teams" className="hover:text-blue-600">КВН</Link></li>
           <li>/</li>
           <li className="text-gray-900 truncate max-w-[200px]">{team.title}</li>
         </ol>

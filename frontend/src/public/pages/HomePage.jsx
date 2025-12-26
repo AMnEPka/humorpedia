@@ -61,7 +61,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="secondary" size="lg">
-              <Link to="/teams/kvn">Команды КВН</Link>
+              <Link to="/kvn/teams">Команды КВН</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="bg-transparent border-white text-white hover:bg-white/10">
               <Link to="/people">Люди</Link>
