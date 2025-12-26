@@ -33,6 +33,70 @@ SQL_FILE = "/app/humorbd.sql"
 PEOPLE_LIST_FILE = "/app/migration/people_list.json"
 TV_MAP_FILE = "/app/migration/tv_map.json"
 IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+TAG_MAP_FILE = "/app/migration/tag_mapping.json"
+
+
+# Transliteration map for cyrillic -> latin slugs
+TRANSLIT_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+}
+
+
+def transliterate_slug(text: str) -> str:
+    """Convert cyrillic text to latin slug"""
+    slug = text.lower().replace(" ", "-").replace(".", "").replace(",", "")
+    slug = ''.join(TRANSLIT_MAP.get(char, char) for char in slug)
+    # Remove non-alphanumeric characters except dashes
+    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    # Remove consecutive dashes
+    slug = re.sub(r'-+', '-', slug)
+    return slug.strip('-')
+
+
+def sync_tags_to_collection(tags: list[str], db) -> None:
+    """
+    Синхронная версия TagService.sync_tags().
+    Создаёт новые теги в коллекции tags, если их нет.
+    Увеличивает usage_count для существующих.
+    """
+    if not tags:
+        return
+    
+    for tag_name in tags:
+        tag_name = tag_name.strip()
+        if not tag_name:
+            continue
+        
+        # Check if tag already exists (case-insensitive)
+        existing = db.tags.find_one({
+            "name": {"$regex": f"^{re.escape(tag_name)}$", "$options": "i"}
+        })
+        
+        if not existing:
+            # Create new tag
+            from uuid import uuid4
+            tag_doc = {
+                "_id": str(uuid4()),
+                "name": tag_name,
+                "slug": transliterate_slug(tag_name),
+                "old_id": None,
+                "usage_count": 1,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            try:
+                db.tags.insert_one(tag_doc)
+            except Exception:
+                pass  # Ignore duplicates
+        else:
+            # Increment usage count
+            db.tags.update_one(
+                {"_id": existing["_id"]},
+                {"$inc": {"usage_count": 1}}
+            )
 
 
 # --------- parsing helpers ---------
