@@ -666,6 +666,8 @@ def _bio_from_migx_sections(sections: list[dict]) -> tuple[str, str, str | None,
 
 
 def _tags_from_keywords(keywords: str) -> list[str]:
+    """DEPRECATED: Старая функция, которая брала теги из keywords.
+    Теперь используем _tags_from_tv() для правильного извлечения тегов."""
     if not keywords:
         return []
     parts = [normalize_rich_text(p.strip()) for p in keywords.split(",")]
@@ -677,6 +679,7 @@ def build_person_doc(
     tv_by_id: dict[str, str],
     tv_map: dict[str, str],
     image_map: dict[str, str],
+    tag_map: dict[str, str],
     image_hint: str | None,
 ):
     tv_named = {}
@@ -710,8 +713,8 @@ def build_person_doc(
     if not timeline_events:
         timeline_events = _timeline_from_migx_sections(sections)
 
-    # tags
-    tags = _tags_from_keywords(sc.keywords)
+    # tags - из TV переменной 'tags' (правильный способ)
+    tags = _tags_from_tv(tv_named.get('tags', ''), tag_map)
 
     # rating
     avg = float(sc.rating or 0.0)
