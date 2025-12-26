@@ -31,6 +31,69 @@ logger = logging.getLogger(__name__)
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'humorpedia')
 
+# Default admin credentials
+DEFAULT_ADMIN_USERNAME = "admin"
+DEFAULT_ADMIN_EMAIL = "admin@humorpedia.local"
+DEFAULT_ADMIN_PASSWORD = "admin"
+
+
+async def ensure_default_admin(db):
+    """Create default admin user if not exists"""
+    try:
+        existing = await db.users.find_one({
+            "$or": [
+                {"username": DEFAULT_ADMIN_USERNAME},
+                {"email": DEFAULT_ADMIN_EMAIL}
+            ]
+        })
+        
+        if existing:
+            logger.info(f"Default admin already exists: {existing.get('username')}")
+            return
+        
+        password_hash = bcrypt.hashpw(DEFAULT_ADMIN_PASSWORD.encode(), bcrypt.gensalt()).decode()
+        
+        admin_doc = {
+            "_id": str(uuid4()),
+            "username": DEFAULT_ADMIN_USERNAME,
+            "email": DEFAULT_ADMIN_EMAIL,
+            "password_hash": password_hash,
+            "profile": {
+                "full_name": "Administrator",
+                "avatar": None,
+                "bio": None,
+                "birth_date": None,
+                "location": None
+            },
+            "role": "admin",
+            "permissions": ["comment", "vote", "edit", "delete", "moderate", "admin"],
+            "oauth": {
+                "vk_id": None,
+                "yandex_id": None,
+                "vk_data": None,
+                "yandex_data": None
+            },
+            "auth_provider": "email",
+            "stats": {
+                "articles_count": 0,
+                "comments_count": 0,
+                "votes_count": 0,
+                "quiz_attempts": 0
+            },
+            "active": True,
+            "verified": True,
+            "banned": False,
+            "old_id": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "last_login_at": None
+        }
+        
+        await db.users.insert_one(admin_doc)
+        logger.info(f"✅ Default admin created: {DEFAULT_ADMIN_USERNAME} / {DEFAULT_ADMIN_PASSWORD}")
+    except Exception as e:
+        logger.error(f"Failed to create default admin: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
