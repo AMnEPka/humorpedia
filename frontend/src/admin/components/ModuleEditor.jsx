@@ -700,7 +700,7 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSave()}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Редактирование: {moduleNames[localModule.type]}
