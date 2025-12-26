@@ -10,8 +10,11 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import bcrypt
 from pathlib import Path
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from uuid import uuid4
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
