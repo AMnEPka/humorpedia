@@ -23,8 +23,8 @@ from import_people_from_sql import _split_rows, _split_fields, _unescape_sql_str
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sql", default="/app/humorbd.sql")
-    parser.add_argument("--out", default="/app/migration/kvn/kvn_teams_list.json")
+    parser.add_argument("--sql", default="C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\humorbd.sql")
+    parser.add_argument("--out", default="C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\kvn_teams_list.json")
     parser.add_argument("--parent", type=int, default=1031)
     args = parser.parse_args()
 
