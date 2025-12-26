@@ -885,10 +885,18 @@ def main():
             if not doc.get('image') and existing.get('image'):
                 doc['image'] = existing.get('image')
 
+            # Синхронизируем теги
+            if doc.get('tags'):
+                sync_tags_to_collection(doc['tags'], db)
+
             doc["_id"] = existing["_id"]
             db.people.replace_one({"slug": doc.get("slug")}, doc)
             updated += 1
         else:
+            # Синхронизируем теги при создании
+            if doc.get('tags'):
+                sync_tags_to_collection(doc['tags'], db)
+            
             db.people.insert_one(doc)
             imported += 1
 
