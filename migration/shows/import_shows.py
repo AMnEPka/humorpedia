@@ -261,8 +261,13 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         else:
             poster_url = tv_img
 
-    # Rating (not used in shows, but keep structure)
-    rating = None
+    # Rating - используем из SQL дампа
+    avg = float(sc.rating or 0.0)
+    if avg < 0:
+        avg = 0.0
+    if avg > 10:
+        avg = 10.0
+    rating = {"average": avg, "count": int(sc.votes or 0)}
 
     doc = {
         '_id': str(uuid4()),
@@ -279,7 +284,7 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         'modules': modules,
         'poster': poster_url,
         'rating': rating,
-        'votes_count': 0,
+        'votes_count': int(sc.votes or 0),
         'views': 0,
         'comments_count': 0,
         'participant_ids': [],
