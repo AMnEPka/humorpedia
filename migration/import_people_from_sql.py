@@ -831,6 +831,7 @@ def main():
 
     tv_map = _load_tv_map()
     image_map = _load_image_map()
+    tag_map = _load_tag_map()
 
     sc_rows, tv_vals = _extract_for_ids(target_ids)
 
@@ -849,7 +850,7 @@ def main():
                     image_hint = p.get("image")
                     break
 
-        doc = build_person_doc(sc, tv_vals.get(cid, {}), tv_map, image_map, image_hint)
+        doc = build_person_doc(sc, tv_vals.get(cid, {}), tv_map, image_map, tag_map, image_hint)
         docs.append((cid, doc))
 
     print(f"Собрано документов: {len(docs)}")
