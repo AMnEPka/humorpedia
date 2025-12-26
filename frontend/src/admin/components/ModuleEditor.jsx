@@ -196,13 +196,11 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Содержимое (HTML)</Label>
-              <Textarea
-                value={data.content || ''}
-                onChange={(e) => updateData({ ...data, content: e.target.value })}
-                placeholder="<p>Текст...</p>"
-                rows={10}
-                className="font-mono text-sm"
+              <Label>Содержимое</Label>
+              <RichTextEditor
+                content={data.content || ''}
+                onChange={(html) => updateData({ ...data, content: html })}
+                placeholder="Начните вводить текст..."
               />
             </div>
           </div>
