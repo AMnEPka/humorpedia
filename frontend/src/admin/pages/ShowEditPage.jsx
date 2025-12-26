@@ -39,7 +39,13 @@ export default function ShowEditPage() {
   useEffect(() => {
     if (!isNew) {
       contentApi.getShow(id).then(res => {
-        setShow({ ...emptyShow, ...res.data, facts: { ...emptyShow.facts, ...res.data.facts }, seo: { ...emptyShow.seo, ...res.data.seo } });
+        setShow({ 
+          ...emptyShow, 
+          ...res.data, 
+          facts: res.data.facts || {},
+          social_links: res.data.social_links || {},
+          seo: { ...emptyShow.seo, ...res.data.seo } 
+        });
       }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
     }
   }, [id, isNew]);
