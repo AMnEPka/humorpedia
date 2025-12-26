@@ -4,7 +4,8 @@ import { publicApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Calendar, Tv, Users, ExternalLink } from 'lucide-react';
+import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
+import RatingWidget from '../components/RatingWidget';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
