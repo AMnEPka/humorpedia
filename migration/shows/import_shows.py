@@ -180,14 +180,49 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     # Parse MIGX
     sections = _parse_migx(tv_named.get("config", ""))
 
-    # Извлекаем таблицу фактов из секции "info"
+    # Извлекаем таблицу фактов и ссылки из секции "info"
     facts = {}
     first_text_block = ""
+    social_links = {}
+    
     for sec in sections:
         if sec.get("MIGX_formname") == "info":
             table_html = sec.get("table", "")
             facts = _parse_facts_table(table_html)
             first_text_block = sec.get("subtitle", "")
+            
+            # Извлекаем social links из list_social
+            list_social = sec.get("list_social", "")
+            if list_social:
+                try:
+                    import json
+                    if isinstance(list_social, str):
+                        social_data = json.loads(list_social)
+                    else:
+                        social_data = list_social
+                    
+                    if isinstance(social_data, list):
+                        for item in social_data:
+                            if isinstance(item, dict):
+                                link = item.get('link', '')
+                                name = item.get('name', '').lower()
+                                
+                                if link:
+                                    # Определяем тип ссылки
+                                    if 'vk.com' in link or 'vkontakte' in link:
+                                        social_links['vk'] = link
+                                    elif 'youtube' in link:
+                                        social_links['youtube'] = link
+                                    elif 'instagram' in link or 'instagr.am' in link:
+                                        social_links['instagram'] = link
+                                    elif 'telegram' in link or 't.me' in link:
+                                        social_links['telegram'] = link
+                                    else:
+                                        # Всё остальное - официальный сайт
+                                        social_links['website'] = link
+                except Exception as e:
+                    print(f"  ⚠️ Ошибка парсинга list_social: {e}")
+            
             break
 
     # Извлекаем остальные модули
