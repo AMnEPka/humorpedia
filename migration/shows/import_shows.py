@@ -196,18 +196,29 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     
     # Первый текстовый блок (из info subtitle)
     if first_text_block:
-        modules.append({
-            'id': str(uuid4()),
-            'type': 'text_block',
-            'order': order,
-            'title': '',
-            'visible': True,
-            'data': {
+        # Удаляем заголовок если он дублирует название шоу
+        cleaned_text = normalize_rich_text(first_text_block)
+        
+        # Проверяем, начинается ли текст с названия шоу
+        title_lower = sc.pagetitle.lower()
+        if cleaned_text.lower().startswith(f'<p>{title_lower}') or cleaned_text.lower().startswith(f'<h'):
+            # Удаляем первый параграф/заголовок
+            import re
+            cleaned_text = re.sub(r'^<[ph]\d?>.*?</[ph]\d?>', '', cleaned_text, count=1, flags=re.IGNORECASE | re.DOTALL).strip()
+        
+        if cleaned_text:
+            modules.append({
+                'id': str(uuid4()),
+                'type': 'text_block',
+                'order': order,
                 'title': '',
-                'content': normalize_rich_text(first_text_block),
-            }
-        })
-        order += 1
+                'visible': True,
+                'data': {
+                    'title': '',
+                    'content': cleaned_text,
+                }
+            })
+            order += 1
     
     # Остальные секции (текст и таблицы)
     for sec in sections:
