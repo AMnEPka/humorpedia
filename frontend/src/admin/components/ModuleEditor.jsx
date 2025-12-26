@@ -28,6 +28,7 @@ import {
   HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import RichTextEditor from './RichTextEditor';
 
 const moduleIcons = {
   hero_card: Users,
