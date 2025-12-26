@@ -2,13 +2,20 @@
 """Импорт шоу из humorbd.sql в MongoDB.
 
 Этот скрипт импортирует шоу (parent=33) и их дочерние страницы (сезоны).
+Отмечает импортированные шоу в shows_list.json.
 
 Использование:
   # dry-run для одного шоу
   python3 import_shows.py --ids 1629 --dry-run
   
-  # импорт одного шоу с дочерними
+  # импорт одного шоу
   python3 import_shows.py --ids 1629 --apply
+  
+  # импорт всех pending из shows_list.json
+  python3 import_shows.py --all --apply
+  
+  # импорт первых N pending шоу
+  python3 import_shows.py --batch 10 --apply
 """
 
 from __future__ import annotations
