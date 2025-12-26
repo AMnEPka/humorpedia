@@ -326,6 +326,7 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         'created_at': datetime.now(timezone.utc).isoformat(),
         'updated_at': datetime.now(timezone.utc).isoformat(),
         'facts': facts,
+        'social_links': social_links,  # Добавлено!
         'description': normalize_rich_text(sc.description) if sc.description else '',
         'modules': modules,
         'poster': poster_url,
