@@ -112,7 +112,7 @@ export default function TeamDetailPage() {
         <ol className="flex items-center gap-2 text-sm text-gray-500">
           <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
           <li>/</li>
-          <li><Link to={`/teams/${category}`} className="hover:text-blue-600">{categoryNames[category] || 'Команды'}</Link></li>
+          <li><Link to="/kvn/teams" className="hover:text-blue-600">КВН</Link></li>
           <li>/</li>
           <li className="text-gray-900 truncate max-w-[200px]">{team.title}</li>
         </ol>
