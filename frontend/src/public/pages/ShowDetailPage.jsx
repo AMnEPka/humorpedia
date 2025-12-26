@@ -145,17 +145,27 @@ function ModuleRenderer({ module }) {
 }
 
 export default function ShowDetailPage() {
-  const { slug } = useParams();
+  const { slug, parentSlug, childSlug, grandchildSlug, greatGrandchildSlug } = useParams();
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Собираем полный путь из всех параметров
+  const fullPath = [parentSlug, childSlug, grandchildSlug, greatGrandchildSlug]
+    .filter(Boolean)
+    .join('/') || slug;
+
   useEffect(() => {
-    publicApi.getShow(slug)
+    // Если есть вложенный путь, используем API by-path
+    const fetchShow = fullPath.includes('/') 
+      ? publicApi.getShowByPath(fullPath)
+      : publicApi.getShow(slug || fullPath);
+    
+    fetchShow
       .then(res => setShow(res.data))
       .catch(() => setError('Шоу не найдено'))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, fullPath]);
 
   if (loading) {
     return (
