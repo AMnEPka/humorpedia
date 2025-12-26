@@ -98,8 +98,9 @@ function AppRoutes() {
         <Route path="/people/:slug" element={<PersonDetailPage />} />
         
         {/* Teams with categories */}
-        <Route path="/teams" element={<Navigate to="/teams/kvn" replace />} />
-        <Route path="/teams/:category" element={<TeamsListPage />} />
+        <Route path="/teams" element={<Navigate to="/kvn/teams" replace />} />
+        <Route path="/teams/:category" element={<Navigate to="/kvn/teams" replace />} />
+        <Route path="/kvn/teams" element={<TeamsListPage />} />
         <Route path="/kvn/teams/:slug" element={<TeamDetailPage />} />
         
         {/* Shows */}
