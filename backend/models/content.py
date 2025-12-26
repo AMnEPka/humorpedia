@@ -149,6 +149,10 @@ class Show(BaseContent):
     facts: ShowFacts = Field(default_factory=ShowFacts)
     description: Optional[str] = None  # HTML
     
+    # Hierarchy support
+    parent_id: Optional[str] = None  # For child shows (seasons, episodes)
+    child_show_ids: List[str] = Field(default_factory=list)  # List of child shows
+    
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
     
@@ -167,6 +171,7 @@ class ShowCreate(BaseModel):
     poster: Optional[MediaFile] = None
     facts: Optional[ShowFacts] = None
     description: Optional[str] = None
+    parent_id: Optional[str] = None  # For child shows
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
@@ -181,6 +186,7 @@ class ShowUpdate(BaseModel):
     poster: Optional[MediaFile] = None
     facts: Optional[ShowFacts] = None
     description: Optional[str] = None
+    parent_id: Optional[str] = None  # For child shows
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None
