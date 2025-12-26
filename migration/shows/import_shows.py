@@ -45,6 +45,43 @@ from utils import DB_NAME, MONGO_URL, normalize_rich_text
 SQL_FILE = "/app/humorbd.sql"
 TAG_MAP_FILE = "/app/migration/tag_mapping.json"
 IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+SHOWS_LIST_FILE = "/app/migration/shows/shows_list.json"
+
+
+def _load_shows_list() -> list[dict]:
+    """Загружает список шоу из JSON."""
+    if not os.path.exists(SHOWS_LIST_FILE):
+        return []
+    with open(SHOWS_LIST_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def _save_shows_list(shows: list[dict]) -> None:
+    """Сохраняет список шоу в JSON."""
+    with open(SHOWS_LIST_FILE, 'w', encoding='utf-8') as f:
+        json.dump(shows, f, ensure_ascii=False, indent=2)
+
+
+def _mark_show_imported(show_id: int) -> None:
+    """Отмечает шоу как импортированное в shows_list.json."""
+    shows = _load_shows_list()
+    for show in shows:
+        if show['id'] == show_id:
+            show['status'] = 'imported'
+            show['imported_at'] = datetime.now(timezone.utc).isoformat()
+            break
+    _save_shows_list(shows)
+
+
+def _mark_show_error(show_id: int, error: str) -> None:
+    """Отмечает шоу с ошибкой."""
+    shows = _load_shows_list()
+    for show in shows:
+        if show['id'] == show_id:
+            show['status'] = 'error'
+            show['error'] = error[:200]
+            break
+    _save_shows_list(shows)
 
 
 # Transliteration map for cyrillic -> latin slugs
