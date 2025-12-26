@@ -1,134 +1,120 @@
 <analysis>**original_problem_statement:**
-The user wants to rewrite the website  from scratch. The initial phase focused on migrating all people content from a MySQL dump. The user has now confirmed this phase is complete and wants to begin the next major task: migrating KVN Teams.
+The user's goal is to recreate the website . The project has moved through several phases. The people migration is complete. The current work focuses on migrating complex content types like KVN Teams and Shows, which involves parsing nested data structures from a MySQL dump, creating new import scripts, and building out the corresponding frontend pages. A major effort was also undertaken to refactor the tag import system to be centralized and robust. Additionally, the URL structure for KVN teams was refactored based on user requirements.
 
-**PRODUCT REQUIREMENTS (for KVN Teams):**
-1.  **New Content Subtype:** Create a new subtype for content, KVN Team, likely within the existing  collection, distinguished by a  field.
-2.  **Data Source:** Find all records in the SQL dump where the  ID is 1031.
-3.  **URL Structure:** Public URLs should be .
-4.  **Data Mapping:**
-    *   Photo, social links, and rating system are the same as for people.
-    *   A new facts table with a variable set of key-value pairs (e.g., Город основания, Год основания, Высшая лига, КиВиНы) needs to be displayed.
-    *   An untitled block of text (equivalent to Biography) should be displayed.
-    *   A Table of Contents should link to text blocks that appear *after* the timeline. These blocks typically include Состав команды, История команды, etc.
-    *   A timeline module should be present, but might only contain date/title without extensive descriptions.
-    *   Four distinct text blocks (Состав, История, etc.) should follow the timeline, often containing tables.
-5.  **Admin Panel:** Create an admin interface for this new KVN Team subtype.
-6.  **Import Script:** Create a new, separate import script for KVN teams, organized within a  subfolder.
+**PRODUCT REQUIREMENTS (current focus):**
+
+1.  **KVN Teams:**
+    *   **Status:** Single-team import is complete and verified by the user after multiple iterations.
+    *   **Data Source:** SQL dump,  ID 1031.
+    *   **URL Structure:**  for the list,  for details.
+    *   **Features Implemented:** Dynamic facts table, social links, styled tables within content, correct module ordering (including timeline), and finding/merging a separate games list HTML table into the main content.
+
+2.  **Shows:**
+    *   **Status:** In progress. A test case (Comedy Баттл, ID 1629) has been partially imported.
+    *   **Data Source:** SQL dump, base parent ID 33.
+    *   **Architecture:** Implemented a hierarchical structure using a  field within the  collection to handle parent-child relationships (e.g., Show Name and Show Name Season 1).
+    *   **Features Implemented (for test case):** Refactored  to a two-column layout, added dynamic facts table, implemented clickable tags, and fixed rating widget display.
+
+3.  **Tags:**
+    *   **Status:** Complete. A new, centralized system has been implemented.
+    *   **Architecture:** Tags are parsed from the SQL dump ( and TV variables) into a central . All import scripts now use a shared service () to sync tags into a dedicated  collection in MongoDB, correctly managing . This has been applied to both KVN Team and People import scripts.
 
 **User's preferred language**: Russian
 
 **what currently exists?**
-A full-stack application (FastAPI/React/MongoDB) with a completed and user-verified data migration workflow for the people content type. A robust script, , handles complex data cleaning, MIGX JSON parsing, and normalization. A full Docker Compose development environment ( and Dockerfiles) has been created and documented. The agent has just started implementing the new KVN Team content type, including creating backend models and starting work on the frontend page.
+The application is a full-stack FastAPI/React/MongoDB project. The people data migration is complete and stable. The import and display for a single, complex KVN Team () has been fully implemented and polished through multiple rounds of user feedback, serving as a robust template for future content types. A centralized tag management system is now in place and integrated into the people and KVN team import scripts. The URL structure has been refactored per user request. The initial implementation for importing hierarchical Show content has begun, with a test case successfully imported and its detail page built out.
 
 **Last working item**:
--   Last item agent was working: The agent began implementing the new KVN Team content type as requested by the user. This involved:
-    1.  Planning the new data structure by extending the existing  model with a  enum and a flexible  dictionary.
-    2.  Creating a new directory  for the new migration scripts.
-    3.  Modifying the backend models in  to support .
-    4.  Beginning modifications on the frontend page  to display the new data structure.
-    5.  During the frontend modifications, the agent ran into persistent ESLint and build errors, which it was unable to resolve.
+-   Last item agent was working: The agent was implementing a user request to find and display social links for Shows. The user reported a missing website link for Comedy Баттл. The agent successfully located the link data within a nested MIGX JSON field () in the SQL dump and updated the  script to parse it. The next step is to re-run the import and verify the link appears on the frontend.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? Frontend testing agent (to verify the new Team Detail page renders correctly after the build is fixed).
+-   Which testing method agent to use? manual testing by curl
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Frontend Build/Linting Failure (P0 - BLOCKER)**
-    -   **Description:** The frontend application is failing to compile due to ESLint errors in . The agent repeatedly tried to use  and yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command., which are not correctly configured for this  project, leading to a loop. The last reported error was , indicating a  hook is missing dependencies.
-    -   **Attempted fixes:** The agent tried various linting commands and tool calls which failed. It also attempted to modify ESLint configuration indirectly, which was not the root cause.
+-   **Issue 1: Verify Social Link implementation for Shows (P0)**
+    -   **Description:** The import script  was updated to extract a website link from a newly discovered field. The changes need to be applied and verified.
     -   **Next debug checklist:**
-        1.  Stop using  or yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command..
-        2.  Run yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. within the  directory and observe the terminal output for the exact ESLint error messages.
-        3.  View the file .
-        4.  Locate the  hook mentioned in the error (likely around line 30) and add the missing dependencies to its dependency array.
-        5.  Run yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. again to confirm the build is successful.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a hard blocker preventing any further development or testing of the new KVN Team frontend page. Fixing it will unblock the primary task.
+        1.  Delete the existing Comedy Баттл show document from the  collection to ensure a clean import.
+        2.  Run the updated  script for ID  with the  flag.
+        3.  Use  or a debug script to check the API response for  to confirm the  field is now populated.
+        4.  Take a screenshot of the page  to visually confirm that the Ссылки section with the website link now appears in the sidebar.
+    -   **Why fix this issue and what will be achieved with the fix?** This will complete the feature set for the single show page as per the user's latest feedback, making the  script feature-complete for the test case.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1: Implement KVN Team Content Type (P0)**
-    -   **Where to resume:** The immediate priority is to fix the blocking frontend build issue (Issue 1). Once fixed, resume work on:
-        1.  **Backend:** Create the new import script . This script should parse the data for a single team (start with ID ), extract the  table, the multiple text blocks, and the timeline, and save it to the  collection with  and .
-        2.  **Frontend:** Complete the  to correctly render all the new data fields: facts table, multiple text blocks (with titles), and timeline.
-        3.  **Testing:** Once a single team is imported and the page renders, test it with the screenshot tool.
-    -   **What will be achieved with this?** A fully functional, end-to-end workflow for importing and displaying a single KVN team.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:** Issue 1: Frontend Build/Linting Failure
+-   None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: UI for Photo Picker in Admin Panel:** Implement the frontend UI for the media browser using the existing  endpoint. This involves a modal with a searchable list of images from the  directory.
-    -   **P2: Mass Data Migration for KVN Teams:** After the script for one team is perfected, create a master list of all KVN teams (parent ID 1031) and perform the mass import.
-    -   **P3: Mass Data Migration for Other Content Types:** Adapt the migration process for , , , , and .
+    -   **P1: Mass Import KVN Teams:** Run the finalized  script for all 442 KVN teams identified in .
+    -   **P1: Mass Import Shows:** Run the finalized  script for all 58 top-level shows (parent ID 33). Decide on a strategy for importing their child pages.
+    -   **P2: UI for Photo Picker in Admin Panel:** Implement the frontend UI for the media browser using the existing  endpoint.
+    -   **P3: Mass Data Migration for Other Content Types:** Adapt the migration process for , , , and .
 -   **Future Tasks:**
-    -   **P4: Implement Rating Submission:** Create the backend  endpoint and frontend logic to allow authenticated users to submit new ratings.
+    -   **P4: Implement Rating Submission:** Create the  endpoint and frontend logic.
     -   **P5: Social Logins:** Implement VK and Yandex OAuth.
     -   **P6: Automated Cross-Linking:** Build a system to auto-link mentions of people/teams within content.
 
 **Completed work in this session**
--   **People Migration Complete:** Successfully completed the entire people migration. This involved numerous iterations of fixing data artifacts, including:
-    -   Fixing HTML rendering, escape characters (, , ).
-    -   Fixing incorrect rating values (e.g., >10) and missing vote counts by correcting SQL dump parsing logic.
-    -   Fixing missing photos by correcting URL normalization () and improving the update script logic.
-    -   Fixing missing timeline and personal life modules by implementing a robust parser for MIGX JSON within the SQL dump.
--   **New Golden Import Script:** Created and refined , which is now the definitive, fast, and correct way to import data.
--   **Admin Panel Bug Fix:** Fixed a bug in the  where timeline events were not visible for editing because of a data key mismatch ( vs. ).
--   **Docker Environment:** Created a full  setup with Dockerfiles for the frontend and backend, enabling easy local development.
--   **Documentation:** Fully updated  to reflect the current, correct migration process using the new scripts.
--   **New API Endpoint:** Created  to support a future photo picker in the admin panel.
-
-**Earlier issues found/mentioned but not fixed**
--   None. The agent has been thorough in addressing user feedback.
-
-**Known issue recurrence from previous fork**
--   None.
+-   **KVN Team Import & Page (Complete for single test case):**
+    -   Created and debugged  to correctly parse SQL and generate a list of all KVN teams.
+    -   Created  to import a single team ().
+    -   Iteratively fixed and enhanced the import and frontend based on extensive user feedback:
+        -   Rendered dynamic facts table, social links, and styled HTML tables.
+        -   Correctly ordered and merged different content modules.
+        -   Located and embedded a large, separate HTML table for the List of Games.
+-   **Centralized Tag System (Complete):**
+    -   Refactored the entire tag workflow. Tags are now loaded from the SQL dump into a central .
+    -   Created a  collection in MongoDB.
+    -   Created a  (and a sync wrapper) to add/update tags and their  in the database.
+    -   Updated both  and  to use this new robust system.
+-   **URL Structure Refactor (Complete):**
+    -   Changed all KVN team URLs from  to .
+    -   Updated all frontend routes, links, and breadcrumbs accordingly and verified redirects.
+-   **Show Import & Page (In Progress):**
+    -   Designed and implemented a hierarchical data model () for shows.
+    -   Created the initial  script.
+    -   Fully refactored the  from a hardcoded layout to a flexible two-column design matching the team page.
+    -   Implemented rendering for facts, ratings, tags, and styled content for the test show.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Data Migration (Advanced):** Parsing complex, nested, and escaped MIGX JSON stored as text within SQL  statements.
--   **Content Sub-typing:** Using an  () within a single collection () to differentiate between different kinds of teams (e.g., KVN, Improv) while sharing a common base schema.
--   **Dynamic Data Models:** Using a Pydantic  () to handle an arbitrary number of key-value pairs for the KVN team info table.
--   **Dockerization:** Creating a multi-service  environment for a full-stack application, including database volumes and static file mounts between services.
+-   **Hierarchical Data Modeling:** Using a self-referencing  within a single MongoDB collection () to represent tree-like data structures.
+-   **Centralized Service Layer:** Creating a  in the backend to manage a shared resource ( collection), ensuring consistency and avoiding code duplication in import scripts.
+-   **Synchronous Wrappers for Async Code:** Creating a synchronous function () to allow synchronous migration scripts to interact with the asynchronous backend service layer.
+-   **Iterative Frontend Refactoring:** Replacing a rigid, hardcoded page layout () with a flexible, component-based, two-column layout reusable from other parts of the application.
+-   **Advanced Data Archaeology:** Deeply investigating SQL dumps and nested MIGX JSON to find hidden or non-obvious data fields, such as the separate games list table and social links for shows.
 
 **key DB schema**
--   **content** collection:
-    -   Documents with  will now also have a  field.
-    -   These documents will contain a  field to store the key-value pairs from the info table.
+-   **teams:** (New) , , , .
+-   **shows:** (New) , , , , .
+-   **tags:** (New) . Documents are managed by the .
+-   **people:**  field is now populated correctly.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : The definitive, working script for importing people. Can be used as a template for the KVN teams script.
--   : The new directory for all KVN team migration work.
--   : Contains the  and new  models.
--   : The frontend page for displaying team details, currently in a broken state.
--   : The main file for running the project locally.
--   : Instructions for using Docker.
--   : Updated instructions for the entire migration process.
-
-**Areas that need refactoring**:
--   The migration folder () contains many old, now-obsolete scripts (, , etc.). These could be moved to an  subfolder to reduce clutter.
-
-**key api endpoints**
--   : The primary endpoint for fetching team data.
--   : A new endpoint for listing files in the media directory.
+-   : Finalized script for importing a single KVN team.
+-   : Script for importing shows (currently configured for a single show).
+-   : Updated script for importing people with the correct tag logic.
+-   : The global mapping of all tag IDs to tag names from the SQL dump.
+-   : The service responsible for managing the  collection.
+-   : The polished frontend page for KVN teams.
+-   : The newly refactored frontend page for shows.
+-   : Contains the updated routing structure.
 
 **Critical Info for New Agent**
--   The user considers the people migration task **complete and successful**. Do not revisit it unless explicitly asked.
--   The new, primary focus is **implementing the KVN Team content type**.
--   You are currently **blocked by a frontend build error** in . You must fix this before making any other progress on the KVN team task.
--   Follow the user's direction to create new migration scripts in the  subdirectory. Use  as a reference for the new script's structure.
+-   **Tag System is Centralized:** All new import scripts MUST use the  utility from  to process tags. Do not store tags only as strings on documents; they must be synced with the  collection.
+-   **KVN URL Structure is Final:** The URLs for KVN teams are now  and . Do not revert this.
+-   **Show Hierarchy:** The  collection uses  to manage hierarchy. The current import script is set to only import the top-level show.
+-   **Frontend Layouts:** The two-column layout with a sidebar (seen in  and ) is the preferred standard for new content detail pages.
 
 **documents and test_reports created in this job**
 -   
@@ -136,25 +122,21 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 -   
 -   
 -   
--   
--   
--   
--   The file  was significantly updated.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** 1. yes 2. yes. most likely like people 3. make a new import script (it's better to create subfolders in the migration folder, otherwise there are a lot of files there, we still have to import more than one category of pages). url for teams should be kvn/teams (base page - kvn). admin - make a separate subtype KVN Team, and teams will be the base collection, and from it we will make different types of teams. choose a team with id 1138
-2.  **User:** we are done with the people, I have successfully imported everyone... Let's move on to the KVN teams... (provides detailed spec for KVN teams)
-3.  **User:** tell me how I can mass upload photos to mongodb on my local stand, and how I can then transfer them to you here?
-4.  **User:** just update the readme and I'll try to export the project to myself
-5.  **User:** shouldn't you add requirements.txt? readme - update
-6.  **User:** for now, a dev-variant with a volume for mongo
-7.  **User:** ok, everything seems to be fine, but then I want to do it myself. Therefore you: 1) create a docker-compose file for me (and all related ones) to run the project in docker 2) tell me if the migration/readme.md import instruction you made in md format is up to date?
-8.  **User:** ok, let's import the next 10 people
-9.  **User:** okay, so for the front end everything seems to be in order. Make 10 more pages of people.
-10. **User:** yes!
+1.  **User:** в моей старой странице ссылка есть: это одна ссылка на веб-сайт, вот этот url: https://premier.one/show/comedy-battl постарайся найти его, чтобы не пропускать ссылки у других шоу
+2.  **User:** так, что-то фигня: теги - не кликабельны и их всего 10 штук (а их намного больше) ссылка на сайт шоу и/или соцсети шоу - нет рейтинг - виджет есть, но сам рейтинг не подтянулся. И в первом текстовом блоке убери название шоу в начале (на скриншоте)
+3.  **User:** во-первых, давай не импортировать сразу все дочерние страницы, пока работаем только с первым уровнем иерархии. во-вторых, у родительской камеди баттл - нет оценок-смайликов, нет url, нет таблицы базовой информации по шоу
+4.  **User:** давай начнем с одного тестового шоу. У шоу есть разные форматы страниц. фото, таблица под фото, теги, ссылки и первый текстовый модуль - всегда одинаковые. Дальше могут быть в ассортименте - текстовые блоки, таблицы или какие-то иные блоки. начнем с comedy battle (1629)
+5.  **User:** так, отлично. Давай начнем готовить импорт шоу: у большого количества шоу есть дочерние страницы. Я пока не совсем понимаю, как мне лучше сделать: у меня есть сущность разделы и есть отдельно сущность шоу. Но хотелось бы, чтобы все шоу находились в одном месте, а не в двух разных разделах - иерархические и нет. базовый родительский ресурс, который мы анализируем - 33
+6.  **User:** но если я нажимаю в разделе https://comedyhub-1.preview.emergentagent.com/kvn/teams на команду КВН, то там старая ссылеп, обнови и её
+7.  **User:** так, надо переделать пути импорта команд квн. раздел команды КВН имеет url /teams/kvn и команды, которые я импортирую локально получают url teams/kvn/team1. мне нужна другая иерархия: раздел команды квн должен иметь url kvn/teams и все команды квн после импорта должны иметь url kvn/teams/team1
+8.  **User:** ты мне заполнил файл tag_mapping.json для людей а аналогичного файла для команд - kvn/tag_mapping.json нет. Как мне его раздобыть?
+9.  **User:** отлично, а теперь ту же операцию с тегами делаем в модуле импорта людей. Оказывается, там ты тоже сделал неверно! Должны браться корректные теги из 1) Таблице modx_tagger_tags (tag_id -> tag_name) 2) TV переменной tags (список tag_id через ||) и при импорте заноситься в компонент тегов.
+10. **User:** При импорте все теги должны заноситься в раздел админки теги (https://comedyhub-1.preview.emergentagent.com/admin/tags)
 
 **Project Health Check:**
--   **Broken:** The frontend build is currently broken due to ESLint errors in . The application will not run or hot-reload until this is fixed.
+-   **Broken:** None.
 -   **Mocked:** None.
 
 **3rd Party Integrations**
@@ -163,8 +145,8 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
--   **Troubleshoot agent used after agent stuck in loop:** YES (diagnosed a tool issue, but did not resolve the underlying frontend build error).
--   **Test files created:** None.
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None. The agent has created and modified several Python import scripts in .
 -   **Known regressions:** None.
 
 **Credentials to test flow:**
@@ -174,4 +156,4 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 -   **Password:** 
 
 **What agent forgot to execute**
--   The agent got stuck on the frontend linting issue and was unable to complete the initial setup for the KVN team feature. It did not forget a step, but rather was blocked from proceeding.</analysis>
+-   The agent did not forget anything; it was actively working on a fix when the session ended. The immediate next step is to re-import the Comedy Баттл show to apply the latest script change (parsing ) and verify the result on the frontend.</analysis>
