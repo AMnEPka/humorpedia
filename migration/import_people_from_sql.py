@@ -29,11 +29,18 @@ import pymongo
 
 from utils import DB_NAME, MONGO_URL, create_person_document, normalize_rich_text
 
-SQL_FILE = "/app/humorbd.sql"
-PEOPLE_LIST_FILE = "/app/migration/people_list.json"
-TV_MAP_FILE = "/app/migration/tv_map.json"
-IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
-TAG_MAP_FILE = "/app/migration/tag_mapping.json"
+
+# SQL_FILE = "/app/humorbd.sql"
+# PEOPLE_LIST_FILE = "/app/migration/people_list.json"
+# TV_MAP_FILE = "/app/migration/tv_map.json"
+# IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+# TAG_MAP_FILE = "/app/migration/tag_mapping.json"
+
+SQL_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\humorbd.sql"
+PEOPLE_LIST_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\people_list.json"
+TV_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\tv_map.json"
+IMAGE_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\image_mapping.json"
+TAG_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\\\tag_mapping.json"
 
 
 # Transliteration map for cyrillic -> latin slugs
@@ -97,7 +104,6 @@ def sync_tags_to_collection(tags: list[str], db) -> None:
                 {"_id": existing["_id"]},
                 {"$inc": {"usage_count": 1}}
             )
-
 
 # --------- parsing helpers ---------
 
@@ -805,6 +811,37 @@ def _pick_from_people_list(limit: int) -> list[dict]:
     return pending[:limit]
 
 
+def _update_people_list_status(imported_ids: set[int], status: str = "imported"):
+    """Обновляет статус людей в people_list.json"""
+    
+    if not imported_ids:
+        print("Нет импортированных ID для обновления people_list.json")
+        return
+    
+    try:
+        # Читаем текущий файл
+        with open(PEOPLE_LIST_FILE, "r", encoding="utf-8") as f:
+            people_list = json.load(f)
+        
+        # Обновляем статусы
+        updated_count = 0
+        for person in people_list:
+            if int(person.get("id", 0)) in imported_ids:
+                old_status = person.get("status")
+                person["status"] = status
+                updated_count += 1
+                print(f"  Обновлён статус для id={person['id']}: {old_status} -> {status}")
+        
+        # Сохраняем обратно
+        with open(PEOPLE_LIST_FILE, "w", encoding="utf-8") as f:
+            json.dump(people_list, f, ensure_ascii=False, indent=2)
+        
+        print(f"Обновлено записей в people_list.json: {updated_count}")
+        
+    except Exception as e:
+        print(f"Ошибка при обновлении people_list.json: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Import people from humorbd.sql")
     parser.add_argument("--ids", nargs="*", type=int, help="MODX content IDs")
@@ -874,6 +911,7 @@ def main():
 
     imported = 0
     updated = 0
+    imported_ids = set()
 
     for cid, doc in docs:
         existing = db.people.find_one({"slug": doc.get("slug")})
@@ -892,6 +930,7 @@ def main():
             doc["_id"] = existing["_id"]
             db.people.replace_one({"slug": doc.get("slug")}, doc)
             updated += 1
+            imported_ids.add(cid)
         else:
             # Синхронизируем теги при создании
             if doc.get('tags'):
@@ -899,10 +938,16 @@ def main():
             
             db.people.insert_one(doc)
             imported += 1
+            imported_ids.add(cid)
 
     client.close()
 
     print(f"Готово. inserted={imported}, updated={updated}")
+    
+    # Обновляем people_list.json если были импортированы записи
+    if imported_ids and args.from_list:
+        print("\nОбновление people_list.json...")
+        _update_people_list_status(imported_ids)
 
 
 if __name__ == "__main__":
