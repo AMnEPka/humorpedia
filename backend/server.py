@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
     db = app.state.db
     await create_indexes(db)
     
+    # Create default admin if not exists
+    await ensure_default_admin(db)
+    
     logger.info(f"Connected to MongoDB: {db_name}")
     
     yield
