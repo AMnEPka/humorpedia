@@ -324,11 +324,15 @@ async def get_shows_hierarchy(
     if status:
         query["status"] = status.value
     
-    # Получаем все шоу
-    all_shows = await db.shows.find(query, {"_id": 0}).sort([("level", 1), ("title", 1)]).to_list(1000)
+    # Получаем все шоу (сохраняем _id для связей)
+    all_shows = await db.shows.find(query).sort([("level", 1), ("title", 1)]).to_list(1000)
     
     # Строим дерево
-    shows_by_id = {s.get('id', s.get('slug')): s for s in all_shows}
+    shows_by_id = {}
+    for s in all_shows:
+        s['_id'] = str(s['_id']) if not isinstance(s['_id'], str) else s['_id']
+        shows_by_id[s['_id']] = s
+    
     root_shows = []
     
     for show in all_shows:
