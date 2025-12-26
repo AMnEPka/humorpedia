@@ -107,7 +107,7 @@ export default function TeamsListPage() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {teams.map((team) => (
-              <Link key={team.id} to={`/teams/${category}/${team.slug}`}>
+              <Link key={team.id} to={`/kvn/teams/${team.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="aspect-square bg-gray-100 overflow-hidden">
                     {team.logo ? (
