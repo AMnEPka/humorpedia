@@ -105,7 +105,7 @@ def sync_tags_to_collection(tags: list[str], db) -> None:
             }
             try:
                 db.tags.insert_one(tag_doc)
-                print(f"  ✅ Created tag: {tag_name}")
+                # print(f"  ✅ Created tag: {tag_name}")
             except Exception as e:
                 print(f"  ⚠️  Failed to create tag {tag_name}: {e}")
         else:
@@ -476,25 +476,25 @@ def main():
         try:
             doc = build_team_doc(sc, tv_by_id, tv_map, image_map, tag_map)
             
-            print(f"\n{'='*60}")
-            print(f"ID {team_id}: {doc['title']} ({doc['slug']})")
-            print(f"{'='*60}")
-            print(f"Facts: {len(doc['facts'])} items")
-            for k, v in doc['facts'].items():
-                print(f"  - {k}: {v[:60]}")
-            print(f"Text blocks: {len([m for m in doc['modules'] if m['type'] == 'text_block'])}")
-            for m in doc['modules']:
-                if m['type'] == 'text_block':
-                    print(f"  - {m['title'] or '(Без заголовка)'}: {len(m['data']['content'])} chars")
+            # print(f"\n{'='*60}")
+            # print(f"ID {team_id}: {doc['title']} ({doc['slug']})")
+            # print(f"{'='*60}")
+            # print(f"Facts: {len(doc['facts'])} items")
+            # for k, v in doc['facts'].items():
+            #     print(f"  - {k}: {v[:60]}")
+            # print(f"Text blocks: {len([m for m in doc['modules'] if m['type'] == 'text_block'])}")
+            # for m in doc['modules']:
+            #     if m['type'] == 'text_block':
+            #         print(f"  - {m['title'] or '(Без заголовка)'}: {len(m['data']['content'])} chars")
             
-            timeline_count = len([m for m in doc['modules'] if m['type'] == 'timeline'])
-            if timeline_count:
-                timeline = [m for m in doc['modules'] if m['type'] == 'timeline'][0]
-                print(f"Timeline: {len(timeline['data']['items'])} events")
+            # timeline_count = len([m for m in doc['modules'] if m['type'] == 'timeline'])
+            # if timeline_count:
+            #     timeline = [m for m in doc['modules'] if m['type'] == 'timeline'][0]
+                # print(f"Timeline: {len(timeline['data']['items'])} events")
             
-            print(f"Tags: {doc['tags']}")
-            print(f"Rating: {doc['rating']['average']} ({doc['rating']['count']} votes)")
-            print(f"Logo: {doc['logo']}")
+            # print(f"Tags: {doc['tags']}")
+            # print(f"Rating: {doc['rating']['average']} ({doc['rating']['count']} votes)")
+            # print(f"Logo: {doc['logo']}")
 
             if args.apply:
                 # Проверяем, не существует ли уже
@@ -505,12 +505,12 @@ def main():
                 
                 # Синхронизируем теги в коллекцию tags
                 if doc['tags']:
-                    print(f"  📌 Syncing {len(doc['tags'])} tags...")
+                    #print(f"  📌 Syncing {len(doc['tags'])} tags...")
                     sync_tags_to_collection(doc['tags'], db)
                 
                 collection.insert_one(doc)
                 imported_count += 1
-                print(f"✅ Импортирован")
+                #print(f"✅ Импортирован")
                 
                 # Обновляем статус в списке
                 if args.from_list:
