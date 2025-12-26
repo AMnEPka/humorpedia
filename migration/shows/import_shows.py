@@ -397,6 +397,8 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
 def main():
     parser = argparse.ArgumentParser(description="Импорт шоу из SQL в MongoDB")
     parser.add_argument("--ids", nargs="+", type=int, help="Конкретные ID шоу для импорта")
+    parser.add_argument("--all", action="store_true", help="Импортировать все pending шоу из shows_list.json")
+    parser.add_argument("--batch", type=int, help="Импортировать первые N pending шоу")
     parser.add_argument("--dry-run", action="store_true", help="Только показать, не сохранять")
     parser.add_argument("--apply", action="store_true", help="Применить изменения")
     parser.add_argument("--with-children", action="store_true", default=False, help="Импортировать дочерние шоу")
@@ -406,11 +408,27 @@ def main():
         print("Укажите --dry-run или --apply")
         return
 
-    if not args.ids:
-        print("Укажите --ids")
+    # Определяем список ID для импорта
+    target_ids = set()
+    
+    if args.ids:
+        target_ids = set(args.ids)
+    elif args.all or args.batch:
+        shows_list = _load_shows_list()
+        pending = [s for s in shows_list if s.get('status') == 'pending']
+        
+        if args.batch:
+            pending = pending[:args.batch]
+        
+        target_ids = {s['id'] for s in pending}
+        
+        if not target_ids:
+            print("Нет pending шоу для импорта")
+            return
+    else:
+        print("Укажите --ids, --all или --batch")
         return
 
-    target_ids = set(args.ids)
     print(f"Импорт {len(target_ids)} шоу: {sorted(target_ids)}\n")
 
     # Загружаем данные
@@ -426,6 +444,8 @@ def main():
         db = client[DB_NAME]
 
     imported_count = 0
+    error_count = 0
+    skipped_count = 0
     
     for show_id in sorted(target_ids):
         # Get parent show data
@@ -434,6 +454,9 @@ def main():
         
         if not sc:
             print(f"⚠️  ID {show_id}: не найден в SQL")
+            if args.apply:
+                _mark_show_error(show_id, "Не найден в SQL")
+            error_count += 1
             continue
 
         tv_by_id = tv_values.get(show_id, {})
@@ -445,16 +468,21 @@ def main():
             print(f"\n{'='*60}")
             print(f"ID {show_id}: {parent_doc['title']} ({parent_doc['slug']})")
             print(f"{'='*60}")
-            print(f"Description: {parent_doc['description'][:100]}...")
+            print(f"Description: {parent_doc['description'][:100] if parent_doc['description'] else '(нет)'}...")
             print(f"Facts: {len(parent_doc['facts'])} items")
-            for k, v in parent_doc['facts'].items():
-                print(f"  - {k}: {v[:60]}")
+            for k, v in list(parent_doc['facts'].items())[:5]:
+                print(f"  - {k}: {v[:60] if len(v) > 60 else v}")
+            if len(parent_doc['facts']) > 5:
+                print(f"  ... и ещё {len(parent_doc['facts']) - 5}")
             print(f"Modules: {len(parent_doc['modules'])}")
-            for m in parent_doc['modules']:
+            for m in parent_doc['modules'][:5]:
                 title = m['title'] or '(Без заголовка)'
                 content_len = len(m['data']['content'])
                 print(f"  - {m['type']}: {title} ({content_len} chars)")
+            if len(parent_doc['modules']) > 5:
+                print(f"  ... и ещё {len(parent_doc['modules']) - 5}")
             print(f"Tags: {len(parent_doc['tags'])} - {parent_doc['tags'][:5]}")
+            print(f"Social links: {parent_doc.get('social_links', {})}")
             print(f"Poster: {parent_doc['poster']}")
 
             if args.apply:
@@ -462,6 +490,8 @@ def main():
                 existing = db.shows.find_one({"slug": parent_doc['slug']})
                 if existing:
                     print(f"⚠️  Шоу с slug '{parent_doc['slug']}' уже существует, пропускаем")
+                    _mark_show_imported(show_id)  # Отмечаем как импортированное
+                    skipped_count += 1
                     continue
                 
                 # Sync tags
@@ -472,7 +502,10 @@ def main():
                 db.shows.insert_one(parent_doc)
                 parent_mongo_id = parent_doc['_id']
                 imported_count += 1
-                print(f"✅ Родительское шоу импортировано")
+                
+                # Отмечаем в shows_list.json
+                _mark_show_imported(show_id)
+                print(f"✅ Шоу импортировано и отмечено в shows_list.json")
                 
                 # Import children
                 if args.with_children:
@@ -508,6 +541,9 @@ def main():
 
         except Exception as e:
             print(f"❌ Ошибка импорта ID {show_id}: {e}")
+            if args.apply:
+                _mark_show_error(show_id, str(e))
+            error_count += 1
             import traceback
             traceback.print_exc()
 
@@ -515,7 +551,10 @@ def main():
         client.close()
 
     print(f"\n{'='*60}")
-    print(f"Импортировано: {imported_count} шоу")
+    print(f"Результат:")
+    print(f"  ✅ Импортировано: {imported_count}")
+    print(f"  ⏭️  Пропущено (уже есть): {skipped_count}")
+    print(f"  ❌ Ошибок: {error_count}")
     print(f"{'='*60}")
 
 
