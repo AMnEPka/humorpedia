@@ -17,7 +17,8 @@ import TagSelector from '../components/TagSelector';
 const emptyShow = {
   title: '', slug: '', name: '', status: 'draft',
   poster: null, description: '',
-  facts: { start_year: null, end_year: null, network: '', episodes_count: null, seasons_count: null, hosts: [], genre: [], status: 'ongoing' },
+  facts: {},  // Произвольные факты key-value
+  social_links: {},  // Социальные ссылки
   modules: [], tags: [],
   seo: { meta_title: '', meta_description: '' }
 };
