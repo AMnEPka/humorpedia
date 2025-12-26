@@ -151,21 +151,28 @@ export default function ShowDetailPage() {
   const [error, setError] = useState(null);
 
   // Собираем полный путь из всех параметров
-  const fullPath = [parentSlug, childSlug, grandchildSlug, greatGrandchildSlug]
-    .filter(Boolean)
-    .join('/') || slug;
+  // Если есть parentSlug, значит это вложенный путь
+  const fullPath = parentSlug 
+    ? [parentSlug, childSlug, grandchildSlug, greatGrandchildSlug].filter(Boolean).join('/')
+    : slug;
 
   useEffect(() => {
-    // Если есть вложенный путь, используем API by-path
+    if (!fullPath) {
+      setError('Шоу не найдено');
+      setLoading(false);
+      return;
+    }
+
+    // Если путь содержит /, используем API by-path, иначе обычный getShow
     const fetchShow = fullPath.includes('/') 
       ? publicApi.getShowByPath(fullPath)
-      : publicApi.getShow(slug || fullPath);
+      : publicApi.getShow(fullPath);
     
     fetchShow
       .then(res => setShow(res.data))
       .catch(() => setError('Шоу не найдено'))
       .finally(() => setLoading(false));
-  }, [slug, fullPath]);
+  }, [fullPath]);
 
   if (loading) {
     return (
