@@ -16,7 +16,7 @@ const staticNavigation = [
   { name: 'Новости', href: '/news' },
   { name: 'Статьи', href: '/articles' },
   { name: 'Люди', href: '/people' },
-  { name: 'Команды КВН', href: '/teams/kvn' },
+  { name: 'Команды КВН', href: '/kvn/teams' },
   { name: 'Шоу', href: '/shows' },
   { name: 'Квизы', href: '/quizzes' },
   { name: 'Контакты', href: '/contacts' },

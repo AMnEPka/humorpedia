@@ -248,7 +248,7 @@ export default function TeamsListPage() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => window.open(`/teams/${team.slug}`, '_blank')}
+                            onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
                           >
                             <Eye className="mr-2 h-4 w-4" /> Просмотр
                           </DropdownMenuItem>

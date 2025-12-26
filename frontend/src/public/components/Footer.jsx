@@ -26,7 +26,7 @@ export default function Footer() {
               <li><Link to="/news" className="hover:text-white transition-colors">Новости</Link></li>
               <li><Link to="/articles" className="hover:text-white transition-colors">Статьи</Link></li>
               <li><Link to="/people" className="hover:text-white transition-colors">Люди</Link></li>
-              <li><Link to="/teams/kvn" className="hover:text-white transition-colors">Команды КВН</Link></li>
+              <li><Link to="/kvn/teams" className="hover:text-white transition-colors">Команды КВН</Link></li>
               <li><Link to="/shows" className="hover:text-white transition-colors">Шоу</Link></li>
             </ul>
           </div>
