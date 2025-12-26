@@ -149,6 +149,10 @@ class Show(BaseContent):
     facts: ShowFacts = Field(default_factory=ShowFacts)
     description: Optional[str] = None  # HTML
     
+    # Hierarchy support
+    parent_id: Optional[str] = None  # For child shows (seasons, episodes)
+    child_show_ids: List[str] = Field(default_factory=list)  # List of child shows
+    
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
     
