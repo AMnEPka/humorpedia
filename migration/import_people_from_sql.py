@@ -876,14 +876,9 @@ def main():
     updated = 0
 
     for cid, doc in docs:
-        slug = doc.get("slug")
-        print(f"Processing {cid}: {doc.get('title')} (slug: {slug})")
-        
-        existing = db.people.find_one({"slug": slug})
+        existing = db.people.find_one({"slug": doc.get("slug")})
         if existing:
-            print(f"  Found existing with slug: {slug}")
             if not args.update:
-                print(f"  Skipping (--update not set)")
                 continue
 
             # Не затираем фото при update, если новое не удалось вычислить
@@ -892,23 +887,18 @@ def main():
 
             # Синхронизируем теги
             if doc.get('tags'):
-                print(f"  Syncing {len(doc['tags'])} tags...")
                 sync_tags_to_collection(doc['tags'], db)
 
             doc["_id"] = existing["_id"]
-            db.people.replace_one({"slug": slug}, doc)
+            db.people.replace_one({"slug": doc.get("slug")}, doc)
             updated += 1
-            print(f"  Updated")
         else:
-            print(f"  No existing found, inserting...")
             # Синхронизируем теги при создании
             if doc.get('tags'):
-                print(f"  Syncing {len(doc['tags'])} tags...")
                 sync_tags_to_collection(doc['tags'], db)
             
             db.people.insert_one(doc)
             imported += 1
-            print(f"  Inserted")
 
     client.close()
 
