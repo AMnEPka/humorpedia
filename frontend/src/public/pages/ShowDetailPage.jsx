@@ -280,40 +280,4 @@ export default function ShowDetailPage() {
       </div>
     </div>
   );
-              {show.social_links.youtube && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={show.social_links.youtube} target="_blank" rel="noopener noreferrer">
-                    YouTube
-                  </a>
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Modules / Content blocks */}
-      {show.modules?.length > 0 && (
-        <div className="space-y-8">
-          {show.modules
-            .filter(m => m.visible !== false)
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-            .map((module, idx) => (
-              <Card key={module.id || idx}>
-                <CardContent className="p-6">
-                  <ModuleRenderer module={module} />
-                </CardContent>
-              </Card>
-            ))}
-        </div>
-      )}
-      
-      {/* Related content */}
-      <div className="mt-12">
-        <Button variant="outline" asChild>
-          <Link to="/shows">← Все шоу</Link>
-        </Button>
-      </div>
-    </div>
-  );
 }
