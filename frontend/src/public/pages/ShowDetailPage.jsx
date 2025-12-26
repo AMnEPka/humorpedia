@@ -258,6 +258,49 @@ export default function ShowDetailPage() {
             </Card>
           )}
 
+          {/* Social Links / Website */}
+          {show.social_links && Object.keys(show.social_links).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ExternalLink className="h-5 w-5" /> Ссылки
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-2">
+                {show.social_links.website && (
+                  <a 
+                    href={show.social_links.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                  >
+                    🌐 Официальный сайт
+                  </a>
+                )}
+                {show.social_links.vk && (
+                  <a 
+                    href={show.social_links.vk} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                  >
+                    VK
+                  </a>
+                )}
+                {show.social_links.youtube && (
+                  <a 
+                    href={show.social_links.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                  >
+                    YouTube
+                  </a>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Rating Widget */}
           <Card>
             <CardHeader>
