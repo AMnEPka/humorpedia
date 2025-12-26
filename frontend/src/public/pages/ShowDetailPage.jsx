@@ -11,13 +11,45 @@ import RatingWidget from '../components/RatingWidget';
 function ModuleRenderer({ module }) {
   if (!module?.visible) return null;
   
+  // Add table styles
+  const tableStyles = `
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin: 1rem 0;
+      border: 1px solid #e5e7eb;
+    }
+    th, td { 
+      border: 1px solid #e5e7eb; 
+      padding: 0.5rem 0.75rem; 
+      text-align: left;
+    }
+    th { 
+      background-color: #f3f4f6; 
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+  `;
+  
   switch (module.type) {
     case 'text_block':
       return (
-        <div className="prose prose-lg max-w-none">
-          {module.data?.title && <h2 className="text-xl font-bold mb-3">{module.data.title}</h2>}
-          <div dangerouslySetInnerHTML={{ __html: module.data?.content || '' }} />
-        </div>
+        <Card>
+          {module.data?.title && (
+            <CardHeader>
+              <CardTitle>{module.data.title}</CardTitle>
+            </CardHeader>
+          )}
+          <CardContent>
+            <style>{tableStyles}</style>
+            <div 
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
+            />
+          </CardContent>
+        </Card>
       );
     
     case 'image_gallery':
