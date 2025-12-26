@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -36,14 +37,110 @@ from import_people_from_sql import (
     _load_image_map,
     _load_tv_map,
     _parse_migx,
-    _tags_from_keywords,
     _timeline_from_migx_sections,
 )
 from utils import DB_NAME, MONGO_URL, normalize_rich_text
 
+
 SQL_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\humorbd.sql"
 KVN_TEAMS_LIST_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\kvn_teams_list.json"
 IMAGE_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\image_mapping.json"
+TAG_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\tag_mapping.json"
+
+# SQL_FILE = "/app/humorbd.sql"
+# KVN_TEAMS_LIST_FILE = "/app/migration/kvn/kvn_teams_list.json"
+# IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+# TAG_MAP_FILE = "/app/migration/tag_mapping.json"
+
+
+# Transliteration map for cyrillic -> latin slugs (from backend/services/tags.py)
+TRANSLIT_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+}
+
+
+def transliterate_slug(text: str) -> str:
+    """Convert cyrillic text to latin slug"""
+    slug = text.lower().replace(" ", "-").replace(".", "").replace(",", "")
+    slug = ''.join(TRANSLIT_MAP.get(char, char) for char in slug)
+    # Remove non-alphanumeric characters except dashes
+    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    # Remove consecutive dashes
+    slug = re.sub(r'-+', '-', slug)
+    return slug.strip('-')
+
+
+def sync_tags_to_collection(tags: list[str], db) -> None:
+    """
+    Синхронная версия TagService.sync_tags().
+    Создаёт новые теги в коллекции tags, если их нет.
+    Увеличивает usage_count для существующих.
+    """
+    if not tags:
+        return
+    
+    for tag_name in tags:
+        tag_name = tag_name.strip()
+        if not tag_name:
+            continue
+        
+        # Check if tag already exists (case-insensitive)
+        existing = db.tags.find_one({
+            "name": {"$regex": f"^{re.escape(tag_name)}$", "$options": "i"}
+        })
+        
+        if not existing:
+            # Create new tag
+            tag_doc = {
+                "_id": str(uuid4()),
+                "name": tag_name,
+                "slug": transliterate_slug(tag_name),
+                "old_id": None,
+                "usage_count": 1,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            try:
+                db.tags.insert_one(tag_doc)
+                print(f"  ✅ Created tag: {tag_name}")
+            except Exception as e:
+                print(f"  ⚠️  Failed to create tag {tag_name}: {e}")
+        else:
+            # Increment usage count
+            db.tags.update_one(
+                {"_id": existing["_id"]},
+                {"$inc": {"usage_count": 1}}
+            )
+
+
+def _load_tag_map():
+    """Загружает маппинг tag_id -> tag_name из JSON файла."""
+    if not os.path.exists(TAG_MAP_FILE):
+        print(f"⚠️  Tag mapping file not found: {TAG_MAP_FILE}")
+        return {}
+    
+    with open(TAG_MAP_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def _tags_from_tv(tv_tags_str: str, tag_map: dict) -> list[str]:
+    """Преобразует строку TV 'tags' в список названий тегов."""
+    if not tv_tags_str:
+        return []
+    
+    tag_ids = tv_tags_str.split('||')
+    tag_names = []
+    
+    for tag_id in tag_ids:
+        tag_id = tag_id.strip()
+        if tag_id in tag_map:
+            tag_names.append(tag_map[tag_id])
+    
+    return tag_names
+
 
 
 def create_team_document(
@@ -171,7 +268,7 @@ def _parse_facts_table(table_html: str) -> dict:
     return facts
 
 
-def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str]):
+def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str], tag_map: dict[str, str]):
     """Строит документ команды из данных SQL."""
     tv_named = {}
     for tv_id, val in tv_by_id.items():
@@ -273,8 +370,8 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
     # Таймлайн
     timeline_events = _timeline_from_migx_sections(sections)
 
-    # Tags
-    tags = _tags_from_keywords(sc.keywords)
+    # Tags - из TV переменной
+    tags = _tags_from_tv(tv_named.get('tags', ''), tag_map)
 
     # Rating
     avg = float(sc.rating or 0.0)
@@ -355,6 +452,7 @@ def main():
     # Загружаем данные
     tv_map = _load_tv_map()
     image_map = _load_image_map()
+    tag_map = _load_tag_map()
     site_content, tv_values = _extract_for_ids(target_ids)
 
     # Подключение к MongoDB
@@ -376,7 +474,7 @@ def main():
         tv_by_id = tv_values.get(team_id, {})
         
         try:
-            doc = build_team_doc(sc, tv_by_id, tv_map, image_map)
+            doc = build_team_doc(sc, tv_by_id, tv_map, image_map, tag_map)
             
             print(f"\n{'='*60}")
             print(f"ID {team_id}: {doc['title']} ({doc['slug']})")
@@ -404,6 +502,11 @@ def main():
                 if existing:
                     print(f"⚠️  Команда с slug '{doc['slug']}' уже существует, пропускаем")
                     continue
+                
+                # Синхронизируем теги в коллекцию tags
+                if doc['tags']:
+                    print(f"  📌 Syncing {len(doc['tags'])} tags...")
+                    sync_tags_to_collection(doc['tags'], db)
                 
                 collection.insert_one(doc)
                 imported_count += 1

@@ -29,16 +29,81 @@ import pymongo
 
 from utils import DB_NAME, MONGO_URL, create_person_document, normalize_rich_text
 
+
 # SQL_FILE = "/app/humorbd.sql"
 # PEOPLE_LIST_FILE = "/app/migration/people_list.json"
 # TV_MAP_FILE = "/app/migration/tv_map.json"
 # IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+# TAG_MAP_FILE = "/app/migration/tag_mapping.json"
 
 SQL_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\humorbd.sql"
 PEOPLE_LIST_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\people_list.json"
 TV_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\tv_map.json"
 IMAGE_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\image_mapping.json"
+TAG_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\\\tag_mapping.json"
 
+
+# Transliteration map for cyrillic -> latin slugs
+TRANSLIT_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+}
+
+
+def transliterate_slug(text: str) -> str:
+    """Convert cyrillic text to latin slug"""
+    slug = text.lower().replace(" ", "-").replace(".", "").replace(",", "")
+    slug = ''.join(TRANSLIT_MAP.get(char, char) for char in slug)
+    # Remove non-alphanumeric characters except dashes
+    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    # Remove consecutive dashes
+    slug = re.sub(r'-+', '-', slug)
+    return slug.strip('-')
+
+
+def sync_tags_to_collection(tags: list[str], db) -> None:
+    """
+    Синхронная версия TagService.sync_tags().
+    Создаёт новые теги в коллекции tags, если их нет.
+    Увеличивает usage_count для существующих.
+    """
+    if not tags:
+        return
+    
+    for tag_name in tags:
+        tag_name = tag_name.strip()
+        if not tag_name:
+            continue
+        
+        # Check if tag already exists (case-insensitive)
+        existing = db.tags.find_one({
+            "name": {"$regex": f"^{re.escape(tag_name)}$", "$options": "i"}
+        })
+        
+        if not existing:
+            # Create new tag
+            from uuid import uuid4
+            tag_doc = {
+                "_id": str(uuid4()),
+                "name": tag_name,
+                "slug": transliterate_slug(tag_name),
+                "old_id": None,
+                "usage_count": 1,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            try:
+                db.tags.insert_one(tag_doc)
+            except Exception:
+                pass  # Ignore duplicates
+        else:
+            # Increment usage count
+            db.tags.update_one(
+                {"_id": existing["_id"]},
+                {"$inc": {"usage_count": 1}}
+            )
 
 # --------- parsing helpers ---------
 
@@ -227,6 +292,32 @@ def _load_image_map() -> dict[str, str]:
         return {}
     with open(IMAGE_MAP_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _load_tag_map():
+    """Загружает маппинг tag_id -> tag_name из JSON файла."""
+    if not os.path.exists(TAG_MAP_FILE):
+        print(f"⚠️  Tag mapping file not found: {TAG_MAP_FILE}")
+        return {}
+    
+    with open(TAG_MAP_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def _tags_from_tv(tv_tags_str: str, tag_map: dict) -> list[str]:
+    """Преобразует строку TV 'tags' в список названий тегов."""
+    if not tv_tags_str:
+        return []
+    
+    tag_ids = tv_tags_str.split('||')
+    tag_names = []
+    
+    for tag_id in tag_ids:
+        tag_id = tag_id.strip()
+        if tag_id in tag_map:
+            tag_names.append(tag_map[tag_id])
+    
+    return tag_names
 
 
 def _extract_for_ids(target_ids: set[int]):
@@ -581,6 +672,8 @@ def _bio_from_migx_sections(sections: list[dict]) -> tuple[str, str, str | None,
 
 
 def _tags_from_keywords(keywords: str) -> list[str]:
+    """DEPRECATED: Старая функция, которая брала теги из keywords.
+    Теперь используем _tags_from_tv() для правильного извлечения тегов."""
     if not keywords:
         return []
     parts = [normalize_rich_text(p.strip()) for p in keywords.split(",")]
@@ -592,6 +685,7 @@ def build_person_doc(
     tv_by_id: dict[str, str],
     tv_map: dict[str, str],
     image_map: dict[str, str],
+    tag_map: dict[str, str],
     image_hint: str | None,
 ):
     tv_named = {}
@@ -625,8 +719,8 @@ def build_person_doc(
     if not timeline_events:
         timeline_events = _timeline_from_migx_sections(sections)
 
-    # tags
-    tags = _tags_from_keywords(sc.keywords)
+    # tags - из TV переменной 'tags' (правильный способ)
+    tags = _tags_from_tv(tv_named.get('tags', ''), tag_map)
 
     # rating
     avg = float(sc.rating or 0.0)
@@ -774,6 +868,7 @@ def main():
 
     tv_map = _load_tv_map()
     image_map = _load_image_map()
+    tag_map = _load_tag_map()
 
     sc_rows, tv_vals = _extract_for_ids(target_ids)
 
@@ -792,7 +887,7 @@ def main():
                     image_hint = p.get("image")
                     break
 
-        doc = build_person_doc(sc, tv_vals.get(cid, {}), tv_map, image_map, image_hint)
+        doc = build_person_doc(sc, tv_vals.get(cid, {}), tv_map, image_map, tag_map, image_hint)
         docs.append((cid, doc))
 
     print(f"Собрано документов: {len(docs)}")
@@ -828,11 +923,19 @@ def main():
             if not doc.get('image') and existing.get('image'):
                 doc['image'] = existing.get('image')
 
+            # Синхронизируем теги
+            if doc.get('tags'):
+                sync_tags_to_collection(doc['tags'], db)
+
             doc["_id"] = existing["_id"]
             db.people.replace_one({"slug": doc.get("slug")}, doc)
             updated += 1
             imported_ids.add(cid)
         else:
+            # Синхронизируем теги при создании
+            if doc.get('tags'):
+                sync_tags_to_collection(doc['tags'], db)
+            
             db.people.insert_one(doc)
             imported += 1
             imported_ids.add(cid)
