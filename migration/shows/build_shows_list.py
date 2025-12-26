@@ -82,8 +82,6 @@ def main():
                     }
                 )
 
-            break
-
     results.sort(key=lambda x: x["id"])
 
     with open(args.out, "w", encoding="utf-8") as f:
