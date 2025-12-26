@@ -168,7 +168,8 @@ def _parse_facts_table(table_html: str) -> dict:
         return {}
 
     facts = {}
-    rows = re.findall(r'<tr>\s*<td>(.*?)</td>\s*<td>(.*?)</td>\s*</tr>', table_html, re.IGNORECASE | re.DOTALL)
+    # Улучшенный regex для таблиц со style атрибутами
+    rows = re.findall(r'<tr[^>]*>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>\s*</tr>', table_html, re.IGNORECASE | re.DOTALL)
     
     for key_html, val_html in rows:
         key = re.sub(r'<[^>]+>', '', key_html).strip()
