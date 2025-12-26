@@ -97,7 +97,7 @@ export default function TeamDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
         <p className="text-gray-500 mb-4">{error || 'Команда не найдена'}</p>
         <Button asChild>
-          <Link to={`/teams/${category}`}>Вернуться к списку</Link>
+          <Link to="/kvn/teams">Вернуться к списку</Link>
         </Button>
       </div>
     );
