@@ -45,7 +45,7 @@ from utils import DB_NAME, MONGO_URL, normalize_rich_text
 SQL_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\humorbd.sql"
 KVN_TEAMS_LIST_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\kvn_teams_list.json"
 IMAGE_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\image_mapping.json"
-TAG_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\kvn\\tag_mapping.json"
+TAG_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\tag_mapping.json"
 
 # SQL_FILE = "/app/humorbd.sql"
 # KVN_TEAMS_LIST_FILE = "/app/migration/kvn/kvn_teams_list.json"
