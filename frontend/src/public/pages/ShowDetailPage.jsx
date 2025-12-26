@@ -147,107 +147,107 @@ export default function ShowDetailPage() {
   const facts = show.facts || {};
 
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4">
-      {/* Hero section */}
-      <div className="grid md:grid-cols-3 gap-8 mb-8">
-        {/* Poster */}
-        <div className="md:col-span-1">
-          <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg">
-            {show.poster?.url ? (
-              <img
-                src={show.poster.url}
-                alt={show.title}
-                className="w-full h-full object-cover"
+    <div className="container max-w-7xl mx-auto py-8 px-4">
+      {/* Breadcrumb */}
+      <nav className="mb-6">
+        <ol className="flex items-center gap-2 text-sm text-gray-500">
+          <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
+          <li>/</li>
+          <li><Link to="/shows" className="hover:text-blue-600">Шоу</Link></li>
+          <li>/</li>
+          <li className="text-gray-900 truncate max-w-[200px]">{show.title}</li>
+        </ol>
+      </nav>
+
+      {/* Hero */}
+      <div className="mb-8">
+        <div className="flex items-start gap-6">
+          {/* Poster */}
+          {show.poster && (
+            <div className="w-48 flex-shrink-0">
+              <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg">
+                <img
+                  src={show.poster}
+                  alt={show.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Title & Description */}
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold mb-4">{show.title}</h1>
+            {show.description && (
+              <div 
+                className="text-lg text-gray-700 leading-relaxed mb-4"
+                dangerouslySetInnerHTML={{ __html: show.description }}
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Tv className="h-16 w-16 text-muted-foreground" />
+            )}
+            
+            {/* Tags */}
+            {show.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {show.tags.slice(0, 10).map(tag => (
+                  <Badge key={tag} variant="secondary">{tag}</Badge>
+                ))}
               </div>
             )}
           </div>
         </div>
-        
-        {/* Info */}
-        <div className="md:col-span-2 space-y-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">{show.name || show.title}</h1>
-            {show.title !== show.name && (
-              <p className="text-xl text-muted-foreground">{show.title}</p>
-            )}
-          </div>
-          
-          {/* Tags */}
-          {show.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {show.tags.map(tag => (
-                <Badge key={tag} variant="secondary">{tag}</Badge>
-              ))}
-            </div>
+      </div>
+
+      {/* Main content - 2 column layout */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Facts Table */}
+          {show.facts && Object.keys(show.facts).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" /> Информация
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {Object.entries(show.facts).map(([key, value], i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="py-2 pr-4 text-gray-600 font-medium align-top">{key}</td>
+                        <td className="py-2" dangerouslySetInnerHTML={{ __html: value }} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
           )}
-          
-          {/* Description */}
-          {show.description && (
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {show.description}
-            </p>
-          )}
-          
-          {/* Facts */}
+
+          {/* Rating Widget */}
           <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {facts.channel && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Канал</div>
-                    <div className="font-medium">{facts.channel}</div>
-                  </div>
-                )}
-                {facts.years && (
-                  <div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> Годы выхода
-                    </div>
-                    <div className="font-medium">{facts.years}</div>
-                  </div>
-                )}
-                {facts.genre && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Жанр</div>
-                    <div className="font-medium">{facts.genre}</div>
-                  </div>
-                )}
-                {facts.seasons_count && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Сезонов</div>
-                    <div className="font-medium">{facts.seasons_count}</div>
-                  </div>
-                )}
-                {facts.episodes_count && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Серий</div>
-                    <div className="font-medium">{facts.episodes_count}</div>
-                  </div>
-                )}
-                {facts.rating && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Рейтинг</div>
-                    <div className="font-medium">⭐ {facts.rating}</div>
-                  </div>
-                )}
-              </div>
+            <CardHeader>
+              <CardTitle>Оценка</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RatingWidget 
+                contentType="show"
+                contentId={show._id}
+                currentRating={show.rating}
+              />
             </CardContent>
           </Card>
-          
-          {/* External links */}
-          {show.social_links && Object.keys(show.social_links).length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {show.social_links.website && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={show.social_links.website} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="mr-2 h-4 w-4" /> Официальный сайт
-                  </a>
-                </Button>
-              )}
+        </div>
+
+        {/* Main content */}
+        <div className="lg:col-span-2 space-y-6">
+          {show.modules?.map((module) => (
+            <ModuleRenderer key={module.id} module={module} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
               {show.social_links.youtube && (
                 <Button variant="outline" size="sm" asChild>
                   <a href={show.social_links.youtube} target="_blank" rel="noopener noreferrer">
