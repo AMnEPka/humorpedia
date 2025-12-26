@@ -214,8 +214,14 @@ def get_child_shows(parent_id: int) -> list[dict]:
     return children
 
 
-def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str], tag_map: dict[str, str], parent_mongo_id: str = None):
-    """Строит документ шоу из данных SQL."""
+def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str], tag_map: dict[str, str], parent_mongo_id: str = None, parent_path: str = None, level: int = 0):
+    """Строит документ шоу из данных SQL.
+    
+    Args:
+        parent_mongo_id: MongoDB ID родительского шоу
+        parent_path: Полный путь родителя (например 'comedy-battle')
+        level: Уровень вложенности (0 = корневой, 1 = первый уровень и т.д.)
+    """
     tv_named = {}
     for tv_id, val in tv_by_id.items():
         tv_name = tv_map.get(tv_id)
