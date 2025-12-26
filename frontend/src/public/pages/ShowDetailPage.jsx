@@ -308,10 +308,20 @@ export default function ShowDetailPage() {
             </CardHeader>
             <CardContent>
               <EmojiRating 
-                contentType="show"
-                contentId={show._id}
-                currentRating={show.rating}
+                value={show.rating?.average || 0}
+                max={10}
+                readonly={false}
               />
+              <div className="mt-2 text-sm text-gray-600 text-center">
+                {show.rating?.average ? (
+                  <>
+                    {show.rating.average.toFixed(1)} / 10
+                    {show.rating.count > 0 && ` (${show.rating.count} ${show.rating.count === 1 ? 'голос' : 'голосов'})`}
+                  </>
+                ) : (
+                  'Пока нет оценок'
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
