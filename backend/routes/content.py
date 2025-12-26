@@ -265,11 +265,46 @@ async def list_shows(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    include_children: bool = Query(False, description="Include child shows")
 ):
-    """List shows with pagination"""
+    """List shows with pagination (excludes child shows by default)"""
     query = build_query(status, tag, search, ["title", "name"])
+    
+    # По умолчанию показываем только корневые шоу (level = 0 или отсутствует)
+    if not include_children:
+        query["$or"] = [{"level": 0}, {"level": {"$exists": False}}]
+    
     return await list_content("shows", skip, limit, query, "name", 1)
+
+
+@router.get("/shows/by-path/{path:path}", response_model=dict)
+async def get_show_by_path(path: str):
+    """Get show by full path (e.g., comedy-battle/season1)"""
+    db = get_db()
+    show = await db.shows.find_one({"full_path": path}, {"_id": 0})
+    if not show:
+        # Попробуем найти по slug (для обратной совместимости)
+        show = await db.shows.find_one({"slug": path}, {"_id": 0})
+    if not show:
+        raise HTTPException(status_code=404, detail="Show not found")
+    return show
+
+
+@router.get("/shows/{parent_slug}/children", response_model=dict)
+async def get_show_children(parent_slug: str):
+    """Get children of a show"""
+    db = get_db()
+    parent = await db.shows.find_one({"slug": parent_slug})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent show not found")
+    
+    children = await db.shows.find(
+        {"parent_id": parent["_id"]},
+        {"_id": 0}
+    ).sort("title", 1).to_list(100)
+    
+    return {"items": children, "total": len(children), "parent": parent.get("title")}
 
 
 @router.get("/shows/{id_or_slug}", response_model=dict)
