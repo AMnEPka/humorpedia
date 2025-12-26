@@ -220,8 +220,10 @@ export default function ShowDetailPage() {
             {/* Tags */}
             {show.tags?.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
-                {show.tags.slice(0, 10).map(tag => (
-                  <Badge key={tag} variant="secondary">{tag}</Badge>
+                {show.tags.map(tag => (
+                  <Link key={tag} to={`/tags/${encodeURIComponent(tag)}`}>
+                    <Badge variant="secondary" className="cursor-pointer hover:bg-gray-300">{tag}</Badge>
+                  </Link>
                 ))}
               </div>
             )}
