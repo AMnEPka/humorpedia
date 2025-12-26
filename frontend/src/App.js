@@ -106,6 +106,9 @@ function AppRoutes() {
         {/* Shows */}
         <Route path="/shows" element={<ShowsListPage />} />
         <Route path="/shows/:slug" element={<ShowDetailPage />} />
+        <Route path="/shows/:parentSlug/:childSlug" element={<ShowDetailPage />} />
+        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug" element={<ShowDetailPage />} />
+        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug/:greatGrandchildSlug" element={<ShowDetailPage />} />
         
         {/* Quizzes */}
         <Route path="/quizzes" element={<QuizzesListPage />} />
