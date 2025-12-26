@@ -313,6 +313,40 @@ async def get_show(id_or_slug: str):
     return await get_by_id_or_slug("shows", id_or_slug, "Show not found")
 
 
+@router.get("/shows-hierarchy", response_model=dict)
+async def get_shows_hierarchy(
+    status: Optional[ContentStatus] = None
+):
+    """Get all shows with hierarchy for admin panel"""
+    db = get_db()
+    
+    query = {}
+    if status:
+        query["status"] = status.value
+    
+    # Получаем все шоу
+    all_shows = await db.shows.find(query, {"_id": 0}).sort([("level", 1), ("title", 1)]).to_list(1000)
+    
+    # Строим дерево
+    shows_by_id = {s.get('id', s.get('slug')): s for s in all_shows}
+    root_shows = []
+    
+    for show in all_shows:
+        show['children'] = []
+        parent_id = show.get('parent_id')
+        
+        if not parent_id:
+            root_shows.append(show)
+        else:
+            parent = shows_by_id.get(parent_id)
+            if parent:
+                if 'children' not in parent:
+                    parent['children'] = []
+                parent['children'].append(show)
+    
+    return {"items": root_shows, "total": len(all_shows)}
+
+
 @router.put("/shows/{id}", response_model=dict)
 async def update_show(id: str, data: ShowUpdate):
     """Update show"""
