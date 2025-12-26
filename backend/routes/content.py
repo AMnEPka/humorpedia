@@ -281,7 +281,7 @@ async def list_shows(
 @router.get("/shows/by-path/{path:path}", response_model=dict)
 async def get_show_by_path(path: str):
     """Get show by full path (e.g., comedy-battle/season1)"""
-    db = get_db()
+    db = await get_db()
     show = await db.shows.find_one({"full_path": path}, {"_id": 0})
     if not show:
         # Попробуем найти по slug (для обратной совместимости)
@@ -294,7 +294,7 @@ async def get_show_by_path(path: str):
 @router.get("/shows/{parent_slug}/children", response_model=dict)
 async def get_show_children(parent_slug: str):
     """Get children of a show"""
-    db = get_db()
+    db = await get_db()
     parent = await db.shows.find_one({"slug": parent_slug})
     if not parent:
         raise HTTPException(status_code=404, detail="Parent show not found")
@@ -318,7 +318,7 @@ async def get_shows_hierarchy(
     status: Optional[ContentStatus] = None
 ):
     """Get all shows with hierarchy for admin panel"""
-    db = get_db()
+    db = await get_db()
     
     query = {}
     if status:
