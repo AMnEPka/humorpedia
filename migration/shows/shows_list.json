@@ -1,1 +1,362 @@
-[]
+[
+  {
+    "id": 1615,
+    "title": "Comedy Club",
+    "slug": "comedy-club",
+    "status": "pending"
+  },
+  {
+    "id": 1616,
+    "title": "Не спать",
+    "slug": "ne-spat",
+    "status": "pending"
+  },
+  {
+    "id": 1617,
+    "title": "Прожарка на ТНТ",
+    "slug": "prozharka-na-tnt",
+    "status": "pending"
+  },
+  {
+    "id": 1618,
+    "title": "ИК",
+    "slug": "improv-kom",
+    "status": "pending"
+  },
+  {
+    "id": 1619,
+    "title": "Импровизация",
+    "slug": "improv",
+    "status": "pending"
+  },
+  {
+    "id": 1620,
+    "title": "Убойной ночи",
+    "slug": "ubojnoj-nochi",
+    "status": "pending"
+  },
+  {
+    "id": 1621,
+    "title": "Однажды в России",
+    "slug": "odnazhdyi-v-rossii",
+    "status": "pending"
+  },
+  {
+    "id": 1622,
+    "title": "Comedy Woman",
+    "slug": "comedywoman",
+    "status": "pending"
+  },
+  {
+    "id": 1623,
+    "title": "Убойный вечер",
+    "slug": "ubojnyij-vecher",
+    "status": "pending"
+  },
+  {
+    "id": 1624,
+    "title": "Женский стендап",
+    "slug": "standupwomen",
+    "status": "pending"
+  },
+  {
+    "id": 1625,
+    "title": "Открытый микрофон",
+    "slug": "openmicrophone",
+    "status": "pending"
+  },
+  {
+    "id": 1626,
+    "title": "Смех без правил",
+    "slug": "smeh-bez-pravil",
+    "status": "pending"
+  },
+  {
+    "id": 1627,
+    "title": "Бар в большом городе",
+    "slug": "bar-v-bolshom-gorode",
+    "status": "pending"
+  },
+  {
+    "id": 1628,
+    "title": "Убойная лига",
+    "slug": "ubojnaya-liga",
+    "status": "pending"
+  },
+  {
+    "id": 1629,
+    "title": "Comedy Баттл",
+    "slug": "comedy-battle",
+    "status": "pending"
+  },
+  {
+    "id": 1630,
+    "title": "Medium Quality",
+    "slug": "medium-quality",
+    "status": "pending"
+  },
+  {
+    "id": 1631,
+    "title": "Stand Up Club #1",
+    "slug": "standupclub1",
+    "status": "pending"
+  },
+  {
+    "id": 1632,
+    "title": "Импров-комеди (Improv comedy)",
+    "slug": "improv-comedy",
+    "status": "pending"
+  },
+  {
+    "id": 1633,
+    "title": "Лига Плохих Шуток (Чикен Карри)",
+    "slug": "liga-ploxix-shutok",
+    "status": "pending"
+  },
+  {
+    "id": 1634,
+    "title": "Comment Out (Чикен Карри)",
+    "slug": "comment-out",
+    "status": "pending"
+  },
+  {
+    "id": 1635,
+    "title": "Плохие песни («Студия Союз»)",
+    "slug": "plohie-pesni",
+    "status": "pending"
+  },
+  {
+    "id": 1636,
+    "title": "Время от времени",
+    "slug": "vremya-ot-vremeni",
+    "status": "pending"
+  },
+  {
+    "id": 1637,
+    "title": "Stand Up на ТНТ",
+    "slug": "standup",
+    "status": "pending"
+  },
+  {
+    "id": 1638,
+    "title": "Студия Союз",
+    "slug": "studiya-soyuz",
+    "status": "pending"
+  },
+  {
+    "id": 1639,
+    "title": "Между нами шоу",
+    "slug": "mezhdu-nami-show",
+    "status": "pending"
+  },
+  {
+    "id": 1640,
+    "title": "Стендап Андеграунд",
+    "slug": "standup-underground",
+    "status": "pending"
+  },
+  {
+    "id": 1641,
+    "title": "Смех в большом городе",
+    "slug": "smex-v-bolshom-gorode",
+    "status": "pending"
+  },
+  {
+    "id": 1642,
+    "title": "Дизель Студио",
+    "slug": "diesel-studio",
+    "status": "pending"
+  },
+  {
+    "id": 1643,
+    "title": "Шоу «Уральские пельмени»",
+    "slug": "uralskie-pelmeni-show",
+    "status": "pending"
+  },
+  {
+    "id": 1644,
+    "title": "ИГРА",
+    "slug": "igra",
+    "status": "pending"
+  },
+  {
+    "id": 1645,
+    "title": "О.С.П.-студия",
+    "slug": "osp-studiya",
+    "status": "pending"
+  },
+  {
+    "id": 1646,
+    "title": "Рассмеши комика",
+    "slug": "rassmeshi-komika",
+    "status": "pending"
+  },
+  {
+    "id": 1647,
+    "title": "Ленинградский Stand-up клуб",
+    "slug": "leningradskij-stand-up-club",
+    "status": "pending"
+  },
+  {
+    "id": 1648,
+    "title": "Центральный Микрофон",
+    "slug": "central-microphone",
+    "status": "pending"
+  },
+  {
+    "id": 1649,
+    "title": "Лига Смеха",
+    "slug": "ls",
+    "status": "pending"
+  },
+  {
+    "id": 1650,
+    "title": "Хронология Stand Up на Руси",
+    "slug": "standup-history",
+    "status": "pending"
+  },
+  {
+    "id": 1651,
+    "title": "Большой вопрос",
+    "slug": "big-vopros",
+    "status": "pending"
+  },
+  {
+    "id": 1652,
+    "title": "Суперлига",
+    "slug": "superliga",
+    "status": "pending"
+  },
+  {
+    "id": 1653,
+    "title": "22 комика",
+    "slug": "22-komika",
+    "status": "pending"
+  },
+  {
+    "id": 1654,
+    "title": "Концерты",
+    "slug": "kontserty",
+    "status": "pending"
+  },
+  {
+    "id": 1655,
+    "title": "Это миниатюры",
+    "slug": "miniatures",
+    "status": "pending"
+  },
+  {
+    "id": 1656,
+    "title": "Большое шоу",
+    "slug": "big-show",
+    "status": "pending"
+  },
+  {
+    "id": 1657,
+    "title": "Пожалуйста, не рассказывай!",
+    "slug": "please-ne-rasskazivai",
+    "status": "pending"
+  },
+  {
+    "id": 1658,
+    "title": "Лига Городов",
+    "slug": "liga-gorodov",
+    "status": "pending"
+  },
+  {
+    "id": 1659,
+    "title": "Студия Квартал-95",
+    "slug": "kvartal-95",
+    "status": "pending"
+  },
+  {
+    "id": 1660,
+    "title": "Чувство юмора",
+    "slug": "chuvstvo-yumora",
+    "status": "pending"
+  },
+  {
+    "id": 1661,
+    "title": "Битва за время",
+    "slug": "bitva-za-vremya",
+    "status": "pending"
+  },
+  {
+    "id": 1663,
+    "title": "Звёзды на НТВ",
+    "slug": "zvezdy-ntv",
+    "status": "pending"
+  },
+  {
+    "id": 1714,
+    "title": "Шоу «Контакты»",
+    "slug": "kontakti",
+    "status": "pending"
+  },
+  {
+    "id": 1735,
+    "title": "Что было дальше?",
+    "slug": "cbd",
+    "status": "pending"
+  },
+  {
+    "id": 2182,
+    "title": "ИКС",
+    "slug": "iks",
+    "status": "pending"
+  },
+  {
+    "id": 2189,
+    "title": "Русские не смеются",
+    "slug": "russkie-ne-smeyutsya",
+    "status": "pending"
+  },
+  {
+    "id": 2285,
+    "title": "Lena Kuka Crew",
+    "slug": "lena-kuka-crew",
+    "status": "pending"
+  },
+  {
+    "id": 2289,
+    "title": "Money Mic",
+    "slug": "money-mic",
+    "status": "pending"
+  },
+  {
+    "id": 2299,
+    "title": "СметанаТВ",
+    "slug": "smetanatv",
+    "status": "pending"
+  },
+  {
+    "id": 2973,
+    "title": "Женское шоу",
+    "slug": "zhenskoe-shou",
+    "status": "pending"
+  },
+  {
+    "id": 3008,
+    "title": "Шоу «Русская дорога»",
+    "slug": "show-russkaya-doroga",
+    "status": "pending"
+  },
+  {
+    "id": 3022,
+    "title": "comigration",
+    "slug": "comigration",
+    "status": "pending"
+  },
+  {
+    "id": 3284,
+    "title": "Стендап рулетка",
+    "slug": "stendap-ruletka",
+    "status": "pending"
+  },
+  {
+    "id": 3678,
+    "title": "Команды",
+    "slug": "komandy",
+    "status": "pending"
+  }
+]
