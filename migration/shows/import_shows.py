@@ -308,7 +308,7 @@ def main():
     parser.add_argument("--ids", nargs="+", type=int, help="Конкретные ID шоу для импорта")
     parser.add_argument("--dry-run", action="store_true", help="Только показать, не сохранять")
     parser.add_argument("--apply", action="store_true", help="Применить изменения")
-    parser.add_argument("--with-children", action="store_true", default=True, help="Импортировать дочерние шоу")
+    parser.add_argument("--with-children", action="store_true", default=False, help="Импортировать дочерние шоу")
     args = parser.parse_args()
 
     if not args.dry_run and not args.apply:
