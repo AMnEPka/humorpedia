@@ -87,7 +87,8 @@
     "id": 1629,
     "title": "Comedy Баттл",
     "slug": "comedy-battle",
-    "status": "pending"
+    "status": "imported",
+    "imported_at": "2025-12-26T08:31:48.297530+00:00"
   },
   {
     "id": 1630,
