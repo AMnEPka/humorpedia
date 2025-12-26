@@ -33,8 +33,8 @@ export default function ShowEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [hostInput, setHostInput] = useState('');
-  const [genreInput, setGenreInput] = useState('');
+  const [newFactKey, setNewFactKey] = useState('');
+  const [newFactValue, setNewFactValue] = useState('');
 
   useEffect(() => {
     if (!isNew) {
