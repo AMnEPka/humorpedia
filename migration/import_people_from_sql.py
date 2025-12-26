@@ -288,6 +288,32 @@ def _load_image_map() -> dict[str, str]:
         return json.load(f)
 
 
+def _load_tag_map():
+    """Загружает маппинг tag_id -> tag_name из JSON файла."""
+    if not os.path.exists(TAG_MAP_FILE):
+        print(f"⚠️  Tag mapping file not found: {TAG_MAP_FILE}")
+        return {}
+    
+    with open(TAG_MAP_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def _tags_from_tv(tv_tags_str: str, tag_map: dict) -> list[str]:
+    """Преобразует строку TV 'tags' в список названий тегов."""
+    if not tv_tags_str:
+        return []
+    
+    tag_ids = tv_tags_str.split('||')
+    tag_names = []
+    
+    for tag_id in tag_ids:
+        tag_id = tag_id.strip()
+        if tag_id in tag_map:
+            tag_names.append(tag_map[tag_id])
+    
+    return tag_names
+
+
 def _extract_for_ids(target_ids: set[int]):
     """Сканирует humorbd.sql и собирает site_content + tv_values только для target_ids."""
 
