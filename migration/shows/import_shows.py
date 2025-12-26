@@ -42,10 +42,15 @@ from import_people_from_sql import (
 )
 from utils import DB_NAME, MONGO_URL, normalize_rich_text
 
-SQL_FILE = "/app/humorbd.sql"
-TAG_MAP_FILE = "/app/migration/tag_mapping.json"
-IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
-SHOWS_LIST_FILE = "/app/migration/shows/shows_list.json"
+# SQL_FILE = "/app/humorbd.sql"
+# TAG_MAP_FILE = "/app/migration/tag_mapping.json"
+# IMAGE_MAP_FILE = "/app/migration/image_mapping.json"
+# SHOWS_LIST_FILE = "/app/migration/shows/shows_list.json"
+
+SQL_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\humorbd.sql"
+SHOWS_LIST_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\shows\\shows_list.json"
+IMAGE_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\image_mapping.json"
+TAG_MAP_FILE = "C:\\Users\\rdp6126443.gmail.com\\humorpedia\\migration\\tag_mapping.json"
 
 
 def _load_shows_list() -> list[dict]:
