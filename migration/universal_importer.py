@@ -244,6 +244,8 @@ class UniversalImporter:
             tag_map=self.tag_map,
             image_map=self.image_map,
             sql_file=self.sql_file,
+            rating=float(sc.rating) if sc.rating else 0.0,
+            votes=int(sc.votes) if sc.votes else 0,
         )
         
         # Собираем модули
