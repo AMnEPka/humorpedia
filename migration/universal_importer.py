@@ -188,18 +188,18 @@ class UniversalImporter:
     
     def extract_resource(self, resource_id: int) -> Optional[dict]:
         """Извлекает данные ресурса из SQL."""
-        from import_people_from_sql import (
-            _extract_for_ids,
-            _load_tv_map,
-        )
+        # Используем существующую функцию парсинга SQL из import_people_from_sql
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        
+        from import_people_from_sql import _extract_for_ids
         
         # Извлекаем данные
-        items = _extract_for_ids(self.sql_file, [resource_id])
+        items = _extract_for_ids({resource_id})
         
         if not items:
             return None
         
-        return items[0]
+        return items[0] if items else None
     
     def build_document(
         self,
