@@ -226,6 +226,19 @@ export default function ShowDetailPage() {
 
   const breadcrumbs = buildBreadcrumbs();
 
+  // Разделяем модули на системные (sidebar) и контентные (main)
+  const sidebarModules = useMemo(() => {
+    return (show.modules || [])
+      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [show.modules]);
+
+  const contentModules = useMemo(() => {
+    return (show.modules || [])
+      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [show.modules]);
+
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Breadcrumb */}
