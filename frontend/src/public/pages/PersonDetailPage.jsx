@@ -6,6 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import EmojiRating from '@/components/EmojiRating';
 import publicApi from '../utils/api';
+import { 
+  PosterPhotoModule, 
+  FactsTableModule, 
+  RatingWidgetModule, 
+  TagsCloudModule, 
+  SocialLinksModule,
+  isSystemModule 
+} from '@/components/SystemModules';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
