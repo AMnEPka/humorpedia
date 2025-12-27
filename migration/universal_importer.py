@@ -262,26 +262,45 @@ class UniversalImporter:
                 continue
             
             parser = parser_class(config.to_dict())
-            module = parser.build_module(ctx, order)
             
-            if module:
-                modules.append(module)
-                order += 1
+            # Специальная обработка для text_block с all_text_sections
+            if config.type == 'text_block' and config.to_dict().get('all_text_sections'):
+                from parsers.text import TextBlockParser
+                text_parser = TextBlockParser(config.to_dict())
+                text_sections = text_parser.parse_all_text_sections(ctx)
                 
-                # Извлекаем данные для основных полей документа
-                data = module.get('data', {})
+                for text_data in text_sections:
+                    module = {
+                        'id': str(uuid4()),
+                        'type': 'text_block',
+                        'order': order,
+                        'title': text_data.get('title', ''),
+                        'visible': True,
+                        'data': text_data
+                    }
+                    modules.append(module)
+                    order += 1
+            else:
+                module = parser.build_module(ctx, order)
                 
-                if config.type == 'tags_cloud' and 'tags' in data:
-                    extra_fields['tags'] = data['tags']
-                elif config.type == 'rating_widget' and 'rating' in data:
-                    extra_fields['rating'] = data['rating']
-                elif config.type == 'social_links' and 'links' in data:
-                    extra_fields['social_links'] = data['links']
-                elif config.type == 'facts_table' and 'facts' in data:
-                    extra_fields['facts'] = data['facts']
-                elif config.type == 'poster_photo' and data.get('url'):
-                    extra_fields['image'] = data['url']
-                    extra_fields['poster'] = data['url']
+                if module:
+                    modules.append(module)
+                    order += 1
+                    
+                    # Извлекаем данные для основных полей документа
+                    data = module.get('data', {})
+                    
+                    if config.type == 'tags_cloud' and 'tags' in data:
+                        extra_fields['tags'] = data['tags']
+                    elif config.type == 'rating_widget' and 'rating' in data:
+                        extra_fields['rating'] = data['rating']
+                    elif config.type == 'social_links' and 'links' in data:
+                        extra_fields['social_links'] = data['links']
+                    elif config.type == 'facts_table' and 'facts' in data:
+                        extra_fields['facts'] = data['facts']
+                    elif config.type == 'poster_photo' and data.get('url'):
+                        extra_fields['image'] = data['url']
+                        extra_fields['poster'] = data['url']
         
         # Строим slug
         slug = sc.alias or transliterate_slug(sc.pagetitle)
