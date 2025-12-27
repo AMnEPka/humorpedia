@@ -87,14 +87,14 @@ const moduleNames = {
 };
 
 const modulesByType = {
-  person: ['table_of_contents', 'hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
-  team: ['table_of_contents', 'hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
-  show: ['hero_card', 'text_block', 'timeline', 'episodes_list', 'participants', 'tags', 'table', 'gallery', 'video'],
-  article: ['table_of_contents', 'text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
-  news: ['text_block', 'gallery', 'video', 'tags'],
-  quiz: ['quiz_questions', 'quiz_results', 'text_block'],
-  wiki: ['table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
-  page: ['text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery']
+  person: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'table_of_contents', 'hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
+  team: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'table_of_contents', 'hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
+  show: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'hero_card', 'text_block', 'timeline', 'episodes_list', 'participants', 'tags', 'table', 'gallery', 'video'],
+  article: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
+  news: ['poster_photo', 'text_block', 'gallery', 'video', 'tags'],
+  quiz: ['poster_photo', 'quiz_questions', 'quiz_results', 'text_block'],
+  wiki: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
+  page: ['poster_photo', 'text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery']
 };
 
 function SortableModule({ module, onEdit, onDelete }) {
