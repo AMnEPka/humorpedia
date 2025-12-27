@@ -695,6 +695,190 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
           </div>
         );
       
+      // ===== СИСТЕМНЫЕ МОДУЛИ =====
+      
+      case 'poster_photo':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль автоматически отображает фото/постер из основных данных страницы.
+                Изменить фото можно во вкладке "Основное".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Размер</Label>
+              <Select 
+                value={data.size || 'medium'} 
+                onValueChange={(v) => updateData({ ...data, size: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="small">Маленький</SelectItem>
+                  <SelectItem value="medium">Средний</SelectItem>
+                  <SelectItem value="large">Большой</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Форма</Label>
+              <Select 
+                value={data.shape || 'rounded'} 
+                onValueChange={(v) => updateData({ ...data, shape: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="square">Квадрат</SelectItem>
+                  <SelectItem value="rounded">Скруглённый</SelectItem>
+                  <SelectItem value="circle">Круг</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'facts_table':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль автоматически отображает таблицу фактов из основных данных страницы.
+                Редактировать факты можно во вкладке "Факты".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Информация"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'card'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="card">Карточка</SelectItem>
+                  <SelectItem value="table">Таблица</SelectItem>
+                  <SelectItem value="list">Список</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'rating_widget':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль отображает виджет рейтинга. Оценки хранятся в основных данных страницы.
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Оценка"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'smileys'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="smileys">Смайлики</SelectItem>
+                  <SelectItem value="stars">Звёзды</SelectItem>
+                  <SelectItem value="numeric">Числовой</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'tags_cloud':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль отображает теги страницы. Редактировать теги можно во вкладке "Теги".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Теги"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'badges'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="badges">Бейджи</SelectItem>
+                  <SelectItem value="links">Ссылки</SelectItem>
+                  <SelectItem value="cloud">Облако</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Максимум тегов (0 = все)</Label>
+              <Input
+                type="number"
+                value={data.max_tags || 0}
+                onChange={(e) => updateData({ ...data, max_tags: parseInt(e.target.value) || 0 })}
+                min={0}
+              />
+            </div>
+          </div>
+        );
+
+      case 'social_links':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль отображает социальные ссылки. Редактировать ссылки можно во вкладке "Основное" или "Факты".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Ссылки"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'icons'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="icons">Иконки</SelectItem>
+                  <SelectItem value="buttons">Кнопки</SelectItem>
+                  <SelectItem value="list">Список</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+      
       default:
         // Generic JSON editor for other types
         return (
