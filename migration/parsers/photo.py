@@ -18,6 +18,9 @@ class PhotoParser(BaseParser):
     module_type = "poster_photo"
     default_title = "Фото"
     
+    # Базовый путь для изображений
+    IMAGE_PREFIX = "/media/imported/"
+    
     def parse(self, ctx: ParseContext) -> Optional[dict]:
         image_url = None
         
@@ -28,7 +31,7 @@ class PhotoParser(BaseParser):
         
         # 2. Пробуем запасные TV поля
         if not image_url:
-            for field in self.config.get('fallback_tv_fields', ['photo', 'poster', 'img']):
+            for field in self.config.get('fallback_tv_fields', ['photo', 'poster', 'img', 'image']):
                 if field in ctx.tv_data and ctx.tv_data[field]:
                     image_url = ctx.tv_data[field]
                     break
@@ -43,9 +46,36 @@ class PhotoParser(BaseParser):
             if image_url in ctx.image_map:
                 image_url = ctx.image_map[image_url]
         
-        # Возвращаем данные только если есть URL (но модуль создаётся всегда)
+        # 5. Добавляем префикс если нужно
+        if image_url:
+            image_url = self._normalize_image_url(image_url)
+        
+        # Возвращаем данные (модуль создаётся всегда)
         return {
             'url': image_url or '',
             'size': self.config.get('size', 'medium'),
             'shape': self.config.get('shape', 'rounded')
         }
+    
+    def _normalize_image_url(self, url: str) -> str:
+        """Нормализует URL изображения, добавляя префикс если нужно."""
+        if not url:
+            return ''
+        
+        # Уже абсолютный URL
+        if url.startswith('http://') or url.startswith('https://'):
+            return url
+        
+        # Уже имеет правильный префикс
+        if url.startswith('/media/imported/'):
+            return url
+        
+        # Убираем начальный слеш если есть
+        url = url.lstrip('/')
+        
+        # Если путь начинается с images/, добавляем префикс
+        if url.startswith('images/'):
+            return f"{self.IMAGE_PREFIX}{url}"
+        
+        # Иначе просто добавляем префикс
+        return f"{self.IMAGE_PREFIX}{url}"
