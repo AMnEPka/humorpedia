@@ -242,6 +242,7 @@ from routes.comments import router as comments_router
 from routes.media import router as media_router
 from routes.templates import router as templates_router
 from routes.sections import router as sections_router
+from routes.mongo_admin import router as mongo_admin_router
 
 api_router.include_router(content_router)
 api_router.include_router(auth_router)
@@ -251,6 +252,7 @@ api_router.include_router(comments_router)
 api_router.include_router(media_router)
 api_router.include_router(templates_router)
 api_router.include_router(sections_router)
+api_router.include_router(mongo_admin_router)
 
 
 # Statistics endpoint
