@@ -471,25 +471,25 @@ def main():
             # Build parent show document
             parent_doc = build_show_doc(sc, tv_by_id, tv_map, image_map, tag_map)
             
-            print(f"\n{'='*60}")
-            print(f"ID {show_id}: {parent_doc['title']} ({parent_doc['slug']})")
-            print(f"{'='*60}")
-            print(f"Description: {parent_doc['description'][:100] if parent_doc['description'] else '(нет)'}...")
-            print(f"Facts: {len(parent_doc['facts'])} items")
-            for k, v in list(parent_doc['facts'].items())[:5]:
-                print(f"  - {k}: {v[:60] if len(v) > 60 else v}")
-            if len(parent_doc['facts']) > 5:
-                print(f"  ... и ещё {len(parent_doc['facts']) - 5}")
-            print(f"Modules: {len(parent_doc['modules'])}")
-            for m in parent_doc['modules'][:5]:
-                title = m['title'] or '(Без заголовка)'
-                content_len = len(m['data']['content'])
-                print(f"  - {m['type']}: {title} ({content_len} chars)")
-            if len(parent_doc['modules']) > 5:
-                print(f"  ... и ещё {len(parent_doc['modules']) - 5}")
-            print(f"Tags: {len(parent_doc['tags'])} - {parent_doc['tags'][:5]}")
-            print(f"Social links: {parent_doc.get('social_links', {})}")
-            print(f"Poster: {parent_doc['poster']}")
+            # print(f"\n{'='*60}")
+            # print(f"ID {show_id}: {parent_doc['title']} ({parent_doc['slug']})")
+            # print(f"{'='*60}")
+            # print(f"Description: {parent_doc['description'][:100] if parent_doc['description'] else '(нет)'}...")
+            # print(f"Facts: {len(parent_doc['facts'])} items")
+            # for k, v in list(parent_doc['facts'].items())[:5]:
+            #     print(f"  - {k}: {v[:60] if len(v) > 60 else v}")
+            # if len(parent_doc['facts']) > 5:
+            #     print(f"  ... и ещё {len(parent_doc['facts']) - 5}")
+            # print(f"Modules: {len(parent_doc['modules'])}")
+            # for m in parent_doc['modules'][:5]:
+            #     title = m['title'] or '(Без заголовка)'
+            #     content_len = len(m['data']['content'])
+            #     print(f"  - {m['type']}: {title} ({content_len} chars)")
+            # if len(parent_doc['modules']) > 5:
+            #     print(f"  ... и ещё {len(parent_doc['modules']) - 5}")
+            # print(f"Tags: {len(parent_doc['tags'])} - {parent_doc['tags'][:5]}")
+            # print(f"Social links: {parent_doc.get('social_links', {})}")
+            # print(f"Poster: {parent_doc['poster']}")
 
             if args.apply:
                 # Check if exists
@@ -511,7 +511,7 @@ def main():
                 
                 # Отмечаем в shows_list.json
                 _mark_show_imported(show_id)
-                print(f"✅ Шоу импортировано и отмечено в shows_list.json")
+                # print(f"✅ Шоу импортировано и отмечено в shows_list.json")
                 
                 # Import children
                 if args.with_children:
