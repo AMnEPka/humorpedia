@@ -22,12 +22,57 @@ class TimelineParser(BaseParser):
     def parse(self, ctx: ParseContext) -> Optional[dict]:
         events = []
         
-        # 1. Пробуем TV поле напрямую (JSON массив событий)
-        tv_field = self.config.get('tv_field', 'timeline')
-        if tv_field and tv_field in ctx.tv_data:
-            events = self._parse_events_json(ctx.tv_data[tv_field])
+        # 1. Пробуем TV поля timeline-block-date{N}, timeline-block-name{N}, timeline-block-value{N}
+        for i in range(1, 15):
+            suf = "" if i == 1 else str(i)
+            date = ctx.tv_data.get(f"timeline-block-date{suf}", "")
+            name = ctx.tv_data.get(f"timeline-block-name{suf}", "")
+            value = ctx.tv_data.get(f"timeline-block-value{suf}", "")
+            
+            if date and name and value:
+                events.append({
+                    'year': self.normalize_html(date),
+                    'date': '',
+                    'title': self.normalize_html(name),
+                    'description': self.normalize_html(value)
+                })
         
-        # 2. Пробуем MIGX секции
+        # 2. Пробуем MIGX секцию timeline -> list_triple
+        if not events:
+            config = ctx.tv_data.get('config', '')
+            if config:
+                sections = self._parse_migx(config)
+                
+                for sec in sections:
+                    if sec.get('MIGX_formname') == 'timeline':
+                        list_triple = sec.get('list_triple', [])
+                        
+                        # list_triple может быть строкой или массивом
+                        if isinstance(list_triple, str) and list_triple:
+                            try:
+                                # Нормализуем JSON
+                                list_triple = self.normalize_migx_json(list_triple)
+                                list_triple = json.loads(list_triple)
+                            except:
+                                list_triple = []
+                        
+                        if isinstance(list_triple, list):
+                            for item in list_triple:
+                                if isinstance(item, dict):
+                                    title = item.get('title', '')
+                                    subtitle = item.get('subtitle', '')  # год
+                                    content = item.get('content', '')
+                                    
+                                    if title or subtitle:
+                                        events.append({
+                                            'year': self.normalize_html(subtitle) if subtitle else '',
+                                            'date': '',
+                                            'title': self.normalize_html(title) if title else '',
+                                            'description': self.normalize_html(content) if content else ''
+                                        })
+                        break
+        
+        # 3. Пробуем TV поля tv_simple секции
         if not events:
             config = ctx.tv_data.get('config', '')
             if config:
@@ -43,14 +88,14 @@ class TimelineParser(BaseParser):
                         if event:
                             events.append(event)
         
-        # 3. Парсим HTML если есть селектор
+        # 4. Парсим HTML если есть селектор
         if not events and ctx.html:
             events = self._parse_html_timeline(ctx.html)
         
         if not events:
             return None
         
-        # Сортируем по году/дате
+        # Сортируем по году
         events = self._sort_events(events)
         
         return {
