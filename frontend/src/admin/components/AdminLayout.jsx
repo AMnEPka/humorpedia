@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import {
   Users, FileText, Newspaper, HelpCircle, BookOpen, Tv, 
   UsersRound, Tags, MessageSquare, Image, LayoutTemplate,
-  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree
+  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +25,7 @@ const menuItems = [
   { divider: true },
   { path: '/admin/users', icon: Users, label: 'Пользователи', adminOnly: true },
   { path: '/admin/templates', icon: LayoutTemplate, label: 'Шаблоны' },
+  { path: '/admin/database', icon: Database, label: 'База данных', adminOnly: true },
 ];
 
 export default function AdminLayout({ children }) {
