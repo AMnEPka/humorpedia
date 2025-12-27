@@ -292,7 +292,7 @@ class UniversalImporter:
             'slug': slug,
             'full_path': full_path,
             'status': 'published',
-            'description': BaseParser.normalize_html(sc.content or "")[:500] if sc.content else "",
+            'description': BaseParser.normalize_html(sc.description or "")[:500] if sc.description else "",
             'modules': modules,
             'tags': extra_fields.get('tags', []),
             'rating': extra_fields.get('rating', {'average': 0.0, 'count': 0}),
