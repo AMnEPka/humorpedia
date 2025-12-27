@@ -83,6 +83,8 @@ class BaseParser(ABC):
             return ""
         
         text = unescape(text)
+        # Удаляем управляющие символы кроме newline
+        text = re.sub(r'[\x00-\x09\x0b-\x1f]', '', text)
         text = text.replace('\\r\\n', '\n').replace('\\r', '\n').replace('\\n', '\n')
         text = text.replace('>\\<', '><')
         text = text.replace('\\\\"', '"').replace('\\"', '"')
@@ -90,6 +92,25 @@ class BaseParser(ABC):
         text = text.replace('\\/', '/')
         text = text.replace('\\<', '<').replace('\\>', '>')
         text = text.replace('\u00a0', ' ').replace('&nbsp;', ' ')
+        
+        return text.strip()
+    
+    @staticmethod
+    def normalize_migx_json(text: str) -> str:
+        """Нормализует MIGX JSON строку для парсинга."""
+        if not text:
+            return ""
+        
+        # Удаляем все управляющие символы
+        text = re.sub(r'[\x00-\x09\x0b-\x1f]', '', text)
+        text = text.replace('\\r\\n', ' ').replace('\\r', ' ').replace('\\n', ' ')
+        text = text.replace('>\\<', '><')
+        text = text.replace('\\"', '"')
+        text = text.replace("\\'", "'")
+        text = text.replace('\\/', '/')
+        text = text.replace('\\<', '<').replace('\\>', '>')
+        # Заменяем переносы на пробелы для валидного JSON
+        text = text.replace('\n', ' ')
         
         return text.strip()
     
