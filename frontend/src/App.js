@@ -34,6 +34,7 @@ import CommentsPage from './admin/pages/CommentsPage';
 import UsersPage from './admin/pages/UsersPage';
 import TemplatesPage from './admin/pages/TemplatesPage';
 import TemplateEditPage from './admin/pages/TemplateEditPage';
+import MongoAdminPage from './admin/pages/MongoAdminPage';
 
 // Public pages
 import PublicLayout from './public/components/Layout';
