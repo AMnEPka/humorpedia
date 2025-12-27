@@ -49,7 +49,13 @@ const moduleIcons = {
   best_articles: Star,
   interesting: Zap,
   random_page: Shuffle,
-  table_of_contents: List
+  table_of_contents: List,
+  // Новые системные модули
+  poster_photo: Image,
+  facts_table: Table,
+  rating_widget: Star,
+  tags_cloud: Tag,
+  social_links: Users
 };
 
 const moduleNames = {
