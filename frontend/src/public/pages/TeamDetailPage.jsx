@@ -14,11 +14,12 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
     
     if (effectiveMode === 'timeline') {
       const timelineModule = modules?.find(m => m.type === 'timeline');
-      return timelineModule?.data?.items?.map(item => ({
+      const events = timelineModule?.data?.events || timelineModule?.data?.items || [];
+      return events.map(item => ({
         id: `timeline-${item.year}`,
         label: item.year,
         title: item.title
-      })) || [];
+      }));
     } else {
       // Get titles from text_block modules
       return modules?.filter(m => m.type === 'text_block' && m.data?.title)
