@@ -280,6 +280,7 @@ class UniversalImporter:
                 elif config.type == 'facts_table' and 'facts' in data:
                     extra_fields['facts'] = data['facts']
                 elif config.type == 'poster_photo' and data.get('url'):
+                    extra_fields['image'] = data['url']
                     extra_fields['poster'] = data['url']
         
         # Строим slug
