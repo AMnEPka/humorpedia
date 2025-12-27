@@ -86,6 +86,7 @@ class ModuleConfig:
     max_items: int = 0
     strip_first_heading: bool = False
     all_sections: bool = False
+    all_text_sections: bool = False  # Для text_block - парсить все text секции
     exclude_keys: List[str] = field(default_factory=list)
     fallback_tv_fields: List[str] = field(default_factory=list)
     
@@ -114,6 +115,8 @@ class ModuleConfig:
             d['strip_first_heading'] = self.strip_first_heading
         if self.all_sections:
             d['all_sections'] = self.all_sections
+        if self.all_text_sections:
+            d['all_text_sections'] = self.all_text_sections
         if self.exclude_keys:
             d['exclude_keys'] = self.exclude_keys
         if self.fallback_tv_fields:
