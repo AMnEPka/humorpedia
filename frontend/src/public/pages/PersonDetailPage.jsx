@@ -251,56 +251,42 @@ export default function PersonDetailPage() {
                 <div className="border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <tbody className="divide-y">
-                      {person.full_name && (
-                        <tr>
-                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium w-1/3">Полное имя</td>
-                          <td className="px-3 py-2">{person.full_name}</td>
-                        </tr>
-                      )}
-                      {(person.birth_date || person.bio?.birth_date) && (
-                        <tr>
-                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Дата рождения</td>
-                          <td className="px-3 py-2">
-                            {(() => {
-                              const dateStr = person.birth_date || person.bio?.birth_date;
-                              const birthDate = new Date(dateStr);
-                              const today = new Date();
-                              let age = today.getFullYear() - birthDate.getFullYear();
-                              const monthDiff = today.getMonth() - birthDate.getMonth();
-                              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                                age--;
-                              }
-                              const ageText = `${age} ${age % 10 === 1 && age % 100 !== 11 ? 'год' : age % 10 >= 2 && age % 10 <= 4 && (age % 100 < 10 || age % 100 >= 20) ? 'года' : 'лет'}`;
-                              const dateText = birthDate.toLocaleDateString('ru-RU', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              });
-                              return `${dateText} (${ageText})`;
-                            })()}
-                          </td>
-                        </tr>
-                      )}
-                      {(person.birth_place || person.bio?.birth_place) && (
-                        <tr>
-                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Место рождения</td>
-                          <td className="px-3 py-2">г. {person.birth_place || person.bio?.birth_place}</td>
-                        </tr>
-                      )}
-                      {/* Facts from facts field */}
+                      {/* Facts from facts field - unified approach */}
                       {person.facts && Object.entries(person.facts).map(([key, value]) => (
                         <tr key={key}>
-                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">{key}</td>
+                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium w-1/3">{key}</td>
                           <td className="px-3 py-2" dangerouslySetInnerHTML={{ __html: value }} />
                         </tr>
                       ))}
-                      {/* Custom fields from bio.extra_fields */}
-                      {person.bio?.extra_fields && Object.entries(person.bio.extra_fields).map(([key, value]) => (
-                        <tr key={key}>
-                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">{key}</td>
-                          <td className="px-3 py-2">{value}</td>
-                        </tr>
-                      ))}
+                      {/* Fallback: old format fields if facts is empty */}
+                      {(!person.facts || Object.keys(person.facts).length === 0) && (
+                        <>
+                          {person.full_name && (
+                            <tr>
+                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium w-1/3">Полное имя</td>
+                              <td className="px-3 py-2">{person.full_name}</td>
+                            </tr>
+                          )}
+                          {(person.birth_date || person.bio?.birth_date) && (
+                            <tr>
+                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Дата рождения</td>
+                              <td className="px-3 py-2">{person.birth_date || person.bio?.birth_date}</td>
+                            </tr>
+                          )}
+                          {(person.birth_place || person.bio?.birth_place) && (
+                            <tr>
+                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Место рождения</td>
+                              <td className="px-3 py-2">г. {person.birth_place || person.bio?.birth_place}</td>
+                            </tr>
+                          )}
+                          {person.bio?.extra_fields && Object.entries(person.bio.extra_fields).map(([key, value]) => (
+                            <tr key={key}>
+                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">{key}</td>
+                              <td className="px-3 py-2">{value}</td>
+                            </tr>
+                          ))}
+                        </>
+                      )}
                     </tbody>
                   </table>
                 </div>
