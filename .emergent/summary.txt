@@ -1,48 +1,55 @@
 <analysis>**original_problem_statement:**
-The user's goal is to recreate the website . The project has moved through several phases. The people migration is complete. The current work focuses on migrating complex content types like KVN Teams and Shows, which involves parsing nested data structures from a MySQL dump, creating new import scripts, and building out the corresponding frontend pages. A major effort was also undertaken to refactor the tag import system to be centralized and robust. Additionally, the URL structure for KVN teams was refactored based on user requirements.
+The user's initial goal was to recreate the website . After completing the migration of people and KVN teams, the focus shifted to shows, which required handling hierarchical data.
 
-**PRODUCT REQUIREMENTS (current focus):**
+Recent user requests that have been addressed or are in progress:
+1.  Create  and update the import script to track imported items.
+2.  Automatically create a default admin user () on application startup.
+3.  Implement an admin UI for managing dynamic facts for shows.
+4.  Implement the import and display of hierarchical child show pages.
+5.  Integrate a WYSIWYG (TipTap) editor for all text content in the admin panel.
+6.  Create a database management interface within the admin panel for import/export operations.
+7.  Generate dynamic content templates based on the structure of imported data.
+8.  Convert previously hardcoded page sections (photo, facts table, rating, tags) into re-orderable modules.
+9.  **Current task:** Ensure the new modular structure is rendered correctly on the public-facing pages.
 
-1.  **KVN Teams:**
-    *   **Status:** Single-team import is complete and verified by the user after multiple iterations.
-    *   **Data Source:** SQL dump,  ID 1031.
-    *   **URL Structure:**  for the list,  for details.
-    *   **Features Implemented:** Dynamic facts table, social links, styled tables within content, correct module ordering (including timeline), and finding/merging a separate games list HTML table into the main content.
-
-2.  **Shows:**
-    *   **Status:** In progress. A test case (Comedy Баттл, ID 1629) has been partially imported.
-    *   **Data Source:** SQL dump, base parent ID 33.
-    *   **Architecture:** Implemented a hierarchical structure using a  field within the  collection to handle parent-child relationships (e.g., Show Name and Show Name Season 1).
-    *   **Features Implemented (for test case):** Refactored  to a two-column layout, added dynamic facts table, implemented clickable tags, and fixed rating widget display.
-
-3.  **Tags:**
-    *   **Status:** Complete. A new, centralized system has been implemented.
-    *   **Architecture:** Tags are parsed from the SQL dump ( and TV variables) into a central . All import scripts now use a shared service () to sync tags into a dedicated  collection in MongoDB, correctly managing . This has been applied to both KVN Team and People import scripts.
+**PRODUCT REQUIREMENTS:**
+-   Content pages must be fully modular, allowing an admin to control the visibility and order of all components, including the main photo, facts table, rating widget, and tags, via the Templates section of the admin panel.
+-   The admin panel must provide a hierarchical view of parent-child relationships for Shows.
+-   All rich text editing should be handled by a WYSIWYG editor.
 
 **User's preferred language**: Russian
 
 **what currently exists?**
-The application is a full-stack FastAPI/React/MongoDB project. The people data migration is complete and stable. The import and display for a single, complex KVN Team () has been fully implemented and polished through multiple rounds of user feedback, serving as a robust template for future content types. A centralized tag management system is now in place and integrated into the people and KVN team import scripts. The URL structure has been refactored per user request. The initial implementation for importing hierarchical Show content has begun, with a test case successfully imported and its detail page built out.
+The application is a full-stack FastAPI/React/MongoDB project. Data for people, KVN teams, and hierarchical shows has been partially migrated. The admin panel has been significantly enhanced with the following features:
+-   A WYSIWYG editor (TipTap) is integrated for all text and timeline modules.
+-   A hierarchical, collapsible table view for Shows.
+-   A dynamic Facts editor for key-value data.
+-   A Database management page for running export/import/aggregate queries.
+-   A Templates editor where core page elements (photo, facts, rating, etc.) are now manageable as re-orderable modules.
+
+On the backend, a startup script now ensures a default admin user exists. All content in the database has been updated to include the new system modules (, , etc.) in their  array.
 
 **Last working item**:
--   Last item agent was working: The agent was implementing a user request to find and display social links for Shows. The user reported a missing website link for Comedy Баттл. The agent successfully located the link data within a nested MIGX JSON field () in the SQL dump and updated the  script to parse it. The next step is to re-run the import and verify the link appears on the frontend.
+-   Last item agent was working: The agent was refactoring the public-facing detail pages (e.g., ) to render content based on the new fully modular structure. The previous implementation had a hardcoded layout for elements like the photo, facts, and rating. The goal is to make these pages dynamically render all components from the  array of a given document, respecting the order defined in its template. The agent had successfully updated all database documents and the admin panel templates to support this, and was beginning the frontend implementation.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? manual testing by curl
+-   Which testing method agent to use? Frontend testing agent
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Verify Social Link implementation for Shows (P0)**
-    -   **Description:** The import script  was updated to extract a website link from a newly discovered field. The changes need to be applied and verified.
+-   **Issue 1: Render System Modules on Public Pages (P0)**
+    -   **Description:** The public-facing detail pages (, , ) still use a hardcoded layout for the sidebar and core components (photo, facts, rating, tags). They must be updated to dynamically render these elements from the  array present in the content's data.
+    -   **Attempted fixes:** The agent created a  component to help with rendering but found that integrating it into the existing complex pages required a larger refactor. The database and admin panel have already been successfully prepared for this change.
     -   **Next debug checklist:**
-        1.  Delete the existing Comedy Баттл show document from the  collection to ensure a clean import.
-        2.  Run the updated  script for ID  with the  flag.
-        3.  Use  or a debug script to check the API response for  to confirm the  field is now populated.
-        4.  Take a screenshot of the page  to visually confirm that the Ссылки section with the website link now appears in the sidebar.
-    -   **Why fix this issue and what will be achieved with the fix?** This will complete the feature set for the single show page as per the user's latest feedback, making the  script feature-complete for the test case.
+        1.  Analyze the structure of  (or another detail page) to identify where the hardcoded sidebar and content components are rendered.
+        2.  In the  hook that fetches the page data, filter the returned  array into two separate lists:  (e.g., , , , , ) and  (all others).
+        3.  Create or enhance a generic  component that takes a module object and renders the correct component based on its .
+        4.  Replace the hardcoded JSX in the detail page with a  call over the  and  arrays, passing each module to the .
+        5.  Ensure styling and layout are preserved after the refactor.
+    -   **Why fix this issue and what will be achieved with the fix?** This will complete the user's request for a fully flexible, template-driven content system. Admins will be able to control the layout of all pages directly from the admin panel without code changes.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Should Test frontend/backend/both after fix?** Frontend
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
@@ -50,73 +57,79 @@ The application is a full-stack FastAPI/React/MongoDB project. The people data m
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: Mass Import KVN Teams:** Run the finalized  script for all 442 KVN teams identified in .
-    -   **P1: Mass Import Shows:** Run the finalized  script for all 58 top-level shows (parent ID 33). Decide on a strategy for importing their child pages.
-    -   **P2: UI for Photo Picker in Admin Panel:** Implement the frontend UI for the media browser using the existing  endpoint.
-    -   **P3: Mass Data Migration for Other Content Types:** Adapt the migration process for , , , and .
+    -   **P1: Update All Import Scripts:** Modify , , and  to use the new  utility function. This will ensure newly imported content is created with the modular structure instead of populating now-deprecated top-level fields.
+    -   **P2: Mass Import KVN Teams:** Run the finalized  script for all remaining KVN teams.
+    -   **P3: Mass Import All Shows:** Run  and  to migrate all remaining shows and their seasons/children.
 -   **Future Tasks:**
-    -   **P4: Implement Rating Submission:** Create the  endpoint and frontend logic.
-    -   **P5: Social Logins:** Implement VK and Yandex OAuth.
-    -   **P6: Automated Cross-Linking:** Build a system to auto-link mentions of people/teams within content.
+    -   **P4: Mass Data Migration for Other Content Types:** Adapt the migration process for , , , and .
+    -   **P5: Implement Rating Submission:** Create the  endpoint and frontend logic.
+    -   **P6: Social Logins:** Implement VK and Yandex OAuth.
+    -   **P7: Automated Cross-Linking:** Build a system to auto-link mentions of people/teams within content.
 
 **Completed work in this session**
--   **KVN Team Import & Page (Complete for single test case):**
-    -   Created and debugged  to correctly parse SQL and generate a list of all KVN teams.
-    -   Created  to import a single team ().
-    -   Iteratively fixed and enhanced the import and frontend based on extensive user feedback:
-        -   Rendered dynamic facts table, social links, and styled HTML tables.
-        -   Correctly ordered and merged different content modules.
-        -   Located and embedded a large, separate HTML table for the List of Games.
--   **Centralized Tag System (Complete):**
-    -   Refactored the entire tag workflow. Tags are now loaded from the SQL dump into a central .
-    -   Created a  collection in MongoDB.
-    -   Created a  (and a sync wrapper) to add/update tags and their  in the database.
-    -   Updated both  and  to use this new robust system.
--   **URL Structure Refactor (Complete):**
-    -   Changed all KVN team URLs from  to .
-    -   Updated all frontend routes, links, and breadcrumbs accordingly and verified redirects.
--   **Show Import & Page (In Progress):**
-    -   Designed and implemented a hierarchical data model () for shows.
-    -   Created the initial  script.
-    -   Fully refactored the  from a hardcoded layout to a flexible two-column design matching the team page.
-    -   Implemented rendering for facts, ratings, tags, and styled content for the test show.
+-   **Show Import & Display:**
+    -   Fixed a bug preventing social links from being saved for shows.
+    -   Created a  and a script to generate it, and updated the import script to track progress.
+    -   Fixed a regex bug in the import script that failed to parse facts tables with style attributes.
+-   **Admin User Management:**
+    -   Implemented a backend startup process to automatically create a default admin user () if one does not exist.
+-   **Admin Panel Enhancements:**
+    -   Refactored the Facts editor for shows to support dynamic key-value pairs.
+    -   Implemented a fully hierarchical, collapsible view for the Shows list page.
+    -   Integrated a TipTap WYSIWYG editor for all  and  modules.
+    -   Added a new Database page allowing admins to run mongoexport/import/aggregate commands safely via an API.
+-   **Modular Content System (Foundation):**
+    -   Created dynamic content templates in the database based on imported data for people, teams, and shows.
+    -   Converted hardcoded page elements (photo, facts, rating, tags) into new, distinct module types (, , etc.).
+    -   Updated all templates and existing database documents to include these new system modules in the correct order.
+-   **Hierarchical Content (Shows):**
+    -   Implemented backend and frontend routing to support deeply nested URLs (e.g., ).
+    -   Created a new script  to handle the import of non-root shows.
+    -   Updated the main shows list () to only return top-level shows.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Hierarchical Data Modeling:** Using a self-referencing  within a single MongoDB collection () to represent tree-like data structures.
--   **Centralized Service Layer:** Creating a  in the backend to manage a shared resource ( collection), ensuring consistency and avoiding code duplication in import scripts.
--   **Synchronous Wrappers for Async Code:** Creating a synchronous function () to allow synchronous migration scripts to interact with the asynchronous backend service layer.
--   **Iterative Frontend Refactoring:** Replacing a rigid, hardcoded page layout () with a flexible, component-based, two-column layout reusable from other parts of the application.
--   **Advanced Data Archaeology:** Deeply investigating SQL dumps and nested MIGX JSON to find hidden or non-obvious data fields, such as the separate games list table and social links for shows.
+-   **Modular Content Architecture:** Transitioning from a fixed layout to a dynamic system where page structure is defined by an ordered list of modules in a database template.
+-   **Hierarchical Data & Routing:** Handling tree-like data structures in MongoDB () and creating corresponding nested routes on both the backend () and frontend ().
+-   **Dynamic Admin Interfaces:** Building admin UIs that adapt to the data they are presenting, such as the hierarchical show list and the key-value facts editor.
+-   **WYSIWYG Integration:** Integrating the TipTap rich text editor into a React application and customizing it for different use cases (full editor vs. compact).
+-   **API-Driven Internal Tools:** Exposing controlled access to powerful backend operations (like database queries) through a secure REST API and a user-friendly admin interface.
 
 **key DB schema**
--   **teams:** (New) , , , .
--   **shows:** (New) , , , , .
--   **tags:** (New) . Documents are managed by the .
--   **people:**  field is now populated correctly.
+-   **shows, teams, people:**
+    -    (e.g., ) - This array now defines the entire page structure.
+    -    - Links to the  collection.
+    -    - (shows) The full URL path for nested items, e.g., .
+    -    - (shows) Hierarchy depth, where  is a root item.
+    -    - (shows) The  of the parent document.
+-   **templates:**
+    -   , 
+    -    - The ordered list of default modules for this template, including system types like , , etc.
 
 **changes in tech stack**
--   None.
+-   **Added Frontend Libraries:**  and its dependencies (, , etc.) have been added to .
 
 **All files of reference**
--   : Finalized script for importing a single KVN team.
--   : Script for importing shows (currently configured for a single show).
--   : Updated script for importing people with the correct tag logic.
--   : The global mapping of all tag IDs to tag names from the SQL dump.
--   : The service responsible for managing the  collection.
--   : The polished frontend page for KVN teams.
--   : The newly refactored frontend page for shows.
--   : Contains the updated routing structure.
+-   : Primary candidate for the modular rendering refactor.
+-   : Also needs the modular rendering refactor.
+-   : Defines the UI for editing all module types, including the new system ones.
+-   : Example of an advanced, dynamic admin UI (hierarchical table).
+-   : The UI for the database tool.
+-   : Contains the API logic for fetching hierarchical content.
+-   : The API endpoints for the database tool.
+-   : Contains the  helper function for import scripts.
 
 **Critical Info for New Agent**
--   **Tag System is Centralized:** All new import scripts MUST use the  utility from  to process tags. Do not store tags only as strings on documents; they must be synced with the  collection.
--   **KVN URL Structure is Final:** The URLs for KVN teams are now  and . Do not revert this.
--   **Show Hierarchy:** The  collection uses  to manage hierarchy. The current import script is set to only import the top-level show.
--   **Frontend Layouts:** The two-column layout with a sidebar (seen in  and ) is the preferred standard for new content detail pages.
+-   **Modular Rendering is the Top Priority:** The most critical pending task is to refactor the public-facing detail pages to render their layout from the  array. The backend data and admin UI are already prepared for this. Do not try to use old top-level fields like  or ; all data should come from iterating over .
+-   **Update Import Scripts Before Mass Import:** Before running any mass-import tasks, ensure the import scripts are updated to use the  utility. This will prevent the creation of legacy data structures.
+-   **Hierarchical vs. Flat Data:** Remember that the main show list endpoint () intentionally returns a flat list of only top-level shows (). To get the full hierarchy for the admin panel, the dedicated endpoint  must be used.
 
-**documents and test_reports created in this job**
+**documents and test reports created in this job**
+-   
+-   
+-   
 -   
 -   
 -   
@@ -124,36 +137,36 @@ The application is a full-stack FastAPI/React/MongoDB project. The people data m
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** в моей старой странице ссылка есть: это одна ссылка на веб-сайт, вот этот url: https://premier.one/show/comedy-battl постарайся найти его, чтобы не пропускать ссылки у других шоу
-2.  **User:** так, что-то фигня: теги - не кликабельны и их всего 10 штук (а их намного больше) ссылка на сайт шоу и/или соцсети шоу - нет рейтинг - виджет есть, но сам рейтинг не подтянулся. И в первом текстовом блоке убери название шоу в начале (на скриншоте)
-3.  **User:** во-первых, давай не импортировать сразу все дочерние страницы, пока работаем только с первым уровнем иерархии. во-вторых, у родительской камеди баттл - нет оценок-смайликов, нет url, нет таблицы базовой информации по шоу
-4.  **User:** давай начнем с одного тестового шоу. У шоу есть разные форматы страниц. фото, таблица под фото, теги, ссылки и первый текстовый модуль - всегда одинаковые. Дальше могут быть в ассортименте - текстовые блоки, таблицы или какие-то иные блоки. начнем с comedy battle (1629)
-5.  **User:** так, отлично. Давай начнем готовить импорт шоу: у большого количества шоу есть дочерние страницы. Я пока не совсем понимаю, как мне лучше сделать: у меня есть сущность разделы и есть отдельно сущность шоу. Но хотелось бы, чтобы все шоу находились в одном месте, а не в двух разных разделах - иерархические и нет. базовый родительский ресурс, который мы анализируем - 33
-6.  **User:** но если я нажимаю в разделе https://comedyhub-1.preview.emergentagent.com/kvn/teams на команду КВН, то там старая ссылеп, обнови и её
-7.  **User:** так, надо переделать пути импорта команд квн. раздел команды КВН имеет url /teams/kvn и команды, которые я импортирую локально получают url teams/kvn/team1. мне нужна другая иерархия: раздел команды квн должен иметь url kvn/teams и все команды квн после импорта должны иметь url kvn/teams/team1
-8.  **User:** ты мне заполнил файл tag_mapping.json для людей а аналогичного файла для команд - kvn/tag_mapping.json нет. Как мне его раздобыть?
-9.  **User:** отлично, а теперь ту же операцию с тегами делаем в модуле импорта людей. Оказывается, там ты тоже сделал неверно! Должны браться корректные теги из 1) Таблице modx_tagger_tags (tag_id -> tag_name) 2) TV переменной tags (список tag_id через ||) и при импорте заноситься в компонент тегов.
-10. **User:** При импорте все теги должны заноситься в раздел админки теги (https://comedyhub-1.preview.emergentagent.com/admin/tags)
+1.  **User:** Make the system blocks (photo, facts, etc.) appear on the public pages, not just in the template editor. **Status:** IN PROGRESS. This is the current main task.
+2.  **User:** Can I make photo, facts table, rating, and tags into regular modules to control their order/visibility? **Status:** DONE (backend/DB), IN PROGRESS (frontend rendering).
+3.  **User:** Create templates for people, teams, and shows based on their imported module structure. **Status:** DONE.
+4.  **User:** Build a MongoDB admin interface in the app for import/export. **Status:** DONE.
+5.  **User:** Can I get the connection string to connect to MongoDB directly? **Status:** ANSWERED. Agent explained direct connection is not possible and provided alternatives, which led to the creation of the MongoDB admin interface.
+6.  **User:** Add the same WYSIWYG editor to the timeline module's description field. **Status:** DONE.
+7.  **User:** Add a WYSIWYG editor to the text block module. **Status:** DONE.
+8.  **User:** The child page isn't visible in the admin show list, and there's no hierarchy. **Status:** DONE. Agent rebuilt the admin page to show a hierarchical tree.
+9.  **User:** Start importing child pages for shows, ensuring correct hierarchical URLs and admin display. **Status:** DONE (for a single test case).
+10. **User:** The facts table is not visible in the admin panel for shows. **Status:** DONE.
 
 **Project Health Check:**
--   **Broken:** None.
+-   **Broken:** Public detail pages are functional but do not reflect the new modular template system.
 -   **Mocked:** None.
 
 **3rd Party Integrations**
+-   **@tiptap/react:** A suite of libraries for the WYSIWYG editor.
 -   **VK (Authentication):** Planned, not implemented.
 -   **Yandex (Authentication):** Planned, not implemented.
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None. The agent has created and modified several Python import scripts in .
+-   **Test files created:** None.
 -   **Known regressions:** None.
 
 **Credentials to test flow:**
 -   **Admin URL:** 
--   **Public URL:** 
 -   **Username:** 
 -   **Password:** 
 
 **What agent forgot to execute**
--   The agent did not forget anything; it was actively working on a fix when the session ended. The immediate next step is to re-import the Comedy Баттл show to apply the latest script change (parsing ) and verify the result on the frontend.</analysis>
+-   The agent has been thorough and is currently in the middle of a multi-step feature implementation. Nothing has been forgotten; the next step is to complete the frontend part of the modular rendering feature.</analysis>
