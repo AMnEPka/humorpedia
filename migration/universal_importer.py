@@ -193,13 +193,16 @@ class UniversalImporter:
         
         from import_people_from_sql import _extract_for_ids
         
-        # Извлекаем данные
-        items = _extract_for_ids({resource_id})
+        # Функция возвращает (site_content_dict, tv_values_dict)
+        site_content, tv_values = _extract_for_ids({resource_id})
         
-        if not items:
+        if resource_id not in site_content:
             return None
         
-        return items[0] if items else None
+        return {
+            'sc': site_content[resource_id],
+            'tv': tv_values.get(resource_id, {})
+        }
     
     def build_document(
         self,
