@@ -416,13 +416,13 @@ function ModuleRenderer({ module }) {
           </CardHeader>
           <CardContent>
             <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
-              {module.data?.items?.map((item, i) => (
+              {(module.data?.events || module.data?.items || []).map((item, i) => (
                 <div key={i} id={`timeline-${item.year}`} className="relative scroll-mt-20">
                   <div className="absolute -left-[25px] w-4 h-4 bg-blue-600 rounded-full border-4 border-white" />
                   <div className="text-sm text-blue-600 font-semibold">{item.year}</div>
                   <div className="font-medium">{item.title}</div>
                   {item.description && (
-                    <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                    <p className="text-gray-600 text-sm mt-1" dangerouslySetInnerHTML={{ __html: item.description }} />
                   )}
                 </div>
               ))}
