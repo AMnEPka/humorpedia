@@ -268,7 +268,7 @@ frontend:
     file: "/app/frontend/src/public/pages/PersonDetailPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
@@ -276,6 +276,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Рефакторинг для модульного рендеринга. Теперь страница динамически отображает системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) на основе массива modules. Проверено скриншотом - все работает."
+      - working: true
+        agent: "testing"
+        comment: "Полное E2E тестирование системных модулей на /people/irina-chesnokova завершено успешно. ✅ Poster photo module: фото в сайдбаре отображается корректно. ✅ Social links module: VK, Instagram, YouTube иконки найдены и работают. ✅ Rating widget module: рейтинг 4.5/10 с эмодзи отображается правильно. ✅ Facts table module: таблица с полями 'Полное имя' и 'Дата рождения' работает корректно. ✅ Tags cloud module: теги 'Воронеж', 'Ирина Чеснокова', 'Санкт-Петербург' отображаются в контентной части. ✅ Text modules: секции 'Биография' и 'Хронология' с полным контентом работают. Все системные модули рендерятся только при visible=true в массиве modules."
 
   - task: "Public Show Pages"
     implemented: true
@@ -283,11 +286,14 @@ frontend:
     file: "/app/frontend/src/public/pages/ShowDetailPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Рефакторинг для модульного рендеринга. Страница показывает системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) динамически. Проверено скриншотом /shows/comedy-battle - все элементы отображаются."
+      - working: true
+        agent: "testing"
+        comment: "E2E тестирование системных модулей на /shows/comedy-battle завершено успешно. ✅ Poster photo module: постер шоу отображается корректно. ✅ Facts table module: таблица 'Информация' с данными о шоу (статус, количество сезонов, даты) работает. ✅ Tags cloud module: теги с именами участников отображаются (37 элементов найдено). ✅ Text blocks: описание шоу и контентные блоки отображаются корректно (8 блоков найдено). ✅ Social links: ссылки на официальный сайт работают. Все системные модули корректно рендерятся на основе массива modules с visible=true."
 
   - task: "Public Team Pages"
     implemented: true
@@ -295,11 +301,14 @@ frontend:
     file: "/app/frontend/src/public/pages/TeamDetailPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Рефакторинг для модульного рендеринга. Страница показывает системные модули динамически. Проверено скриншотом /kvn/teams/sbornaya-pyatigorska - таблица фактов, теги, контент отображаются корректно."
+      - working: true
+        agent: "testing"
+        comment: "E2E тестирование системных модулей на /kvn/teams/sbornaya-pyatigorska завершено успешно. ✅ Hero section: название команды 'Сборная Пятигорска' и теги ('КВН', 'Высшая лига', 'Пятигорск') отображаются в hero-секции. ✅ Facts table module: таблица 'Информация' с данными команды (founded_year: 2010, city: Пятигорск, achievements) работает корректно. ✅ Text block module: секция 'История команды' с полным текстом отображается. ✅ Poster photo module: логотип команды (буква 'С') в hero-секции. Все системные модули корректно рендерятся динамически на основе массива modules."
 
   - task: "Login Page"
     implemented: true
