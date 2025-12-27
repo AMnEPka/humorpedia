@@ -170,8 +170,8 @@ export default function TeamDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Facts Table */}
-          {team.facts && Object.keys(team.facts).length > 0 && (
+          {/* Facts Table - рендерится если есть модуль facts_table */}
+          {sidebarModules.find(m => m.type === 'facts_table') && team.facts && Object.keys(team.facts).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -250,8 +250,8 @@ export default function TeamDetailPage() {
             </Card>
           )}
 
-          {/* Social Links */}
-          {team.social_links && Object.keys(team.social_links).length > 0 && (
+          {/* Social Links - рендерится если есть модуль social_links */}
+          {sidebarModules.find(m => m.type === 'social_links') && team.social_links && Object.keys(team.social_links).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -310,7 +310,7 @@ export default function TeamDetailPage() {
           </Button>
 
           {/* Table of Contents */}
-          <TableOfContents modules={team.modules} contentType="team" />
+          <TableOfContents modules={contentModules} contentType="team" />
         </div>
 
         {/* Main content */}
@@ -330,9 +330,9 @@ export default function TeamDetailPage() {
             </Card>
           )}
 
-          {/* Modules */}
-          {team.modules?.map((module, i) => (
-            <ModuleRenderer key={i} module={module} />
+          {/* Content Modules */}
+          {contentModules.map((module, i) => (
+            <ModuleRenderer key={module.id || i} module={module} />
           ))}
         </div>
       </div>
