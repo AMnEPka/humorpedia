@@ -135,15 +135,18 @@ export default function TeamDetailPage() {
       {/* Hero */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-white mb-8">
         <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="w-32 h-32 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
-            {team.logo ? (
-              <img src={team.logo} alt={team.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
-                {team.title?.charAt(0)?.toUpperCase()}
-              </div>
-            )}
-          </div>
+          {/* Logo/Photo - рендерится если есть модуль poster_photo */}
+          {sidebarModules.find(m => m.type === 'poster_photo') && (
+            <div className="w-32 h-32 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
+              {team.logo || team.poster || team.photo ? (
+                <img src={team.logo || team.poster || team.photo} alt={team.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
+                  {team.title?.charAt(0)?.toUpperCase()}
+                </div>
+              )}
+            </div>
+          )}
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{team.title}</h1>
             {team.city && (
@@ -152,7 +155,8 @@ export default function TeamDetailPage() {
                 <span>{team.city}</span>
               </div>
             )}
-            {team.tags?.length > 0 && (
+            {/* Tags - рендерятся если есть модуль tags_cloud */}
+            {sidebarModules.find(m => m.type === 'tags_cloud') && team.tags?.length > 0 && (
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
                 {team.tags.map((tag, i) => (
                   <Badge key={i} variant="secondary" className="bg-white/20 text-white">{tag}</Badge>
