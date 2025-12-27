@@ -276,6 +276,7 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                         setEvents(newEvents);
                       }}
                       placeholder="Описание события..."
+                      minHeight={100}
                     />
                   </div>
                 </div>
