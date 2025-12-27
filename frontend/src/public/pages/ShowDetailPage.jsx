@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
 import EmojiRating from '@/components/EmojiRating';
+import { isSystemModule } from '@/components/SystemModules';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
