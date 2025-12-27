@@ -34,6 +34,7 @@ import CommentsPage from './admin/pages/CommentsPage';
 import UsersPage from './admin/pages/UsersPage';
 import TemplatesPage from './admin/pages/TemplatesPage';
 import TemplateEditPage from './admin/pages/TemplateEditPage';
+import MongoAdminPage from './admin/pages/MongoAdminPage';
 
 // Public pages
 import PublicLayout from './public/components/Layout';
@@ -106,6 +107,9 @@ function AppRoutes() {
         {/* Shows */}
         <Route path="/shows" element={<ShowsListPage />} />
         <Route path="/shows/:slug" element={<ShowDetailPage />} />
+        <Route path="/shows/:parentSlug/:childSlug" element={<ShowDetailPage />} />
+        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug" element={<ShowDetailPage />} />
+        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug/:greatGrandchildSlug" element={<ShowDetailPage />} />
         
         {/* Quizzes */}
         <Route path="/quizzes" element={<QuizzesListPage />} />
@@ -175,6 +179,9 @@ function AppRoutes() {
       {/* Admin - Templates */}
       <Route path="/admin/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
       <Route path="/admin/templates/:id" element={<ProtectedRoute><TemplateEditPage /></ProtectedRoute>} />
+      
+      {/* Admin - MongoDB */}
+      <Route path="/admin/database" element={<ProtectedRoute><MongoAdminPage /></ProtectedRoute>} />
     </Routes>
   );
 }

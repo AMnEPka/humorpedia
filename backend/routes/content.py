@@ -265,17 +265,90 @@ async def list_shows(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    include_children: bool = Query(False, description="Include child shows")
 ):
-    """List shows with pagination"""
+    """List shows with pagination (excludes child shows by default)"""
     query = build_query(status, tag, search, ["title", "name"])
+    
+    # По умолчанию показываем только корневые шоу (level = 0 или отсутствует)
+    if not include_children:
+        query["$or"] = [{"level": 0}, {"level": {"$exists": False}}]
+    
     return await list_content("shows", skip, limit, query, "name", 1)
+
+
+@router.get("/shows/by-path/{path:path}", response_model=dict)
+async def get_show_by_path(path: str):
+    """Get show by full path (e.g., comedy-battle/season1)"""
+    db = await get_db()
+    show = await db.shows.find_one({"full_path": path}, {"_id": 0})
+    if not show:
+        # Попробуем найти по slug (для обратной совместимости)
+        show = await db.shows.find_one({"slug": path}, {"_id": 0})
+    if not show:
+        raise HTTPException(status_code=404, detail="Show not found")
+    return show
+
+
+@router.get("/shows/{parent_slug}/children", response_model=dict)
+async def get_show_children(parent_slug: str):
+    """Get children of a show"""
+    db = await get_db()
+    parent = await db.shows.find_one({"slug": parent_slug})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent show not found")
+    
+    children = await db.shows.find(
+        {"parent_id": parent["_id"]},
+        {"_id": 0}
+    ).sort("title", 1).to_list(100)
+    
+    return {"items": children, "total": len(children), "parent": parent.get("title")}
 
 
 @router.get("/shows/{id_or_slug}", response_model=dict)
 async def get_show(id_or_slug: str):
     """Get show by ID or slug"""
     return await get_by_id_or_slug("shows", id_or_slug, "Show not found")
+
+
+@router.get("/shows-hierarchy", response_model=dict)
+async def get_shows_hierarchy(
+    status: Optional[ContentStatus] = None
+):
+    """Get all shows with hierarchy for admin panel"""
+    db = await get_db()
+    
+    query = {}
+    if status:
+        query["status"] = status.value
+    
+    # Получаем все шоу (сохраняем _id для связей)
+    all_shows = await db.shows.find(query).sort([("level", 1), ("title", 1)]).to_list(1000)
+    
+    # Строим дерево
+    shows_by_id = {}
+    for s in all_shows:
+        s['_id'] = str(s['_id']) if not isinstance(s['_id'], str) else s['_id']
+        shows_by_id[s['_id']] = s
+    
+    root_shows = []
+    
+    for show in all_shows:
+        show['children'] = []
+        parent_id = show.get('parent_id')
+        
+        if not parent_id:
+            root_shows.append(show)
+        else:
+            parent = shows_by_id.get(parent_id)
+            if parent:
+                if 'children' not in parent:
+                    parent['children'] = []
+                parent['children'].append(show)
+    
+    return {"items": root_shows, "total": len(all_shows)}
 
 
 @router.put("/shows/{id}", response_model=dict)

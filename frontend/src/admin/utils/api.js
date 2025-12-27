@@ -60,6 +60,7 @@ export const contentApi = {
 
   // Shows
   listShows: (params) => api.get('/content/shows', { params }),
+  listShowsHierarchy: () => api.get('/content/shows-hierarchy'),
   getShow: (id) => api.get(`/content/shows/${id}`),
   createShow: (data) => api.post('/content/shows', data),
   updateShow: (id, data) => api.put(`/content/shows/${id}`, data),

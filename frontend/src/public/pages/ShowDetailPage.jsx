@@ -145,17 +145,34 @@ function ModuleRenderer({ module }) {
 }
 
 export default function ShowDetailPage() {
-  const { slug } = useParams();
+  const { slug, parentSlug, childSlug, grandchildSlug, greatGrandchildSlug } = useParams();
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Собираем полный путь из всех параметров
+  // Если есть parentSlug, значит это вложенный путь
+  const fullPath = parentSlug 
+    ? [parentSlug, childSlug, grandchildSlug, greatGrandchildSlug].filter(Boolean).join('/')
+    : slug;
+
   useEffect(() => {
-    publicApi.getShow(slug)
+    if (!fullPath) {
+      setError('Шоу не найдено');
+      setLoading(false);
+      return;
+    }
+
+    // Если путь содержит /, используем API by-path, иначе обычный getShow
+    const fetchShow = fullPath.includes('/') 
+      ? publicApi.getShowByPath(fullPath)
+      : publicApi.getShow(fullPath);
+    
+    fetchShow
       .then(res => setShow(res.data))
       .catch(() => setError('Шоу не найдено'))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [fullPath]);
 
   if (loading) {
     return (
@@ -178,16 +195,51 @@ export default function ShowDetailPage() {
 
   const facts = show.facts || {};
 
+  // Строим breadcrumb из full_path
+  const buildBreadcrumbs = () => {
+    const crumbs = [
+      { label: 'Главная', path: '/' },
+      { label: 'Шоу', path: '/shows' }
+    ];
+    
+    if (show.full_path && show.full_path.includes('/')) {
+      const pathParts = show.full_path.split('/');
+      let currentPath = '/shows';
+      
+      // Добавляем родительские элементы (все кроме последнего)
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        currentPath += '/' + pathParts[i];
+        crumbs.push({ 
+          label: pathParts[i], // Будет заменено на title если есть
+          path: currentPath,
+          isParent: true
+        });
+      }
+    }
+    
+    // Текущая страница (без ссылки)
+    crumbs.push({ label: show.title, path: null });
+    
+    return crumbs;
+  };
+
+  const breadcrumbs = buildBreadcrumbs();
+
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Breadcrumb */}
       <nav className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-gray-500">
-          <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
-          <li>/</li>
-          <li><Link to="/shows" className="hover:text-blue-600">Шоу</Link></li>
-          <li>/</li>
-          <li className="text-gray-900 truncate max-w-[200px]">{show.title}</li>
+        <ol className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+          {breadcrumbs.map((crumb, idx) => (
+            <li key={idx} className="flex items-center gap-2">
+              {idx > 0 && <span>/</span>}
+              {crumb.path ? (
+                <Link to={crumb.path} className="hover:text-blue-600">{crumb.label}</Link>
+              ) : (
+                <span className="text-gray-900 truncate max-w-[200px]">{crumb.label}</span>
+              )}
+            </li>
+          ))}
         </ol>
       </nav>
 
