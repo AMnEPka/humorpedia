@@ -175,6 +175,22 @@ export default function ShowDetailPage() {
       .finally(() => setLoading(false));
   }, [fullPath]);
 
+  // Разделяем модули на системные (sidebar) и контентные (main)
+  // Хуки должны быть до любых return
+  const sidebarModules = useMemo(() => {
+    if (!show?.modules) return [];
+    return show.modules
+      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [show?.modules]);
+
+  const contentModules = useMemo(() => {
+    if (!show?.modules) return [];
+    return show.modules
+      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [show?.modules]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -225,19 +241,6 @@ export default function ShowDetailPage() {
   };
 
   const breadcrumbs = buildBreadcrumbs();
-
-  // Разделяем модули на системные (sidebar) и контентные (main)
-  const sidebarModules = useMemo(() => {
-    return (show.modules || [])
-      .filter(m => m.visible !== false && isSystemModule(m.type))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [show.modules]);
-
-  const contentModules = useMemo(() => {
-    return (show.modules || [])
-      .filter(m => m.visible !== false && !isSystemModule(m.type))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [show.modules]);
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
