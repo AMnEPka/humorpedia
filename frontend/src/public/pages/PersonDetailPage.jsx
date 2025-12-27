@@ -104,6 +104,22 @@ export default function PersonDetailPage() {
     fetchPerson();
   }, [slug]);
 
+  // Разделяем модули на системные (sidebar) и контентные (main)
+  // Хуки должны быть до любых return
+  const sidebarModules = useMemo(() => {
+    if (!person?.modules) return [];
+    return person.modules
+      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [person?.modules]);
+
+  const contentModules = useMemo(() => {
+    if (!person?.modules) return [];
+    return person.modules
+      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [person?.modules]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -122,39 +138,6 @@ export default function PersonDetailPage() {
       </div>
     );
   }
-
-  // Разделяем модули на системные (sidebar) и контентные (main)
-  const sidebarModules = useMemo(() => {
-    return (person.modules || [])
-      .filter(m => m.visible !== false && isSystemModule(m.type))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [person.modules]);
-
-  const contentModules = useMemo(() => {
-    return (person.modules || [])
-      .filter(m => m.visible !== false && !isSystemModule(m.type))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [person.modules]);
-
-  // Рендер системного модуля для sidebar
-  const renderSidebarModule = (module) => {
-    const moduleData = module.data || {};
-    
-    switch (module.type) {
-      case 'poster_photo':
-        return <PosterPhotoModule key={module.id || module.type} data={person} moduleData={moduleData} />;
-      case 'facts_table':
-        return <FactsTableModule key={module.id || module.type} data={person} moduleData={moduleData} />;
-      case 'rating_widget':
-        return <RatingWidgetModule key={module.id || module.type} data={person} moduleData={moduleData} />;
-      case 'tags_cloud':
-        return <TagsCloudModule key={module.id || module.type} data={person} moduleData={moduleData} />;
-      case 'social_links':
-        return <SocialLinksModule key={module.id || module.type} data={person} moduleData={moduleData} />;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
