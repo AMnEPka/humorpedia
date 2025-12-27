@@ -227,9 +227,9 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
               />
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               {events.map((item, index) => (
-                <div key={index} className="border rounded-lg p-3 space-y-2">
+                <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/20">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Событие {index + 1}</span>
                     <Button 
@@ -241,35 +241,43 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={item.year || item.date || ''}
-                      onChange={(e) => {
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Год / период</Label>
+                      <Input
+                        value={item.year || item.date || ''}
+                        onChange={(e) => {
+                          const newEvents = [...events];
+                          newEvents[index] = { ...newEvents[index], year: e.target.value };
+                          setEvents(newEvents);
+                        }}
+                        placeholder="2007-2013"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Заголовок</Label>
+                      <Input
+                        value={item.title || ''}
+                        onChange={(e) => {
+                          const newEvents = [...events];
+                          newEvents[index] = { ...newEvents[index], title: e.target.value };
+                          setEvents(newEvents);
+                        }}
+                        placeholder="Название события"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Описание</Label>
+                    <RichTextEditor
+                      content={item.description || ''}
+                      onChange={(html) => {
                         const newEvents = [...events];
-                        newEvents[index] = { ...newEvents[index], year: e.target.value };
+                        newEvents[index] = { ...newEvents[index], description: html };
                         setEvents(newEvents);
                       }}
-                      placeholder="Год / период (например 2007-2013)"
-                    />
-                    <Input
-                      value={item.title || ''}
-                      onChange={(e) => {
-                        const newEvents = [...events];
-                        newEvents[index] = { ...newEvents[index], title: e.target.value };
-                        setEvents(newEvents);
-                      }}
-                      placeholder="Заголовок"
+                      placeholder="Описание события..."
                     />
                   </div>
-                  <Textarea
-                    value={item.description || ''}
-                    onChange={(e) => {
-                      const newEvents = [...events];
-                      newEvents[index] = { ...newEvents[index], description: e.target.value };
-                      setEvents(newEvents);
-                    }}
-                    placeholder="Описание (HTML)"
-                    rows={2}
-                  />
                 </div>
               ))}
             </div>
