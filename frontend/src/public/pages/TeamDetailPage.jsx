@@ -411,8 +411,6 @@ function ModuleRenderer({ module }) {
     
     case 'timeline':
       const timelineEvents = module.data?.events || module.data?.items || [];
-      console.log('Timeline module:', module);
-      console.log('Timeline events:', timelineEvents);
       return (
         <Card>
           <CardHeader>
