@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
@@ -17,7 +16,8 @@ import TagSelector from '../components/TagSelector';
 const emptyShow = {
   title: '', slug: '', name: '', status: 'draft',
   poster: null, description: '',
-  facts: { start_year: null, end_year: null, network: '', episodes_count: null, seasons_count: null, hosts: [], genre: [], status: 'ongoing' },
+  facts: {},  // Произвольные факты key-value
+  social_links: {},  // Социальные ссылки
   modules: [], tags: [],
   seo: { meta_title: '', meta_description: '' }
 };
@@ -32,13 +32,19 @@ export default function ShowEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [hostInput, setHostInput] = useState('');
-  const [genreInput, setGenreInput] = useState('');
+  const [newFactKey, setNewFactKey] = useState('');
+  const [newFactValue, setNewFactValue] = useState('');
 
   useEffect(() => {
     if (!isNew) {
       contentApi.getShow(id).then(res => {
-        setShow({ ...emptyShow, ...res.data, facts: { ...emptyShow.facts, ...res.data.facts }, seo: { ...emptyShow.seo, ...res.data.seo } });
+        setShow({ 
+          ...emptyShow, 
+          ...res.data, 
+          facts: res.data.facts || {},
+          social_links: res.data.social_links || {},
+          seo: { ...emptyShow.seo, ...res.data.seo } 
+        });
       }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
     }
   }, [id, isNew]);
@@ -141,49 +147,99 @@ export default function ShowEditPage() {
         <TabsContent value="facts" className="space-y-6">
           <Card>
             <CardHeader><CardTitle>Факты о шоу</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="space-y-2"><Label>Год начала</Label><Input type="number" value={show.facts.start_year || ''} onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, start_year: parseInt(e.target.value) || null } }))} /></div>
-                <div className="space-y-2"><Label>Год окончания</Label><Input type="number" value={show.facts.end_year || ''} onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, end_year: parseInt(e.target.value) || null } }))} placeholder="Пусто = идёт" /></div>
-                <div className="space-y-2"><Label>Телеканал</Label><Input value={show.facts.network || ''} onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, network: e.target.value } }))} placeholder="ТНТ" /></div>
-                <div className="space-y-2"><Label>Количество сезонов</Label><Input type="number" value={show.facts.seasons_count || ''} onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, seasons_count: parseInt(e.target.value) || null } }))} /></div>
-                <div className="space-y-2"><Label>Количество выпусков</Label><Input type="number" value={show.facts.episodes_count || ''} onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, episodes_count: parseInt(e.target.value) || null } }))} /></div>
+            <CardContent className="space-y-4">
+              {/* Существующие факты */}
+              {Object.entries(show.facts || {}).length > 0 ? (
                 <div className="space-y-2">
-                  <Label>Статус</Label>
-                  <Select value={show.facts.status} onValueChange={(v) => setShow(p => ({ ...p, facts: { ...p.facts, status: v } }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ongoing">Выходит</SelectItem>
-                      <SelectItem value="ended">Завершено</SelectItem>
-                      <SelectItem value="hiatus">Пауза</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {Object.entries(show.facts).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <Input 
+                        value={key} 
+                        className="w-1/3 bg-background"
+                        onChange={(e) => {
+                          const newFacts = { ...show.facts };
+                          delete newFacts[key];
+                          newFacts[e.target.value] = value;
+                          setShow(p => ({ ...p, facts: newFacts }));
+                        }}
+                      />
+                      <Input 
+                        value={value} 
+                        className="flex-1 bg-background"
+                        onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, [key]: e.target.value } }))}
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          const newFacts = { ...show.facts };
+                          delete newFacts[key];
+                          setShow(p => ({ ...p, facts: newFacts }));
+                        }}
+                      >
+                        <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Нет фактов</p>
+              )}
+              
+              {/* Добавить новый факт */}
+              <div className="flex items-center gap-2 pt-4 border-t">
+                <Input 
+                  value={newFactKey} 
+                  onChange={(e) => setNewFactKey(e.target.value)}
+                  placeholder="Название (напр. Статус шоу)"
+                  className="w-1/3"
+                />
+                <Input 
+                  value={newFactValue} 
+                  onChange={(e) => setNewFactValue(e.target.value)}
+                  placeholder="Значение"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
+                      setShow(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                      setNewFactKey('');
+                      setNewFactValue('');
+                    }
+                  }}
+                />
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    if (newFactKey.trim() && newFactValue.trim()) {
+                      setShow(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                      setNewFactKey('');
+                      setNewFactValue('');
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader><CardTitle>Ведущие</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input value={hostInput} onChange={(e) => setHostInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), hostInput.trim() && (setShow(p => ({ ...p, facts: { ...p.facts, hosts: [...p.facts.hosts, hostInput.trim()] } })), setHostInput('')))} placeholder="Имя ведущего" />
-                  <Button type="button" variant="outline" onClick={() => hostInput.trim() && (setShow(p => ({ ...p, facts: { ...p.facts, hosts: [...p.facts.hosts, hostInput.trim()] } })), setHostInput(''))}><Plus className="h-4 w-4" /></Button>
-                </div>
-                <div className="space-y-2">{show.facts.hosts.map((h, i) => <div key={i} className="flex items-center justify-between bg-muted p-2 rounded"><span>{h}</span><button onClick={() => setShow(p => ({ ...p, facts: { ...p.facts, hosts: p.facts.hosts.filter((_, j) => j !== i) } }))} className="text-muted-foreground hover:text-destructive"><X className="h-4 w-4" /></button></div>)}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle>Жанры</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input value={genreInput} onChange={(e) => setGenreInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), genreInput.trim() && (setShow(p => ({ ...p, facts: { ...p.facts, genre: [...p.facts.genre, genreInput.trim()] } })), setGenreInput('')))} placeholder="Стендап" />
-                  <Button type="button" variant="outline" onClick={() => genreInput.trim() && (setShow(p => ({ ...p, facts: { ...p.facts, genre: [...p.facts.genre, genreInput.trim()] } })), setGenreInput(''))}><Plus className="h-4 w-4" /></Button>
-                </div>
-                <div className="flex flex-wrap gap-2">{show.facts.genre.map((g, i) => <Badge key={i} variant="secondary" className="pr-1">{g}<button onClick={() => setShow(p => ({ ...p, facts: { ...p.facts, genre: p.facts.genre.filter((_, j) => j !== i) } }))} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button></Badge>)}</div>
-              </CardContent>
-            </Card>
-          </div>
+
+          <Card>
+            <CardHeader><CardTitle>Ссылки</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {['website', 'vk', 'telegram', 'youtube', 'instagram'].map(key => (
+                  <div key={key} className="space-y-2">
+                    <Label>{key === 'website' ? 'Официальный сайт' : key === 'vk' ? 'ВКонтакте' : key.charAt(0).toUpperCase() + key.slice(1)}</Label>
+                    <Input 
+                      value={show.social_links?.[key] || ''} 
+                      onChange={(e) => setShow(p => ({ ...p, social_links: { ...p.social_links, [key]: e.target.value } }))}
+                      placeholder="https://..."
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="modules">

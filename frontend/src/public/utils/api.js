@@ -31,6 +31,8 @@ export const publicApi = {
   // Shows
   getShows: (params) => api.get('/content/shows', { params }),
   getShow: (slug) => api.get(`/content/shows/${slug}`),
+  getShowByPath: (path) => api.get(`/content/shows/by-path/${path}`),
+  getShowChildren: (parentSlug) => api.get(`/content/shows/${parentSlug}/children`),
   
   // Quizzes
   getQuizzes: (params) => api.get('/content/quizzes', { params }),

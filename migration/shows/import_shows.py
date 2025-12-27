@@ -219,8 +219,14 @@ def get_child_shows(parent_id: int) -> list[dict]:
     return children
 
 
-def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str], tag_map: dict[str, str], parent_mongo_id: str = None):
-    """Строит документ шоу из данных SQL."""
+def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_map: dict[str, str], tag_map: dict[str, str], parent_mongo_id: str = None, parent_path: str = None, level: int = 0):
+    """Строит документ шоу из данных SQL.
+    
+    Args:
+        parent_mongo_id: MongoDB ID родительского шоу
+        parent_path: Полный путь родителя (например 'comedy-battle')
+        level: Уровень вложенности (0 = корневой, 1 = первый уровень и т.д.)
+    """
     tv_named = {}
     for tv_id, val in tv_by_id.items():
         tv_name = tv_map.get(tv_id)
@@ -365,18 +371,26 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         avg = 10.0
     rating = {"average": avg, "count": int(sc.votes or 0)}
 
+    # Формируем полный путь (full_path)
+    if parent_path:
+        full_path = f"{parent_path}/{sc.alias}"
+    else:
+        full_path = sc.alias
+
     doc = {
         '_id': str(uuid4()),
         'content_type': 'show',
         'title': sc.pagetitle,
         'slug': sc.alias,
+        'full_path': full_path,  # Полный путь для URL
+        'level': level,  # Уровень вложенности
         'name': sc.longtitle or sc.pagetitle,
         'status': 'published',
         'tags': tags,
         'created_at': datetime.now(timezone.utc).isoformat(),
         'updated_at': datetime.now(timezone.utc).isoformat(),
         'facts': facts,
-        'social_links': social_links,  # Добавлено!
+        'social_links': social_links,
         'description': normalize_rich_text(sc.description) if sc.description else '',
         'modules': modules,
         'poster': poster_url,
@@ -388,7 +402,7 @@ def build_show_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
         'team_ids': [],
         'article_ids': [],
         'related_show_ids': [],
-        'parent_id': parent_mongo_id,  # For child shows
+        'parent_id': parent_mongo_id,  # MongoDB ID родителя
         'child_show_ids': [],
         'featured': False,
         'seo': {

@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select, SelectContent, SelectItem, 
   SelectTrigger, SelectValue
@@ -28,6 +29,7 @@ import {
   HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import RichTextEditor from './RichTextEditor';
 
 const moduleIcons = {
   hero_card: Users,
@@ -48,7 +50,13 @@ const moduleIcons = {
   best_articles: Star,
   interesting: Zap,
   random_page: Shuffle,
-  table_of_contents: List
+  table_of_contents: List,
+  // Новые системные модули
+  poster_photo: Image,
+  facts_table: Table,
+  rating_widget: Star,
+  tags_cloud: Tag,
+  social_links: Users
 };
 
 const moduleNames = {
@@ -70,18 +78,24 @@ const moduleNames = {
   best_articles: 'Лучшие статьи',
   interesting: 'Интересное',
   random_page: 'Случайная страница',
-  table_of_contents: 'Оглавление'
+  table_of_contents: 'Оглавление',
+  // Новые системные модули
+  poster_photo: 'Фото/Постер',
+  facts_table: 'Таблица фактов',
+  rating_widget: 'Рейтинг',
+  tags_cloud: 'Облако тегов',
+  social_links: 'Социальные ссылки'
 };
 
 const modulesByType = {
-  person: ['table_of_contents', 'hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
-  team: ['table_of_contents', 'hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
-  show: ['hero_card', 'text_block', 'timeline', 'episodes_list', 'participants', 'tags', 'table', 'gallery', 'video'],
-  article: ['table_of_contents', 'text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
-  news: ['text_block', 'gallery', 'video', 'tags'],
-  quiz: ['quiz_questions', 'quiz_results', 'text_block'],
-  wiki: ['table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
-  page: ['text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery']
+  person: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'table_of_contents', 'hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
+  team: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'table_of_contents', 'hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
+  show: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'hero_card', 'text_block', 'timeline', 'episodes_list', 'participants', 'tags', 'table', 'gallery', 'video'],
+  article: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
+  news: ['poster_photo', 'text_block', 'gallery', 'video', 'tags'],
+  quiz: ['poster_photo', 'quiz_questions', 'quiz_results', 'text_block'],
+  wiki: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
+  page: ['poster_photo', 'text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery']
 };
 
 function SortableModule({ module, onEdit, onDelete }) {
@@ -195,13 +209,11 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Содержимое (HTML)</Label>
-              <Textarea
-                value={data.content || ''}
-                onChange={(e) => updateData({ ...data, content: e.target.value })}
-                placeholder="<p>Текст...</p>"
-                rows={10}
-                className="font-mono text-sm"
+              <Label>Содержимое</Label>
+              <RichTextEditor
+                content={data.content || ''}
+                onChange={(html) => updateData({ ...data, content: html })}
+                placeholder="Начните вводить текст..."
               />
             </div>
           </div>
@@ -228,9 +240,9 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
               />
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               {events.map((item, index) => (
-                <div key={index} className="border rounded-lg p-3 space-y-2">
+                <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/20">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Событие {index + 1}</span>
                     <Button 
@@ -242,35 +254,44 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      value={item.year || item.date || ''}
-                      onChange={(e) => {
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Год / период</Label>
+                      <Input
+                        value={item.year || item.date || ''}
+                        onChange={(e) => {
+                          const newEvents = [...events];
+                          newEvents[index] = { ...newEvents[index], year: e.target.value };
+                          setEvents(newEvents);
+                        }}
+                        placeholder="2007-2013"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Заголовок</Label>
+                      <Input
+                        value={item.title || ''}
+                        onChange={(e) => {
+                          const newEvents = [...events];
+                          newEvents[index] = { ...newEvents[index], title: e.target.value };
+                          setEvents(newEvents);
+                        }}
+                        placeholder="Название события"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Описание</Label>
+                    <RichTextEditor
+                      content={item.description || ''}
+                      onChange={(html) => {
                         const newEvents = [...events];
-                        newEvents[index] = { ...newEvents[index], year: e.target.value };
+                        newEvents[index] = { ...newEvents[index], description: html };
                         setEvents(newEvents);
                       }}
-                      placeholder="Год / период (например 2007-2013)"
-                    />
-                    <Input
-                      value={item.title || ''}
-                      onChange={(e) => {
-                        const newEvents = [...events];
-                        newEvents[index] = { ...newEvents[index], title: e.target.value };
-                        setEvents(newEvents);
-                      }}
-                      placeholder="Заголовок"
+                      placeholder="Описание события..."
+                      minHeight={100}
                     />
                   </div>
-                  <Textarea
-                    value={item.description || ''}
-                    onChange={(e) => {
-                      const newEvents = [...events];
-                      newEvents[index] = { ...newEvents[index], description: e.target.value };
-                      setEvents(newEvents);
-                    }}
-                    placeholder="Описание (HTML)"
-                    rows={2}
-                  />
                 </div>
               ))}
             </div>
@@ -675,6 +696,190 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
           </div>
         );
       
+      // ===== СИСТЕМНЫЕ МОДУЛИ =====
+      
+      case 'poster_photo':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль автоматически отображает фото/постер из основных данных страницы.
+                Изменить фото можно во вкладке "Основное".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Размер</Label>
+              <Select 
+                value={data.size || 'medium'} 
+                onValueChange={(v) => updateData({ ...data, size: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="small">Маленький</SelectItem>
+                  <SelectItem value="medium">Средний</SelectItem>
+                  <SelectItem value="large">Большой</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Форма</Label>
+              <Select 
+                value={data.shape || 'rounded'} 
+                onValueChange={(v) => updateData({ ...data, shape: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="square">Квадрат</SelectItem>
+                  <SelectItem value="rounded">Скруглённый</SelectItem>
+                  <SelectItem value="circle">Круг</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'facts_table':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль автоматически отображает таблицу фактов из основных данных страницы.
+                Редактировать факты можно во вкладке "Факты".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Информация"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'card'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="card">Карточка</SelectItem>
+                  <SelectItem value="table">Таблица</SelectItem>
+                  <SelectItem value="list">Список</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'rating_widget':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль отображает виджет рейтинга. Оценки хранятся в основных данных страницы.
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Оценка"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'smileys'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="smileys">Смайлики</SelectItem>
+                  <SelectItem value="stars">Звёзды</SelectItem>
+                  <SelectItem value="numeric">Числовой</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'tags_cloud':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль отображает теги страницы. Редактировать теги можно во вкладке "Теги".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Теги"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'badges'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="badges">Бейджи</SelectItem>
+                  <SelectItem value="links">Ссылки</SelectItem>
+                  <SelectItem value="cloud">Облако</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Максимум тегов (0 = все)</Label>
+              <Input
+                type="number"
+                value={data.max_tags || 0}
+                onChange={(e) => updateData({ ...data, max_tags: parseInt(e.target.value) || 0 })}
+                min={0}
+              />
+            </div>
+          </div>
+        );
+
+      case 'social_links':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Этот модуль отображает социальные ссылки. Редактировать ссылки можно во вкладке "Основное" или "Факты".
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label>Заголовок</Label>
+              <Input
+                value={data.title || ''}
+                onChange={(e) => updateData({ ...data, title: e.target.value })}
+                placeholder="Ссылки"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Стиль</Label>
+              <Select 
+                value={data.style || 'icons'} 
+                onValueChange={(v) => updateData({ ...data, style: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="icons">Иконки</SelectItem>
+                  <SelectItem value="buttons">Кнопки</SelectItem>
+                  <SelectItem value="list">Список</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+      
       default:
         // Generic JSON editor for other types
         return (
@@ -701,7 +906,7 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSave()}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Редактирование: {moduleNames[localModule.type]}
