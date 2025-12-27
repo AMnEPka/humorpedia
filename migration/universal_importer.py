@@ -357,14 +357,20 @@ class UniversalImporter:
             client = pymongo.MongoClient(self.mongo_url)
             db = client[self.db_name]
             
-            # Проверяем существует ли
-            existing = db[self.collection].find_one({'old_id': int(sc.id)})
+            # Проверяем существует ли (по old_id или slug)
+            existing = db[self.collection].find_one({
+                '$or': [
+                    {'old_id': int(sc.id)},
+                    {'slug': doc['slug']}
+                ]
+            })
             
             if existing:
                 # Обновляем
+                doc['id'] = existing.get('id', doc['id'])
                 db[self.collection].update_one(
                     {'_id': existing['_id']},
-                    {'$set': {**doc, '_id': existing['_id']}}
+                    {'$set': doc}
                 )
                 print(f"  ✅ Обновлён: {doc['slug']}")
             else:
