@@ -311,7 +311,7 @@ function MenuBar({ editor }) {
   );
 }
 
-export default function RichTextEditor({ content, onChange, placeholder = "Начните вводить текст..." }) {
+export default function RichTextEditor({ content, onChange, placeholder = "Начните вводить текст...", minHeight = 200 }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -338,7 +338,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "На�
     content: content || '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none min-h-[200px] p-4 focus:outline-none',
+        class: 'prose prose-sm max-w-none p-4 focus:outline-none',
       },
     },
     onUpdate: ({ editor }) => {
@@ -359,7 +359,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "На�
       <EditorContent editor={editor} />
       <style>{`
         .ProseMirror {
-          min-height: 200px;
+          min-height: ${minHeight}px;
           padding: 1rem;
         }
         .ProseMirror:focus {
