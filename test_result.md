@@ -480,18 +480,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Shows Management (List/Edit)"
-    - "Articles Management (List/Edit)"
-    - "News Management (List/Edit)"
-    - "Media Library Page"
-    - "Users Management Page"
+    - "Public Person Pages"
+    - "Public Show Pages"
+    - "Public Team Pages"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Завершил подключение всех страниц админ-панели в App.js. Все страницы (Shows, Articles, News, Quizzes, Wiki, Media, Tags, Comments, Users, Templates) теперь используют реальные компоненты вместо PlaceholderPage. Проверил через скриншоты - Dashboard, Shows, Media, Users, Templates - все работают. Нужно полное тестирование CRUD операций для всех типов контента."
+    message: "Завершил рефакторинг публичных страниц для модульного рендеринга. PersonDetailPage, ShowDetailPage и TeamDetailPage теперь динамически отображают системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) из массива modules. Все три страницы проверены скриншотами - работают корректно. Нужно полное E2E тестирование для подтверждения."
   - agent: "testing"
     message: "Протестировал публичные страницы людей после реимпорта. Страницы /people/shastun-i-makar и /people/irina-chesnokova загружаются корректно. Биография и хронология отображаются с правильным HTML-форматированием без литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP запросы с HTTPS страницы), но это не влияет на основной контент страниц."
   - agent: "testing"
