@@ -98,7 +98,7 @@ class TeamMembersParser(BaseParser):
         if not config_str:
             return []
         try:
-            config_str = self.normalize_html(config_str)
+            config_str = self.normalize_migx_json(config_str)
             data = json.loads(config_str)
             return data if isinstance(data, list) else [data]
         except:
