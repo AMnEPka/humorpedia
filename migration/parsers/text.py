@@ -2,7 +2,7 @@
 
 import re
 import json
-from typing import Optional
+from typing import Optional, List
 from .base import BaseParser, ParseContext
 
 
@@ -16,6 +16,8 @@ class TextBlockParser(BaseParser):
         html_selector: Регулярка для поиска текста в HTML
         title: Заголовок блока
         strip_first_heading: Удалять первый заголовок если он совпадает с title
+        all_sections: Собрать все секции кроме info/timeline/tags
+        all_text_sections: Вернуть список всех text секций (для множественных модулей)
     """
     
     module_type = "text_block"
@@ -41,18 +43,22 @@ class TextBlockParser(BaseParser):
                     sections = self._parse_migx(config)
                     for sec in sections:
                         if sec.get('MIGX_formname') == migx_section:
-                            content = sec.get(migx_field, '')
+                            content = sec.get(migx_field, '') or sec.get('content', '')
+                            if not block_title:
+                                block_title = sec.get('title', '')
                             break
         
-        # 3. Берём все секции MIGX кроме info
+        # 3. Берём все секции MIGX кроме info/timeline/tags
         if not content and self.config.get('all_sections'):
             config = ctx.tv_data.get('config', '')
             if config:
                 sections = self._parse_migx(config)
                 contents = []
+                skip_types = {'info', 'timeline', 'tags', 'ad_250', 'ad_block_120', 'popular_articles'}
                 for sec in sections:
-                    if sec.get('MIGX_formname') != 'info':
-                        text = sec.get('subtitle', '') or sec.get('content', '')
+                    form = sec.get('MIGX_formname', '')
+                    if form not in skip_types:
+                        text = sec.get('content', '') or sec.get('subtitle', '')
                         title = sec.get('title', '')
                         if text:
                             if title:
@@ -86,6 +92,42 @@ class TextBlockParser(BaseParser):
             'title': block_title,
             'content': content
         }
+    
+    def parse_all_text_sections(self, ctx: ParseContext) -> List[dict]:
+        """Парсит все text секции из MIGX и возвращает список."""
+        results = []
+        
+        config = ctx.tv_data.get('config', '')
+        if not config:
+            return results
+        
+        sections = self._parse_migx(config)
+        skip_types = {'info', 'timeline', 'tags', 'ad_250', 'ad_block_120', 'popular_articles'}
+        
+        for sec in sections:
+            form = sec.get('MIGX_formname', '')
+            
+            # Обрабатываем text секции
+            if form == 'text':
+                content = sec.get('content', '') or sec.get('subtitle', '')
+                title = sec.get('title', '')
+                
+                if content:
+                    results.append({
+                        'title': self.normalize_html(title) if title else '',
+                        'content': self.normalize_html(content)
+                    })
+            
+            # Обрабатываем table секции как текстовые блоки
+            elif form == 'table':
+                content = sec.get('content', '')
+                if content:
+                    results.append({
+                        'title': '',
+                        'content': self.normalize_html(content)
+                    })
+        
+        return results
     
     def _parse_migx(self, config_str: str) -> list:
         """Парсит MIGX JSON."""
