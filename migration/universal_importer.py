@@ -301,6 +301,7 @@ class UniversalImporter:
             'rating': extra_fields.get('rating', {'average': 0.0, 'count': 0}),
             'social_links': extra_fields.get('social_links', {}),
             'facts': extra_fields.get('facts', {}),
+            'image': extra_fields.get('image', ''),
             'poster': extra_fields.get('poster', ''),
             'views_count': 0,
             'views': 0,
