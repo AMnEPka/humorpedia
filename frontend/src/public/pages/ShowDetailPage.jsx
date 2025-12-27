@@ -301,8 +301,8 @@ export default function ShowDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Facts Table */}
-          {show.facts && Object.keys(show.facts).length > 0 && (
+          {/* Facts Table - рендерится если есть модуль facts_table */}
+          {sidebarModules.find(m => m.type === 'facts_table') && show.facts && Object.keys(show.facts).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -324,8 +324,8 @@ export default function ShowDetailPage() {
             </Card>
           )}
 
-          {/* Social Links / Website */}
-          {show.social_links && Object.keys(show.social_links).length > 0 && (
+          {/* Social Links - рендерится если есть модуль social_links */}
+          {sidebarModules.find(m => m.type === 'social_links') && show.social_links && Object.keys(show.social_links).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -367,34 +367,36 @@ export default function ShowDetailPage() {
             </Card>
           )}
 
-          {/* Rating Widget */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Оценка</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmojiRating 
-                value={show.rating?.average || 0}
-                max={10}
-                readonly={false}
-              />
-              <div className="mt-2 text-sm text-gray-600 text-center">
-                {show.rating?.average ? (
-                  <>
-                    {show.rating.average.toFixed(1)} / 10
-                    {show.rating.count > 0 && ` (${show.rating.count} ${show.rating.count === 1 ? 'голос' : 'голосов'})`}
-                  </>
-                ) : (
-                  'Пока нет оценок'
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Rating Widget - рендерится если есть модуль rating_widget */}
+          {sidebarModules.find(m => m.type === 'rating_widget') && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Оценка</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EmojiRating 
+                  value={show.rating?.average || 0}
+                  max={10}
+                  readonly={false}
+                />
+                <div className="mt-2 text-sm text-gray-600 text-center">
+                  {show.rating?.average ? (
+                    <>
+                      {show.rating.average.toFixed(1)} / 10
+                      {show.rating.count > 0 && ` (${show.rating.count} ${show.rating.count === 1 ? 'голос' : 'голосов'})`}
+                    </>
+                  ) : (
+                    'Пока нет оценок'
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {show.modules?.map((module) => (
+          {contentModules.map((module) => (
             <ModuleRenderer key={module.id} module={module} />
           ))}
         </div>
