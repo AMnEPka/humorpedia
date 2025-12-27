@@ -268,11 +268,38 @@ frontend:
     file: "/app/frontend/src/public/pages/PersonDetailPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
         comment: "Протестированы страницы /people/shastun-i-makar и /people/irina-chesnokova. Биография и хронология отображаются корректно с HTML-форматированием. Нет литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP/HTTPS), но основной контент работает."
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг для модульного рендеринга. Теперь страница динамически отображает системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) на основе массива modules. Проверено скриншотом - все работает."
+
+  - task: "Public Show Pages"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/public/pages/ShowDetailPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг для модульного рендеринга. Страница показывает системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) динамически. Проверено скриншотом /shows/comedy-battle - все элементы отображаются."
+
+  - task: "Public Team Pages"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/public/pages/TeamDetailPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг для модульного рендеринга. Страница показывает системные модули динамически. Проверено скриншотом /kvn/teams/sbornaya-pyatigorska - таблица фактов, теги, контент отображаются корректно."
 
   - task: "Login Page"
     implemented: true
