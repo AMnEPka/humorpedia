@@ -519,14 +519,14 @@ def create_team_importer() -> UniversalImporter:
         content_type='team',
         collection='teams',
         modules=[
-            ModuleConfig('poster_photo'),
+            ModuleConfig('poster_photo', tv_field='img'),
             ModuleConfig('facts_table', title='Информация', style='card'),
             ModuleConfig('rating_widget', title='Оценка', style='smileys'),
             ModuleConfig('tags_cloud', style='badges'),
             ModuleConfig('social_links', title='Ссылки', style='list'),
-            ModuleConfig('text_block', title='История', migx_section='info', migx_field='subtitle'),
-            ModuleConfig('team_members', title='Состав'),
+            ModuleConfig('text_block', title='', migx_section='info', migx_field='subtitle'),
             ModuleConfig('timeline', title='Хронология'),
+            ModuleConfig('text_block', all_text_sections=True),  # Все text секции как отдельные модули
         ]
     )
 
