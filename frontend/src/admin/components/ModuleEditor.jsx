@@ -77,7 +77,13 @@ const moduleNames = {
   best_articles: 'Лучшие статьи',
   interesting: 'Интересное',
   random_page: 'Случайная страница',
-  table_of_contents: 'Оглавление'
+  table_of_contents: 'Оглавление',
+  // Новые системные модули
+  poster_photo: 'Фото/Постер',
+  facts_table: 'Таблица фактов',
+  rating_widget: 'Рейтинг',
+  tags_cloud: 'Облако тегов',
+  social_links: 'Социальные ссылки'
 };
 
 const modulesByType = {
