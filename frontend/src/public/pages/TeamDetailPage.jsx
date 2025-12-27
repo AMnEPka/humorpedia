@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
+import { isSystemModule } from '@/components/SystemModules';
 
 // Table of Contents component for teams
 function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
