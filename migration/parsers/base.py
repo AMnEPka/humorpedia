@@ -19,6 +19,8 @@ class ParseContext:
     tag_map: dict = field(default_factory=dict)  # Маппинг tag_id -> tag_name
     image_map: dict = field(default_factory=dict)  # Маппинг image_id -> url
     sql_file: str = ""  # Путь к SQL файлу для извлечения рейтингов
+    rating: float = 0.0  # Рейтинг из site_content
+    votes: int = 0  # Количество голосов из site_content
     extra: dict = field(default_factory=dict)  # Дополнительные данные
 
 
