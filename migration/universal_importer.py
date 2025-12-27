@@ -235,8 +235,9 @@ class UniversalImporter:
                 tv_data[tv_name] = val
         
         # Создаём контекст для парсеров
+        # SiteContentRow не имеет content, используем description для HTML
         ctx = ParseContext(
-            html=sc.content or "",
+            html=sc.description or "",
             title=sc.pagetitle or "",
             resource_id=int(sc.id),
             tv_data=tv_data,
