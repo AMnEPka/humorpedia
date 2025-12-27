@@ -85,6 +85,22 @@ export default function TeamDetailPage() {
     fetchTeam();
   }, [slug]);
 
+  // Разделяем модули на системные (sidebar) и контентные (main)
+  // Хуки должны быть до любых return
+  const sidebarModules = useMemo(() => {
+    if (!team?.modules) return [];
+    return team.modules
+      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [team?.modules]);
+
+  const contentModules = useMemo(() => {
+    if (!team?.modules) return [];
+    return team.modules
+      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [team?.modules]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -105,19 +121,6 @@ export default function TeamDetailPage() {
   }
 
   const categoryNames = { kvn: 'КВН', lg: 'Лига смеха', improv: 'Импровизация' };
-
-  // Разделяем модули на системные (sidebar) и контентные (main)
-  const sidebarModules = useMemo(() => {
-    return (team.modules || [])
-      .filter(m => m.visible !== false && isSystemModule(m.type))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [team.modules]);
-
-  const contentModules = useMemo(() => {
-    return (team.modules || [])
-      .filter(m => m.visible !== false && !isSystemModule(m.type))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [team.modules]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
