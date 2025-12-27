@@ -260,8 +260,8 @@ export default function ShowDetailPage() {
       {/* Hero */}
       <div className="mb-8">
         <div className="flex items-start gap-6">
-          {/* Poster */}
-          {show.poster && (
+          {/* Poster - рендерится если есть модуль poster_photo */}
+          {sidebarModules.find(m => m.type === 'poster_photo') && show.poster && (
             <div className="w-48 flex-shrink-0">
               <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg">
                 <img
@@ -283,8 +283,8 @@ export default function ShowDetailPage() {
               />
             )}
             
-            {/* Tags */}
-            {show.tags?.length > 0 && (
+            {/* Tags - рендерятся если есть модуль tags_cloud */}
+            {sidebarModules.find(m => m.type === 'tags_cloud') && show.tags?.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
                 {show.tags.map(tag => (
                   <Link key={tag} to={`/tags/${encodeURIComponent(tag)}`}>
