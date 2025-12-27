@@ -488,10 +488,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Public Person Pages"
-    - "Public Show Pages"
-    - "Public Team Pages"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -505,3 +502,5 @@ agent_communication:
     message: "Протестировал админ-панель timeline editing после исправления ModuleEditor.jsx. Успешно: 1) Логин в админ-панель работает корректно, 2) Навигация к персонам /admin/people/a7876d88-115a-4000-a27e-0fbd72dc2cea (Шастун и Макар) и /admin/people/89312eab-09cb-4e49-b130-f04493b6c1a5 (Ирина Чеснокова) работает, 3) Модули tab доступен и показывает модули включая timeline, 4) Timeline модули присутствуют на обеих страницах. Исправлена ошибка компиляции в ModuleEditor.jsx (убрал проблемный ESLint комментарий). Основная функциональность timeline editing доступна, но требуется дополнительное тестирование интерактивности редактора из-за сложности селекторов."
   - agent: "testing"
     message: "Протестировал admin module list functionality после recent updates. ✅ Все основные функции работают: логин, навигация к персоне, переключение на Модули tab, отображение модулей (Биография, Хронология), редактирование модуля 'Биография' с изменением заголовка на 'Биография TEST', сохранение изменений, обновление списка модулей. ✅ Migration корректно установила module.title для text_block/timeline модулей. ✅ ModuleEditor синхронизирует module.title с data.title при редактировании text_block. Исправлена ошибка компиляции ESLint в ModuleEditor.jsx. Отсутствует только модуль 'Личная жизнь' из ожидаемых, но это может быть нормально для данной персоны."
+  - agent: "testing"
+    message: "Завершено полное E2E тестирование системных модулей на всех трех типах публичных страниц. ✅ PERSON PAGE (/people/irina-chesnokova): все системные модули работают корректно - poster_photo (фото в сайдбаре), social_links (VK/Instagram/YouTube иконки), rating_widget (4.5/10 с эмодзи), facts_table (Полное имя, Дата рождения), tags_cloud (Воронеж, Ирина Чеснокова теги), text_modules (Биография, Хронология). ✅ SHOW PAGE (/shows/comedy-battle): poster_photo (постер шоу), facts_table (Информация с данными), tags_cloud (37 тегов участников), text_blocks (описание). ✅ TEAM PAGE (/kvn/teams/sbornaya-pyatigorska): hero section с названием и тегами, facts_table (Информация), text_block (История команды). Все модули рендерятся только при visible=true в массиве modules документа. Системная модульность работает полностью корректно."
