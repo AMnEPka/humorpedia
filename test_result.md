@@ -488,7 +488,9 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Hierarchical import feature"
+    - "Children endpoint fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
