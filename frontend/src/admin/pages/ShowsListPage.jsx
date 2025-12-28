@@ -39,7 +39,7 @@ function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
               <span className="w-7" />
             )}
             <div>
-              <Link to={`/admin/shows/${show._id}`} className="font-medium hover:underline">
+              <Link to={`/admin/shows/${show.id}`} className="font-medium hover:underline">
                 {show.name || show.title}
               </Link>
               <div className="text-sm text-muted-foreground">
@@ -63,15 +63,15 @@ function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild><Link to={`/admin/shows/${show._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(show._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to={`/admin/shows/${show.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(show.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </TableCell>
       </TableRow>
       {hasChildren && isExpanded && show.children.map(child => (
         <ShowRow 
-          key={child._id} 
+          key={child.id} 
           show={child} 
           level={level + 1} 
           expandedIds={expandedIds}
