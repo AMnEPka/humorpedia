@@ -62,7 +62,7 @@ export default function ShowsListPage() {
         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {shows.map((show) => (
-              <Link key={show.id} to={`/shows/${show.slug}`}>
+              <Link key={show.id} to={`/shows/${show.full_path || show.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
                   <div className="aspect-video bg-gray-100 overflow-hidden">
                     {show.poster ? (
