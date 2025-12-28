@@ -1,55 +1,46 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to recreate the website . After completing the migration of people and KVN teams, the focus shifted to shows, which required handling hierarchical data.
+The user's initial goal was to recreate the website . The project evolved to focus on creating a fully modular content system, where page layouts are controlled via an admin panel. After implementing the modular rendering on the frontend, the user requested a more sustainable way to import data.
 
-Recent user requests that have been addressed or are in progress:
-1.  Create  and update the import script to track imported items.
-2.  Automatically create a default admin user () on application startup.
-3.  Implement an admin UI for managing dynamic facts for shows.
-4.  Implement the import and display of hierarchical child show pages.
-5.  Integrate a WYSIWYG (TipTap) editor for all text content in the admin panel.
-6.  Create a database management interface within the admin panel for import/export operations.
-7.  Generate dynamic content templates based on the structure of imported data.
-8.  Convert previously hardcoded page sections (photo, facts table, rating, tags) into re-orderable modules.
-9.  **Current task:** Ensure the new modular structure is rendered correctly on the public-facing pages.
+Recent user requests:
+1.  Render system modules (photo, facts, rating, tags) on public-facing pages, driven by the database templates. (Completed)
+2.  Instead of creating unique import scripts for each content type, build a single, universal, modular import script. (In Progress)
+3.  The universal importer should support importing content hierarchically, allowing the user to specify a parent page for the new content (e.g., importing a show's season as a child of the main show page). (Last worked on)
 
 **PRODUCT REQUIREMENTS:**
--   Content pages must be fully modular, allowing an admin to control the visibility and order of all components, including the main photo, facts table, rating widget, and tags, via the Templates section of the admin panel.
--   The admin panel must provide a hierarchical view of parent-child relationships for Shows.
+-   Content pages must be fully modular, allowing an admin to control the visibility and order of all components.
+-   A universal importer tool must handle data migration for all content types by combining modular parsers.
+-   The importer must support specifying a parent document to create hierarchical relationships.
 -   All rich text editing should be handled by a WYSIWYG editor.
 
 **User's preferred language**: Russian
 
 **what currently exists?**
-The application is a full-stack FastAPI/React/MongoDB project. Data for people, KVN teams, and hierarchical shows has been partially migrated. The admin panel has been significantly enhanced with the following features:
--   A WYSIWYG editor (TipTap) is integrated for all text and timeline modules.
--   A hierarchical, collapsible table view for Shows.
--   A dynamic Facts editor for key-value data.
--   A Database management page for running export/import/aggregate queries.
--   A Templates editor where core page elements (photo, facts, rating, etc.) are now manageable as re-orderable modules.
+A full-stack FastAPI/React/MongoDB application. The frontend has been successfully refactored to render content pages (, , ) dynamically based on a  array in the database, making the layout fully configurable from the admin panel.
 
-On the backend, a startup script now ensures a default admin user exists. All content in the database has been updated to include the new system modules (, , etc.) in their  array.
+A new **universal modular importer** () has been created. It uses a new framework of individual parsers (located in ) for different content modules (e.g., , , ). This replaces the need for separate, monolithic import scripts for each content type. The importer has been tested and confirmed to work for single-item imports for people, shows, and teams.
 
 **Last working item**:
--   Last item agent was working: The agent was refactoring the public-facing detail pages (e.g., ) to render content based on the new fully modular structure. The previous implementation had a hardcoded layout for elements like the photo, facts, and rating. The goal is to make these pages dynamically render all components from the  array of a given document, respecting the order defined in its template. The agent had successfully updated all database documents and the admin panel templates to support this, and was beginning the frontend implementation.
+-   Last item agent was working: The agent was enhancing the  to support hierarchical imports. The user wants to specify a parent page when importing new content (e.g., a show season under a main show). The agent added command-line arguments (, , ) to the script to handle this and was in the process of finding a test case (a season of Comedy Battle) to validate the implementation.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? Frontend testing agent
+-   Which testing method agent to use? backend testing agent (by running the python script with the new arguments).
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Render System Modules on Public Pages (P0)**
-    -   **Description:** The public-facing detail pages (, , ) still use a hardcoded layout for the sidebar and core components (photo, facts, rating, tags). They must be updated to dynamically render these elements from the  array present in the content's data.
-    -   **Attempted fixes:** The agent created a  component to help with rendering but found that integrating it into the existing complex pages required a larger refactor. The database and admin panel have already been successfully prepared for this change.
+-   **Issue 1: Complete and Verify Hierarchical Import (P0)**
+    -   **Description:** The  script has been modified to accept parent identifiers ( or ) but the logic to find the parent, construct the , and save the new document with the correct  and  has not been fully implemented or tested.
+    -   **Attempted fixes:** The agent added argument parsing to the CLI and started searching for a suitable test ID.
     -   **Next debug checklist:**
-        1.  Analyze the structure of  (or another detail page) to identify where the hardcoded sidebar and content components are rendered.
-        2.  In the  hook that fetches the page data, filter the returned  array into two separate lists:  (e.g., , , , , ) and  (all others).
-        3.  Create or enhance a generic  component that takes a module object and renders the correct component based on its .
-        4.  Replace the hardcoded JSX in the detail page with a  call over the  and  arrays, passing each module to the .
-        5.  Ensure styling and layout are preserved after the refactor.
-    -   **Why fix this issue and what will be achieved with the fix?** This will complete the user's request for a fully flexible, template-driven content system. Admins will be able to control the layout of all pages directly from the admin panel without code changes.
+        1.  In , within the  method, implement the logic to handle the  and  arguments.
+        2.  If a parent is specified, fetch the parent document from the database.
+        3.  If the parent is found, construct the new document's , , and  based on the parent's data.
+        4.  Find a valid  for a child resource (e.g., a season of a show) from the SQL dump to use for testing.
+        5.  Run the importer with the test ID and the parent identifier, e.g., .
+        6.  Verify in the database that the new document is created with the correct hierarchical fields.
+    -   **Why fix this issue and what will be achieved with the fix?** This will complete the universal importer's core functionality, enabling the user to migrate all hierarchical content as requested.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
+    -   **Should Test frontend/backend/both after fix?** Backend (database verification).
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
@@ -57,74 +48,71 @@ On the backend, a startup script now ensures a default admin user exists. All co
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1: Update All Import Scripts:** Modify , , and  to use the new  utility function. This will ensure newly imported content is created with the modular structure instead of populating now-deprecated top-level fields.
-    -   **P2: Mass Import KVN Teams:** Run the finalized  script for all remaining KVN teams.
-    -   **P3: Mass Import All Shows:** Run  and  to migrate all remaining shows and their seasons/children.
+    -   **P1: Mass Import KVN Teams:** Run the universal importer for all remaining KVN teams.
+    -   **P2: Mass Import All Shows:** Run the universal importer to migrate all remaining shows and their seasons/children, using the new hierarchy feature.
+    -   **P3: Migrate Media Assets:** Copy image files (like ) from the source to the  directory so they are served correctly. The importer now sets the correct paths, but the files themselves are missing.
 -   **Future Tasks:**
-    -   **P4: Mass Data Migration for Other Content Types:** Adapt the migration process for , , , and .
+    -   **P4: Create Importer Configurations for Other Content Types:** Define parser sequences in  for , , , and  to enable their migration.
     -   **P5: Implement Rating Submission:** Create the  endpoint and frontend logic.
     -   **P6: Social Logins:** Implement VK and Yandex OAuth.
     -   **P7: Automated Cross-Linking:** Build a system to auto-link mentions of people/teams within content.
 
 **Completed work in this session**
--   **Show Import & Display:**
-    -   Fixed a bug preventing social links from being saved for shows.
-    -   Created a  and a script to generate it, and updated the import script to track progress.
-    -   Fixed a regex bug in the import script that failed to parse facts tables with style attributes.
--   **Admin User Management:**
-    -   Implemented a backend startup process to automatically create a default admin user () if one does not exist.
--   **Admin Panel Enhancements:**
-    -   Refactored the Facts editor for shows to support dynamic key-value pairs.
-    -   Implemented a fully hierarchical, collapsible view for the Shows list page.
-    -   Integrated a TipTap WYSIWYG editor for all  and  modules.
-    -   Added a new Database page allowing admins to run mongoexport/import/aggregate commands safely via an API.
--   **Modular Content System (Foundation):**
-    -   Created dynamic content templates in the database based on imported data for people, teams, and shows.
-    -   Converted hardcoded page elements (photo, facts, rating, tags) into new, distinct module types (, , etc.).
-    -   Updated all templates and existing database documents to include these new system modules in the correct order.
--   **Hierarchical Content (Shows):**
-    -   Implemented backend and frontend routing to support deeply nested URLs (e.g., ).
-    -   Created a new script  to handle the import of non-root shows.
-    -   Updated the main shows list () to only return top-level shows.
+-   **Modular Frontend Rendering:**
+    -   Successfully refactored , , and  to dynamically render their entire layout from the  array in the database.
+    -   Fixed frontend bugs related to React hook dependencies and incorrect data key access ( vs. ) for the timeline component.
+    -   Fixed an issue where the  wasn't displaying on person pages by correcting the conditional rendering logic.
+-   **Universal Modular Importer:**
+    -   Created a new, flexible import system with  and a  directory ().
+    -   Implemented and debugged multiple parsers (, , , , , etc.).
+    -   Fixed numerous data extraction bugs, including MIGX JSON normalization, rating/vote extraction, and correct image URL prefixing.
+    -   Successfully configured and tested the importer for , , and  content types, ensuring all data (including timelines, facts, and multiple text blocks) is correctly migrated.
+    -   Verified the imported data renders correctly on the refactored frontend pages.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Missing Poster Images for Shows**
+    -   **Debug checklist:** The agent confirmed that the importer sets the correct image path (e.g., ), but the image file itself does not exist at that location, resulting in a 404.
+    -   **Why to solve this issue and what will be achieved with this?** This is not a bug in the importer code but a missing step in the overall data migration process. A separate task is needed to copy all media files to the public directory. This is listed under Upcoming Tasks.
+    -   **Should Test frontend/backend/both after fix:** Frontend (visual verification).
+    -   **Is recurring issue?** N
+
+**Known issue recurrence from previous fork**
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Modular Content Architecture:** Transitioning from a fixed layout to a dynamic system where page structure is defined by an ordered list of modules in a database template.
--   **Hierarchical Data & Routing:** Handling tree-like data structures in MongoDB () and creating corresponding nested routes on both the backend () and frontend ().
--   **Dynamic Admin Interfaces:** Building admin UIs that adapt to the data they are presenting, such as the hierarchical show list and the key-value facts editor.
--   **WYSIWYG Integration:** Integrating the TipTap rich text editor into a React application and customizing it for different use cases (full editor vs. compact).
--   **API-Driven Internal Tools:** Exposing controlled access to powerful backend operations (like database queries) through a secure REST API and a user-friendly admin interface.
+-   **Modular Content Architecture:** The core concept of defining page structure through an ordered list of modules in the database.
+-   **Universal Data Importer:** A single, configurable script () that uses a set of modular  to migrate different types of content, replacing multiple specialized scripts.
+-   **Dynamic Frontend Rendering:** React components that iterate over a  array from an API to build the UI, rather than having a hardcoded layout.
+-   **Hierarchical Data & Routing:** Handling tree-like data structures in MongoDB (, ) and creating corresponding nested routes.
 
 **key DB schema**
 -   **shows, teams, people:**
-    -    (e.g., ) - This array now defines the entire page structure.
-    -    - Links to the  collection.
-    -    - (shows) The full URL path for nested items, e.g., .
-    -    - (shows) Hierarchy depth, where  is a root item.
-    -    - (shows) The  of the parent document.
--   **templates:**
+    -    (e.g., )
+    -   
+    -   
+    -   
+    -   
+    -   
     -   , 
-    -    - The ordered list of default modules for this template, including system types like , , etc.
 
 **changes in tech stack**
--   **Added Frontend Libraries:**  and its dependencies (, , etc.) have been added to .
+-   None in this session.
 
 **All files of reference**
--   : Primary candidate for the modular rendering refactor.
--   : Also needs the modular rendering refactor.
--   : Defines the UI for editing all module types, including the new system ones.
--   : Example of an advanced, dynamic admin UI (hierarchical table).
--   : The UI for the database tool.
--   : Contains the API logic for fetching hierarchical content.
--   : The API endpoints for the database tool.
--   : Contains the  helper function for import scripts.
+-   : The new primary tool for all data migration. Contains the logic for parsing, building, and importing documents. **(New & Heavily Modified)**
+-   : The directory containing all the new modular parser classes. **(New)**
+-   : Refactored to render modules dynamically.
+-   : Refactored to render modules dynamically.
+-   : Refactored to render modules dynamically.
 
 **Critical Info for New Agent**
--   **Modular Rendering is the Top Priority:** The most critical pending task is to refactor the public-facing detail pages to render their layout from the  array. The backend data and admin UI are already prepared for this. Do not try to use old top-level fields like  or ; all data should come from iterating over .
--   **Update Import Scripts Before Mass Import:** Before running any mass-import tasks, ensure the import scripts are updated to use the  utility. This will prevent the creation of legacy data structures.
--   **Hierarchical vs. Flat Data:** Remember that the main show list endpoint () intentionally returns a flat list of only top-level shows (). To get the full hierarchy for the admin panel, the dedicated endpoint  must be used.
+-   The main priority is to finish the hierarchical import feature in . The user explicitly asked for this capability.
+-   All new data imports should now be done through the  script. The old scripts in  should be considered deprecated.
+-   The frontend pages now correctly render modular content. Any future data parsing issues should be addressed in the appropriate parser within , not on the frontend.
+-   The missing images for shows are not a bug in the importer but a separate task of file migration.
 
 **documents and test reports created in this job**
 -   
@@ -135,21 +123,25 @@ On the backend, a startup script now ensures a default admin user exists. All co
 -   
 -   
 -   
+-   
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Make the system blocks (photo, facts, etc.) appear on the public pages, not just in the template editor. **Status:** IN PROGRESS. This is the current main task.
-2.  **User:** Can I make photo, facts table, rating, and tags into regular modules to control their order/visibility? **Status:** DONE (backend/DB), IN PROGRESS (frontend rendering).
-3.  **User:** Create templates for people, teams, and shows based on their imported module structure. **Status:** DONE.
-4.  **User:** Build a MongoDB admin interface in the app for import/export. **Status:** DONE.
-5.  **User:** Can I get the connection string to connect to MongoDB directly? **Status:** ANSWERED. Agent explained direct connection is not possible and provided alternatives, which led to the creation of the MongoDB admin interface.
-6.  **User:** Add the same WYSIWYG editor to the timeline module's description field. **Status:** DONE.
-7.  **User:** Add a WYSIWYG editor to the text block module. **Status:** DONE.
-8.  **User:** The child page isn't visible in the admin show list, and there's no hierarchy. **Status:** DONE. Agent rebuilt the admin page to show a hierarchical tree.
-9.  **User:** Start importing child pages for shows, ensuring correct hierarchical URLs and admin display. **Status:** DONE (for a single test case).
-10. **User:** The facts table is not visible in the admin panel for shows. **Status:** DONE.
+1.  **User:** Requests ability to specify a parent page during import for hierarchical content. **Status:** IN PROGRESS.
+2.  **User:** Confirms KVN team page timeline is now fixed. **Status:** VERIFIED.
+3.  **User:** Reports timeline for KVN teams is not working. **Status:** RESOLVED.
+4.  **User:** Reports missing data on imported pages (person photo, facts, rating; team timeline/text blocks; show rating). **Status:** RESOLVED.
+5.  **User:** Asks to run a test import for one of each content type (person, show, team). **Status:** DONE.
+6.  **User:** Acknowledges the universal importer is working and asks how to use it for different content types. **Status:** ANSWERED.
+7.  **User:** Asks to start with a test import for a single page of each type. **Status:** DONE.
+8.  **User:** Great idea! Create the universal modular importer. **Status:** DONE.
+9.  **User:** Suggests creating a universal modular importer instead of unique scripts. **Status:** ACTIONED.
+10. **User:** Confirms the current priority is to make the system modules (photo, facts, etc.) appear on the public pages. **Status:** RESOLVED.
 
 **Project Health Check:**
--   **Broken:** Public detail pages are functional but do not reflect the new modular template system.
+-   **Broken:** None.
 -   **Mocked:** None.
 
 **3rd Party Integrations**
@@ -158,7 +150,7 @@ On the backend, a startup script now ensures a default admin user exists. All co
 -   **Yandex (Authentication):** Planned, not implemented.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (after initial frontend refactor, passed).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
 -   **Known regressions:** None.
@@ -169,4 +161,4 @@ On the backend, a startup script now ensures a default admin user exists. All co
 -   **Password:** 
 
 **What agent forgot to execute**
--   The agent has been thorough and is currently in the middle of a multi-step feature implementation. Nothing has been forgotten; the next step is to complete the frontend part of the modular rendering feature.</analysis>
+-   The agent was in the middle of implementing hierarchical imports in . This task is not forgotten but is the immediate next step.</analysis>
