@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 from uuid import uuid4
 from html import unescape
+from urllib.parse import urlparse
 
 
 @dataclass
@@ -151,19 +152,56 @@ class BaseParser(ABC):
         if not url:
             return None
         
-        url_lower = url.lower()
-        
-        if 'vk.com' in url_lower or 'vkontakte' in url_lower:
-            return ('vk', url)
-        elif 'youtube' in url_lower:
-            return ('youtube', url)
-        elif 'instagram' in url_lower or 'instagr.am' in url_lower:
-            return ('instagram', url)
-        elif 't.me' in url_lower or 'telegram' in url_lower:
-            return ('telegram', url)
-        elif 'twitter' in url_lower or 'x.com' in url_lower:
-            return ('twitter', url)
-        elif 'tiktok' in url_lower:
-            return ('tiktok', url)
-        else:
-            return ('website', url)
+        url_lower = url.lower().strip()
+
+        # Parse the URL to safely inspect its components
+        parsed = urlparse(url_lower)
+        host = parsed.hostname or ""
+
+        # Handle scheme-less inputs like "vk.com/user" or "instagram.com/user"
+        if not host:
+            # If there is no scheme and netloc, try to treat the first
+            # non-empty path segment as a pseudo-host for classification.
+            if not parsed.scheme and not parsed.netloc and parsed.path:
+                first_segment = parsed.path.split("/")[0]
+                host = first_segment
+            else:
+                host = ""
+
+        host = host.lower()
+
+        def is_host_for(domain: str) -> bool:
+            return host == domain or host.endswith("." + domain)
+
+        # Prefer host-based checks when available
+        if host:
+            if is_host_for("vk.com") or "vkontakte" in host:
+                return ("vk", url)
+            if is_host_for("youtube.com") or is_host_for("youtu.be"):
+                return ("youtube", url)
+            if is_host_for("instagram.com") or is_host_for("instagr.am"):
+                return ("instagram", url)
+            if is_host_for("t.me") or is_host_for("telegram.me") or "telegram" in host:
+                return ("telegram", url)
+            if is_host_for("twitter.com") or is_host_for("x.com"):
+                return ("twitter", url)
+            if is_host_for("tiktok.com"):
+                return ("tiktok", url)
+            return ("website", url)
+
+        # Fallback for completely unparseable inputs without a host:
+        # keep loose matching for backward compatibility, but note that
+        # this no longer relies on arbitrary substrings in a parsed URL.
+        if "vk.com" in url_lower or "vkontakte" in url_lower:
+            return ("vk", url)
+        if "youtube" in url_lower or "youtu.be" in url_lower:
+            return ("youtube", url)
+        if "instagram" in url_lower or "instagr.am" in url_lower:
+            return ("instagram", url)
+        if "t.me" in url_lower or "telegram" in url_lower:
+            return ("telegram", url)
+        if "twitter" in url_lower or "x.com" in url_lower:
+            return ("twitter", url)
+        if "tiktok" in url_lower:
+            return ("tiktok", url)
+        return ("website", url)
