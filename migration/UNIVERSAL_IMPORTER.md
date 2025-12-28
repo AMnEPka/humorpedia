@@ -55,6 +55,24 @@ python universal_importer.py --type person --ids 350 --apply
 python universal_importer.py --type team --ids 100,101,102 --apply
 ```
 
+### Иерархический импорт (дочерние страницы)
+
+Для импорта дочернего контента (например, сезона шоу) используйте параметры
+`--parent-slug` или `--parent-old-id`:
+
+```bash
+# Импорт сезона шоу по slug родителя
+python universal_importer.py --type show --ids 1702 --parent-slug comedy-battle --apply
+
+# Импорт сезона по старому ID родителя из MODX
+python universal_importer.py --type show --ids 1702 --parent-old-id 1629 --apply
+```
+
+При иерархическом импорте автоматически устанавливаются:
+- `parent_id` - ссылка на родительский документ
+- `full_path` - полный путь (например: `comedy-battle/season9`)
+- `level` - уровень вложенности (родитель + 1)
+
 ## Параметры ModuleConfig
 
 ### Общие параметры
