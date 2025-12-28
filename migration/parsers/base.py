@@ -153,7 +153,7 @@ class BaseParser(ABC):
                 cleaned = re.sub(r'(?<=[^\\])"(?=[^,\[\]{}:])', "'", normalized)
                 data = json.loads(cleaned)
                 return data if isinstance(data, list) else [data]
-            except:
+            except Exception:
                 pass
         
         return []
