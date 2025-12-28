@@ -49,12 +49,8 @@ class TimelineParser(BaseParser):
                         
                         # list_triple может быть строкой или массивом
                         if isinstance(list_triple, str) and list_triple:
-                            try:
-                                # Нормализуем JSON
-                                list_triple = self.normalize_migx_json(list_triple)
-                                list_triple = json.loads(list_triple)
-                            except:
-                                list_triple = []
+                            # Используем parse_migx_config для вложенного JSON
+                            list_triple = self.parse_migx_config(list_triple)
                         
                         if isinstance(list_triple, list):
                             for item in list_triple:
