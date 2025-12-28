@@ -192,13 +192,30 @@ class BaseParser(ABC):
         # Fallback for completely unparseable inputs without a host:
         # keep loose matching for backward compatibility, but avoid
         # relying on arbitrary domain-like substrings in the full URL.
-        if "vk.com" in url_lower or "vkontakte" in url_lower:
+        first_segment = ""
+        if parsed.path:
+            first_segment = parsed.path.split("/")[0].lower()
+
+        def _segment_contains_token(segment: str, token: str) -> bool:
+            """
+            Check if the given token appears in the segment as a separate word
+            (for example 'vk' in 'vk', 'vk123', '123vk', 'vk_com'), but avoid
+            arbitrary substring matches inside long strings.
+            """
+            if not segment:
+                return False
+            pattern = r"\b" + re.escape(token) + r"\b"
+            return re.search(pattern, segment) is not None
+
+        # Match known services based on the first path segment only.
+        # This avoids scanning the entire URL string for domain substrings.
+        if first_segment in ("vk.com", "vkontakte") or _segment_contains_token(first_segment, "vk"):
             return ("vk", url)
-        if "youtube" in url_lower or "youtu.be" in url_lower:
+        if first_segment in ("youtube.com", "youtu.be", "youtube") or _segment_contains_token(first_segment, "youtube"):
             return ("youtube", url)
-        if "instagram" in url_lower or "instagr.am" in url_lower:
+        if first_segment in ("instagram.com", "instagr.am", "instagram") or _segment_contains_token(first_segment, "instagram"):
             return ("instagram", url)
-        if "t.me" in url_lower or "telegram" in url_lower:
+        if first_segment in ("t.me", "telegram.me", "telegram") or _segment_contains_token(first_segment, "telegram"):
             return ("telegram", url)
         # Treat "x.com" specially: only consider it when it appears as
         # the leading path segment (e.g. "x.com/..." without a scheme).
@@ -207,8 +224,8 @@ class BaseParser(ABC):
             first_segment = parsed.path.split("/")[0]
             if first_segment == "x.com" or first_segment.startswith("x.com?") or first_segment.startswith("x.com#"):
                 x_in_path = True
-        if "twitter" in url_lower or x_in_path:
+        if _segment_contains_token(first_segment.lower(), "twitter") or x_in_path:
             return ("twitter", url)
-        if "tiktok" in url_lower:
+        if _segment_contains_token(first_segment.lower(), "tiktok") or first_segment.lower() in ("tiktok.com", "tiktok"):
             return ("tiktok", url)
         return ("website", url)
