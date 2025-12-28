@@ -63,15 +63,7 @@ export default function ShowEditPage() {
         setSuccess('Сохранено!');
       }
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      if (Array.isArray(detail)) {
-        // Pydantic validation errors
-        setError(detail.map(e => e.msg || JSON.stringify(e)).join(', '));
-      } else if (typeof detail === 'object') {
-        setError(detail.msg || JSON.stringify(detail));
-      } else {
-        setError(detail || 'Ошибка сохранения');
-      }
+      setError(getErrorMessage(err, 'Ошибка сохранения'));
     } finally {
       setSaving(false);
     }
