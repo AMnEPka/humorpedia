@@ -20,7 +20,7 @@ const statusLabels = {
 // Рекурсивный компонент для отображения строки шоу с вложенностью
 function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
   const hasChildren = show.children && show.children.length > 0;
-  const isExpanded = expandedIds.has(show._id);
+  const isExpanded = expandedIds.has(show.id);
   const indent = level * 24;
 
   return (
@@ -30,7 +30,7 @@ function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
           <div className="flex items-center" style={{ paddingLeft: `${indent}px` }}>
             {hasChildren ? (
               <button 
-                onClick={() => toggleExpand(show._id)}
+                onClick={() => toggleExpand(show.id)}
                 className="mr-2 p-1 hover:bg-muted rounded"
               >
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
