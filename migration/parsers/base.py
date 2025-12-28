@@ -114,6 +114,11 @@ class BaseParser(ABC):
         # Заменяем переносы на пробелы для валидного JSON
         text = text.replace('\n', ' ')
         
+        # Удаляем невалидные escape-последовательности 
+        # (backslash перед символами которые не являются валидными JSON escapes)
+        # Валидные: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+        text = re.sub(r'\\(?!["\\/bfnrtu])', '', text)
+        
         return text.strip()
     
     @staticmethod
