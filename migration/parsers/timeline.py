@@ -181,11 +181,5 @@ class TimelineParser(BaseParser):
         return sorted(events, key=get_sort_key)
     
     def _parse_migx(self, config_str: str) -> list:
-        if not config_str:
-            return []
-        try:
-            config_str = self.normalize_migx_json(config_str)
-            data = json.loads(config_str)
-            return data if isinstance(data, list) else [data]
-        except:
-            return []
+        """Парсит MIGX config используя общий метод."""
+        return self.parse_migx_config(config_str)
