@@ -131,6 +131,33 @@ class BaseParser(ABC):
         return re.sub(r'<[^>]+>', '', html).strip()
     
     @staticmethod
+    
+    @staticmethod
+    def parse_migx_config(config_str: str) -> list:
+        """Парсит MIGX конфигурацию, обрабатывая вложенные JSON.
+        
+        Returns:
+            Список секций MIGX или пустой список при ошибке.
+        """
+        if not config_str:
+            return []
+        
+        normalized = BaseParser.normalize_migx_json(config_str)
+        
+        try:
+            data = json.loads(normalized)
+            return data if isinstance(data, list) else [data]
+        except json.JSONDecodeError:
+            # Если не удалось, пробуем более агрессивную очистку HTML внутри значений
+            # Заменяем \" внутри строк на апостроф
+            try:
+                cleaned = re.sub(r'(?<=[^\\])"(?=[^,\[\]{}:])', "'", normalized)
+                data = json.loads(cleaned)
+                return data if isinstance(data, list) else [data]
+            except:
+                pass
+        
+        return []
     def extract_table_rows(html: str) -> list[tuple[str, str]]:
         """Извлекает строки из HTML таблицы (ключ, значение)."""
         rows = re.findall(
