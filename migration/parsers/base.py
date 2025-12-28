@@ -102,8 +102,7 @@ class BaseParser(ABC):
     def normalize_migx_json(text: str) -> str:
         """Нормализует MIGX JSON строку для парсинга.
         
-        Обрабатывает вложенные JSON строки (например list_triple),
-        сохраняя их экранирование для последующего парсинга.
+        Обрабатывает различные уровни экранирования из SQL dump.
         """
         if not text:
             return ""
