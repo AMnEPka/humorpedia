@@ -536,12 +536,42 @@ def create_team_importer() -> UniversalImporter:
 # ============================================================================
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Универсальный импортер Humorpedia')
+    parser = argparse.ArgumentParser(
+        description='Универсальный импортер Humorpedia',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Примеры использования:
+
+  # Импорт человека
+  python universal_importer.py --type person --ids 350 --apply
+
+  # Импорт шоу
+  python universal_importer.py --type show --ids 1656 --apply
+
+  # Импорт сезона как дочерней страницы шоу (по slug родителя)
+  python universal_importer.py --type show --ids 1700 --parent-slug comedy-battle --apply
+
+  # Импорт сезона как дочерней страницы (по old_id родителя из MODX)  
+  python universal_importer.py --type show --ids 1700 --parent-old-id 1629 --apply
+
+  # Импорт в произвольную коллекцию
+  python universal_importer.py --type show --collection articles --ids 500 --apply
+        """
+    )
     parser.add_argument('--type', choices=['show', 'person', 'team'], required=True,
-                        help='Тип контента для импорта')
-    parser.add_argument('--ids', type=str, help='ID ресурсов через запятую')
-    parser.add_argument('--apply', action='store_true', help='Записать в MongoDB')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Подробный вывод')
+                        help='Тип шаблона для импорта (определяет набор модулей)')
+    parser.add_argument('--collection', type=str, default=None,
+                        help='Коллекция MongoDB (по умолчанию: shows/people/teams)')
+    parser.add_argument('--ids', type=str, required=True,
+                        help='ID ресурсов MODX через запятую')
+    parser.add_argument('--parent-slug', type=str, default=None,
+                        help='Slug родительской страницы для иерархии')
+    parser.add_argument('--parent-old-id', type=int, default=None,
+                        help='MODX ID родительской страницы для иерархии')
+    parser.add_argument('--apply', action='store_true',
+                        help='Записать в MongoDB (без этого флага - dry-run)')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Подробный вывод')
     
     args = parser.parse_args()
     
@@ -553,12 +583,50 @@ if __name__ == '__main__':
     elif args.type == 'team':
         importer = create_team_importer()
     
+    # Переопределяем коллекцию если указана
+    if args.collection:
+        importer.collection = args.collection
+        print(f"📁 Используется коллекция: {args.collection}")
+    
+    # Определяем родителя если указан
+    parent_id = None
+    parent_path = None
+    parent_level = 0
+    
+    if args.parent_slug or args.parent_old_id:
+        import pymongo
+        client = pymongo.MongoClient(importer.mongo_url)
+        db = client[importer.db_name]
+        
+        # Ищем родителя
+        if args.parent_slug:
+            parent_doc = db[importer.collection].find_one({'slug': args.parent_slug})
+        else:
+            parent_doc = db[importer.collection].find_one({'old_id': args.parent_old_id})
+        
+        if parent_doc:
+            parent_id = parent_doc.get('id')
+            parent_path = parent_doc.get('full_path', parent_doc.get('slug'))
+            parent_level = parent_doc.get('level', 0)
+            print(f"📂 Родитель найден: {parent_doc.get('title')} (level={parent_level})")
+            print(f"   path: {parent_path}")
+        else:
+            print(f"⚠️  Родитель не найден! Импорт будет на верхнем уровне.")
+        
+        client.close()
+    
     # Импортируем
-    if args.ids:
-        ids = [int(x.strip()) for x in args.ids.split(',')]
-        for rid in ids:
-            doc = importer.import_resource(rid, apply=args.apply)
-            if doc and args.verbose:
-                importer.print_document(doc, verbose=True)
+    ids = [int(x.strip()) for x in args.ids.split(',')]
+    
+    for rid in ids:
+        doc = importer.import_resource(
+            rid, 
+            apply=args.apply,
+            parent_id=parent_id,
+            parent_path=parent_path,
+            level=parent_level + 1 if parent_id else 0
+        )
+        if doc and args.verbose:
+            importer.print_document(doc, verbose=True)
     else:
         print("Укажите --ids для импорта")
