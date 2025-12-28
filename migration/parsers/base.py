@@ -99,7 +99,11 @@ class BaseParser(ABC):
     
     @staticmethod
     def normalize_migx_json(text: str) -> str:
-        """Нормализует MIGX JSON строку для парсинга."""
+        """Нормализует MIGX JSON строку для парсинга.
+        
+        Обрабатывает вложенные JSON строки (например list_triple),
+        сохраняя их экранирование для последующего парсинга.
+        """
         if not text:
             return ""
         
@@ -107,16 +111,21 @@ class BaseParser(ABC):
         text = re.sub(r'[\x00-\x09\x0b-\x1f]', '', text)
         text = text.replace('\\r\\n', ' ').replace('\\r', ' ').replace('\\n', ' ')
         text = text.replace('>\\<', '><')
+        
+        # Обрабатываем экранирование уровень за уровнем
+        # Четверные backslash -> placeholder для вложенных JSON
+        text = text.replace('\\\\\\"', '{{NESTED_QUOTE}}')
+        # Двойные backslash перед кавычкой -> одинарный (внутренний JSON)
         text = text.replace('\\"', '"')
+        # Восстанавливаем вложенные кавычки как экранированные
+        text = text.replace('{{NESTED_QUOTE}}', '\\"')
+        
         text = text.replace("\\'", "'")
         text = text.replace('\\/', '/')
         text = text.replace('\\<', '<').replace('\\>', '>')
-        # Заменяем переносы на пробелы для валидного JSON
         text = text.replace('\n', ' ')
         
         # Удаляем невалидные escape-последовательности 
-        # (backslash перед символами которые не являются валидными JSON escapes)
-        # Валидные: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
         text = re.sub(r'\\(?!["\\/bfnrtu])', '', text)
         
         return text.strip()
