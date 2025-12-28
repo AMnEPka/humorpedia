@@ -299,8 +299,10 @@ async def get_show_children(parent_slug: str):
     if not parent:
         raise HTTPException(status_code=404, detail="Parent show not found")
     
+    # Use parent's 'id' field (string UUID), not MongoDB's '_id'
+    parent_id = parent.get("id")
     children = await db.shows.find(
-        {"parent_id": parent["_id"]},
+        {"parent_id": parent_id},
         {"_id": 0}
     ).sort("title", 1).to_list(100)
     
