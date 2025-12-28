@@ -487,6 +487,21 @@ metadata:
   test_sequence: 1
   run_ui: true
 
+  - task: "Hierarchical import feature and children endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/content.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Завершил реализацию иерархического импорта в universal_importer.py. Добавлены аргументы --parent-slug и --parent-old-id для указания родительской страницы. Протестировано успешно: импортированы сезоны 9 и 10 шоу Comedy Баттл как дочерние страницы. Исправлен баг в эндпоинте /shows/{slug}/children - теперь корректно использует поле 'id' вместо MongoDB '_id' для поиска дочерних элементов."
+      - working: true
+        agent: "testing"
+        comment: "Полное тестирование иерархической структуры завершено успешно. ✅ GET /api/content/shows/comedy-battle/children возвращает 2 дочерних сезона (9 и 10) с корректными полями parent_id, level=1, full_path. ✅ GET /api/content/shows/by-path/comedy-battle/season9 работает корректно. ✅ GET /api/content/shows/season9 возвращает сезон по slug. ✅ Проверена целостность данных - дочерние элементы корректно ссылаются на parent_id. ✅ Список шоу по умолчанию исключает дочерние элементы, но включает их при include_children=true. Все 22 теста прошли успешно."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -504,3 +519,7 @@ agent_communication:
     message: "Протестировал admin module list functionality после recent updates. ✅ Все основные функции работают: логин, навигация к персоне, переключение на Модули tab, отображение модулей (Биография, Хронология), редактирование модуля 'Биография' с изменением заголовка на 'Биография TEST', сохранение изменений, обновление списка модулей. ✅ Migration корректно установила module.title для text_block/timeline модулей. ✅ ModuleEditor синхронизирует module.title с data.title при редактировании text_block. Исправлена ошибка компиляции ESLint в ModuleEditor.jsx. Отсутствует только модуль 'Личная жизнь' из ожидаемых, но это может быть нормально для данной персоны."
   - agent: "testing"
     message: "Завершено полное E2E тестирование системных модулей на всех трех типах публичных страниц. ✅ PERSON PAGE (/people/irina-chesnokova): все системные модули работают корректно - poster_photo (фото в сайдбаре), social_links (VK/Instagram/YouTube иконки), rating_widget (4.5/10 с эмодзи), facts_table (Полное имя, Дата рождения), tags_cloud (Воронеж, Ирина Чеснокова теги), text_modules (Биография, Хронология). ✅ SHOW PAGE (/shows/comedy-battle): poster_photo (постер шоу), facts_table (Информация с данными), tags_cloud (37 тегов участников), text_blocks (описание). ✅ TEAM PAGE (/kvn/teams/sbornaya-pyatigorska): hero section с названием и тегами, facts_table (Информация), text_block (История команды). Все модули рендерятся только при visible=true в массиве modules документа. Системная модульность работает полностью корректно."
+  - agent: "main"
+    message: "Завершил реализацию иерархического импорта в universal_importer.py. Добавлены аргументы --parent-slug и --parent-old-id для указания родительской страницы. Протестировано успешно: импортированы сезоны 9 и 10 шоу Comedy Баттл как дочерние страницы. Исправлен баг в эндпоинте /shows/{slug}/children - теперь корректно использует поле 'id' вместо MongoDB '_id' для поиска дочерних элементов. Страница сезона /shows/season9 отображается корректно с breadcrumbs показывающими иерархию. Обновлена документация UNIVERSAL_IMPORTER.md."
+  - agent: "testing"
+    message: "Завершено полное тестирование иерархической функциональности шоу. ✅ Все backend API endpoints работают корректно: /api/content/shows/comedy-battle/children возвращает 2 дочерних сезона с правильными полями (parent_id, level=1, full_path), /api/content/shows/by-path/comedy-battle/season9 и /api/content/shows/season9 работают. ✅ Проверена целостность данных - дочерние элементы корректно ссылаются на родительский ID. ✅ Список шоу правильно исключает дочерние элементы по умолчанию и включает при include_children=true. ✅ Frontend страница /shows/season9 загружается корректно. Все 22 теста прошли успешно. Создан backend_test.py для автоматизированного тестирования."

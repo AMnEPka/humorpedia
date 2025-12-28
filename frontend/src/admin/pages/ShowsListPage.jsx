@@ -20,7 +20,7 @@ const statusLabels = {
 // Рекурсивный компонент для отображения строки шоу с вложенностью
 function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
   const hasChildren = show.children && show.children.length > 0;
-  const isExpanded = expandedIds.has(show._id);
+  const isExpanded = expandedIds.has(show.id);
   const indent = level * 24;
 
   return (
@@ -30,7 +30,7 @@ function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
           <div className="flex items-center" style={{ paddingLeft: `${indent}px` }}>
             {hasChildren ? (
               <button 
-                onClick={() => toggleExpand(show._id)}
+                onClick={() => toggleExpand(show.id)}
                 className="mr-2 p-1 hover:bg-muted rounded"
               >
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
@@ -39,7 +39,7 @@ function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
               <span className="w-7" />
             )}
             <div>
-              <Link to={`/admin/shows/${show._id}`} className="font-medium hover:underline">
+              <Link to={`/admin/shows/${show.id}`} className="font-medium hover:underline">
                 {show.name || show.title}
               </Link>
               <div className="text-sm text-muted-foreground">
@@ -63,15 +63,15 @@ function ShowRow({ show, level = 0, expandedIds, toggleExpand, onDelete }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild><Link to={`/admin/shows/${show._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(show._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to={`/admin/shows/${show.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(show.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </TableCell>
       </TableRow>
       {hasChildren && isExpanded && show.children.map(child => (
         <ShowRow 
-          key={child._id} 
+          key={child.id} 
           show={child} 
           level={level + 1} 
           expandedIds={expandedIds}
@@ -247,7 +247,7 @@ export default function ShowsListPage() {
                 {isHierarchyMode ? (
                   shows.map((show) => (
                     <ShowRow 
-                      key={show._id} 
+                      key={show.id} 
                       show={show} 
                       level={0}
                       expandedIds={expandedIds}
@@ -257,9 +257,9 @@ export default function ShowsListPage() {
                   ))
                 ) : (
                   shows.map((show) => (
-                    <TableRow key={show._id} className={show.level > 0 ? 'bg-muted/30' : ''}>
+                    <TableRow key={show.id} className={show.level > 0 ? 'bg-muted/30' : ''}>
                       <TableCell>
-                        <Link to={`/admin/shows/${show._id}`} className="font-medium hover:underline">{show.name || show.title}</Link>
+                        <Link to={`/admin/shows/${show.id}`} className="font-medium hover:underline">{show.name || show.title}</Link>
                         <div className="text-sm text-muted-foreground">
                           /{show.full_path || show.slug}
                           {show.level > 0 && <Badge variant="outline" className="ml-2 text-xs">Уровень {show.level}</Badge>}
@@ -272,8 +272,8 @@ export default function ShowsListPage() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild><Link to={`/admin/shows/${show._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(show._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
+                            <DropdownMenuItem asChild><Link to={`/admin/shows/${show.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(show.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

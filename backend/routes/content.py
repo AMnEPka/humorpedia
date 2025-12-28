@@ -299,8 +299,10 @@ async def get_show_children(parent_slug: str):
     if not parent:
         raise HTTPException(status_code=404, detail="Parent show not found")
     
+    # Use parent's 'id' field (string UUID), not MongoDB's '_id'
+    parent_id = parent.get("id")
     children = await db.shows.find(
-        {"parent_id": parent["_id"]},
+        {"parent_id": parent_id},
         {"_id": 0}
     ).sort("title", 1).to_list(100)
     
@@ -324,14 +326,13 @@ async def get_shows_hierarchy(
     if status:
         query["status"] = status.value
     
-    # Получаем все шоу (сохраняем _id для связей)
-    all_shows = await db.shows.find(query).sort([("level", 1), ("title", 1)]).to_list(1000)
+    # Получаем все шоу
+    all_shows = await db.shows.find(query, {"_id": 0}).sort([("level", 1), ("title", 1)]).to_list(1000)
     
-    # Строим дерево
+    # Строим дерево - индексируем по 'id' (UUID), т.к. parent_id ссылается на него
     shows_by_id = {}
     for s in all_shows:
-        s['_id'] = str(s['_id']) if not isinstance(s['_id'], str) else s['_id']
-        shows_by_id[s['_id']] = s
+        shows_by_id[s.get('id')] = s
     
     root_shows = []
     
