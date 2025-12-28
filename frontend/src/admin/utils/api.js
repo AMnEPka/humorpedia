@@ -35,6 +35,20 @@ api.interceptors.response.use(
 
 export default api;
 
+// Helper to extract error message from API response
+export const getErrorMessage = (err, defaultMsg = 'Ошибка') => {
+  const detail = err.response?.data?.detail;
+  if (Array.isArray(detail)) {
+    // Pydantic validation errors - extract messages
+    return detail.map(e => e.msg || JSON.stringify(e)).join(', ');
+  } else if (typeof detail === 'object' && detail !== null) {
+    return detail.msg || JSON.stringify(detail);
+  } else if (typeof detail === 'string') {
+    return detail;
+  }
+  return err.message || defaultMsg;
+};
+
 // Auth API
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
