@@ -147,14 +147,52 @@ class BaseParser(ABC):
             data = json.loads(normalized)
             return data if isinstance(data, list) else [data]
         except json.JSONDecodeError:
-            # Если не удалось, пробуем более агрессивную очистку HTML внутри значений
-            # Заменяем \" внутри строк на апостроф
-            try:
-                cleaned = re.sub(r'(?<=[^\\])"(?=[^,\[\]{}:])', "'", normalized)
-                data = json.loads(cleaned)
-                return data if isinstance(data, list) else [data]
-            except Exception:
-                pass
+            pass
+        
+        # Fallback: пробуем исправить HTML кавычки внутри значений
+        # Заменяем неэкранированные кавычки внутри значений на HTML entities
+        try:
+            # Находим все значения в кавычках и заменяем внутренние " на '
+            def fix_inner_quotes(match):
+                key = match.group(1)
+                value = match.group(2)
+                # Заменяем " внутри значения на ' (кроме начала/конца)
+                fixed = value.replace('"', "'")
+                return f'"{key}":"{fixed}"'
+            
+            # Паттерн для key:"value" пар  
+            fixed = re.sub(
+                r'"([^"]+)":"([^"]*(?:""[^"]*)*)"',
+                fix_inner_quotes,
+                normalized
+            )
+            data = json.loads(fixed)
+            return data if isinstance(data, list) else [data]
+        except Exception:
+            pass
+        
+        # Последний fallback - извлекаем объекты регуляркой
+        try:
+            objects = []
+            # Ищем паттерны {"key":"value",...}
+            for match in re.finditer(r'\{[^{}]+\}', normalized):
+                obj_str = match.group()
+                try:
+                    obj = json.loads(obj_str)
+                    objects.append(obj)
+                except:
+                    # Пробуем почистить
+                    cleaned = re.sub(r'(?<=[,:])\"([^"]*?)\"(?=[,}])', 
+                                    lambda m: '"' + m.group(1).replace('"', "'") + '"', 
+                                    obj_str)
+                    try:
+                        obj = json.loads(cleaned)
+                        objects.append(obj)
+                    except:
+                        pass
+            return objects
+        except Exception:
+            pass
         
         return []
     
