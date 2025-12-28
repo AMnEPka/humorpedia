@@ -16,6 +16,13 @@ class ModuleType(str, Enum):
     VIDEO = "video"                   # Video embed
     QUOTE = "quote"                   # Quote block
     
+    # System modules (sidebar/meta)
+    POSTER_PHOTO = "poster_photo"     # Poster/profile photo
+    FACTS_TABLE = "facts_table"       # Facts info table
+    TAGS_CLOUD = "tags_cloud"         # Tags cloud display
+    SOCIAL_LINKS = "social_links"     # Social media links
+    RATING_WIDGET = "rating_widget"   # Rating widget
+    
     # Team-specific modules
     TEAM_MEMBERS = "team_members"     # Team composition
     TV_APPEARANCES = "tv_appearances" # TV broadcasts table
