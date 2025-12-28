@@ -273,6 +273,42 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Протестированы страницы /people/shastun-i-makar и /people/irina-chesnokova. Биография и хронология отображаются корректно с HTML-форматированием. Нет литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP/HTTPS), но основной контент работает."
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг для модульного рендеринга. Теперь страница динамически отображает системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) на основе массива modules. Проверено скриншотом - все работает."
+      - working: true
+        agent: "testing"
+        comment: "Полное E2E тестирование системных модулей на /people/irina-chesnokova завершено успешно. ✅ Poster photo module: фото в сайдбаре отображается корректно. ✅ Social links module: VK, Instagram, YouTube иконки найдены и работают. ✅ Rating widget module: рейтинг 4.5/10 с эмодзи отображается правильно. ✅ Facts table module: таблица с полями 'Полное имя' и 'Дата рождения' работает корректно. ✅ Tags cloud module: теги 'Воронеж', 'Ирина Чеснокова', 'Санкт-Петербург' отображаются в контентной части. ✅ Text modules: секции 'Биография' и 'Хронология' с полным контентом работают. Все системные модули рендерятся только при visible=true в массиве modules."
+
+  - task: "Public Show Pages"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/public/pages/ShowDetailPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг для модульного рендеринга. Страница показывает системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) динамически. Проверено скриншотом /shows/comedy-battle - все элементы отображаются."
+      - working: true
+        agent: "testing"
+        comment: "E2E тестирование системных модулей на /shows/comedy-battle завершено успешно. ✅ Poster photo module: постер шоу отображается корректно. ✅ Facts table module: таблица 'Информация' с данными о шоу (статус, количество сезонов, даты) работает. ✅ Tags cloud module: теги с именами участников отображаются (37 элементов найдено). ✅ Text blocks: описание шоу и контентные блоки отображаются корректно (8 блоков найдено). ✅ Social links: ссылки на официальный сайт работают. Все системные модули корректно рендерятся на основе массива modules с visible=true."
+
+  - task: "Public Team Pages"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/public/pages/TeamDetailPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг для модульного рендеринга. Страница показывает системные модули динамически. Проверено скриншотом /kvn/teams/sbornaya-pyatigorska - таблица фактов, теги, контент отображаются корректно."
+      - working: true
+        agent: "testing"
+        comment: "E2E тестирование системных модулей на /kvn/teams/sbornaya-pyatigorska завершено успешно. ✅ Hero section: название команды 'Сборная Пятигорска' и теги ('КВН', 'Высшая лига', 'Пятигорск') отображаются в hero-секции. ✅ Facts table module: таблица 'Информация' с данными команды (founded_year: 2010, city: Пятигорск, achievements) работает корректно. ✅ Text block module: секция 'История команды' с полным текстом отображается. ✅ Poster photo module: логотип команды (буква 'С') в hero-секции. Все системные модули корректно рендерятся динамически на основе массива modules."
 
   - task: "Login Page"
     implemented: true
@@ -452,22 +488,19 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Shows Management (List/Edit)"
-    - "Articles Management (List/Edit)"
-    - "News Management (List/Edit)"
-    - "Media Library Page"
-    - "Users Management Page"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Завершил подключение всех страниц админ-панели в App.js. Все страницы (Shows, Articles, News, Quizzes, Wiki, Media, Tags, Comments, Users, Templates) теперь используют реальные компоненты вместо PlaceholderPage. Проверил через скриншоты - Dashboard, Shows, Media, Users, Templates - все работают. Нужно полное тестирование CRUD операций для всех типов контента."
+    message: "Завершил рефакторинг публичных страниц для модульного рендеринга. PersonDetailPage, ShowDetailPage и TeamDetailPage теперь динамически отображают системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) из массива modules. Все три страницы проверены скриншотами - работают корректно. Нужно полное E2E тестирование для подтверждения."
   - agent: "testing"
     message: "Протестировал публичные страницы людей после реимпорта. Страницы /people/shastun-i-makar и /people/irina-chesnokova загружаются корректно. Биография и хронология отображаются с правильным HTML-форматированием без литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP запросы с HTTPS страницы), но это не влияет на основной контент страниц."
   - agent: "testing"
     message: "Протестировал админ-панель timeline editing после исправления ModuleEditor.jsx. Успешно: 1) Логин в админ-панель работает корректно, 2) Навигация к персонам /admin/people/a7876d88-115a-4000-a27e-0fbd72dc2cea (Шастун и Макар) и /admin/people/89312eab-09cb-4e49-b130-f04493b6c1a5 (Ирина Чеснокова) работает, 3) Модули tab доступен и показывает модули включая timeline, 4) Timeline модули присутствуют на обеих страницах. Исправлена ошибка компиляции в ModuleEditor.jsx (убрал проблемный ESLint комментарий). Основная функциональность timeline editing доступна, но требуется дополнительное тестирование интерактивности редактора из-за сложности селекторов."
   - agent: "testing"
     message: "Протестировал admin module list functionality после recent updates. ✅ Все основные функции работают: логин, навигация к персоне, переключение на Модули tab, отображение модулей (Биография, Хронология), редактирование модуля 'Биография' с изменением заголовка на 'Биография TEST', сохранение изменений, обновление списка модулей. ✅ Migration корректно установила module.title для text_block/timeline модулей. ✅ ModuleEditor синхронизирует module.title с data.title при редактировании text_block. Исправлена ошибка компиляции ESLint в ModuleEditor.jsx. Отсутствует только модуль 'Личная жизнь' из ожидаемых, но это может быть нормально для данной персоны."
+  - agent: "testing"
+    message: "Завершено полное E2E тестирование системных модулей на всех трех типах публичных страниц. ✅ PERSON PAGE (/people/irina-chesnokova): все системные модули работают корректно - poster_photo (фото в сайдбаре), social_links (VK/Instagram/YouTube иконки), rating_widget (4.5/10 с эмодзи), facts_table (Полное имя, Дата рождения), tags_cloud (Воронеж, Ирина Чеснокова теги), text_modules (Биография, Хронология). ✅ SHOW PAGE (/shows/comedy-battle): poster_photo (постер шоу), facts_table (Информация с данными), tags_cloud (37 тегов участников), text_blocks (описание). ✅ TEAM PAGE (/kvn/teams/sbornaya-pyatigorska): hero section с названием и тегами, facts_table (Информация), text_block (История команды). Все модули рендерятся только при visible=true в массиве modules документа. Системная модульность работает полностью корректно."

@@ -270,3 +270,58 @@ def transliterate(text):
     slug = re.sub(r'-+', '-', slug)
     slug = re.sub(r'[^a-z0-9-]', '', slug)
     return slug.strip('-')
+
+
+def create_sidebar_modules(start_order: int = 1) -> list:
+    """
+    Создаёт системные модули для сайдбара (фото, факты, рейтинг, теги, ссылки).
+    Эти модули отображают данные из основных полей документа.
+    
+    Args:
+        start_order: Начальный порядок для модулей
+    
+    Returns:
+        list: Список модулей для добавления в документ
+    """
+    return [
+        {
+            "id": str(uuid4()),
+            "type": "poster_photo",
+            "order": start_order,
+            "title": "Фото",
+            "visible": True,
+            "data": {"size": "medium", "shape": "rounded"}
+        },
+        {
+            "id": str(uuid4()),
+            "type": "facts_table",
+            "order": start_order + 1,
+            "title": "Информация",
+            "visible": True,
+            "data": {"title": "Информация", "style": "card"}
+        },
+        {
+            "id": str(uuid4()),
+            "type": "rating_widget",
+            "order": start_order + 2,
+            "title": "Оценка",
+            "visible": True,
+            "data": {"title": "Оценка", "style": "smileys"}
+        },
+        {
+            "id": str(uuid4()),
+            "type": "tags_cloud",
+            "order": start_order + 3,
+            "title": "Теги",
+            "visible": True,
+            "data": {"title": "", "style": "badges", "max_tags": 0}
+        },
+        {
+            "id": str(uuid4()),
+            "type": "social_links",
+            "order": start_order + 4,
+            "title": "Ссылки",
+            "visible": True,
+            "data": {"title": "Ссылки", "style": "list"}
+        }
+    ]

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
+import { isSystemModule } from '@/components/SystemModules';
 
 // Table of Contents component for teams
 function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
@@ -13,11 +14,12 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
     
     if (effectiveMode === 'timeline') {
       const timelineModule = modules?.find(m => m.type === 'timeline');
-      return timelineModule?.data?.items?.map(item => ({
+      const events = timelineModule?.data?.events || timelineModule?.data?.items || [];
+      return events.map(item => ({
         id: `timeline-${item.year}`,
         label: item.year,
         title: item.title
-      })) || [];
+      }));
     } else {
       // Get titles from text_block modules
       return modules?.filter(m => m.type === 'text_block' && m.data?.title)
@@ -84,6 +86,22 @@ export default function TeamDetailPage() {
     fetchTeam();
   }, [slug]);
 
+  // Разделяем модули на системные (sidebar) и контентные (main)
+  // Хуки должны быть до любых return
+  const sidebarModules = useMemo(() => {
+    if (!team?.modules) return [];
+    return team.modules
+      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [team?.modules]);
+
+  const contentModules = useMemo(() => {
+    if (!team?.modules) return [];
+    return team.modules
+      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [team?.modules]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -121,15 +139,18 @@ export default function TeamDetailPage() {
       {/* Hero */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-white mb-8">
         <div className="flex flex-col md:flex-row items-center gap-8">
-          <div className="w-32 h-32 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
-            {team.logo ? (
-              <img src={team.logo} alt={team.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
-                {team.title?.charAt(0)?.toUpperCase()}
-              </div>
-            )}
-          </div>
+          {/* Logo/Photo - рендерится если есть модуль poster_photo */}
+          {sidebarModules.find(m => m.type === 'poster_photo') && (
+            <div className="w-32 h-32 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
+              {team.logo || team.poster || team.photo ? (
+                <img src={team.logo || team.poster || team.photo} alt={team.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
+                  {team.title?.charAt(0)?.toUpperCase()}
+                </div>
+              )}
+            </div>
+          )}
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{team.title}</h1>
             {team.city && (
@@ -138,7 +159,8 @@ export default function TeamDetailPage() {
                 <span>{team.city}</span>
               </div>
             )}
-            {team.tags?.length > 0 && (
+            {/* Tags - рендерятся если есть модуль tags_cloud */}
+            {sidebarModules.find(m => m.type === 'tags_cloud') && team.tags?.length > 0 && (
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
                 {team.tags.map((tag, i) => (
                   <Badge key={i} variant="secondary" className="bg-white/20 text-white">{tag}</Badge>
@@ -152,8 +174,8 @@ export default function TeamDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Facts Table */}
-          {team.facts && Object.keys(team.facts).length > 0 && (
+          {/* Facts Table - рендерится если есть модуль facts_table */}
+          {sidebarModules.find(m => m.type === 'facts_table') && team.facts && Object.keys(team.facts).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -232,8 +254,8 @@ export default function TeamDetailPage() {
             </Card>
           )}
 
-          {/* Social Links */}
-          {team.social_links && Object.keys(team.social_links).length > 0 && (
+          {/* Social Links - рендерится если есть модуль social_links */}
+          {sidebarModules.find(m => m.type === 'social_links') && team.social_links && Object.keys(team.social_links).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -292,7 +314,7 @@ export default function TeamDetailPage() {
           </Button>
 
           {/* Table of Contents */}
-          <TableOfContents modules={team.modules} contentType="team" />
+          <TableOfContents modules={contentModules} contentType="team" />
         </div>
 
         {/* Main content */}
@@ -312,9 +334,9 @@ export default function TeamDetailPage() {
             </Card>
           )}
 
-          {/* Modules */}
-          {team.modules?.map((module, i) => (
-            <ModuleRenderer key={i} module={module} />
+          {/* Content Modules */}
+          {contentModules.map((module, i) => (
+            <ModuleRenderer key={module.id || i} module={module} />
           ))}
         </div>
       </div>
@@ -388,24 +410,29 @@ function ModuleRenderer({ module }) {
       );
     
     case 'timeline':
+      const timelineEvents = module.data?.events || module.data?.items || [];
       return (
         <Card>
           <CardHeader>
             <CardTitle>{module.data?.title || 'Хронология'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
-              {module.data?.items?.map((item, i) => (
-                <div key={i} id={`timeline-${item.year}`} className="relative scroll-mt-20">
-                  <div className="absolute -left-[25px] w-4 h-4 bg-blue-600 rounded-full border-4 border-white" />
-                  <div className="text-sm text-blue-600 font-semibold">{item.year}</div>
-                  <div className="font-medium">{item.title}</div>
-                  {item.description && (
-                    <p className="text-gray-600 text-sm mt-1">{item.description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
+            {timelineEvents.length === 0 ? (
+              <p className="text-gray-500">Нет событий</p>
+            ) : (
+              <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
+                {timelineEvents.map((item, i) => (
+                  <div key={i} id={`timeline-${item.year}`} className="relative scroll-mt-20">
+                    <div className="absolute -left-[25px] w-4 h-4 bg-blue-600 rounded-full border-4 border-white" />
+                    <div className="text-sm text-blue-600 font-semibold">{item.year}</div>
+                    <div className="font-medium">{item.title}</div>
+                    {item.description && (
+                      <p className="text-gray-600 text-sm mt-1" dangerouslySetInnerHTML={{ __html: item.description }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       );

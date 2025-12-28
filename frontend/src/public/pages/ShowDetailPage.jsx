@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
 import EmojiRating from '@/components/EmojiRating';
+import { isSystemModule } from '@/components/SystemModules';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
@@ -174,6 +175,22 @@ export default function ShowDetailPage() {
       .finally(() => setLoading(false));
   }, [fullPath]);
 
+  // Разделяем модули на системные (sidebar) и контентные (main)
+  // Хуки должны быть до любых return
+  const sidebarModules = useMemo(() => {
+    if (!show?.modules) return [];
+    return show.modules
+      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [show?.modules]);
+
+  const contentModules = useMemo(() => {
+    if (!show?.modules) return [];
+    return show.modules
+      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [show?.modules]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -246,8 +263,8 @@ export default function ShowDetailPage() {
       {/* Hero */}
       <div className="mb-8">
         <div className="flex items-start gap-6">
-          {/* Poster */}
-          {show.poster && (
+          {/* Poster - рендерится если есть модуль poster_photo */}
+          {sidebarModules.find(m => m.type === 'poster_photo') && show.poster && (
             <div className="w-48 flex-shrink-0">
               <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg">
                 <img
@@ -269,8 +286,8 @@ export default function ShowDetailPage() {
               />
             )}
             
-            {/* Tags */}
-            {show.tags?.length > 0 && (
+            {/* Tags - рендерятся если есть модуль tags_cloud */}
+            {sidebarModules.find(m => m.type === 'tags_cloud') && show.tags?.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
                 {show.tags.map(tag => (
                   <Link key={tag} to={`/tags/${encodeURIComponent(tag)}`}>
@@ -287,8 +304,8 @@ export default function ShowDetailPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Facts Table */}
-          {show.facts && Object.keys(show.facts).length > 0 && (
+          {/* Facts Table - рендерится если есть модуль facts_table */}
+          {sidebarModules.find(m => m.type === 'facts_table') && show.facts && Object.keys(show.facts).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -310,8 +327,8 @@ export default function ShowDetailPage() {
             </Card>
           )}
 
-          {/* Social Links / Website */}
-          {show.social_links && Object.keys(show.social_links).length > 0 && (
+          {/* Social Links - рендерится если есть модуль social_links */}
+          {sidebarModules.find(m => m.type === 'social_links') && show.social_links && Object.keys(show.social_links).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -353,34 +370,36 @@ export default function ShowDetailPage() {
             </Card>
           )}
 
-          {/* Rating Widget */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Оценка</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmojiRating 
-                value={show.rating?.average || 0}
-                max={10}
-                readonly={false}
-              />
-              <div className="mt-2 text-sm text-gray-600 text-center">
-                {show.rating?.average ? (
-                  <>
-                    {show.rating.average.toFixed(1)} / 10
-                    {show.rating.count > 0 && ` (${show.rating.count} ${show.rating.count === 1 ? 'голос' : 'голосов'})`}
-                  </>
-                ) : (
-                  'Пока нет оценок'
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Rating Widget - рендерится если есть модуль rating_widget */}
+          {sidebarModules.find(m => m.type === 'rating_widget') && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Оценка</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EmojiRating 
+                  value={show.rating?.average || 0}
+                  max={10}
+                  readonly={false}
+                />
+                <div className="mt-2 text-sm text-gray-600 text-center">
+                  {show.rating?.average ? (
+                    <>
+                      {show.rating.average.toFixed(1)} / 10
+                      {show.rating.count > 0 && ` (${show.rating.count} ${show.rating.count === 1 ? 'голос' : 'голосов'})`}
+                    </>
+                  ) : (
+                    'Пока нет оценок'
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {show.modules?.map((module) => (
+          {contentModules.map((module) => (
             <ModuleRenderer key={module.id} module={module} />
           ))}
         </div>
