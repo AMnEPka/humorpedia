@@ -110,23 +110,18 @@ class BaseParser(ABC):
         # Удаляем все управляющие символы
         text = re.sub(r'[\x00-\x09\x0b-\x1f]', '', text)
         text = text.replace('\\r\\n', ' ').replace('\\r', ' ').replace('\\n', ' ')
-        text = text.replace('>\\<', '><')
-        
-        # Обрабатываем экранирование уровень за уровнем
-        # Четверные backslash -> placeholder для вложенных JSON
-        text = text.replace('\\\\\\"', '{{NESTED_QUOTE}}')
-        # Двойные backslash перед кавычкой -> одинарный (внутренний JSON)
-        text = text.replace('\\"', '"')
-        # Восстанавливаем вложенные кавычки как экранированные
-        text = text.replace('{{NESTED_QUOTE}}', '\\"')
-        
-        text = text.replace("\\'", "'")
-        text = text.replace('\\/', '/')
-        text = text.replace('\\<', '<').replace('\\>', '>')
         text = text.replace('\n', ' ')
         
+        # Самый внешний уровень экранирования от SQL
+        # \\" -> " (внешние кавычки JSON)
+        text = text.replace('\\"', '"')
+        
+        # \\/ -> / 
+        text = text.replace('\\/', '/')
+        
         # Удаляем невалидные escape-последовательности 
-        text = re.sub(r'\\(?!["\\/bfnrtu])', '', text)
+        # Но сохраняем \\", которые теперь стали \" внутри строк
+        text = re.sub(r'\\(?!["\\/bfnrtu\\])', '', text)
         
         return text.strip()
     
