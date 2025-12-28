@@ -1,6 +1,7 @@
 """Базовый класс для всех парсеров модулей."""
 
 from __future__ import annotations
+import json
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
