@@ -143,58 +143,61 @@ class BaseParser(ABC):
         
         normalized = BaseParser.normalize_migx_json(config_str)
         
+        # Первая попытка - прямой парсинг
         try:
             data = json.loads(normalized)
             return data if isinstance(data, list) else [data]
         except json.JSONDecodeError:
             pass
         
-        # Fallback: пробуем исправить HTML кавычки внутри значений
-        # Заменяем неэкранированные кавычки внутри значений на HTML entities
-        try:
-            # Находим все значения в кавычках и заменяем внутренние " на '
-            def fix_inner_quotes(match):
-                key = match.group(1)
-                value = match.group(2)
-                # Заменяем " внутри значения на ' (кроме начала/конца)
-                fixed = value.replace('"', "'")
-                return f'"{key}":"{fixed}"'
-            
-            # Паттерн для key:"value" пар  
-            fixed = re.sub(
-                r'"([^"]+)":"([^"]*(?:""[^"]*)*)"',
-                fix_inner_quotes,
-                normalized
-            )
-            data = json.loads(fixed)
-            return data if isinstance(data, list) else [data]
-        except Exception:
-            pass
+        # Вторая попытка - разбиваем по MIGX_id и парсим каждый объект отдельно
+        objects = []
+        # Находим все {"MIGX_id":N,...} объекты
+        parts = re.split(r'(?=\{"MIGX_id")', normalized)
         
-        # Последний fallback - извлекаем объекты регуляркой
-        try:
-            objects = []
-            # Ищем паттерны {"key":"value",...}
-            for match in re.finditer(r'\{[^{}]+\}', normalized):
-                obj_str = match.group()
+        for part in parts:
+            part = part.strip()
+            if not part or not part.startswith('{"MIGX_id"'):
+                continue
+            
+            # Убираем завершающие символы массива
+            part = part.rstrip(',]')
+            
+            # Пробуем распарсить этот объект
+            try:
+                obj = json.loads(part)
+                objects.append(obj)
+            except json.JSONDecodeError:
+                # Пробуем заменить проблемные кавычки в HTML на entities
                 try:
-                    obj = json.loads(obj_str)
+                    # Заменяем href="..." на href='...'
+                    fixed = re.sub(r'href="([^"]*)"', r"href='\1'", part)
+                    fixed = re.sub(r'src="([^"]*)"', r"src='\1'", fixed)
+                    obj = json.loads(fixed)
                     objects.append(obj)
                 except:
-                    # Пробуем почистить
-                    cleaned = re.sub(r'(?<=[,:])\"([^"]*?)\"(?=[,}])', 
-                                    lambda m: '"' + m.group(1).replace('"', "'") + '"', 
-                                    obj_str)
-                    try:
-                        obj = json.loads(cleaned)
+                    # Извлекаем хотя бы основные поля регулярками
+                    obj = {}
+                    for field in ['MIGX_id', 'MIGX_formname', 'subtitle', 'title', 'id', 'section_name']:
+                        match = re.search(rf'"{field}"\s*:\s*"([^"]*)"', part)
+                        if match:
+                            obj[field] = match.group(1)
+                        else:
+                            # Пробуем числовое значение
+                            match = re.search(rf'"{field}"\s*:\s*(\d+)', part)
+                            if match:
+                                obj[field] = int(match.group(1))
+                    
+                    # Для content/table/subtitle берём всё до следующего ключа
+                    for field in ['content', 'table', 'subtitle']:
+                        match = re.search(rf'"{field}"\s*:\s*"(.*?)(?:","[a-z_]+":|\}}$)', part, re.DOTALL)
+                        if match and field not in obj:
+                            obj[field] = match.group(1)
+                    
+                    if obj:
                         objects.append(obj)
-                    except:
-                        pass
-            return objects
-        except Exception:
-            pass
         
-        return []
+        return objects
     
     @staticmethod
     def extract_table_rows(html: str) -> list[tuple[str, str]]:
