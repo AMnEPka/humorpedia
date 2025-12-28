@@ -130,7 +130,6 @@ class BaseParser(ABC):
         """Удаляет HTML теги из текста."""
         return re.sub(r'<[^>]+>', '', html).strip()
     
-    @staticmethod
     
     @staticmethod
     def parse_migx_config(config_str: str) -> list:
@@ -158,6 +157,8 @@ class BaseParser(ABC):
                 pass
         
         return []
+    
+    @staticmethod
     def extract_table_rows(html: str) -> list[tuple[str, str]]:
         """Извлекает строки из HTML таблицы (ключ, значение)."""
         rows = re.findall(
