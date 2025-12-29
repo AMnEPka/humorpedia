@@ -61,23 +61,56 @@ class SocialLinksParser(BaseParser):
         }
     
     def _parse_social_json(self, data) -> dict:
-        """Парсит JSON с социальными ссылками."""
+        """Парсит JSON с социальными ссылками.
+        
+        Поддерживает два формата:
+        1. Массив объектов: [{"name": "website", "link": "https://..."}, ...]
+        2. Словарь: {"website": "https://...", "vk": "https://..."}
+        """
         links = {}
         
         try:
             if isinstance(data, str):
-                data = json.loads(self.normalize_html(data))
+                # Нормализуем строку (убираем экранирование)
+                normalized = self.normalize_html(data)
+                normalized = normalized.replace('\\"', '"').replace('\\/', '/')
+                data = json.loads(normalized)
             
             if isinstance(data, list):
                 for item in data:
                     if isinstance(item, dict):
+                        # Формат из MIGX: {"name": "website", "link": "https://..."}
+                        name = item.get('name', '')
                         link = item.get('link', '')
+                        
                         if link:
-                            result = self.parse_social_link(link)
-                            if result:
-                                key, url = result
-                                links[key] = url
+                            # Если есть name, используем его как ключ (если это известная соцсеть)
+                            # Иначе определяем тип по URL
+                            if name:
+                                # Нормализуем имя (lowercase, убираем пробелы)
+                                name_lower = name.lower().strip()
+                                # Если это известная соцсеть, используем стандартный ключ
+                                known_socials = {
+                                    'vk': 'vk', 'vkontakte': 'vk',
+                                    'youtube': 'youtube', 'ютуб': 'youtube',
+                                    'instagram': 'instagram', 'инстаграм': 'instagram', 'ig': 'instagram',
+                                    'telegram': 'telegram', 'телеграм': 'telegram', 'tg': 'telegram',
+                                    'twitter': 'twitter', 'твиттер': 'twitter',
+                                    'tiktok': 'tiktok', 'тикток': 'tiktok',
+                                    'website': 'website', 'сайт': 'website', 'site': 'website'
+                                }
+                                key = known_socials.get(name_lower, 'website')
+                            else:
+                                # Определяем тип по URL
+                                result = self.parse_social_link(link)
+                                if result:
+                                    key, _ = result
+                                else:
+                                    key = 'website'
+                            
+                            links[key] = link
             elif isinstance(data, dict):
+                # Формат словаря: {"website": "https://...", "vk": "https://..."}
                 for key, val in data.items():
                     if val:
                         links[key] = val

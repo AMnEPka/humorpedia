@@ -151,10 +151,10 @@ class UniversalImporter:
         content_type: str,
         collection: str,
         modules: List[ModuleConfig],
-        sql_file: str = "/app/humorbd.sql",
-        tag_map_file: str = "/app/migration/tag_mapping.json",
-        image_map_file: str = "/app/migration/image_mapping.json",
-        tv_map_file: str = "/app/migration/tv_map.json",
+        sql_file: str = None,
+        tag_map_file: str = None,
+        image_map_file: str = None,
+        tv_map_file: str = None,
     ):
         """
         Инициализация импортера.
@@ -163,17 +163,36 @@ class UniversalImporter:
             content_type: Тип контента (people, shows, teams, articles, etc.)
             collection: Название MongoDB коллекции
             modules: Список конфигураций модулей в порядке отображения
-            sql_file: Путь к SQL дампу
-            tag_map_file: Путь к маппингу тегов
-            image_map_file: Путь к маппингу изображений
-            tv_map_file: Путь к маппингу TV переменных
+            sql_file: Путь к SQL дампу (по умолчанию: humorbd.sql в директории скрипта)
+            tag_map_file: Путь к маппингу тегов (по умолчанию: tag_mapping.json в директории скрипта)
+            image_map_file: Путь к маппингу изображений (по умолчанию: image_mapping.json в директории скрипта)
+            tv_map_file: Путь к маппингу TV переменных (по умолчанию: tv_map.json в директории скрипта)
         """
+        # Определяем базовую директорию (где находится скрипт)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
         self.content_type = content_type
         self.collection = collection
         self.module_configs = modules
+        
+        # Устанавливаем пути по умолчанию относительно директории скрипта
+        if sql_file is None:
+            # Сначала пробуем в той же директории, потом в родительской
+            sql_file = os.path.join(script_dir, "humorbd.sql")
+            if not os.path.exists(sql_file):
+                sql_file = os.path.join(os.path.dirname(script_dir), "humorbd.sql")
         self.sql_file = sql_file
         
+        if tag_map_file is None:
+            tag_map_file = os.path.join(script_dir, "tag_mapping.json")
+        if image_map_file is None:
+            image_map_file = os.path.join(script_dir, "image_mapping.json")
+        if tv_map_file is None:
+            tv_map_file = os.path.join(script_dir, "tv_map.json")
+        
         # Загружаем маппинги
+        print(f"📂 Загрузка маппингов...")
+        print(f"   SQL файл: {self.sql_file}")
         self.tag_map = self._load_json(tag_map_file)
         self.image_map = self._load_json(image_map_file)
         self.tv_map = self._load_json(tv_map_file)
@@ -185,27 +204,46 @@ class UniversalImporter:
     def _load_json(self, path: str) -> dict:
         """Загружает JSON файл."""
         if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return {}
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    print(f"   ✅ {os.path.basename(path)}: {len(data)} записей")
+                    return data
+            except Exception as e:
+                print(f"   ⚠️ Ошибка загрузки {os.path.basename(path)}: {e}")
+                return {}
+        else:
+            print(f"   ⚠️ Файл не найден: {os.path.basename(path)}")
+            return {}
     
     def extract_resource(self, resource_id: int) -> Optional[dict]:
         """Извлекает данные ресурса из SQL."""
         # Используем существующую функцию парсинга SQL из import_people_from_sql
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         
-        from import_people_from_sql import _extract_for_ids
+        import import_people_from_sql
         
-        # Функция возвращает (site_content_dict, tv_values_dict)
-        site_content, tv_values = _extract_for_ids({resource_id})
+        # Временно устанавливаем правильный путь к SQL файлу
+        original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
+        import_people_from_sql.SQL_FILE = self.sql_file
         
-        if resource_id not in site_content:
-            return None
-        
-        return {
-            'sc': site_content[resource_id],
-            'tv': tv_values.get(resource_id, {})
-        }
+        try:
+            from import_people_from_sql import _extract_for_ids
+            
+            # Функция возвращает (site_content_dict, tv_values_dict)
+            site_content, tv_values = _extract_for_ids({resource_id})
+            
+            if resource_id not in site_content:
+                return None
+            
+            return {
+                'sc': site_content[resource_id],
+                'tv': tv_values.get(resource_id, {})
+            }
+        finally:
+            # Восстанавливаем оригинальный путь
+            if original_sql_file is not None:
+                import_people_from_sql.SQL_FILE = original_sql_file
     
     def build_document(
         self,
@@ -232,10 +270,16 @@ class UniversalImporter:
         
         # Конвертируем TV ID в имена
         tv_data = {}
+        unmapped_tv_count = 0
         for tv_id, val in tv_by_id.items():
             tv_name = self.tv_map.get(tv_id)
             if tv_name:
                 tv_data[tv_name] = val
+            else:
+                unmapped_tv_count += 1
+        
+        if unmapped_tv_count > 0:
+            print(f"  ⚠️ {unmapped_tv_count} TV переменных не найдено в маппинге (используется {len(tv_data)} из {len(tv_by_id)})")
         
         # Создаём контекст для парсеров
         # SiteContentRow не имеет content, используем description для HTML
@@ -283,7 +327,65 @@ class UniversalImporter:
                     }
                     modules.append(module)
                     order += 1
+            # Специальная обработка для "личной жизни" из MIGX info секции
+            elif config.type == 'text_block' and config.to_dict().get('migx_section') == 'info' and config.to_dict().get('migx_field') == 'subtitle':
+                # Парсим биографию (subtitle) и личную жизнь (content) из одной секции
+                from parsers.text import TextBlockParser
+                from parsers.base import BaseParser
+                
+                config_dict = config.to_dict()
+                bio_parser = TextBlockParser(config_dict)
+                bio_data = bio_parser.parse(ctx)
+                
+                if bio_data:
+                    # Добавляем биографию
+                    bio_module = {
+                        'id': str(uuid4()),
+                        'type': 'text_block',
+                        'order': order,
+                        'title': bio_data.get('title', 'Биография'),
+                        'visible': True,
+                        'data': bio_data
+                    }
+                    modules.append(bio_module)
+                    order += 1
+                    
+                    # Парсим "личную жизнь" из info.content (если есть и отличается от subtitle)
+                    # Логика как в старом коде: если есть и subtitle, и content, и они разные,
+                    # то content становится "личной жизнью"
+                    config_personal = ctx.tv_data.get('config', '')
+                    if config_personal:
+                        sections = BaseParser.parse_migx_config(config_personal)
+                        for sec in sections:
+                            if sec.get('MIGX_formname') == 'info':
+                                subtitle_raw = sec.get('subtitle', '') or ''
+                                content_raw = sec.get('content', '') or ''
+                                
+                                # Нормализуем как в старом коде
+                                subtitle_html = BaseParser.normalize_html(subtitle_raw)
+                                content_html = BaseParser.normalize_html(content_raw)
+                                
+                                # Если есть и subtitle, и content, и они разные - content это "личная жизнь"
+                                if subtitle_html and content_html and content_html != subtitle_html:
+                                    personal_module = {
+                                        'id': str(uuid4()),
+                                        'type': 'text_block',
+                                        'order': order,
+                                        'title': 'Личная жизнь',
+                                        'visible': True,
+                                        'data': {
+                                            'title': 'Личная жизнь',
+                                            'content': content_html
+                                        }
+                                    }
+                                    modules.append(personal_module)
+                                    order += 1
+                                break
             else:
+                # Парсим данные напрямую для извлечения в extra_fields
+                # (даже если модуль не создастся, данные могут быть нужны)
+                parsed_data = parser.parse(ctx)
+                
                 module = parser.build_module(ctx, order)
                 
                 if module:
@@ -304,6 +406,18 @@ class UniversalImporter:
                     elif config.type == 'poster_photo' and data.get('url'):
                         extra_fields['image'] = data['url']
                         extra_fields['poster'] = data['url']
+                else:
+                    # Модуль не создан, но данные могут быть нужны для extra_fields
+                    # (например, рейтинг и теги должны быть всегда)
+                    if parsed_data:
+                        if config.type == 'tags_cloud' and 'tags' in parsed_data:
+                            extra_fields['tags'] = parsed_data['tags']
+                        elif config.type == 'rating_widget' and 'rating' in parsed_data:
+                            extra_fields['rating'] = parsed_data['rating']
+                        elif config.type == 'poster_photo' and parsed_data.get('url'):
+                            extra_fields['image'] = parsed_data['url']
+                            extra_fields['poster'] = parsed_data['url']
+                    print(f"  ⚠️ Модуль {config.type} не создан (данные не найдены)")
         
         # Строим slug
         slug = sc.alias or transliterate_slug(sc.pagetitle)

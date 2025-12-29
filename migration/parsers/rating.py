@@ -16,9 +16,18 @@ class RatingParser(BaseParser):
     
     def parse(self, ctx: ParseContext) -> Optional[dict]:
         # Берём рейтинг из контекста (site_content.rating и site_content.votes)
+        avg = float(ctx.rating) if ctx.rating else 0.0
+        count = int(ctx.votes) if ctx.votes else 0
+        
+        # Нормализуем рейтинг (0-10), как в старом коде
+        if avg < 0:
+            avg = 0.0
+        if avg > 10:
+            avg = 10.0
+        
         rating = {
-            'average': round(ctx.rating, 2) if ctx.rating else 0.0,
-            'count': ctx.votes if ctx.votes else 0
+            'average': round(avg, 2),
+            'count': count
         }
         
         # Если рейтинг не найден в site_content, пробуем TV поле

@@ -40,13 +40,13 @@ class PhotoParser(BaseParser):
         if not image_url and ctx.html:
             image_url = self.find_first_image(ctx.html)
         
-        # 4. Проверяем image_map
+        # 4. Проверяем image_map (приоритет: сначала маппинг)
         if image_url and ctx.image_map:
-            # Если это ID, конвертируем в URL
+            # Если это ID или путь, конвертируем через маппинг
             if image_url in ctx.image_map:
                 image_url = ctx.image_map[image_url]
         
-        # 5. Добавляем префикс если нужно
+        # 5. Нормализуем путь (добавляем префикс если нужно)
         if image_url:
             image_url = self._normalize_image_url(image_url)
         
@@ -58,7 +58,13 @@ class PhotoParser(BaseParser):
         }
     
     def _normalize_image_url(self, url: str) -> str:
-        """Нормализует URL изображения, добавляя префикс если нужно."""
+        """Нормализует URL изображения, добавляя префикс если нужно.
+        
+        Логика как в старом коде (import_people_from_sql.py:749-750):
+        - Если путь относительный (не начинается с /), добавляем /media/imported/ + путь
+        - Если путь уже начинается с /media/imported/, оставляем как есть
+        - Путь из БД обычно уже содержит images/ (например: images/people/...)
+        """
         if not url:
             return ''
         
@@ -70,12 +76,11 @@ class PhotoParser(BaseParser):
         if url.startswith('/media/imported/'):
             return url
         
-        # Убираем начальный слеш если есть
-        url = url.lstrip('/')
+        # Если путь относительный (не начинается с /), добавляем /media/imported/ + путь
+        # Путь из БД обычно уже содержит images/ (например: images/people/...)
+        if not url.startswith('/'):
+            return f"{self.IMAGE_PREFIX}{url.lstrip('/')}"
         
-        # Если путь начинается с images/, добавляем префикс
-        if url.startswith('images/'):
-            return f"{self.IMAGE_PREFIX}{url}"
-        
-        # Иначе просто добавляем префикс
-        return f"{self.IMAGE_PREFIX}{url}"
+        # Если путь начинается с /, но не с /media/imported/, убираем начальный слеш
+        # и добавляем префикс
+        return f"{self.IMAGE_PREFIX}{url.lstrip('/')}"
