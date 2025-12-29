@@ -1,10 +1,13 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { publicApi } from '../utils/api';
 
 /**
  * Renders a single content module based on its type
  */
-export default function ModuleRenderer({ module }) {
+export default function ModuleRenderer({ module, personId }) {
   if (!module || module.visible === false) return null;
 
   const { type, data } = module;
@@ -212,6 +215,9 @@ export default function ModuleRenderer({ module }) {
     case 'divider':
       return <hr className="my-8 border-gray-200" />;
 
+    case 'humor_chronicles':
+      return <HumorChroniclesModule module={module} personId={personId} />;
+
     default:
       // For unknown module types, try to render content if available
       if (data?.content) {
@@ -227,9 +233,167 @@ export default function ModuleRenderer({ module }) {
 }
 
 /**
+ * Humor Chronicles Module - displays linked content (news, articles, shows)
+ */
+function HumorChroniclesModule({ module, personId }) {
+  const [content, setContent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!personId) {
+      setLoading(false);
+      return;
+    }
+
+    const loadContent = async () => {
+      try {
+        setLoading(true);
+        const res = await publicApi.getPersonLinkedContent(personId, 'news,article,show', 20);
+        setContent(res.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading linked content:', err);
+        setError('Не удалось загрузить контент');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [personId]);
+
+  if (loading) {
+    return (
+      <Card className="my-4">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Загрузка...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !content) {
+    return null;
+  }
+
+  const hasContent = (content.news?.length > 0) || (content.article?.length > 0) || (content.show?.length > 0);
+  if (!hasContent) {
+    return null;
+  }
+
+  const title = module.title || module.data?.title || 'Юмористические хроники';
+
+  // Format date helper
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('ru-RU', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Content item component (compact for mobile)
+  const ContentItem = ({ item, type }) => {
+    const typeLabels = {
+      news: 'Новость',
+      article: 'Статья',
+      show: 'Шоу'
+    };
+    const typeRoutes = {
+      news: '/news',
+      article: '/articles',
+      show: '/shows'
+    };
+    const slug = item.slug || item._id || item.id;
+    const url = `${typeRoutes[type]}/${slug}`;
+    const coverImage = item.cover_image?.url || item.poster?.url || item.cover_image || item.poster;
+
+    return (
+      <Link to={url} className="block">
+        <div className="flex gap-3 p-2 hover:bg-gray-50 rounded transition-colors">
+          {coverImage && (
+            <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-gray-100">
+              <img
+                src={coverImage}
+                alt={item.title || item.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <span className="text-xs text-muted-foreground uppercase">{typeLabels[type]}</span>
+              {item.published_at && (
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  {formatDate(item.published_at)}
+                </span>
+              )}
+            </div>
+            <h4 className="font-medium text-sm line-clamp-2 leading-snug">
+              {item.title || item.name}
+            </h4>
+            {item.excerpt && (
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                {item.excerpt}
+              </p>
+            )}
+          </div>
+        </div>
+      </Link>
+    );
+  };
+
+  return (
+    <Card className="my-4">
+      <CardContent className="p-4">
+        <h3 className="font-bold text-lg mb-3">{title}</h3>
+        <div className="space-y-3">
+          {content.news && content.news.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">Новости</h4>
+              <div className="space-y-1">
+                {content.news.map((item) => (
+                  <ContentItem key={item._id || item.id} item={item} type="news" />
+                ))}
+              </div>
+            </div>
+          )}
+          {content.article && content.article.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">Статьи</h4>
+              <div className="space-y-1">
+                {content.article.map((item) => (
+                  <ContentItem key={item._id || item.id} item={item} type="article" />
+                ))}
+              </div>
+            </div>
+          )}
+          {content.show && content.show.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">Шоу</h4>
+              <div className="space-y-1">
+                {content.show.map((item) => (
+                  <ContentItem key={item._id || item.id} item={item} type="show" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
  * Renders a list of modules
  */
-export function ModuleList({ modules }) {
+export function ModuleList({ modules, personId }) {
   if (!modules || modules.length === 0) return null;
 
   const sortedModules = [...modules]
@@ -239,7 +403,7 @@ export function ModuleList({ modules }) {
   return (
     <div className="space-y-6">
       {sortedModules.map((module, idx) => (
-        <ModuleRenderer key={module.id || idx} module={module} />
+        <ModuleRenderer key={module.id || idx} module={module} personId={personId} />
       ))}
     </div>
   );

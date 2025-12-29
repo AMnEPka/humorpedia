@@ -12,13 +12,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
+import PersonSelector from '../components/PersonSelector';
 
 const emptyShow = {
   title: '', slug: '', name: '', status: 'draft',
   poster: null, description: '',
   facts: {},  // Произвольные факты key-value
   social_links: {},  // Социальные ссылки
-  modules: [], tags: [],
+  modules: [], tags: [], related_person_ids: [],
   seo: { meta_title: '', meta_description: '' }
 };
 
@@ -139,6 +140,12 @@ export default function ShowEditPage() {
               <CardHeader><CardTitle>Теги</CardTitle></CardHeader>
               <CardContent>
                 <TagSelector value={show.tags} onChange={(tags) => setShow(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Связанные люди</CardTitle></CardHeader>
+              <CardContent>
+                <PersonSelector value={show.related_person_ids || []} onChange={(ids) => setShow(p => ({ ...p, related_person_ids: ids }))} placeholder="Выберите людей..." />
               </CardContent>
             </Card>
           </div>

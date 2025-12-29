@@ -40,6 +40,9 @@ class ModuleType(str, Enum):
     # Quiz modules
     QUIZ_QUESTIONS = "quiz_questions" # Quiz questions
     QUIZ_RESULTS = "quiz_results"     # Quiz results
+    
+    # Person-specific modules
+    HUMOR_CHRONICLES = "humor_chronicles"  # Related content (news, articles, shows)
 
 
 # --- Module Data Schemas ---
@@ -242,6 +245,13 @@ class QuizResult(BaseModel):
 class QuizResultsData(BaseModel):
     """Data for quiz_results module"""
     results: List[QuizResult] = Field(default_factory=list)
+
+
+class HumorChroniclesData(BaseModel):
+    """Data for humor_chronicles module (dynamic, can be empty)"""
+    # Data is fetched dynamically from API, so this can be empty
+    # The module will request data from /api/people/{id}/linked-content
+    pass
 
 
 # --- Main Module Model ---

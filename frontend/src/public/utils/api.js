@@ -22,6 +22,7 @@ export const publicApi = {
   // People
   getPeople: (params) => api.get('/content/people', { params }),
   getPerson: (slug) => api.get(`/content/people/${slug}`),
+  getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
   
   // Teams
   getTeams: (params) => api.get('/content/teams', { params }),

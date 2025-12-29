@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Save, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 import TagSelector from '../components/TagSelector';
+import PersonSelector from '../components/PersonSelector';
 import ModuleEditor from '../components/ModuleEditor';
 
 const emptyNews = {
@@ -23,6 +24,7 @@ const emptyNews = {
   important: false,
   modules: [],
   tags: [],
+  related_person_ids: [],
   seo: { meta_title: '', meta_description: '' }
 };
 
@@ -185,6 +187,19 @@ export default function NewsEditPage() {
                   value={news.tags}
                   onChange={(tags) => setNews(p => ({ ...p, tags }))}
                   placeholder="Выберите или добавьте тег..."
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Связанные люди</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PersonSelector
+                  value={news.related_person_ids || []}
+                  onChange={(ids) => setNews(p => ({ ...p, related_person_ids: ids }))}
+                  placeholder="Выберите людей..."
                 />
               </CardContent>
             </Card>

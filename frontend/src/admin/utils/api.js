@@ -61,6 +61,8 @@ export const contentApi = {
   // People
   listPeople: (params) => api.get('/content/people', { params }),
   getPerson: (id) => api.get(`/content/people/${id}`),
+  searchPeople: (q, limit = 10) => api.get('/content/people/search', { params: { q, limit } }),
+  getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
   createPerson: (data) => api.post('/content/people', data),
   updatePerson: (id, data) => api.put(`/content/people/${id}`, data),
   deletePerson: (id) => api.delete(`/content/people/${id}`),

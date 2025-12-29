@@ -15,6 +15,7 @@ from models.content import (
 )
 from utils.database import get_db
 from services.tags import tag_service
+from services.linking import linking_service
 
 router = APIRouter(prefix="/content", tags=["content"])
 
@@ -177,6 +178,45 @@ async def list_people(
     return await list_content("people", skip, limit, query, "title", 1)
 
 
+@router.get("/people/search", response_model=list)
+async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10, ge=1, le=50)):
+    """Search people by name for editor assistance"""
+    db = await get_db()
+    query = {
+        "$or": [
+            {"full_name": {"$regex": q, "$options": "i"}},
+            {"title": {"$regex": q, "$options": "i"}}
+        ]
+    }
+    cursor = db.people.find(query, {"_id": 1, "full_name": 1, "title": 1, "slug": 1}).limit(limit)
+    people = await cursor.to_list(limit)
+    return [{"id": p["_id"], "name": p.get("full_name") or p.get("title", ""), "slug": p.get("slug")} for p in people]
+
+
+@router.get("/people/{id_or_slug}/linked-content", response_model=dict)
+async def get_person_linked_content(
+    id_or_slug: str,
+    types: Optional[str] = Query(None, description="Comma-separated content types: news,article,show"),
+    limit: int = Query(20, ge=1, le=100)
+):
+    """Get content linked to a person (for humor_chronicles module)"""
+    db = await get_db()
+    
+    # Find person by ID or slug
+    person = await db.people.find_one({
+        "$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]
+    })
+    
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+    
+    person_id = person["_id"]
+    content_types = types.split(",") if types else None
+    
+    result = await linking_service.get_linked_content(person_id, content_types, limit)
+    return result
+
+
 @router.get("/people/{id_or_slug}", response_model=dict)
 async def get_person(id_or_slug: str):
     """Get person by ID or slug"""
@@ -254,9 +294,16 @@ async def create_show(data: ShowCreate):
     show = Show(
         title=data.title, slug=data.slug, name=data.name, poster=data.poster,
         facts=data.facts or {}, description=data.description,
-        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
+        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
+        related_person_ids=data.related_person_ids or []
     )
-    return await create_content("shows", show, data.tags)
+    result = await create_content("shows", show, data.tags)
+    
+    # Update person links
+    if data.related_person_ids:
+        await linking_service.update_person_links("show", result["id"], data.related_person_ids)
+    
+    return result
 
 
 @router.get("/shows", response_model=dict)
@@ -355,7 +402,13 @@ async def get_shows_hierarchy(
 @router.put("/shows/{id}", response_model=dict)
 async def update_show(id: str, data: ShowUpdate):
     """Update show"""
-    return await update_content("shows", id, data, "Show not found")
+    result = await update_content("shows", id, data, "Show not found")
+    
+    # Update person links if related_person_ids changed
+    if data.related_person_ids is not None:
+        await linking_service.update_person_links("show", id, data.related_person_ids)
+    
+    return result
 
 
 @router.delete("/shows/{id}")
@@ -374,7 +427,7 @@ async def create_article(data: ArticleCreate):
     article = Article(
         title=data.title, slug=data.slug, excerpt=data.excerpt, cover_image=data.cover_image,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
-        featured=data.featured
+        featured=data.featured, related_person_ids=data.related_person_ids or []
     )
     
     doc = article.model_dump(by_alias=True)
@@ -389,6 +442,11 @@ async def create_article(data: ArticleCreate):
     
     db = await get_db()
     await db.articles.insert_one(doc)
+    
+    # Update person links
+    if data.related_person_ids:
+        await linking_service.update_person_links("article", doc["_id"], data.related_person_ids)
+    
     return {"id": doc["_id"], "slug": doc["slug"]}
 
 
@@ -435,6 +493,10 @@ async def update_article(id: str, data: ArticleUpdate):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Article not found")
     
+    # Update person links if related_person_ids changed
+    if data.related_person_ids is not None:
+        await linking_service.update_person_links("article", id, data.related_person_ids)
+    
     return {"id": id, "updated": True}
 
 
@@ -454,7 +516,8 @@ async def create_news(data: NewsCreate):
     news = News(
         title=data.title, slug=data.slug, excerpt=data.excerpt,
         cover_image=data.cover_image, content=data.content, important=data.important,
-        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
+        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
+        related_person_ids=data.related_person_ids or []
     )
     
     doc = news.model_dump(by_alias=True)
@@ -469,6 +532,11 @@ async def create_news(data: NewsCreate):
     
     db = await get_db()
     await db.news.insert_one(doc)
+    
+    # Update person links
+    if data.related_person_ids:
+        await linking_service.update_person_links("news", doc["_id"], data.related_person_ids)
+    
     return {"id": doc["_id"], "slug": doc["slug"]}
 
 
@@ -494,7 +562,13 @@ async def get_news_item(id_or_slug: str):
 @router.put("/news/{id}", response_model=dict)
 async def update_news(id: str, data: NewsUpdate):
     """Update news"""
-    return await update_content("news", id, data, "News not found")
+    result = await update_content("news", id, data, "News not found")
+    
+    # Update person links if related_person_ids changed
+    if data.related_person_ids is not None:
+        await linking_service.update_person_links("news", id, data.related_person_ids)
+    
+    return result
 
 
 @router.delete("/news/{id}")

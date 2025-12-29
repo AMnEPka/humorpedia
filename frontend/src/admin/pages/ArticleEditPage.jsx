@@ -13,8 +13,9 @@ import { Switch } from '@/components/ui/switch';
 import { Save, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
+import PersonSelector from '../components/PersonSelector';
 
-const emptyArticle = { title: '', slug: '', status: 'draft', excerpt: '', cover_image: null, author_name: '', featured: false, modules: [], tags: [], seo: { meta_title: '', meta_description: '' } };
+const emptyArticle = { title: '', slug: '', status: 'draft', excerpt: '', cover_image: null, author_name: '', featured: false, modules: [], tags: [], related_person_ids: [], seo: { meta_title: '', meta_description: '' } };
 
 export default function ArticleEditPage() {
   const { id } = useParams();
@@ -76,6 +77,9 @@ export default function ArticleEditPage() {
             </CardContent></Card>
             <Card><CardHeader><CardTitle>Теги</CardTitle></CardHeader><CardContent>
               <TagSelector value={article.tags} onChange={(tags) => setArticle(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." />
+            </CardContent></Card>
+            <Card><CardHeader><CardTitle>Связанные люди</CardTitle></CardHeader><CardContent>
+              <PersonSelector value={article.related_person_ids || []} onChange={(ids) => setArticle(p => ({ ...p, related_person_ids: ids }))} placeholder="Выберите людей..." />
             </CardContent></Card>
           </div>
         </TabsContent>

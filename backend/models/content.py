@@ -161,6 +161,7 @@ class Show(BaseContent):
     team_ids: List[str] = Field(default_factory=list)  # Teams in this show
     article_ids: List[str] = Field(default_factory=list)
     related_show_ids: List[str] = Field(default_factory=list)
+    related_person_ids: List[str] = Field(default_factory=list)  # Related people
 
 
 class ShowCreate(BaseModel):
@@ -176,6 +177,7 @@ class ShowCreate(BaseModel):
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
+    related_person_ids: Optional[List[str]] = None
 
 
 class ShowUpdate(BaseModel):
@@ -193,6 +195,7 @@ class ShowUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     participant_ids: Optional[List[str]] = None
     team_ids: Optional[List[str]] = None
+    related_person_ids: Optional[List[str]] = None
 
 
 # === ARTICLE ===
@@ -229,6 +232,7 @@ class ArticleCreate(BaseModel):
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
+    related_person_ids: Optional[List[str]] = None
 
 
 class ArticleUpdate(BaseModel):
@@ -278,6 +282,7 @@ class NewsCreate(BaseModel):
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
+    related_person_ids: Optional[List[str]] = None
 
 
 class NewsUpdate(BaseModel):
