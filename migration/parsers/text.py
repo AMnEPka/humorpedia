@@ -58,13 +58,34 @@ class TextBlockParser(BaseParser):
                 for sec in sections:
                     form = sec.get('MIGX_formname', '')
                     if form not in skip_types:
-                        text = sec.get('content', '') or sec.get('subtitle', '')
-                        title = sec.get('title', '')
-                        if text:
-                            if title:
-                                contents.append(f'<h3>{title}</h3>{text}')
-                            else:
-                                contents.append(text)
+                        # Для text секций
+                        if form == 'text':
+                            text = sec.get('content', '') or sec.get('subtitle', '')
+                            title = sec.get('title', '')
+                            if text:
+                                if title:
+                                    contents.append(f'<h3>{title}</h3>{text}')
+                                else:
+                                    contents.append(text)
+                        # Для table секций (таблицы)
+                        elif form == 'table':
+                            table_content = sec.get('content', '')
+                            if table_content:
+                                contents.append(table_content)
+                        # Для quote секций (цитаты)
+                        elif form == 'quote':
+                            quote_text = sec.get('content', '') or sec.get('text', '')
+                            if quote_text:
+                                contents.append(f'<blockquote>{quote_text}</blockquote>')
+                        # Для остальных секций
+                        else:
+                            text = sec.get('content', '') or sec.get('subtitle', '')
+                            title = sec.get('title', '')
+                            if text:
+                                if title:
+                                    contents.append(f'<h3>{title}</h3>{text}')
+                                else:
+                                    contents.append(text)
                 content = ''.join(contents)
         
         # 4. Ищем в HTML по селектору

@@ -54,6 +54,8 @@ from parsers import (
     TeamMembersParser,
     GalleryParser,
     RatingParser,
+    QuizParser,
+    QuizResultsParser,
 )
 
 # Маппинг типов модулей на парсеры
@@ -67,6 +69,8 @@ PARSER_MAP: Dict[str, Type[BaseParser]] = {
     'team_members': TeamMembersParser,
     'image_gallery': GalleryParser,
     'rating_widget': RatingParser,
+    'quiz_questions': QuizParser,
+    'quiz_results': QuizResultsParser,
 }
 
 
@@ -240,6 +244,75 @@ class UniversalImporter:
                 'sc': site_content[resource_id],
                 'tv': tv_values.get(resource_id, {})
             }
+        finally:
+            # Восстанавливаем оригинальный путь
+            if original_sql_file is not None:
+                import_people_from_sql.SQL_FILE = original_sql_file
+    
+    def get_resource_ids_by_parent(self, parent_id: int) -> List[int]:
+        """Получает список всех ID ресурсов с указанным parent_id из SQL.
+        
+        Args:
+            parent_id: ID родительского ресурса в MODX
+            
+        Returns:
+            Список ID дочерних ресурсов
+        """
+        resource_ids = []
+        
+        # Используем функции из import_people_from_sql
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import import_people_from_sql
+        
+        # Временно устанавливаем правильный путь к SQL файлу
+        original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
+        import_people_from_sql.SQL_FILE = self.sql_file
+        
+        try:
+            from import_people_from_sql import _split_rows, _split_fields, _unescape_sql_string
+            
+            in_sc = False
+            buf = []
+            
+            with open(self.sql_file, 'r', encoding='utf-8', errors='replace') as f:
+                for line in f:
+                    if not in_sc:
+                        if line.startswith('INSERT INTO `modx_site_content`'):
+                            in_sc = True
+                            buf = [line]
+                        continue
+                    
+                    buf.append(line)
+                    if not line.strip().endswith(';'):
+                        continue
+                    
+                    blob = ''.join(buf)
+                    in_sc = False
+                    buf = []
+                    
+                    m = re.search(r'VALUES\s*(.*);\s*$', blob, flags=re.DOTALL)
+                    if not m:
+                        continue
+                    
+                    rows = _split_rows(m.group(1))
+                    for r in rows:
+                        parts = _split_fields(r)
+                        if not parts or parts[0] is None:
+                            continue
+                        
+                        if len(parts) <= 12:
+                            continue
+                        
+                        try:
+                            rid = int(str(parts[0]).strip())
+                            parent = int(str(parts[12]).strip()) if parts[12] else 0
+                            
+                            if parent == parent_id:
+                                resource_ids.append(rid)
+                        except:
+                            continue
+            
+            return sorted(resource_ids)
         finally:
             # Восстанавливаем оригинальный путь
             if original_sql_file is not None:
@@ -455,6 +528,70 @@ class UniversalImporter:
         
         return doc
     
+    def import_by_parent(
+        self,
+        parent_id: int,
+        apply: bool = False,
+        batch_size: int = 25,
+    ) -> List[dict]:
+        """
+        Импортирует все ресурсы с указанным parent_id пакетами.
+        
+        Args:
+            parent_id: ID родительского ресурса в MODX
+            apply: Если True - записывает в MongoDB
+            batch_size: Размер пакета для обработки (по умолчанию 25)
+            
+        Returns:
+            Список импортированных документов
+        """
+        print(f"\n🔍 Поиск ресурсов с parent_id={parent_id}...")
+        resource_ids = self.get_resource_ids_by_parent(parent_id)
+        
+        if not resource_ids:
+            print(f"  ❌ Ресурсы с parent_id={parent_id} не найдены")
+            return []
+        
+        total = len(resource_ids)
+        print(f"  ✅ Найдено {total} ресурсов")
+        
+        if not apply:
+            print(f"  🔍 Dry-run: ресурсы не будут сохранены")
+            print(f"     Используйте --apply для записи в БД")
+        
+        imported = []
+        batches = [resource_ids[i:i + batch_size] for i in range(0, total, batch_size)]
+        
+        for batch_idx, batch in enumerate(batches, 1):
+            print(f"\n{'='*60}")
+            print(f"📦 Пакет {batch_idx}/{len(batches)} ({len(batch)} ресурсов)")
+            print(f"{'='*60}")
+            
+            for idx, resource_id in enumerate(batch, 1):
+                print(f"\n[{batch_idx}/{len(batches)}] [{idx}/{len(batch)}] ", end="")
+                # Временно подавляем вывод для пакетной обработки (можно включить через verbose)
+                doc = self.import_resource(
+                    resource_id,
+                    apply=apply,
+                    parent_id=None,
+                    parent_path=None,
+                    level=0
+                )
+                if doc:
+                    imported.append(doc)
+                    print(f"✅ Импортирован: {doc.get('title', '')[:50]}")
+                else:
+                    print(f"❌ Не удалось импортировать ID={resource_id}")
+            
+            if batch_idx < len(batches):
+                print(f"\n⏸️  Пакет {batch_idx} завершён. Следующий пакет...")
+        
+        print(f"\n{'='*60}")
+        print(f"✅ Импорт завершён: {len(imported)}/{total} ресурсов импортировано")
+        print(f"{'='*60}")
+        
+        return imported
+    
     def import_resource(
         self,
         resource_id: int,
@@ -645,6 +782,59 @@ def create_team_importer() -> UniversalImporter:
     )
 
 
+def create_news_importer() -> UniversalImporter:
+    """Создаёт импортер для новостей (parent=14).
+    
+    Новости импортируются одним текстовым блоком (все секции объединяются),
+    с опциональным фото и тегами.
+    """
+    return UniversalImporter(
+        content_type='news',
+        collection='news',
+        modules=[
+            ModuleConfig('poster_photo'),  # Опциональное фото новости
+            ModuleConfig('tags_cloud', style='badges'),
+            ModuleConfig('text_block', title='', all_sections=True),  # Все секции в один блок
+        ]
+    )
+
+
+def create_article_importer() -> UniversalImporter:
+    """Создаёт импортер для статей (parent=29).
+    
+    Статьи импортируются текстовыми блоками с поддержкой оглавления.
+    Если есть заголовки у блоков, автоматически создаётся оглавление.
+    Обязательное фото "шапки" и теги.
+    """
+    return UniversalImporter(
+        content_type='article',
+        collection='articles',
+        modules=[
+            ModuleConfig('poster_photo'),  # Обязательное фото "шапки"
+            ModuleConfig('tags_cloud', style='badges'),
+            ModuleConfig('text_block', all_text_sections=True),  # Все text секции как отдельные модули (для оглавления)
+        ]
+    )
+
+
+def create_quiz_importer() -> UniversalImporter:
+    """Создаёт импортер для квизов (parent=31).
+    
+    Квизы содержат вопросы с вариантами ответов, результаты,
+    изображение страницы запуска и теги.
+    """
+    return UniversalImporter(
+        content_type='quiz',
+        collection='quizzes',
+        modules=[
+            ModuleConfig('poster_photo'),  # Изображение страницы запуска
+            ModuleConfig('tags_cloud', style='badges'),
+            ModuleConfig('quiz_questions', tv_field='quiz_questions'),  # Вопросы квиза
+            ModuleConfig('quiz_results', tv_field='quiz_final'),  # Результаты квиза
+        ]
+    )
+
+
 # ============================================================================
 # CLI
 # ============================================================================
@@ -670,14 +860,27 @@ if __name__ == '__main__':
 
   # Импорт в произвольную коллекцию
   python universal_importer.py --type show --collection articles --ids 500 --apply
+
+  # Импорт всех новостей (parent=14) пакетами по 25 штук
+  python universal_importer.py --type news --parent-id 14 --batch-size 25 --apply
+
+  # Импорт всех статей (parent=29) пакетами по 10 штук
+  python universal_importer.py --type article --parent-id 29 --batch-size 10 --apply
+
+  # Импорт всех квизов (parent=31) пакетами по 25 штук
+  python universal_importer.py --type quiz --parent-id 31 --apply
         """
     )
-    parser.add_argument('--type', choices=['show', 'person', 'team'], required=True,
+    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz'], required=True,
                         help='Тип шаблона для импорта (определяет набор модулей)')
     parser.add_argument('--collection', type=str, default=None,
                         help='Коллекция MongoDB (по умолчанию: shows/people/teams)')
-    parser.add_argument('--ids', type=str, required=True,
-                        help='ID ресурсов MODX через запятую')
+    parser.add_argument('--ids', type=str, default=None,
+                        help='ID ресурсов MODX через запятую (взаимоисключающе с --parent-id)')
+    parser.add_argument('--parent-id', type=int, default=None,
+                        help='ID родительского ресурса в MODX для импорта всех дочерних ресурсов (взаимоисключающе с --ids)')
+    parser.add_argument('--batch-size', type=int, default=25,
+                        help='Размер пакета для пакетной обработки при использовании --parent-id (по умолчанию: 25)')
     parser.add_argument('--parent-slug', type=str, default=None,
                         help='Slug родительской страницы для иерархии')
     parser.add_argument('--parent-old-id', type=int, default=None,
@@ -689,6 +892,13 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
+    # Проверяем, что указан либо --ids, либо --parent-id
+    if not args.ids and not args.parent_id:
+        parser.error("Необходимо указать либо --ids, либо --parent-id")
+    
+    if args.ids and args.parent_id:
+        parser.error("Нельзя использовать --ids и --parent-id одновременно")
+    
     # Создаём импортер
     if args.type == 'show':
         importer = create_show_importer()
@@ -696,13 +906,19 @@ if __name__ == '__main__':
         importer = create_person_importer()
     elif args.type == 'team':
         importer = create_team_importer()
+    elif args.type == 'news':
+        importer = create_news_importer()
+    elif args.type == 'article':
+        importer = create_article_importer()
+    elif args.type == 'quiz':
+        importer = create_quiz_importer()
     
     # Переопределяем коллекцию если указана
     if args.collection:
         importer.collection = args.collection
         print(f"📁 Используется коллекция: {args.collection}")
     
-    # Определяем родителя если указан
+    # Определяем родителя если указан (для иерархии в MongoDB)
     parent_id = None
     parent_path = None
     parent_level = 0
@@ -730,17 +946,28 @@ if __name__ == '__main__':
         client.close()
     
     # Импортируем
-    ids = [int(x.strip()) for x in args.ids.split(',')]
-    
-    for rid in ids:
-        doc = importer.import_resource(
-            rid, 
+    if args.parent_id:
+        # Импорт всех ресурсов с указанным parent_id
+        imported = importer.import_by_parent(
+            parent_id=args.parent_id,
             apply=args.apply,
-            parent_id=parent_id,
-            parent_path=parent_path,
-            level=parent_level + 1 if parent_id else 0
+            batch_size=args.batch_size
         )
-        if doc and args.verbose:
-            importer.print_document(doc, verbose=True)
+        
+        if args.verbose:
+            for doc in imported:
+                importer.print_document(doc, verbose=True)
     else:
-        print("Укажите --ids для импорта")
+        # Импорт конкретных ID
+        ids = [int(x.strip()) for x in args.ids.split(',')]
+        
+        for rid in ids:
+            doc = importer.import_resource(
+                rid, 
+                apply=args.apply,
+                parent_id=parent_id,
+                parent_path=parent_path,
+                level=parent_level + 1 if parent_id else 0
+            )
+            if doc and args.verbose:
+                importer.print_document(doc, verbose=True)

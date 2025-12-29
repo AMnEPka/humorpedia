@@ -10,6 +10,7 @@ from .timeline import TimelineParser
 from .members import TeamMembersParser
 from .gallery import GalleryParser
 from .rating import RatingParser
+from .quiz import QuizParser, QuizResultsParser
 
 __all__ = [
     'BaseParser',
@@ -23,4 +24,6 @@ __all__ = [
     'TeamMembersParser',
     'GalleryParser',
     'RatingParser',
+    'QuizParser',
+    'QuizResultsParser',
 ]

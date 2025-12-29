@@ -53,6 +53,15 @@ python universal_importer.py --type person --ids 350 --apply
 
 # Импорт нескольких команд
 python universal_importer.py --type team --ids 100,101,102 --apply
+
+# Импорт всех новостей (parent=14) пакетами по 25 штук
+python universal_importer.py --type news --parent-id 14 --batch-size 25 --apply
+
+# Импорт всех статей (parent=29) пакетами по 10 штук
+python universal_importer.py --type article --parent-id 29 --batch-size 10 --apply
+
+# Импорт всех квизов (parent=31) пакетами по 25 штук (по умолчанию)
+python universal_importer.py --type quiz --parent-id 31 --apply
 ```
 
 ### Иерархический импорт (дочерние страницы)
@@ -177,3 +186,66 @@ news_importer = UniversalImporter(
     ]
 )
 ```
+
+## Готовые импортеры
+
+### Новости (parent=14)
+
+Импортер для новостей объединяет все секции (текст, таблицы, цитаты) в один текстовый блок.
+Опциональное фото и теги.
+
+```bash
+# Импорт одной новости
+python universal_importer.py --type news --ids 1234 --apply
+
+# Импорт всех новостей (parent=14) пакетами
+python universal_importer.py --type news --parent-id 14 --batch-size 25 --apply
+```
+
+### Статьи (parent=29)
+
+Импортер для статей создаёт отдельные текстовые блоки для каждой секции, что позволяет
+автоматически создать оглавление. Обязательное фото "шапки" и теги.
+
+```bash
+# Импорт одной статьи
+python universal_importer.py --type article --ids 5678 --apply
+
+# Импорт всех статей (parent=29) пакетами
+python universal_importer.py --type article --parent-id 29 --batch-size 10 --apply
+```
+
+### Квизы (parent=31)
+
+Импортер для квизов включает вопросы с вариантами ответов, результаты, изображение
+страницы запуска и теги.
+
+```bash
+# Импорт одного квиза
+python universal_importer.py --type quiz --ids 9012 --apply
+
+# Импорт всех квизов (parent=31) пакетами
+python universal_importer.py --type quiz --parent-id 31 --apply
+```
+
+## Импорт по parent_id
+
+Вместо указания конкретных ID можно импортировать все ресурсы с определённым `parent_id`:
+
+```bash
+# Импорт всех новостей (parent=14) пакетами по 25 штук
+python universal_importer.py --type news --parent-id 14 --batch-size 25 --apply
+
+# Импорт всех статей (parent=29) пакетами по 10 штук
+python universal_importer.py --type article --parent-id 29 --batch-size 10 --apply
+```
+
+**Параметры:**
+- `--parent-id` - ID родительского ресурса в MODX (например, 14 для новостей, 29 для статей, 31 для квизов)
+- `--batch-size` - размер пакета для обработки (по умолчанию: 25)
+
+**Преимущества пакетной обработки:**
+- Можно обработать все ресурсы одной командой
+- Прогресс отображается по пакетам
+- Можно контролировать размер пакета для оптимизации производительности
+- При ошибке в одном ресурсе остальные продолжают обрабатываться
