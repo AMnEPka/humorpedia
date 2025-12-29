@@ -1,35 +1,5 @@
 [
   {
-    "id": 102,
-    "title": "КВНщик(ца)",
-    "full_name": "КВНщик(ца)",
-    "slug": "kvn-people",
-    "parent": 30,
-    "published": false,
-    "status": "ignored",
-    "image": null
-  },
-  {
-    "id": 107,
-    "title": "Лига Городов",
-    "full_name": "Лига Городов",
-    "slug": "liga-gorodov-people",
-    "parent": 30,
-    "published": false,
-    "status": "ignored",
-    "image": null
-  },
-  {
-    "id": 108,
-    "title": "КВНщик(ца)",
-    "full_name": "КВНщик(ца)",
-    "slug": "kvn-vyisshaya-liga-2024",
-    "parent": 30,
-    "published": false,
-    "status": "ignored",
-    "image": null
-  },
-  {
     "id": 109,
     "title": "Дроботенко Сергей",
     "full_name": "Сергей Дроботенко",
