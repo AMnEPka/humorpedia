@@ -27,6 +27,7 @@ class Person(BaseContent):
     photo: Optional[MediaFile] = None
     bio: PersonBio = Field(default_factory=PersonBio)
     social_links: SocialLinks = Field(default_factory=SocialLinks)
+    facts: Dict[str, str] = Field(default_factory=dict)  # Facts for facts_table module
     
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
@@ -59,6 +60,7 @@ class PersonUpdate(BaseModel):
     photo: Optional[MediaFile] = None
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
+    facts: Optional[Dict[str, str]] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None
@@ -170,7 +172,7 @@ class ShowCreate(BaseModel):
     slug: str
     name: str
     poster: Optional[MediaFile] = None
-    facts: Optional[ShowFacts] = None
+    facts: Optional[Dict[str, Any]] = None  # Accept dict, will be converted to ShowFacts in endpoint
     description: Optional[str] = None
     parent_id: Optional[str] = None  # For child shows
     modules: List[PageModule] = Field(default_factory=list)
@@ -186,7 +188,7 @@ class ShowUpdate(BaseModel):
     slug: Optional[str] = None
     name: Optional[str] = None
     poster: Optional[MediaFile] = None
-    facts: Optional[ShowFacts] = None
+    facts: Optional[Dict[str, Any]] = None  # Accept dict, will be converted to ShowFacts in endpoint
     description: Optional[str] = None
     parent_id: Optional[str] = None  # For child shows
     modules: Optional[List[PageModule]] = None

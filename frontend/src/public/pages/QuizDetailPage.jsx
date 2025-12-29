@@ -90,7 +90,7 @@ export default function QuizDetailPage() {
     }
   };
 
-  const calculateScoreWithAnswers = (finalAns) => {
+  const calculateScoreWithAnswers = useCallback((finalAns) => {
     let correct = 0;
     
     questions.forEach((q, idx) => {
@@ -119,11 +119,11 @@ export default function QuizDetailPage() {
     setFinalAnswers(finalAns);
     setScore(correct);
     setShowResult(true);
-  };
+  }, [questions]);
 
   const calculateScore = useCallback(() => {
     calculateScoreWithAnswers(answers);
-  }, [questions, answers]);
+  }, [answers, calculateScoreWithAnswers]);
 
   const getResultForScore = () => {
     const percentage = (score / questions.length) * 100;

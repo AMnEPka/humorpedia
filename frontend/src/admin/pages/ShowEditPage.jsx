@@ -37,17 +37,57 @@ export default function ShowEditPage() {
   const [newFactKey, setNewFactKey] = useState('');
   const [newFactValue, setNewFactValue] = useState('');
 
+  // Функция для получения случайного паттерна
+  const getRandomPattern = () => {
+    const patterns = [
+      '/media/imported/images/pattern-1.jpeg',
+      '/media/imported/images/pattern-2.jpeg',
+      '/media/imported/images/pattern-3.jpeg'
+    ];
+    const randomIndex = Math.floor(Math.random() * patterns.length);
+    return {
+      url: patterns[randomIndex],
+      alt: '',
+      caption: '',
+      thumbnail: patterns[randomIndex]
+    };
+  };
+
   useEffect(() => {
     if (!isNew) {
       contentApi.getShow(id).then(res => {
+        // Преобразуем poster из строки в объект MediaFile, если нужно
+        let poster = res.data.poster;
+        if (poster) {
+          if (typeof poster === 'string') {
+            poster = {
+              url: poster,
+              alt: '',
+              caption: '',
+              thumbnail: poster
+            };
+          }
+          // Если poster уже объект, оставляем как есть
+        } else {
+          // Если постера нет, устанавливаем случайный паттерн
+          poster = getRandomPattern();
+        }
+        
         setShow({ 
           ...emptyShow, 
           ...res.data, 
+          poster: poster,
           facts: res.data.facts || {},
           social_links: res.data.social_links || {},
           seo: { ...emptyShow.seo, ...res.data.seo } 
         });
       }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
+    } else {
+      // Для новой страницы устанавливаем случайный паттерн
+      setShow({
+        ...emptyShow,
+        poster: getRandomPattern()
+      });
     }
   }, [id, isNew]);
 
@@ -56,15 +96,58 @@ export default function ShowEditPage() {
   const handleSave = async () => {
     setError(''); setSuccess(''); setSaving(true);
     try {
+      // Prepare data for API - only send fields that are set and valid
+      const dataToSend = {};
+      
+      // Always send these fields if they exist (even if empty for updates)
+      if (show.title !== undefined) dataToSend.title = show.title;
+      if (show.slug !== undefined) dataToSend.slug = show.slug;
+      if (show.name !== undefined) dataToSend.name = show.name || ''; // Allow empty name
+      // Handle poster - convert string to MediaFile object if needed
+      if (show.poster) {
+        if (typeof show.poster === 'string') {
+          // Convert string URL to MediaFile object
+          dataToSend.poster = {
+            url: show.poster,
+            alt: '',
+            caption: '',
+            thumbnail: show.poster
+          };
+        } else if (show.poster.url) {
+          // Already a MediaFile object
+          dataToSend.poster = show.poster;
+        }
+      } else if (show.poster === null) {
+        // Explicitly set to null to clear poster
+        dataToSend.poster = null;
+      }
+      if (show.facts && Object.keys(show.facts).length > 0) dataToSend.facts = show.facts;
+      if (show.description) dataToSend.description = show.description;
+      if (show.parent_id) dataToSend.parent_id = show.parent_id;
+      if (show.modules) dataToSend.modules = show.modules;
+      if (show.tags) dataToSend.tags = show.tags;
+      if (show.seo) dataToSend.seo = show.seo;
+      if (show.status) dataToSend.status = show.status;
+      if (show.participant_ids) dataToSend.participant_ids = show.participant_ids;
+      if (show.team_ids) dataToSend.team_ids = show.team_ids;
+      // Always send related_person_ids, even if empty array
+      if (show.related_person_ids !== undefined) {
+        dataToSend.related_person_ids = Array.isArray(show.related_person_ids) ? show.related_person_ids : [];
+      }
+      
+      console.log('Sending data:', JSON.stringify(dataToSend, null, 2));
+      
       if (isNew) {
-        const res = await contentApi.createShow(show);
+        const res = await contentApi.createShow(dataToSend);
         setSuccess('Создано!');
         navigate(`/admin/shows/${res.data.id}`, { replace: true });
       } else {
-        await contentApi.updateShow(id, show);
+        await contentApi.updateShow(id, dataToSend);
         setSuccess('Сохранено!');
       }
     } catch (err) {
+      console.error('Save error:', err);
+      console.error('Error response:', err.response?.data);
       setError(getErrorMessage(err, 'Ошибка сохранения'));
     } finally {
       setSaving(false);

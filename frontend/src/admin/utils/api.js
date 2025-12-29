@@ -152,6 +152,7 @@ export const commentsApi = {
 export const mediaApi = {
   list: (params) => api.get('/media', { params }),
   get: (id) => api.get(`/media/${id}`),
+  browse: (params) => api.get('/media/browse', { params }),
   upload: (file, metadata) => {
     const formData = new FormData();
     formData.append('file', file);

@@ -34,6 +34,7 @@ const emptyPerson = {
     occupation: [],
     achievements: []
   },
+  facts: {},  // Facts for facts_table module
   social_links: {
     vk: '',
     telegram: '',
@@ -62,16 +63,68 @@ export default function PersonEditPage() {
   const [success, setSuccess] = useState('');
   const [occupationInput, setOccupationInput] = useState('');
   const [achievementInput, setAchievementInput] = useState('');
+  const [newFactKey, setNewFactKey] = useState('');
+  const [newFactValue, setNewFactValue] = useState('');
+
+  // Функция для получения случайного паттерна
+  const getRandomPattern = () => {
+    const patterns = [
+      '/media/imported/images/pattern-1.jpeg',
+      '/media/imported/images/pattern-2.jpeg',
+      '/media/imported/images/pattern-3.jpeg'
+    ];
+    const randomIndex = Math.floor(Math.random() * patterns.length);
+    return {
+      url: patterns[randomIndex],
+      alt: '',
+      caption: '',
+      thumbnail: patterns[randomIndex]
+    };
+  };
 
   useEffect(() => {
     if (!isNew) {
       const fetchPerson = async () => {
         try {
           const response = await contentApi.getPerson(id);
+          // Преобразуем photo из строки в объект MediaFile, если нужно
+          let photo = response.data.photo;
+          if (photo) {
+            if (typeof photo === 'string') {
+              photo = {
+                url: photo,
+                alt: '',
+                caption: '',
+                thumbnail: photo
+              };
+            }
+            // Если photo уже объект, оставляем как есть
+          } else {
+            // Если фото нет, устанавливаем случайный паттерн
+            photo = getRandomPattern();
+          }
+          
+          // Синхронизируем facts с полями биографии при загрузке
+          const loadedFacts = response.data.facts || {};
+          const syncedFacts = { ...loadedFacts };
+          
+          // Всегда обновляем эти три поля из полей биографии (приоритет у полей биографии)
+          if (response.data.full_name) {
+            syncedFacts['Полное имя'] = response.data.full_name;
+          }
+          if (response.data.bio?.birth_date) {
+            syncedFacts['Дата рождения'] = response.data.bio.birth_date;
+          }
+          if (response.data.bio?.birth_place) {
+            syncedFacts['Место рождения'] = response.data.bio.birth_place;
+          }
+          
           setPerson({
             ...emptyPerson,
             ...response.data,
+            photo: photo,
             bio: { ...emptyPerson.bio, ...response.data.bio },
+            facts: syncedFacts,
             social_links: { ...emptyPerson.social_links, ...response.data.social_links },
             seo: { ...emptyPerson.seo, ...response.data.seo }
           });
@@ -82,6 +135,12 @@ export default function PersonEditPage() {
         }
       };
       fetchPerson();
+    } else {
+      // Для новой страницы устанавливаем случайный паттерн
+      setPerson({
+        ...emptyPerson,
+        photo: getRandomPattern()
+      });
     }
   }, [id, isNew]);
 
@@ -117,12 +176,38 @@ export default function PersonEditPage() {
     setSaving(true);
 
     try {
+      // Синхронизируем facts с полями биографии перед сохранением
+      const factsToSave = { ...person.facts };
+      
+      // Обновляем facts из полей биографии (всегда синхронизируем эти три поля)
+      if (person.full_name) {
+        factsToSave['Полное имя'] = person.full_name;
+      } else {
+        // Удаляем, если поле пустое
+        delete factsToSave['Полное имя'];
+      }
+      if (person.bio.birth_date) {
+        factsToSave['Дата рождения'] = person.bio.birth_date;
+      } else {
+        delete factsToSave['Дата рождения'];
+      }
+      if (person.bio.birth_place) {
+        factsToSave['Место рождения'] = person.bio.birth_place;
+      } else {
+        delete factsToSave['Место рождения'];
+      }
+      
+      const personToSave = {
+        ...person,
+        facts: factsToSave
+      };
+
       if (isNew) {
-        const response = await contentApi.createPerson(person);
+        const response = await contentApi.createPerson(personToSave);
         setSuccess('Создано!');
         navigate(`/admin/people/${response.data.id}`, { replace: true });
       } else {
-        await contentApi.updatePerson(id, person);
+        await contentApi.updatePerson(id, personToSave);
         setSuccess('Сохранено!');
       }
     } catch (err) {
@@ -252,15 +337,6 @@ export default function PersonEditPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Полное имя</Label>
-                  <Input
-                    value={person.full_name}
-                    onChange={(e) => setPerson(prev => ({ ...prev, full_name: e.target.value }))}
-                    placeholder="Александр Васильевич Масляков"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label>URL (slug)</Label>
                   <Input
                     value={person.slug}
@@ -326,18 +402,55 @@ export default function PersonEditPage() {
           <Card>
             <CardHeader>
               <CardTitle>Биографические данные</CardTitle>
+              <CardDescription>
+                Эти данные автоматически синхронизируются с таблицей фактов (модуль facts_table)
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Полное имя</Label>
+                  <Input
+                    value={person.full_name || ''}
+                    onChange={(e) => {
+                      const newFullName = e.target.value;
+                      setPerson(prev => ({
+                        ...prev,
+                        full_name: newFullName,
+                        facts: { ...prev.facts, 'Полное имя': newFullName }
+                      }));
+                    }}
+                    placeholder="Александр Васильевич Масляков"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Дата рождения</Label>
                   <Input
                     type="date"
                     value={person.bio.birth_date || ''}
-                    onChange={(e) => setPerson(prev => ({
-                      ...prev,
-                      bio: { ...prev.bio, birth_date: e.target.value }
-                    }))}
+                    onChange={(e) => {
+                      const newBirthDate = e.target.value;
+                      setPerson(prev => ({
+                        ...prev,
+                        bio: { ...prev.bio, birth_date: newBirthDate },
+                        facts: { ...prev.facts, 'Дата рождения': newBirthDate }
+                      }));
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Место рождения</Label>
+                  <Input
+                    value={person.bio.birth_place || ''}
+                    onChange={(e) => {
+                      const newBirthPlace = e.target.value;
+                      setPerson(prev => ({
+                        ...prev,
+                        bio: { ...prev.bio, birth_place: newBirthPlace },
+                        facts: { ...prev.facts, 'Место рождения': newBirthPlace }
+                      }));
+                    }}
+                    placeholder="Свердловск"
                   />
                 </div>
                 <div className="space-y-2">
@@ -352,17 +465,6 @@ export default function PersonEditPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Место рождения</Label>
-                  <Input
-                    value={person.bio.birth_place || ''}
-                    onChange={(e) => setPerson(prev => ({
-                      ...prev,
-                      bio: { ...prev.bio, birth_place: e.target.value }
-                    }))}
-                    placeholder="Свердловск"
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label>Текущий город</Label>
                   <Input
                     value={person.bio.current_city || ''}
@@ -373,6 +475,88 @@ export default function PersonEditPage() {
                     placeholder="Москва"
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Таблица фактов</CardTitle>
+              <CardDescription>
+                Дополнительные факты, которые отображаются в модуле facts_table
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Существующие факты */}
+              {Object.entries(person.facts || {}).length > 0 ? (
+                <div className="space-y-2">
+                  {Object.entries(person.facts).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <Input 
+                        value={key} 
+                        className="w-1/3 bg-background"
+                        onChange={(e) => {
+                          const newFacts = { ...person.facts };
+                          delete newFacts[key];
+                          newFacts[e.target.value] = value;
+                          setPerson(prev => ({ ...prev, facts: newFacts }));
+                        }}
+                      />
+                      <Input 
+                        value={value} 
+                        className="flex-1 bg-background"
+                        onChange={(e) => setPerson(prev => ({ 
+                          ...prev, 
+                          facts: { ...prev.facts, [key]: e.target.value } 
+                        }))}
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          const newFacts = { ...person.facts };
+                          delete newFacts[key];
+                          setPerson(prev => ({ ...prev, facts: newFacts }));
+                        }}
+                      >
+                        <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>
+              )}
+              
+              {/* Добавить новый факт */}
+              <div className="flex gap-2 pt-2 border-t">
+                <Input
+                  value={newFactKey}
+                  onChange={(e) => setNewFactKey(e.target.value)}
+                  placeholder="Название факта"
+                  className="w-1/3"
+                />
+                <Input
+                  value={newFactValue}
+                  onChange={(e) => setNewFactValue(e.target.value)}
+                  placeholder="Значение"
+                  className="flex-1"
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    if (newFactKey.trim() && newFactValue.trim()) {
+                      setPerson(prev => ({
+                        ...prev,
+                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() }
+                      }));
+                      setNewFactKey('');
+                      setNewFactValue('');
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>

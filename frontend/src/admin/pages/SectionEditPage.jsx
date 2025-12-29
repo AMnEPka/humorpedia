@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { sectionsApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,17 @@ const emptySection = {
   seo: { meta_title: '', meta_description: '' }
 };
 
+// Pure function - can be defined outside component
+const flattenTree = (nodes, result = []) => {
+  for (const node of nodes) {
+    result.push(node);
+    if (node.children && node.children.length > 0) {
+      flattenTree(node.children, result);
+    }
+  }
+  return result;
+};
+
 export default function SectionEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -42,6 +53,15 @@ export default function SectionEditPage() {
   const [success, setSuccess] = useState('');
   const [tree, setTree] = useState([]);
 
+  const loadTree = useCallback(async () => {
+    try {
+      const res = await sectionsApi.getTree();
+      setTree(flattenTree(res.data));
+    } catch (err) {
+      console.error('Error loading tree:', err);
+    }
+  }, []);
+
   useEffect(() => {
     loadTree();
     if (!isNew) {
@@ -53,26 +73,7 @@ export default function SectionEditPage() {
         .catch(() => setError('Ошибка загрузки'))
         .finally(() => setLoading(false));
     }
-  }, [id, isNew]);
-
-  const loadTree = async () => {
-    try {
-      const res = await sectionsApi.getTree();
-      setTree(flattenTree(res.data));
-    } catch (err) {
-      console.error('Error loading tree:', err);
-    }
-  };
-
-  const flattenTree = (nodes, result = []) => {
-    for (const node of nodes) {
-      result.push(node);
-      if (node.children && node.children.length > 0) {
-        flattenTree(node.children, result);
-      }
-    }
-    return result;
-  };
+  }, [id, isNew, loadTree]);
 
   const generateSlug = (t) =>
     t

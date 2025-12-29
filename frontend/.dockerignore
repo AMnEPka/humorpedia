@@ -1,3 +1,5 @@
 node_modules
 build
 coverage
+# Exclude large media directory from image to speed up build and startup
+public/media

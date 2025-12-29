@@ -59,14 +59,48 @@ export default function TeamEditPage() {
   const [success, setSuccess] = useState('');
   const [achievementInput, setAchievementInput] = useState('');
 
+  // Функция для получения случайного паттерна
+  const getRandomPattern = () => {
+    const patterns = [
+      '/media/imported/images/pattern-1.jpeg',
+      '/media/imported/images/pattern-2.jpeg',
+      '/media/imported/images/pattern-3.jpeg'
+    ];
+    const randomIndex = Math.floor(Math.random() * patterns.length);
+    return {
+      url: patterns[randomIndex],
+      alt: '',
+      caption: '',
+      thumbnail: patterns[randomIndex]
+    };
+  };
+
   useEffect(() => {
     if (!isNew) {
       const fetchTeam = async () => {
         try {
           const response = await contentApi.getTeam(id);
+          // Преобразуем logo из строки в объект MediaFile, если нужно
+          let logo = response.data.logo;
+          if (logo) {
+            if (typeof logo === 'string') {
+              logo = {
+                url: logo,
+                alt: '',
+                caption: '',
+                thumbnail: logo
+              };
+            }
+            // Если logo уже объект, оставляем как есть
+          } else {
+            // Если логотипа нет, устанавливаем случайный паттерн
+            logo = getRandomPattern();
+          }
+          
           setTeam({
             ...emptyTeam,
             ...response.data,
+            logo: logo,
             facts: { ...emptyTeam.facts, ...response.data.facts },
             social_links: { ...emptyTeam.social_links, ...response.data.social_links },
             seo: { ...emptyTeam.seo, ...response.data.seo }
@@ -78,6 +112,12 @@ export default function TeamEditPage() {
         }
       };
       fetchTeam();
+    } else {
+      // Для новой страницы устанавливаем случайный паттерн
+      setTeam({
+        ...emptyTeam,
+        logo: getRandomPattern()
+      });
     }
   }, [id, isNew]);
 

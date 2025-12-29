@@ -66,7 +66,8 @@ export default function TemplateEditPage() {
         .catch(() => setError('Ошибка загрузки шаблона'))
         .finally(() => setLoading(false));
     }
-  }, [id, isNew]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isNew]); // emptyTemplate is stable (defined in component scope)
 
   const handleSave = async () => {
     if (!template.name.trim()) {

@@ -29,7 +29,9 @@ services:
       - mongodb
     ports:
       - "8001:8001"
-    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+    # Hot reload: watch Python files in /app directory
+    # Exclude __pycache__, .pyc files, and node_modules for better performance
+    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload --reload-dir /app --reload-include "*.py" --reload-exclude "*/__pycache__/*" --reload-exclude "*.pyc"
     restart: unless-stopped
 
   frontend:
@@ -41,9 +43,21 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WDS_SOCKET_PORT=0
       - REACT_APP_BACKEND_URL=http://localhost:8001
+      - DOCKER_ENV=true
+      # Suppress deprecation warnings and increase memory limit to prevent ENOMEM errors
+      - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096
+    ulimits:
+      # Increase file descriptor limit to prevent ENOMEM errors
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      # Exclude public/media from frontend volume to prevent webpack from scanning 3000+ images
+      # The empty directory from Dockerfile will be used instead of real files from host
+      # Media files are served by backend (see backend volumes), so frontend doesn't need them
+      - frontend_media:/app/public/media
     depends_on:
       - backend
     ports:
@@ -53,3 +67,6 @@ services:
 
 volumes:
   mongo_data:
+  # Empty volume for frontend public/media to prevent webpack from scanning 3000+ images
+  # Media files are served by backend, so frontend doesn't need them
+  frontend_media:

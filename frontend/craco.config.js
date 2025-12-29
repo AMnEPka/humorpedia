@@ -47,19 +47,60 @@ const webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
-
-      // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
-          ...webpackConfig.watchOptions,
-          ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/build/**',
-            '**/dist/**',
-            '**/coverage/**',
-            '**/public/**',
+      // Critical: Exclude large media directory from file watching
+      // This prevents webpack from scanning 3000+ image files on startup
+      const publicMediaPath = path.resolve(__dirname, 'public/media');
+      webpackConfig.watchOptions = {
+        ...webpackConfig.watchOptions,
+        ignored: [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/build/**',
+          '**/dist/**',
+          '**/coverage/**',
+          // Explicitly exclude the large media directory
+          publicMediaPath,
+          '**/public/media/**',
+          // Also exclude image files in public folder using glob patterns
+          '**/public/media/**/*.jpg',
+          '**/public/media/**/*.jpeg',
+          '**/public/media/**/*.png',
+          '**/public/media/**/*.gif',
+          '**/public/media/**/*.webp',
+          '**/public/media/**/*.svg',
+          // Exclude cache and temp directories
+          '**/.cache/**',
+          '**/.tmp/**',
+          '**/tmp/**',
+          '**/*.log',
+          '**/*.swp',
+          '**/*.swo',
+          '**/.DS_Store',
         ],
+        aggregateTimeout: 500,
+        // Use polling in Docker for better file change detection, but with longer interval
+        // Longer interval reduces file descriptor usage
+        poll: process.env.CHOKIDAR_USEPOLLING === 'true' ? 2000 : false,
+        // Limit the number of files watched to prevent ENOMEM errors
+        followSymlinks: false,
       };
+
+      // Optimize module resolution with caching
+      if (!webpackConfig.resolve) {
+        webpackConfig.resolve = {};
+      }
+      webpackConfig.resolve.unsafeCache = true;
+
+      // Enable filesystem caching for faster rebuilds
+      if (isDevServer) {
+        webpackConfig.cache = {
+          type: 'filesystem',
+          buildDependencies: {
+            config: [__filename],
+          },
+          cacheDirectory: path.resolve(__dirname, 'node_modules/.cache/webpack'),
+        };
+      }
 
       // Add health check plugin to webpack if enabled
       if (config.enableHealthCheck && healthPluginInstance) {
@@ -78,6 +119,50 @@ if (config.enableVisualEdits && babelMetadataPlugin) {
 }
 
 webpackConfig.devServer = (devServerConfig) => {
+  // Note: public/media is excluded via volume in docker-compose.yml
+  // This prevents webpack from scanning 3000+ images on startup
+  // Media files are served by backend at /media/imported/*
+  
+  // Enable Hot Module Replacement (HMR) for fast development
+  devServerConfig.hot = true;
+  devServerConfig.liveReload = true;
+  devServerConfig.client = {
+    ...devServerConfig.client,
+    webSocketURL: {
+      hostname: 'localhost',
+      pathname: '/ws',
+      port: 3000,
+    },
+    overlay: {
+      errors: true,
+      warnings: false,
+    },
+  };
+  
+  // Proxy media requests to backend
+  // Frontend makes requests to /media/imported/... which should go to backend
+  // In Docker, use service name 'backend' for internal network communication
+  // For client-side code, REACT_APP_BACKEND_URL is used (localhost:8001)
+  const backendUrl = process.env.DOCKER_ENV === 'true'
+    ? 'http://backend:8001'  // Docker internal network
+    : (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001');  // Local development
+  
+  if (!devServerConfig.proxy) {
+    devServerConfig.proxy = [];
+  }
+  if (!Array.isArray(devServerConfig.proxy)) {
+    devServerConfig.proxy = [devServerConfig.proxy];
+  }
+  
+  // Add proxy for media files to backend
+  devServerConfig.proxy.push({
+    context: ['/media'],
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    logLevel: 'debug',
+  });
+
   // Apply visual edits dev server setup only if enabled
   if (config.enableVisualEdits && setupDevServer) {
     devServerConfig = setupDevServer(devServerConfig);

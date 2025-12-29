@@ -340,6 +340,35 @@ app.add_middleware(
 )
 
 
+# Validation error handler
+from fastapi.exceptions import RequestValidationError
+from fastapi import status
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle Pydantic validation errors with detailed messages"""
+    errors = exc.errors()
+    logger.error(f"Validation error: {errors}")
+    logger.error(f"Request path: {request.url.path}")
+    logger.error(f"Request method: {request.method}")
+    
+    # Try to get body if available
+    body = None
+    try:
+        body_bytes = await request.body()
+        if body_bytes:
+            import json
+            body = json.loads(body_bytes.decode())
+    except:
+        pass
+    
+    logger.error(f"Request body: {body}")
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": errors, "body": body}
+    )
+
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

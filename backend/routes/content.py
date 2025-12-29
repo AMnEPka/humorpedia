@@ -2,6 +2,9 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 from models.base import ContentType, ContentStatus
 from models.content import (
@@ -56,7 +59,8 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
     db = await get_db()
     collection = getattr(db, collection_name)
     
-    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    # Use model_dump with exclude_unset=True to only include fields that were explicitly set
+    update_data = {k: v for k, v in data.model_dump(exclude_unset=True).items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     # Sync tags if present
@@ -291,9 +295,22 @@ async def create_show(data: ShowCreate):
     """Create a new show"""
     await check_slug_unique("shows", data.slug)
     
+    # Handle ShowFacts - convert dict to ShowFacts if needed
+    from models.content import ShowFacts
+    facts_data = data.facts
+    if facts_data is None:
+        facts_data = ShowFacts()
+    elif isinstance(facts_data, dict):
+        # Convert dict to ShowFacts object
+        try:
+            facts_data = ShowFacts(**facts_data)
+        except Exception:
+            # If conversion fails, use empty ShowFacts
+            facts_data = ShowFacts()
+    
     show = Show(
         title=data.title, slug=data.slug, name=data.name, poster=data.poster,
-        facts=data.facts or {}, description=data.description,
+        facts=facts_data, description=data.description,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         related_person_ids=data.related_person_ids or []
     )
@@ -402,13 +419,96 @@ async def get_shows_hierarchy(
 @router.put("/shows/{id}", response_model=dict)
 async def update_show(id: str, data: ShowUpdate):
     """Update show"""
-    result = await update_content("shows", id, data, "Show not found")
+    # Log the received data for debugging
+    try:
+        logger.info(f"Update show {id}, received data: {data.model_dump(exclude_unset=True)}")
+    except Exception as e:
+        logger.error(f"Error logging data: {e}")
     
-    # Update person links if related_person_ids changed
+    db = await get_db()
+    
+    # Build update data manually to handle ShowFacts and other complex types properly
+    update_data = {}
+    
+    if data.title is not None:
+        update_data["title"] = data.title
+    if data.slug is not None:
+        update_data["slug"] = data.slug
+    if data.name is not None:
+        update_data["name"] = data.name
+    if data.poster is not None:
+        # Handle null poster (to clear it)
+        if data.poster is None or (isinstance(data.poster, dict) and not data.poster.get('url')):
+            update_data["poster"] = None
+        else:
+            update_data["poster"] = data.poster.model_dump() if hasattr(data.poster, 'model_dump') else data.poster
+    if data.facts is not None:
+        # Convert dict to ShowFacts, then to dict for MongoDB
+        from models.content import ShowFacts
+        try:
+            # If facts is a dict, convert it to ShowFacts object first
+            if isinstance(data.facts, dict):
+                facts_obj = ShowFacts(**data.facts)
+                update_data["facts"] = facts_obj.model_dump()
+            else:
+                # If it's already a ShowFacts object
+                update_data["facts"] = data.facts.model_dump() if hasattr(data.facts, 'model_dump') else data.facts
+        except Exception as e:
+            # If conversion fails, just use the dict as is
+            update_data["facts"] = data.facts if isinstance(data.facts, dict) else {}
+    if data.description is not None:
+        update_data["description"] = data.description
+    if data.parent_id is not None:
+        update_data["parent_id"] = data.parent_id
+    if data.modules is not None:
+        # Convert modules to dict format
+        try:
+            update_data["modules"] = [
+                m.model_dump() if hasattr(m, 'model_dump') else (m if isinstance(m, dict) else {})
+                for m in data.modules
+            ]
+        except Exception as e:
+            logger.error(f"Error processing modules: {e}")
+            # If conversion fails, try to use as is
+            update_data["modules"] = data.modules if isinstance(data.modules, list) else []
+    if data.tags is not None:
+        update_data["tags"] = data.tags
+        await tag_service.sync_tags(data.tags)
+    if data.seo is not None:
+        update_data["seo"] = data.seo.model_dump() if hasattr(data.seo, 'model_dump') else data.seo
+    if data.status is not None:
+        update_data["status"] = data.status.value if hasattr(data.status, 'value') else data.status
+    if data.participant_ids is not None:
+        update_data["participant_ids"] = data.participant_ids
+    if data.team_ids is not None:
+        update_data["team_ids"] = data.team_ids
     if data.related_person_ids is not None:
-        await linking_service.update_person_links("show", id, data.related_person_ids)
+        # Allow empty list to be set (to clear relations)
+        update_data["related_person_ids"] = data.related_person_ids
     
-    return result
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    try:
+        logger.info(f"Updating show {id} with data: {update_data}")
+        result = await db.shows.update_one({"_id": id}, {"$set": update_data})
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Show not found")
+        
+        # Update person links if related_person_ids changed
+        if data.related_person_ids is not None:
+            try:
+                await linking_service.update_person_links("show", id, data.related_person_ids)
+            except Exception as e:
+                logger.error(f"Error updating person links: {e}")
+                # Don't fail the update if linking fails
+        
+        return {"id": id, "updated": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating show {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error updating show: {str(e)}")
 
 
 @router.delete("/shows/{id}")

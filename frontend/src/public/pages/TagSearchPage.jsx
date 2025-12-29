@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Loader2, Tag as TagIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,13 +39,7 @@ export default function TagSearchPage() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (tag) {
-      loadTagResults();
-    }
-  }, [tag]);
-
-  const loadTagResults = async () => {
+  const loadTagResults = useCallback(async () => {
     setLoading(true);
     try {
       const res = await publicApi.searchByTag(tag);
@@ -56,7 +50,13 @@ export default function TagSearchPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tag]);
+
+  useEffect(() => {
+    if (tag) {
+      loadTagResults();
+    }
+  }, [tag, loadTagResults]);
 
   if (loading) {
     return (

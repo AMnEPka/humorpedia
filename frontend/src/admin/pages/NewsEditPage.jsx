@@ -40,12 +40,58 @@ export default function NewsEditPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Функция для получения случайного паттерна
+  const getRandomPattern = () => {
+    const patterns = [
+      '/media/imported/images/pattern-1.jpeg',
+      '/media/imported/images/pattern-2.jpeg',
+      '/media/imported/images/pattern-3.jpeg'
+    ];
+    const randomIndex = Math.floor(Math.random() * patterns.length);
+    return {
+      url: patterns[randomIndex],
+      alt: '',
+      caption: '',
+      thumbnail: patterns[randomIndex]
+    };
+  };
+
   useEffect(() => {
     if (!isNew) {
       contentApi.getNews(id)
-        .then(res => setNews({ ...emptyNews, ...res.data, seo: { ...emptyNews.seo, ...res.data.seo } }))
+        .then(res => {
+          // Преобразуем cover_image из строки в объект MediaFile, если нужно
+          let cover_image = res.data.cover_image;
+          if (cover_image) {
+            if (typeof cover_image === 'string') {
+              cover_image = {
+                url: cover_image,
+                alt: '',
+                caption: '',
+                thumbnail: cover_image
+              };
+            }
+            // Если cover_image уже объект, оставляем как есть
+          } else {
+            // Если обложки нет, устанавливаем случайный паттерн
+            cover_image = getRandomPattern();
+          }
+          
+          setNews({ 
+            ...emptyNews, 
+            ...res.data, 
+            cover_image: cover_image,
+            seo: { ...emptyNews.seo, ...res.data.seo } 
+          });
+        })
         .catch(() => setError('Ошибка загрузки'))
         .finally(() => setLoading(false));
+    } else {
+      // Для новой страницы устанавливаем случайный паттерн
+      setNews({
+        ...emptyNews,
+        cover_image: getRandomPattern()
+      });
     }
   }, [id, isNew]);
 
