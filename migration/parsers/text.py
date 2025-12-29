@@ -63,6 +63,8 @@ class TextBlockParser(BaseParser):
                             text = sec.get('content', '') or sec.get('subtitle', '')
                             title = sec.get('title', '')
                             if text:
+                                # Нормализуем изображения в тексте
+                                text = self._normalize_images_in_html(text, ctx.image_map)
                                 if title:
                                     contents.append(f'<h3>{title}</h3>{text}')
                                 else:
@@ -71,22 +73,30 @@ class TextBlockParser(BaseParser):
                         elif form == 'table':
                             table_content = sec.get('content', '')
                             if table_content:
+                                # Нормализуем изображения в таблице
+                                table_content = self._normalize_images_in_html(table_content, ctx.image_map)
                                 contents.append(table_content)
                         # Для quote секций (цитаты)
                         elif form == 'quote':
                             quote_text = sec.get('content', '') or sec.get('text', '')
                             if quote_text:
+                                # Нормализуем изображения в цитате
+                                quote_text = self._normalize_images_in_html(quote_text, ctx.image_map)
                                 contents.append(f'<blockquote>{quote_text}</blockquote>')
                         # Для остальных секций
                         else:
                             text = sec.get('content', '') or sec.get('subtitle', '')
                             title = sec.get('title', '')
                             if text:
+                                # Нормализуем изображения в тексте
+                                text = self._normalize_images_in_html(text, ctx.image_map)
                                 if title:
                                     contents.append(f'<h3>{title}</h3>{text}')
                                 else:
                                     contents.append(text)
                 content = ''.join(contents)
+                # Дополнительно нормализуем весь контент на случай, если что-то пропустили
+                content = self._normalize_images_in_html(content, ctx.image_map)
         
         # 4. Ищем в HTML по селектору
         if not content and ctx.html:
@@ -102,6 +112,9 @@ class TextBlockParser(BaseParser):
         # Нормализуем HTML
         content = self.normalize_html(content)
         
+        # Нормализуем изображения в HTML контенте (добавляем /media/imported/ если нужно)
+        content = self._normalize_images_in_html(content, ctx.image_map)
+        
         # Удаляем первый заголовок если нужно
         if self.config.get('strip_first_heading') and ctx.title:
             title_lower = ctx.title.lower()
@@ -113,6 +126,54 @@ class TextBlockParser(BaseParser):
             'title': block_title,
             'content': content
         }
+    
+    def _normalize_images_in_html(self, html: str, image_map: dict = None) -> str:
+        """Нормализует пути к изображениям в HTML, добавляя префикс /media/imported/."""
+        if not html:
+            return html
+        
+        IMAGE_PREFIX = "/media/imported/"
+        
+        def normalize_image_url(url: str) -> str:
+            """Нормализует URL изображения."""
+            if not url:
+                return url
+            
+            # Проверяем маппинг
+            if image_map and url in image_map:
+                url = image_map[url]
+            
+            # Уже абсолютный URL
+            if url.startswith('http://') or url.startswith('https://'):
+                return url
+            
+            # Уже имеет правильный префикс
+            if url.startswith('/media/imported/'):
+                return url
+            
+            # Добавляем префикс
+            if not url.startswith('/'):
+                return f"{IMAGE_PREFIX}{url.lstrip('/')}"
+            
+            return f"{IMAGE_PREFIX}{url.lstrip('/')}"
+        
+        # Заменяем все src атрибуты в img тегах
+        def replace_src(match):
+            full_tag = match.group(0)
+            # match.group(1) - атрибуты до src, match.group(2) - значение src
+            src_value = match.group(2)
+            normalized_src = normalize_image_url(src_value)
+            return full_tag.replace(src_value, normalized_src)
+        
+        # Ищем все img теги с src атрибутами
+        html = re.sub(
+            r'<img([^>]+)src=["\']([^"\'>]+)["\']',
+            replace_src,
+            html,
+            flags=re.IGNORECASE
+        )
+        
+        return html
     
     def parse_all_text_sections(self, ctx: ParseContext) -> List[dict]:
         """Парсит все text секции из MIGX и возвращает список."""
@@ -134,18 +195,22 @@ class TextBlockParser(BaseParser):
                 title = sec.get('title', '')
                 
                 if content:
+                    normalized_content = self.normalize_html(content)
+                    normalized_content = self._normalize_images_in_html(normalized_content, ctx.image_map)
                     results.append({
                         'title': self.normalize_html(title) if title else '',
-                        'content': self.normalize_html(content)
+                        'content': normalized_content
                     })
             
             # Обрабатываем table секции как текстовые блоки
             elif form == 'table':
                 content = sec.get('content', '')
                 if content:
+                    normalized_content = self.normalize_html(content)
+                    normalized_content = self._normalize_images_in_html(normalized_content, ctx.image_map)
                     results.append({
                         'title': '',
-                        'content': self.normalize_html(content)
+                        'content': normalized_content
                     })
         
         return results

@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
+import MediaSelector from '../components/MediaSelector';
 
 const emptyTeam = {
   title: '',
@@ -255,6 +256,12 @@ export default function TeamEditPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <MediaSelector
+                  value={team.logo}
+                  onChange={(logo) => setTeam(prev => ({ ...prev, logo }))}
+                  label="Логотип команды"
+                />
               </CardContent>
             </Card>
 

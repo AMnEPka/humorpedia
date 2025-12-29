@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
+import MediaSelector from '../components/MediaSelector';
 
 const emptyPerson = {
   title: '',
@@ -267,6 +268,12 @@ export default function PersonEditPage() {
                     placeholder="alexander-maslyakov"
                   />
                 </div>
+
+                <MediaSelector
+                  value={person.photo}
+                  onChange={(photo) => setPerson(prev => ({ ...prev, photo }))}
+                  label="Основная фотография"
+                />
               </CardContent>
             </Card>
 

@@ -13,6 +13,7 @@ import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
+import MediaSelector from '../components/MediaSelector';
 
 const emptyShow = {
   title: '', slug: '', name: '', status: 'draft',
@@ -134,6 +135,11 @@ export default function ShowEditPage() {
                   <Label>Описание</Label>
                   <Textarea value={show.description || ''} onChange={(e) => setShow(p => ({ ...p, description: e.target.value }))} rows={4} />
                 </div>
+                <MediaSelector
+                  value={show.poster}
+                  onChange={(poster) => setShow(p => ({ ...p, poster }))}
+                  label="Постер шоу"
+                />
               </CardContent>
             </Card>
             <Card>

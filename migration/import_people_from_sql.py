@@ -241,6 +241,9 @@ class SiteContentRow:
     keywords: str
     rating: float
     votes: int
+    createdon: int = 0
+    editedon: int = 0
+    publishedon: int = 0
 
 
 def _load_tv_map() -> dict[str, str]:
@@ -374,6 +377,28 @@ def _extract_for_ids(target_ids: set[int]):
             except Exception:
                 votes = 0
 
+            # Извлекаем даты (индексы из структуры MODX site_content)
+            # Структура: id(0), type(1), contentType(2), pagetitle(3), longtitle(4), description(5),
+            # alias(6), alias_visible(7), link_attributes(8), published(9), pub_date(10),
+            # unpub_date(11), parent(12), isfolder(13), introtext(14), content(15), richtext(16),
+            # template(17), menuindex(18), searchable(19), cacheable(20), createdby(21),
+            # createdon(22), editedby(23), editedon(24), deleted(25), deletedon(26),
+            # deletedby(27), publishedon(28), publishedby(29), ...
+            def get_int(idx: int, default: int = 0) -> int:
+                if idx < len(parts) and parts[idx] is not None:
+                    try:
+                        val = str(parts[idx]).strip()
+                        # Проверяем, что значение не пустое и не NULL
+                        if val and val.upper() != 'NULL':
+                            return int(val)
+                    except:
+                        pass
+                return default
+
+            createdon = get_int(22, 0)  # Исправлено: было 21
+            editedon = get_int(24, 0)   # Исправлено: было 23
+            publishedon = get_int(28, 0)  # Исправлено: было 25
+
             site_content[rid] = SiteContentRow(
                 id=rid,
                 pagetitle=s(3),
@@ -383,6 +408,9 @@ def _extract_for_ids(target_ids: set[int]):
                 keywords=keywords,
                 rating=rating,
                 votes=votes,
+                createdon=createdon,
+                editedon=editedon,
+                publishedon=publishedon,
             )
 
     def flush_tv(insert_blob: str):

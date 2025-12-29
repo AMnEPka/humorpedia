@@ -100,7 +100,7 @@ export default function ShowsListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page <= 1}
-                onClick={() => setSearchParams({ page: page - 1 })}
+                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page - 1 })}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -111,7 +111,7 @@ export default function ShowsListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page >= totalPages}
-                onClick={() => setSearchParams({ page: page + 1 })}
+                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page + 1 })}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

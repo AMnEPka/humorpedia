@@ -14,6 +14,7 @@ import { Save, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
 import ModuleEditor from '../components/ModuleEditor';
+import MediaSelector from '../components/MediaSelector';
 
 const emptyNews = {
   title: '',
@@ -175,6 +176,11 @@ export default function NewsEditPage() {
                   />
                   <Label>Важная новость</Label>
                 </div>
+                <MediaSelector
+                  value={news.cover_image}
+                  onChange={(cover_image) => setNews(p => ({ ...p, cover_image }))}
+                  label="Обложка новости"
+                />
               </CardContent>
             </Card>
 

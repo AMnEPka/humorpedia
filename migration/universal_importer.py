@@ -404,7 +404,6 @@ class UniversalImporter:
             elif config.type == 'text_block' and config.to_dict().get('migx_section') == 'info' and config.to_dict().get('migx_field') == 'subtitle':
                 # Парсим биографию (subtitle) и личную жизнь (content) из одной секции
                 from parsers.text import TextBlockParser
-                from parsers.base import BaseParser
                 
                 config_dict = config.to_dict()
                 bio_parser = TextBlockParser(config_dict)
@@ -496,6 +495,40 @@ class UniversalImporter:
         slug = sc.alias or transliterate_slug(sc.pagetitle)
         full_path = f"{parent_path}/{slug}" if parent_path else slug
         
+        # Определяем даты публикации
+        # Для новостей, статей и квизов используем оригинальные даты из MODX
+        if self.content_type in ('news', 'article', 'quiz'):
+            # Используем publishedon если есть, иначе createdon
+            published_timestamp = getattr(sc, 'publishedon', 0) or getattr(sc, 'createdon', 0)
+            edited_timestamp = getattr(sc, 'editedon', 0) or published_timestamp
+            
+            if published_timestamp > 0:
+                published_at = datetime.fromtimestamp(published_timestamp, tz=timezone.utc)
+                created_at = published_at
+            else:
+                created_at = datetime.now(timezone.utc)
+                published_at = created_at
+            
+            if edited_timestamp > 0:
+                updated_at = datetime.fromtimestamp(edited_timestamp, tz=timezone.utc)
+            else:
+                updated_at = created_at
+        else:
+            # Для остальных типов используем текущую дату
+            created_at = datetime.now(timezone.utc)
+            updated_at = datetime.now(timezone.utc)
+            published_at = None
+        
+        # Определяем формат рейтинга
+        # Для новостей и статей рейтинг должен быть числом (average), а не объектом
+        rating_data = extra_fields.get('rating', {'average': 0.0, 'count': 0})
+        if self.content_type in ('news', 'article'):
+            # Для новостей и статей используем только average как число
+            rating_value = rating_data.get('average', 0.0) if isinstance(rating_data, dict) else (rating_data if isinstance(rating_data, (int, float)) else 0.0)
+        else:
+            # Для остальных типов используем объект
+            rating_value = rating_data if isinstance(rating_data, dict) else {'average': 0.0, 'count': 0}
+        
         # Базовый документ
         doc = {
             'id': str(uuid4()),
@@ -507,7 +540,7 @@ class UniversalImporter:
             'description': BaseParser.normalize_html(sc.description or "")[:500] if sc.description else "",
             'modules': modules,
             'tags': extra_fields.get('tags', []),
-            'rating': extra_fields.get('rating', {'average': 0.0, 'count': 0}),
+            'rating': rating_value,
             'social_links': extra_fields.get('social_links', {}),
             'facts': extra_fields.get('facts', {}),
             'image': extra_fields.get('image', ''),
@@ -518,8 +551,9 @@ class UniversalImporter:
             'level': level,
             'parent_id': parent_id,
             'old_id': int(sc.id),
-            'created_at': datetime.now(timezone.utc).isoformat(),
-            'updated_at': datetime.now(timezone.utc).isoformat(),
+            'created_at': created_at.isoformat(),
+            'updated_at': updated_at.isoformat(),
+            'published_at': published_at.isoformat() if published_at else None,
             'seo': {
                 'meta_title': sc.pagetitle,
                 'meta_description': sc.description or ""
@@ -627,7 +661,10 @@ class UniversalImporter:
         
         print(f"  📦 Модулей: {len(doc['modules'])}")
         print(f"  🏷️  Тегов: {len(doc['tags'])}")
-        print(f"  ⭐ Рейтинг: {doc['rating']['average']:.1f} ({doc['rating']['count']} голосов)")
+        if isinstance(doc['rating'], dict):
+            print(f"  ⭐ Рейтинг: {doc['rating']['average']:.1f} ({doc['rating']['count']} голосов)")
+        else:
+            print(f"  ⭐ Рейтинг: {doc['rating']:.1f}")
         
         if apply:
             import pymongo

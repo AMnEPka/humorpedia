@@ -14,6 +14,7 @@ import { Save, ArrowLeft, Loader2, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
+import MediaSelector from '../components/MediaSelector';
 
 const emptyArticle = { title: '', slug: '', status: 'draft', excerpt: '', cover_image: null, author_name: '', featured: false, modules: [], tags: [], related_person_ids: [], seo: { meta_title: '', meta_description: '' } };
 
@@ -74,6 +75,11 @@ export default function ArticleEditPage() {
               <div className="space-y-2"><Label>Автор</Label><Input value={article.author_name || ''} onChange={(e) => setArticle(p => ({ ...p, author_name: e.target.value }))} placeholder="Имя автора" /></div>
               <div className="space-y-2"><Label>Краткое описание</Label><Textarea value={article.excerpt || ''} onChange={(e) => setArticle(p => ({ ...p, excerpt: e.target.value }))} rows={3} /></div>
               <div className="flex items-center gap-2"><Switch checked={article.featured} onCheckedChange={(v) => setArticle(p => ({ ...p, featured: v }))} /><Label>Избранная статья</Label></div>
+              <MediaSelector
+                value={article.cover_image}
+                onChange={(cover_image) => setArticle(p => ({ ...p, cover_image }))}
+                label="Обложка статьи"
+              />
             </CardContent></Card>
             <Card><CardHeader><CardTitle>Теги</CardTitle></CardHeader><CardContent>
               <TagSelector value={article.tags} onChange={(tags) => setArticle(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." />
