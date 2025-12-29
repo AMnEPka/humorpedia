@@ -1,6 +1,7 @@
 """Базовый класс для всех парсеров модулей."""
 
 from __future__ import annotations
+import json
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -100,20 +101,28 @@ class BaseParser(ABC):
     
     @staticmethod
     def normalize_migx_json(text: str) -> str:
-        """Нормализует MIGX JSON строку для парсинга."""
+        """Нормализует MIGX JSON строку для парсинга.
+        
+        Обрабатывает различные уровни экранирования из SQL dump.
+        """
         if not text:
             return ""
         
         # Удаляем все управляющие символы
         text = re.sub(r'[\x00-\x09\x0b-\x1f]', '', text)
         text = text.replace('\\r\\n', ' ').replace('\\r', ' ').replace('\\n', ' ')
-        text = text.replace('>\\<', '><')
-        text = text.replace('\\"', '"')
-        text = text.replace("\\'", "'")
-        text = text.replace('\\/', '/')
-        text = text.replace('\\<', '<').replace('\\>', '>')
-        # Заменяем переносы на пробелы для валидного JSON
         text = text.replace('\n', ' ')
+        
+        # Самый внешний уровень экранирования от SQL
+        # \\" -> " (внешние кавычки JSON)
+        text = text.replace('\\"', '"')
+        
+        # \\/ -> / 
+        text = text.replace('\\/', '/')
+        
+        # Удаляем невалидные escape-последовательности 
+        # Но сохраняем \\", которые теперь стали \" внутри строк
+        text = re.sub(r'\\(?!["\\/bfnrtu\\])', '', text)
         
         return text.strip()
     
@@ -121,6 +130,75 @@ class BaseParser(ABC):
     def strip_tags(html: str) -> str:
         """Удаляет HTML теги из текста."""
         return re.sub(r'<[^>]+>', '', html).strip()
+    
+    
+    @staticmethod
+    def parse_migx_config(config_str: str) -> list:
+        """Парсит MIGX конфигурацию, обрабатывая вложенные JSON.
+        
+        Returns:
+            Список секций MIGX или пустой список при ошибке.
+        """
+        if not config_str:
+            return []
+        
+        normalized = BaseParser.normalize_migx_json(config_str)
+        
+        # Первая попытка - прямой парсинг
+        try:
+            data = json.loads(normalized)
+            return data if isinstance(data, list) else [data]
+        except json.JSONDecodeError:
+            pass
+        
+        # Вторая попытка - разбиваем по MIGX_id и парсим каждый объект отдельно
+        objects = []
+        # Находим все {"MIGX_id":N,...} объекты
+        parts = re.split(r'(?=\{"MIGX_id")', normalized)
+        
+        for part in parts:
+            part = part.strip()
+            if not part or not part.startswith('{"MIGX_id"'):
+                continue
+            
+            # Убираем завершающие символы массива
+            part = part.rstrip(',]')
+            
+            # Пробуем распарсить этот объект
+            try:
+                obj = json.loads(part)
+                objects.append(obj)
+            except json.JSONDecodeError:
+                # Пробуем заменить проблемные кавычки в HTML на entities
+                try:
+                    # Заменяем href="..." на href='...'
+                    fixed = re.sub(r'href="([^"]*)"', r"href='\1'", part)
+                    fixed = re.sub(r'src="([^"]*)"', r"src='\1'", fixed)
+                    obj = json.loads(fixed)
+                    objects.append(obj)
+                except:
+                    # Извлекаем хотя бы основные поля регулярками
+                    obj = {}
+                    for field in ['MIGX_id', 'MIGX_formname', 'subtitle', 'title', 'id', 'section_name']:
+                        match = re.search(rf'"{field}"\s*:\s*"([^"]*)"', part)
+                        if match:
+                            obj[field] = match.group(1)
+                        else:
+                            # Пробуем числовое значение
+                            match = re.search(rf'"{field}"\s*:\s*(\d+)', part)
+                            if match:
+                                obj[field] = int(match.group(1))
+                    
+                    # Для content/table/subtitle берём всё до следующего ключа
+                    for field in ['content', 'table', 'subtitle']:
+                        match = re.search(rf'"{field}"\s*:\s*"(.*?)(?:","[a-z_]+":|\}}$)', part, re.DOTALL)
+                        if match and field not in obj:
+                            obj[field] = match.group(1)
+                    
+                    if obj:
+                        objects.append(obj)
+        
+        return objects
     
     @staticmethod
     def extract_table_rows(html: str) -> list[tuple[str, str]]:

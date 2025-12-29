@@ -49,12 +49,8 @@ class TimelineParser(BaseParser):
                         
                         # list_triple может быть строкой или массивом
                         if isinstance(list_triple, str) and list_triple:
-                            try:
-                                # Нормализуем JSON
-                                list_triple = self.normalize_migx_json(list_triple)
-                                list_triple = json.loads(list_triple)
-                            except:
-                                list_triple = []
+                            # Используем parse_migx_config для вложенного JSON
+                            list_triple = self.parse_migx_config(list_triple)
                         
                         if isinstance(list_triple, list):
                             for item in list_triple:
@@ -181,11 +177,5 @@ class TimelineParser(BaseParser):
         return sorted(events, key=get_sort_key)
     
     def _parse_migx(self, config_str: str) -> list:
-        if not config_str:
-            return []
-        try:
-            config_str = self.normalize_migx_json(config_str)
-            data = json.loads(config_str)
-            return data if isinstance(data, list) else [data]
-        except:
-            return []
+        """Парсит MIGX config используя общий метод."""
+        return self.parse_migx_config(config_str)
