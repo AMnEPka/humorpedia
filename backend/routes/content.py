@@ -164,6 +164,7 @@ async def create_person(data: PersonCreate):
     person = Person(
         title=data.title, slug=data.slug, full_name=data.full_name,
         photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
+        facts=data.facts or {},
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
     return await create_content("people", person, data.tags)

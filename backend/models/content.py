@@ -46,6 +46,7 @@ class PersonCreate(BaseModel):
     photo: Optional[MediaFile] = None
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
+    facts: Optional[Dict[str, str]] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None

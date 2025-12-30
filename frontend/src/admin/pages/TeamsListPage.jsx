@@ -200,6 +200,7 @@ export default function TeamsListPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[60px]">Лого</TableHead>
                   <TableHead>Название</TableHead>
                   <TableHead>Тип</TableHead>
                   <TableHead>Статус</TableHead>
@@ -209,8 +210,42 @@ export default function TeamsListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {teams.map((team) => (
+                {teams.map((team) => {
+                  // Получаем URL логотипа из различных полей
+                  const getLogoUrl = () => {
+                    const logo = team.logo || team.image || team.cover_image?.url || team.cover_image || team.poster;
+                    if (!logo) return null;
+                    if (typeof logo === 'string') {
+                      return logo.startsWith('/') || logo.startsWith('http') ? logo : `/${logo}`;
+                    }
+                    if (typeof logo === 'object' && logo.url) {
+                      const url = logo.url;
+                      return url.startsWith('/') || url.startsWith('http') ? url : `/${url}`;
+                    }
+                    return null;
+                  };
+                  const logoUrl = getLogoUrl();
+                  
+                  return (
                   <TableRow key={team._id} data-testid={`team-row-${team._id}`}>
+                    <TableCell>
+                      <div className="w-10 h-10 rounded overflow-hidden bg-muted flex items-center justify-center">
+                        {logoUrl ? (
+                          <img 
+                            src={logoUrl} 
+                            alt={team.name || team.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextElementSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <span className={`text-lg font-bold text-muted-foreground ${logoUrl ? 'hidden' : 'flex'}`}>
+                          {(team.name || team.title)?.charAt(0)?.toUpperCase()}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Link 
                         to={`/admin/teams/${team._id}`}
@@ -262,7 +297,8 @@ export default function TeamsListPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

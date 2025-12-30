@@ -207,6 +207,7 @@ export default function PeopleListPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[60px]">Фото</TableHead>
                   <TableHead>Имя</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Теги</TableHead>
@@ -215,8 +216,42 @@ export default function PeopleListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {people.map((person) => (
+                {people.map((person) => {
+                  // Получаем URL фото из различных полей
+                  const getPhotoUrl = () => {
+                    const photo = person.photo || person.image || person.cover_image?.url || person.cover_image || person.poster;
+                    if (!photo) return null;
+                    if (typeof photo === 'string') {
+                      return photo.startsWith('/') || photo.startsWith('http') ? photo : `/${photo}`;
+                    }
+                    if (typeof photo === 'object' && photo.url) {
+                      const url = photo.url;
+                      return url.startsWith('/') || url.startsWith('http') ? url : `/${url}`;
+                    }
+                    return null;
+                  };
+                  const photoUrl = getPhotoUrl();
+                  
+                  return (
                   <TableRow key={person._id} data-testid={`person-row-${person._id}`}>
+                    <TableCell>
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                        {photoUrl ? (
+                          <img 
+                            src={photoUrl} 
+                            alt={person.title || person.full_name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextElementSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <span className={`text-lg font-bold text-muted-foreground ${photoUrl ? 'hidden' : 'flex'}`}>
+                          {(person.title || person.full_name)?.charAt(0)?.toUpperCase()}
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Link 
                         to={`/admin/people/${person._id}`}
@@ -276,7 +311,8 @@ export default function PeopleListPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

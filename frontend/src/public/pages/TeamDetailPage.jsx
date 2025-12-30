@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
-import { isSystemModule } from '@/components/SystemModules';
+import { 
+  isSystemModule 
+} from '@/components/SystemModules';
 
 // Table of Contents component for teams
 function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
@@ -142,13 +144,30 @@ export default function TeamDetailPage() {
           {/* Logo/Photo - рендерится если есть модуль poster_photo */}
           {sidebarModules.find(m => m.type === 'poster_photo') && (
             <div className="w-32 h-32 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
-              {team.logo || team.poster || team.photo ? (
-                <img src={team.logo || team.poster || team.photo} alt={team.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
-                  {team.title?.charAt(0)?.toUpperCase()}
-                </div>
-              )}
+              {(() => {
+                // Получаем URL логотипа из различных полей
+                let logoUrl = null;
+                const logo = team.logo || team.poster || team.photo || team.image || team.cover_image;
+                
+                if (logo) {
+                  if (typeof logo === 'string') {
+                    logoUrl = logo.startsWith('/') || logo.startsWith('http') ? logo : `/${logo}`;
+                  } else if (typeof logo === 'object' && logo !== null) {
+                    logoUrl = logo.url || logo.thumbnail || logo.cover_image;
+                    if (logoUrl && !logoUrl.startsWith('/') && !logoUrl.startsWith('http')) {
+                      logoUrl = `/${logoUrl}`;
+                    }
+                  }
+                }
+                
+                return logoUrl ? (
+                  <img src={logoUrl} alt={team.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
+                    {team.title?.charAt(0)?.toUpperCase()}
+                  </div>
+                );
+              })()}
             </div>
           )}
           <div className="text-center md:text-left">
@@ -183,12 +202,12 @@ export default function TeamDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm border-collapse border border-gray-200">
                   <tbody>
                     {Object.entries(team.facts).map(([key, value], i) => (
-                      <tr key={i} className="border-b last:border-0">
-                        <td className="py-2 pr-4 text-gray-600 font-medium">{key}</td>
-                        <td className="py-2" dangerouslySetInnerHTML={{ __html: value }} />
+                      <tr key={i} className={`border-b border-gray-200 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                        <td className="py-2 pr-4 pl-2 text-gray-600 font-medium border-r border-gray-200">{key}</td>
+                        <td className="py-2 pl-2" dangerouslySetInnerHTML={{ __html: value }} />
                       </tr>
                     ))}
                   </tbody>
