@@ -19,6 +19,7 @@ import MediaSelector from '../components/MediaSelector';
 const emptyKvn = {
   title: '', slug: '', name: '', status: 'draft',
   poster: null, description: '',
+  parent_id: null,  // Для корневой страницы - null
   facts: {},
   social_links: {},
   modules: [], tags: [], person_ids: [], team_ids: [],
@@ -37,6 +38,33 @@ export default function KVNEditPage() {
   const [success, setSuccess] = useState('');
   const [newFactKey, setNewFactKey] = useState('');
   const [newFactValue, setNewFactValue] = useState('');
+  const [parentOptions, setParentOptions] = useState([]);
+
+  // Загружаем список родителей для выбора
+  useEffect(() => {
+    const loadParents = async () => {
+      try {
+        const response = await contentApi.listKvnHierarchy();
+        // Функция для рекурсивного обхода дерева
+        const flattenTree = (nodes, result = [], level = 0) => {
+          for (const node of nodes) {
+            if (node.id !== id) {  // Исключаем текущую страницу
+              result.push({ ...node, level });
+              if (node.children && node.children.length > 0) {
+                flattenTree(node.children, result, level + 1);
+              }
+            }
+          }
+          return result;
+        };
+        const flat = flattenTree(response.data.items || []);
+        setParentOptions(flat);
+      } catch (err) {
+        console.error('Error loading parents:', err);
+      }
+    };
+    loadParents();
+  }, [id]);
 
   useEffect(() => {
     if (!isNew) {
@@ -52,6 +80,7 @@ export default function KVNEditPage() {
           ...emptyKvn, 
           ...res.data, 
           poster: poster,
+          parent_id: res.data.parent_id || null,  // null для корневой страницы
           facts: res.data.facts || {},
           social_links: res.data.social_links || {},
           seo: { ...emptyKvn.seo, ...res.data.seo } 
@@ -81,7 +110,10 @@ export default function KVNEditPage() {
       }
       if (kvn.facts && Object.keys(kvn.facts).length > 0) dataToSend.facts = kvn.facts;
       if (kvn.description) dataToSend.description = kvn.description;
-      if (kvn.parent_id) dataToSend.parent_id = kvn.parent_id;
+      // parent_id может быть null для корневой страницы
+      if (kvn.parent_id !== undefined) {
+        dataToSend.parent_id = kvn.parent_id || null;
+      }
       if (kvn.modules) dataToSend.modules = kvn.modules;
       if (kvn.tags) dataToSend.tags = kvn.tags;
       if (kvn.seo) dataToSend.seo = kvn.seo;
@@ -169,6 +201,29 @@ export default function KVNEditPage() {
                   onChange={(poster) => setKvn(p => ({ ...p, poster }))}
                   label="Постер"
                 />
+                <div className="space-y-2">
+                  <Label>Родительская страница</Label>
+                  <Select
+                    value={kvn.parent_id || 'null'}
+                    onValueChange={(v) => setKvn(p => ({ ...p, parent_id: v === 'null' ? null : v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Корневая страница" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">Корневая страница (без родителя)</SelectItem>
+                      {parentOptions.map((parent) => (
+                        <SelectItem key={parent.id} value={parent.id}>
+                          {'  '.repeat(parent.level || 0)}
+                          {parent.name || parent.title} ({parent.full_path || parent.slug})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Выберите родительскую страницу для создания иерархии. Оставьте "Корневая страница" для страниц верхнего уровня.
+                  </p>
+                </div>
               </CardContent>
             </Card>
             <Card>
