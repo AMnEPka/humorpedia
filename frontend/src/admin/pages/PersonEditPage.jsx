@@ -89,7 +89,15 @@ export default function PersonEditPage() {
           const response = await contentApi.getPerson(id);
           // Преобразуем photo из строки в объект MediaFile, если нужно
           let photo = response.data.photo;
-          if (photo) {
+          
+          // Проверяем, есть ли реальное фото
+          const hasValidPhoto = photo && (
+            (typeof photo === 'string' && photo.trim() !== '') ||
+            (typeof photo === 'object' && photo !== null && 
+             ((photo.url && photo.url.trim() !== '') || (photo.thumbnail && photo.thumbnail.trim() !== '')))
+          );
+          
+          if (hasValidPhoto) {
             if (typeof photo === 'string') {
               photo = {
                 url: photo,
@@ -97,10 +105,28 @@ export default function PersonEditPage() {
                 caption: '',
                 thumbnail: photo
               };
+            } else if (typeof photo === 'object' && photo !== null) {
+              // Если photo уже объект, нормализуем структуру
+              const photoUrl = (photo.url && photo.url.trim() !== '') ? photo.url : 
+                               (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : '';
+              const photoThumbnail = (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : 
+                                     (photo.url && photo.url.trim() !== '') ? photo.url : '';
+              
+              // Если есть хотя бы один валидный URL, создаём нормализованный объект
+              if (photoUrl) {
+                photo = {
+                  url: photoUrl,
+                  alt: photo.alt || '',
+                  caption: photo.caption || '',
+                  thumbnail: photoThumbnail
+                };
+              } else {
+                // Если нет валидного URL, считаем что фото нет
+                photo = getRandomPattern();
+              }
             }
-            // Если photo уже объект, оставляем как есть
           } else {
-            // Если фото нет, устанавливаем случайный паттерн
+            // Если фото нет или пустое, устанавливаем случайный паттерн
             photo = getRandomPattern();
           }
           
@@ -525,15 +551,15 @@ export default function PersonEditPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>
+                <p className="text-muted-foreground text-sm">Нет фактов</p>
               )}
               
               {/* Добавить новый факт */}
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex items-center gap-2 pt-4 border-t">
                 <Input
                   value={newFactKey}
                   onChange={(e) => setNewFactKey(e.target.value)}
-                  placeholder="Название факта"
+                  placeholder="Название (напр. Полное имя)"
                   className="w-1/3"
                 />
                 <Input
@@ -541,9 +567,19 @@ export default function PersonEditPage() {
                   onChange={(e) => setNewFactValue(e.target.value)}
                   placeholder="Значение"
                   className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
+                      setPerson(prev => ({
+                        ...prev,
+                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() }
+                      }));
+                      setNewFactKey('');
+                      setNewFactValue('');
+                    }
+                  }}
                 />
                 <Button 
-                  variant="outline" 
+                  variant="outline"
                   onClick={() => {
                     if (newFactKey.trim() && newFactValue.trim()) {
                       setPerson(prev => ({

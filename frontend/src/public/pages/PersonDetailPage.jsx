@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List } from 'lucide-react';
+import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -247,49 +247,26 @@ export default function PersonDetailPage() {
               </Button>
 
               {/* Facts Table Module */}
-              {sidebarModules.find(m => m.type === 'facts_table') && (
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <tbody className="divide-y">
-                      {/* Facts from facts field - unified approach */}
-                      {person.facts && Object.entries(person.facts).map(([key, value]) => (
-                        <tr key={key}>
-                          <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium w-1/3">{key}</td>
-                          <td className="px-3 py-2" dangerouslySetInnerHTML={{ __html: value }} />
-                        </tr>
-                      ))}
-                      {/* Fallback: old format fields if facts is empty */}
-                      {(!person.facts || Object.keys(person.facts).length === 0) && (
-                        <>
-                          {person.full_name && (
-                            <tr>
-                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium w-1/3">Полное имя</td>
-                              <td className="px-3 py-2">{person.full_name}</td>
-                            </tr>
-                          )}
-                          {(person.birth_date || person.bio?.birth_date) && (
-                            <tr>
-                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Дата рождения</td>
-                              <td className="px-3 py-2">{person.birth_date || person.bio?.birth_date}</td>
-                            </tr>
-                          )}
-                          {(person.birth_place || person.bio?.birth_place) && (
-                            <tr>
-                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">Место рождения</td>
-                              <td className="px-3 py-2">г. {person.birth_place || person.bio?.birth_place}</td>
-                            </tr>
-                          )}
-                          {person.bio?.extra_fields && Object.entries(person.bio.extra_fields).map(([key, value]) => (
-                            <tr key={key}>
-                              <td className="px-3 py-2 bg-gray-50 text-gray-600 font-medium">{key}</td>
-                              <td className="px-3 py-2">{value}</td>
-                            </tr>
-                          ))}
-                        </>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+              {sidebarModules.find(m => m.type === 'facts_table') && person.facts && Object.keys(person.facts).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5" /> Информация
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <table className="w-full text-sm">
+                      <tbody>
+                        {Object.entries(person.facts).map(([key, value], i) => (
+                          <tr key={i} className="border-b last:border-0">
+                            <td className="py-2 pr-4 text-gray-600 font-medium align-top">{key}</td>
+                            <td className="py-2" dangerouslySetInnerHTML={{ __html: value }} />
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
               )}
             </CardContent>
           </Card>
