@@ -215,18 +215,61 @@ export default function PersonEditPage() {
       // Синхронизируем facts с полями биографии перед сохранением
       const factsToSave = { ...person.facts };
       
+      // Функция для расчёта возраста
+      const calculateAge = (birthDate, endDate = null) => {
+        if (!birthDate) return null;
+        const birth = new Date(birthDate);
+        const end = endDate ? new Date(endDate) : new Date();
+        let age = end.getFullYear() - birth.getFullYear();
+        const monthDiff = end.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && end.getDate() < birth.getDate())) {
+          age--;
+        }
+        return age;
+      };
+      
+      // Функция для форматирования даты в читаемый формат
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const months = [
+          'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+          'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+        ];
+        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+      };
+      
       // Обновляем facts из полей биографии (всегда синхронизируем эти три поля)
       if (person.full_name) {
         factsToSave['Полное имя'] = person.full_name;
       } else {
-        // Удаляем, если поле пустое
         delete factsToSave['Полное имя'];
       }
+      
+      // Дата рождения с расчётом возраста
       if (person.bio.birth_date) {
-        factsToSave['Дата рождения'] = person.bio.birth_date;
+        const formattedBirthDate = formatDate(person.bio.birth_date);
+        
+        if (person.bio.death_date) {
+          // Если есть дата смерти - показываем только дату рождения без возраста
+          factsToSave['Дата рождения'] = formattedBirthDate;
+          
+          // Добавляем дату смерти с возрастом на момент смерти
+          const ageAtDeath = calculateAge(person.bio.birth_date, person.bio.death_date);
+          const formattedDeathDate = formatDate(person.bio.death_date);
+          factsToSave['Дата смерти'] = `${formattedDeathDate} (${ageAtDeath} лет)`;
+        } else {
+          // Если жив - показываем дату рождения с текущим возрастом
+          const currentAge = calculateAge(person.bio.birth_date);
+          factsToSave['Дата рождения'] = `${formattedBirthDate} (${currentAge} лет)`;
+          // Удаляем дату смерти из фактов, если она была
+          delete factsToSave['Дата смерти'];
+        }
       } else {
         delete factsToSave['Дата рождения'];
+        delete factsToSave['Дата смерти'];
       }
+      
       if (person.bio.birth_place) {
         factsToSave['Место рождения'] = person.bio.birth_place;
       } else {
