@@ -136,11 +136,34 @@ export default function TeamEditPage() {
             logo = getRandomPattern();
           }
           
+          // Разбираем facts - отделяем структурированные данные от произвольных
+          const loadedFacts = response.data.facts || {};
+          const structuredFields = ['founded_year', 'disbanded_year', 'captain_name', 'city', 'status', 'achievements'];
+          
+          // Структурированные факты (из старого формата)
+          const structuredFacts = {
+            founded_year: loadedFacts.founded_year || null,
+            disbanded_year: loadedFacts.disbanded_year || null,
+            captain_name: loadedFacts.captain_name || '',
+            city: loadedFacts.city || '',
+            status: loadedFacts.status || 'active',
+            achievements: loadedFacts.achievements || []
+          };
+          
+          // Произвольные факты (ключ-значение) - все остальные поля
+          const customFacts = {};
+          Object.entries(loadedFacts).forEach(([key, value]) => {
+            if (!structuredFields.includes(key) && typeof value === 'string') {
+              customFacts[key] = value;
+            }
+          });
+          
           setTeam({
             ...emptyTeam,
             ...response.data,
             logo: logo,
-            facts: { ...emptyTeam.facts, ...response.data.facts },
+            facts: customFacts,
+            structured_facts: structuredFacts,
             social_links: { ...emptyTeam.social_links, ...response.data.social_links },
             seo: { ...emptyTeam.seo, ...response.data.seo }
           });
