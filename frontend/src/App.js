@@ -62,6 +62,8 @@ import PolicyPage from './public/pages/PolicyPage';
 import SectionDetailPage from './public/pages/SectionDetailPage';
 import SearchPage from './public/pages/SearchPage';
 import TagSearchPage from './public/pages/TagSearchPage';
+import CitiesListPagePublic from './public/pages/CitiesListPage';
+import CityDetailPage from './public/pages/CityDetailPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
