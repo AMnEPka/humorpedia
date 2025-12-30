@@ -422,7 +422,7 @@ export default function TeamEditPage() {
         <TabsContent value="facts" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Факты о команде</CardTitle>
+              <CardTitle>Основные данные о команде</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
@@ -430,10 +430,10 @@ export default function TeamEditPage() {
                   <Label>Год основания</Label>
                   <Input
                     type="number"
-                    value={team.facts.founded_year || ''}
+                    value={team.structured_facts?.founded_year || ''}
                     onChange={(e) => setTeam(prev => ({
                       ...prev,
-                      facts: { ...prev.facts, founded_year: parseInt(e.target.value) || null }
+                      structured_facts: { ...prev.structured_facts, founded_year: parseInt(e.target.value) || null }
                     }))}
                     placeholder="2010"
                   />
@@ -442,10 +442,10 @@ export default function TeamEditPage() {
                   <Label>Год распада</Label>
                   <Input
                     type="number"
-                    value={team.facts.disbanded_year || ''}
+                    value={team.structured_facts?.disbanded_year || ''}
                     onChange={(e) => setTeam(prev => ({
                       ...prev,
-                      facts: { ...prev.facts, disbanded_year: parseInt(e.target.value) || null }
+                      structured_facts: { ...prev.structured_facts, disbanded_year: parseInt(e.target.value) || null }
                     }))}
                     placeholder="Оставить пустым если активна"
                   />
@@ -453,10 +453,10 @@ export default function TeamEditPage() {
                 <div className="space-y-2">
                   <Label>Капитан</Label>
                   <Input
-                    value={team.facts.captain_name || ''}
+                    value={team.structured_facts?.captain_name || ''}
                     onChange={(e) => setTeam(prev => ({
                       ...prev,
-                      facts: { ...prev.facts, captain_name: e.target.value }
+                      structured_facts: { ...prev.structured_facts, captain_name: e.target.value }
                     }))}
                     placeholder="Имя капитана"
                   />
@@ -464,10 +464,10 @@ export default function TeamEditPage() {
                 <div className="space-y-2">
                   <Label>Город</Label>
                   <Input
-                    value={team.facts.city || ''}
+                    value={team.structured_facts?.city || ''}
                     onChange={(e) => setTeam(prev => ({
                       ...prev,
-                      facts: { ...prev.facts, city: e.target.value }
+                      structured_facts: { ...prev.structured_facts, city: e.target.value }
                     }))}
                     placeholder="Пятигорск"
                   />
@@ -475,8 +475,8 @@ export default function TeamEditPage() {
                 <div className="space-y-2">
                   <Label>Статус</Label>
                   <Select 
-                    value={team.facts.status} 
-                    onValueChange={(v) => setTeam(prev => ({ ...prev, facts: { ...prev.facts, status: v } }))}
+                    value={team.structured_facts?.status || 'active'} 
+                    onValueChange={(v) => setTeam(prev => ({ ...prev, structured_facts: { ...prev.structured_facts, status: v } }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -509,16 +509,16 @@ export default function TeamEditPage() {
                 </Button>
               </div>
               <div className="space-y-2">
-                {team.facts.achievements.map((item, i) => (
+                {(team.structured_facts?.achievements || []).map((item, i) => (
                   <div key={i} className="flex items-center justify-between bg-muted p-2 rounded">
                     <span>{item}</span>
                     <button
                       type="button"
                       onClick={() => setTeam(prev => ({
                         ...prev,
-                        facts: {
-                          ...prev.facts,
-                          achievements: prev.facts.achievements.filter((_, j) => j !== i)
+                        structured_facts: {
+                          ...prev.structured_facts,
+                          achievements: prev.structured_facts.achievements.filter((_, j) => j !== i)
                         }
                       }))}
                       className="text-muted-foreground hover:text-destructive"
