@@ -110,19 +110,36 @@ export default function TeamsListPage() {
               <Link key={team.id} to={`/kvn/teams/${team.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="aspect-square bg-gray-100 overflow-hidden">
-                    {team.logo ? (
-                      <img 
-                        src={team.logo} 
-                        alt={team.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-blue-50 to-blue-100">
-                        <span className="text-3xl font-bold text-blue-300">
-                          {team.title?.charAt(0)?.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    {(() => {
+                      // Получаем URL логотипа из различных полей
+                      let logoUrl = null;
+                      const logo = team.logo || team.poster || team.photo || team.image || team.cover_image;
+                      
+                      if (logo) {
+                        if (typeof logo === 'string') {
+                          logoUrl = logo.startsWith('/') || logo.startsWith('http') ? logo : `/${logo}`;
+                        } else if (typeof logo === 'object' && logo !== null) {
+                          logoUrl = logo.url || logo.thumbnail || logo.cover_image;
+                          if (logoUrl && !logoUrl.startsWith('/') && !logoUrl.startsWith('http')) {
+                            logoUrl = `/${logoUrl}`;
+                          }
+                        }
+                      }
+                      
+                      return logoUrl ? (
+                        <img 
+                          src={logoUrl} 
+                          alt={team.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gradient-to-br from-blue-50 to-blue-100">
+                          <span className="text-3xl font-bold text-blue-300">
+                            {team.title?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <CardContent className="p-3">
                     <h3 className="font-medium text-sm text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">

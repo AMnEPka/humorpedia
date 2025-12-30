@@ -13,7 +13,21 @@ import { ExternalLink } from 'lucide-react';
  * Модуль фото/постера
  */
 export function PosterPhotoModule({ data, moduleData, className = '' }) {
-  const imageUrl = data.poster || data.cover_image?.url || data.image || data.photo;
+  // Получаем URL изображения из различных полей
+  let imageUrl = null;
+  const image = data.poster || data.cover_image || data.image || data.photo || data.logo;
+  
+  if (image) {
+    if (typeof image === 'string') {
+      imageUrl = image.startsWith('/') || image.startsWith('http') ? image : `/${image}`;
+    } else if (typeof image === 'object' && image !== null) {
+      imageUrl = image.url || image.thumbnail || image.cover_image;
+      if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+        imageUrl = `/${imageUrl}`;
+      }
+    }
+  }
+  
   const altText = data.cover_image?.alt || data.title || data.full_name || data.name;
   const size = moduleData?.size || 'medium';
   const shape = moduleData?.shape || 'rounded';
@@ -143,7 +157,7 @@ function calculateAge(birthDate, endDate = null) {
 /**
  * Функция для добавления возраста к дате (если возможно)
  */
-function addAgeToDate(dateText, key, birthDate, deathDate = null) {
+function addAgeToDate(dateText, key, birthDate, deathDate = null, birthDateText = null) {
   if (!dateText) return dateText;
   
   // Убираем существующий возраст, если он есть
@@ -161,19 +175,53 @@ function addAgeToDate(dateText, key, birthDate, deathDate = null) {
   }
   
   // Если это дата смерти, используем дату смерти для расчета возраста на момент смерти
-  if (key === 'Дата смерти' && birthDate && deathDate) {
-    try {
-      const birth = birthDate instanceof Date ? birthDate : new Date(birthDate);
-      const death = deathDate instanceof Date ? deathDate : new Date(deathDate);
-      if (!isNaN(birth.getTime()) && !isNaN(death.getTime())) {
-        const ageAtDeath = calculateAge(birth, death);
-        if (ageAtDeath !== null) {
-          return `${textWithoutAge} (${ageAtDeath} лет)`;
+  if (key === 'Дата смерти') {
+    // Нужны обе даты для расчета возраста на момент смерти
+    let birth = null;
+    let death = null;
+    
+    // Получаем дату рождения
+    if (birthDate) {
+      try {
+        birth = birthDate instanceof Date ? birthDate : new Date(birthDate);
+        if (isNaN(birth.getTime())) {
+          birth = null;
         }
+      } catch (e) {
+        birth = null;
       }
-    } catch (e) {
-      // Игнорируем ошибку
     }
+    
+    // Если не удалось получить дату рождения из birthDate, пытаемся распарсить из текста
+    if (!birth && birthDateText) {
+      birth = parseDateFromText(birthDateText);
+    }
+    
+    // Получаем дату смерти
+    if (deathDate) {
+      try {
+        death = deathDate instanceof Date ? deathDate : new Date(deathDate);
+        if (isNaN(death.getTime())) {
+          death = null;
+        }
+      } catch (e) {
+        death = null;
+      }
+    }
+    
+    // Если не удалось получить дату смерти из deathDate, пытаемся распарсить из текста
+    if (!death) {
+      death = parseDateFromText(textWithoutAge);
+    }
+    
+    // Если есть обе даты, рассчитываем возраст на момент смерти
+    if (birth && death) {
+      const ageAtDeath = calculateAge(birth, death);
+      if (ageAtDeath !== null) {
+        return `${textWithoutAge} (${ageAtDeath} лет)`;
+      }
+    }
+    
     return textWithoutAge;
   }
   
@@ -216,22 +264,70 @@ export function FactsTableModule({ data, moduleData, className = '' }) {
   const title = moduleData?.title || 'Информация';
   const style = moduleData?.style || 'card';
   
+  // Фильтруем facts: оставляем только строковые значения
+  // Это защищает от объектов ошибок валидации, которые могут попасть в facts
+  const validFacts = Object.entries(facts).reduce((acc, [key, value]) => {
+    // Принимаем только строки и числа (числа конвертируем в строки)
+    if (value === null || value === undefined) return acc;
+    if (typeof value === 'string') {
+      acc[key] = value;
+    } else if (typeof value === 'number') {
+      acc[key] = String(value);
+    } else if (typeof value === 'boolean') {
+      acc[key] = value ? 'Да' : 'Нет';
+    }
+    // Игнорируем объекты, массивы и другие типы
+    return acc;
+  }, {});
+  
   // Получаем даты из bio для расчета возраста
-  const birthDate = data.bio?.birth_date || null;
+  let birthDate = data.bio?.birth_date || null;
+  // Если дата рождения не в bio, пытаемся распарсить из facts
+  if (!birthDate && validFacts['Дата рождения']) {
+    birthDate = parseDateFromText(removeAgeFromDate(validFacts['Дата рождения']));
+  }
+  // Если birthDate - это строка, конвертируем в Date для расчета
+  if (birthDate && typeof birthDate === 'string') {
+    try {
+      const date = new Date(birthDate);
+      if (!isNaN(date.getTime())) {
+        birthDate = date;
+      }
+    } catch (e) {
+      birthDate = null;
+    }
+  }
+  
   // Проверяем дату смерти в bio И в facts (может быть добавлена вручную)
-  const deathDateFromBio = data.bio?.death_date || null;
-  const deathDateFromFacts = facts['Дата смерти'] ? parseDateFromText(removeAgeFromDate(facts['Дата смерти'])) : null;
-  const deathDate = deathDateFromBio || deathDateFromFacts;
+  let deathDate = data.bio?.death_date || null;
+  if (!deathDate && validFacts['Дата смерти']) {
+    deathDate = parseDateFromText(removeAgeFromDate(validFacts['Дата смерти']));
+  }
+  // Если deathDate - это строка, конвертируем в Date для расчета
+  if (deathDate && typeof deathDate === 'string') {
+    try {
+      const date = new Date(deathDate);
+      if (!isNaN(date.getTime())) {
+        deathDate = date;
+      }
+    } catch (e) {
+      deathDate = null;
+    }
+  }
+  
+  // Получаем текст даты рождения из facts для парсинга, если birthDate null
+  const birthDateText = validFacts['Дата рождения'] ? removeAgeFromDate(validFacts['Дата рождения']) : null;
   
   // Обрабатываем факты: добавляем возраст к датам
-  const processedFacts = Object.entries(facts).reduce((acc, [key, value]) => {
+  const processedFacts = Object.entries(validFacts).reduce((acc, [key, value]) => {
     if (!value) return acc;
     
     let processedValue = value;
     
     // Если это дата рождения или дата смерти, добавляем возраст
     if (key === 'Дата рождения' || key === 'Дата смерти') {
-      processedValue = addAgeToDate(value, key, birthDate, deathDate);
+      // Передаем также текст даты рождения для парсинга, если birthDate null
+      processedValue = addAgeToDate(value, key, birthDate, deathDate, birthDateText);
     }
     
     acc[key] = processedValue;
