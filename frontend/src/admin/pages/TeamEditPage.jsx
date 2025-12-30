@@ -59,6 +59,8 @@ export default function TeamEditPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [achievementInput, setAchievementInput] = useState('');
+  const [newFactKey, setNewFactKey] = useState('');
+  const [newFactValue, setNewFactValue] = useState('');
 
   // Функция для получения случайного паттерна
   const getRandomPattern = () => {
