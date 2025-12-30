@@ -27,6 +27,9 @@ import QuizEditPage from './admin/pages/QuizEditPage';
 // Admin - Wiki
 import WikiListPage from './admin/pages/WikiListPage';
 import WikiEditPage from './admin/pages/WikiEditPage';
+// Admin - Cities (Geography)
+import CitiesListPage from './admin/pages/CitiesListPage';
+import CityEditPage from './admin/pages/CityEditPage';
 // Admin - Sections
 import SectionsListPage from './admin/pages/SectionsListPage';
 import SectionEditPage from './admin/pages/SectionEditPage';
