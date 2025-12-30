@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+console.log('[Public API] BACKEND_URL:', BACKEND_URL);
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL + '/api',
+  baseURL: BACKEND_URL + '/api',
   headers: {
     'Content-Type': 'application/json',
   },
