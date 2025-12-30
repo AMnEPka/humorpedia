@@ -12,7 +12,8 @@ import {
   RatingWidgetModule, 
   TagsCloudModule, 
   SocialLinksModule,
-  isSystemModule 
+  isSystemModule,
+  addAgeToDate
 } from '@/components/SystemModules';
 
 // Table of Contents component
@@ -247,11 +248,77 @@ export default function PersonDetailPage() {
               </Button>
 
               {/* Facts Table Module */}
-              {sidebarModules.find(m => m.type === 'facts_table') && (
-                <FactsTableModule 
-                  data={person} 
-                  moduleData={sidebarModules.find(m => m.type === 'facts_table')?.data || {}} 
-                />
+              {sidebarModules.find(m => m.type === 'facts_table') && person.facts && Object.keys(person.facts).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5" /> Информация
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <table className="w-full text-sm border-collapse border border-gray-200">
+                      <tbody>
+                        {Object.entries(person.facts)
+                          .filter(([_, value]) => {
+                            // Фильтруем только валидные значения для отображения
+                            return value !== null && value !== undefined && 
+                                   (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
+                          })
+                          .map(([key, value], i) => {
+                            // Конвертируем value в строку для безопасного отображения
+                            let displayValue = '';
+                            if (typeof value === 'string') {
+                              displayValue = value;
+                            } else if (typeof value === 'number') {
+                              displayValue = String(value);
+                            } else if (typeof value === 'boolean') {
+                              displayValue = value ? 'Да' : 'Нет';
+                            }
+                            
+                            // Обрабатываем даты: добавляем возраст
+                            if (key === 'Дата рождения' || key === 'Дата смерти') {
+                              // Получаем даты из bio для расчета возраста
+                              let birthDate = person.bio?.birth_date || null;
+                              if (birthDate && typeof birthDate === 'string') {
+                                try {
+                                  const date = new Date(birthDate);
+                                  if (!isNaN(date.getTime())) {
+                                    birthDate = date;
+                                  }
+                                } catch (e) {
+                                  birthDate = null;
+                                }
+                              }
+                              
+                              let deathDate = person.bio?.death_date || null;
+                              if (deathDate && typeof deathDate === 'string') {
+                                try {
+                                  const date = new Date(deathDate);
+                                  if (!isNaN(date.getTime())) {
+                                    deathDate = date;
+                                  }
+                                } catch (e) {
+                                  deathDate = null;
+                                }
+                              }
+                              
+                              // Используем функцию addAgeToDate для расчета возраста
+                              const birthDateText = person.facts['Дата рождения'] ? 
+                                person.facts['Дата рождения'].replace(/\s*\(\d+\s+лет\)\s*$/, '').trim() : null;
+                              displayValue = addAgeToDate(displayValue, key, birthDate, deathDate, birthDateText);
+                            }
+                            
+                            return (
+                              <tr key={i} className={`border-b border-gray-200 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                <td className="py-2 pr-4 pl-2 text-gray-600 font-medium border-r border-gray-200">{key}</td>
+                                <td className="py-2 pl-2" dangerouslySetInnerHTML={{ __html: displayValue }} />
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
               )}
             </CardContent>
           </Card>

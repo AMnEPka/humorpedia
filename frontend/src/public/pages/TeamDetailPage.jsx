@@ -202,12 +202,12 @@ export default function TeamDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm border-collapse border border-gray-200">
                   <tbody>
                     {Object.entries(team.facts).map(([key, value], i) => (
-                      <tr key={i} className="border-b last:border-0">
-                        <td className="py-2 pr-4 text-gray-600 font-medium">{key}</td>
-                        <td className="py-2" dangerouslySetInnerHTML={{ __html: value }} />
+                      <tr key={i} className={`border-b border-gray-200 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                        <td className="py-2 pr-4 pl-2 text-gray-600 font-medium border-r border-gray-200">{key}</td>
+                        <td className="py-2 pl-2" dangerouslySetInnerHTML={{ __html: value }} />
                       </tr>
                     ))}
                   </tbody>

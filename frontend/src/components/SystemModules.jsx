@@ -157,7 +157,7 @@ function calculateAge(birthDate, endDate = null) {
 /**
  * Функция для добавления возраста к дате (если возможно)
  */
-function addAgeToDate(dateText, key, birthDate, deathDate = null, birthDateText = null) {
+export function addAgeToDate(dateText, key, birthDate, deathDate = null, birthDateText = null) {
   if (!dateText) return dateText;
   
   // Убираем существующий возраст, если он есть
