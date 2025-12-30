@@ -910,6 +910,27 @@ def create_kvn_importer() -> UniversalImporter:
     )
 
 
+def create_city_importer() -> UniversalImporter:
+    """
+    Создаёт импортер для городов (География, parent_id=34).
+    
+    Использование:
+        python universal_importer.py --type city --parent-id 34 --apply
+    """
+    return UniversalImporter(
+        content_type='city',
+        collection='cities',
+        modules=[
+            ModuleConfig('poster_photo'),
+            ModuleConfig('facts_table', title='Факты', style='card'),
+            ModuleConfig('rating_widget', title='Оценка', style='smileys'),
+            ModuleConfig('tags_cloud', style='badges'),
+            ModuleConfig('text_block', title='', migx_section='info', migx_field='subtitle', strip_first_heading=True),
+            ModuleConfig('text_block', title='', all_text_sections=True),
+        ]
+    )
+
+
 # ============================================================================
 # CLI
 # ============================================================================
