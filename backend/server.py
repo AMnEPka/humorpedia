@@ -280,6 +280,7 @@ async def get_stats(request: Request):
         "quizzes": await db.quizzes.count_documents({"status": "published"}),
         "wiki": await db.wiki.count_documents({"status": "published"}),
         "sections": await db.sections.count_documents({"status": "published"}),
+        "cities": await db.cities.count_documents({"status": "published"}),
         "users": await db.users.count_documents({"active": True}),
         "comments": await db.comments.count_documents({"deleted": False}),
         "tags": await db.tags.count_documents({})
