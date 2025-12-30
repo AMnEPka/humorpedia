@@ -971,9 +971,12 @@ if __name__ == '__main__':
   
   # Импорт всех страниц КВН (parent=32) пакетами
   python universal_importer.py --type kvn --parent-id 32 --apply
+
+  # Импорт всех городов (parent=34) пакетами
+  python universal_importer.py --type city --parent-id 34 --apply
         """
     )
-    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz', 'kvn'], required=True,
+    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz', 'kvn', 'city'], required=True,
                         help='Тип шаблона для импорта (определяет набор модулей)')
     parser.add_argument('--collection', type=str, default=None,
                         help='Коллекция MongoDB (по умолчанию: shows/people/teams)')
