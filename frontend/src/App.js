@@ -12,6 +12,9 @@ import TeamEditPage from './admin/pages/TeamEditPage';
 // Admin - Shows
 import AdminShowsListPage from './admin/pages/ShowsListPage';
 import ShowEditPage from './admin/pages/ShowEditPage';
+// Admin - KVN
+import KVNListPage from './admin/pages/KVNListPage';
+import KVNEditPage from './admin/pages/KVNEditPage';
 // Admin - Articles
 import AdminArticlesListPage from './admin/pages/ArticlesListPage';
 import ArticleEditPage from './admin/pages/ArticleEditPage';
@@ -143,6 +146,10 @@ function AppRoutes() {
       {/* Admin - Shows */}
       <Route path="/admin/shows" element={<ProtectedRoute><AdminShowsListPage /></ProtectedRoute>} />
       <Route path="/admin/shows/:id" element={<ProtectedRoute><ShowEditPage /></ProtectedRoute>} />
+      
+      {/* Admin - KVN */}
+      <Route path="/admin/kvn" element={<ProtectedRoute><KVNListPage /></ProtectedRoute>} />
+      <Route path="/admin/kvn/:id" element={<ProtectedRoute><KVNEditPage /></ProtectedRoute>} />
       
       {/* Admin - Articles */}
       <Route path="/admin/articles" element={<ProtectedRoute><AdminArticlesListPage /></ProtectedRoute>} />

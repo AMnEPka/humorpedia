@@ -81,6 +81,14 @@ export const contentApi = {
   createShow: (data) => api.post('/content/shows', data),
   updateShow: (id, data) => api.put(`/content/shows/${id}`, data),
   deleteShow: (id) => api.delete(`/content/shows/${id}`),
+  
+  // KVN
+  listKvn: (params) => api.get('/content/kvn', { params }),
+  listKvnHierarchy: () => api.get('/content/kvn-hierarchy'),
+  getKvn: (id) => api.get(`/content/kvn/${id}`),
+  createKvn: (data) => api.post('/content/kvn', data),
+  updateKvn: (id, data) => api.put(`/content/kvn/${id}`, data),
+  deleteKvn: (id) => api.delete(`/content/kvn/${id}`),
 
   // Articles
   listArticles: (params) => api.get('/content/articles', { params }),

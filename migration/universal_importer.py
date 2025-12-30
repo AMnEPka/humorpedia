@@ -560,6 +560,23 @@ class UniversalImporter:
             }
         }
         
+        # Специфичные поля для разных типов контента
+        if self.content_type == 'kvn':
+            # Для KVN добавляем поля name и child_kvn_ids
+            doc['name'] = sc.longtitle or sc.pagetitle
+            doc['child_kvn_ids'] = []
+            doc['person_ids'] = []
+            doc['team_ids'] = []
+            doc['related_kvn_ids'] = []
+            # Преобразуем poster в MediaFile формат если это строка
+            if doc.get('poster') and isinstance(doc['poster'], str):
+                doc['poster'] = {
+                    'url': doc['poster'],
+                    'alt': '',
+                    'caption': '',
+                    'thumbnail': doc['poster']
+                }
+        
         return doc
     
     def import_by_parent(
@@ -872,6 +889,27 @@ def create_quiz_importer() -> UniversalImporter:
     )
 
 
+def create_kvn_importer() -> UniversalImporter:
+    """Создаёт импортер для страниц КВН (parent=32).
+    
+    КВН страницы имеют иерархическую структуру до 4 уровней.
+    Содержат постер, факты, рейтинг, теги, социальные ссылки и текстовые блоки.
+    """
+    return UniversalImporter(
+        content_type='kvn',
+        collection='kvn',
+        modules=[
+            ModuleConfig('poster_photo'),
+            ModuleConfig('facts_table', title='Информация', style='card'),
+            ModuleConfig('rating_widget', title='Оценка', style='smileys'),
+            ModuleConfig('tags_cloud', style='badges'),
+            ModuleConfig('social_links', title='Ссылки', style='list'),
+            ModuleConfig('text_block', title='', migx_section='info', migx_field='subtitle', strip_first_heading=True),
+            ModuleConfig('text_block', title='', all_text_sections=True),
+        ]
+    )
+
+
 # ============================================================================
 # CLI
 # ============================================================================
@@ -906,9 +944,15 @@ if __name__ == '__main__':
 
   # Импорт всех квизов (parent=31) пакетами по 25 штук
   python universal_importer.py --type quiz --parent-id 31 --apply
+  
+  # Импорт корневой страницы КВН (id=32)
+  python universal_importer.py --type kvn --ids 32 --apply
+  
+  # Импорт всех страниц КВН (parent=32) пакетами
+  python universal_importer.py --type kvn --parent-id 32 --apply
         """
     )
-    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz'], required=True,
+    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz', 'kvn'], required=True,
                         help='Тип шаблона для импорта (определяет набор модулей)')
     parser.add_argument('--collection', type=str, default=None,
                         help='Коллекция MongoDB (по умолчанию: shows/people/teams)')
@@ -949,6 +993,8 @@ if __name__ == '__main__':
         importer = create_article_importer()
     elif args.type == 'quiz':
         importer = create_quiz_importer()
+    elif args.type == 'kvn':
+        importer = create_kvn_importer()
     
     # Переопределяем коллекцию если указана
     if args.collection:

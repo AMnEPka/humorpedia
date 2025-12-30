@@ -14,7 +14,8 @@ from models.content import (
     Article, ArticleCreate, ArticleUpdate,
     News, NewsCreate, NewsUpdate,
     Quiz, QuizCreate, QuizUpdate,
-    Wiki, WikiCreate, WikiUpdate
+    Wiki, WikiCreate, WikiUpdate,
+    KVN, KVNCreate, KVNUpdate
 )
 from utils.database import get_db
 from services.tags import tag_service
@@ -515,6 +516,274 @@ async def update_show(id: str, data: ShowUpdate):
 async def delete_show(id: str):
     """Delete show"""
     return await delete_content("shows", id, "Show not found")
+
+
+# === KVN ROUTES ===
+
+@router.post("/kvn", response_model=dict)
+async def create_kvn(data: KVNCreate):
+    """Create a new KVN page"""
+    await check_slug_unique("kvn", data.slug)
+    
+    db = await get_db()
+    
+    # Calculate level and full_path based on parent
+    level = 0
+    full_path = data.slug
+    
+    if data.parent_id:
+        parent = await db.kvn.find_one({"_id": data.parent_id})
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent KVN page not found")
+        
+        parent_level = parent.get("level", 0)
+        if parent_level >= 4:
+            raise HTTPException(status_code=400, detail="Maximum hierarchy level (4) reached")
+        
+        level = parent_level + 1
+        parent_path = parent.get("full_path", parent.get("slug"))
+        full_path = f"{parent_path}/{data.slug}"
+    
+    kvn = KVN(
+        title=data.title,
+        slug=data.slug,
+        name=data.name,
+        poster=data.poster,
+        description=data.description,
+        parent_id=data.parent_id,
+        level=level,
+        full_path=full_path,
+        facts=data.facts or {},
+        social_links=data.social_links or {},
+        modules=data.modules,
+        tags=data.tags,
+        seo=data.seo or {},
+        status=data.status,
+        team_ids=data.team_ids or [],
+        person_ids=data.person_ids or []
+    )
+    
+    result = await create_content("kvn", kvn, data.tags)
+    
+    # Update parent's child_kvn_ids if parent exists
+    if data.parent_id:
+        await db.kvn.update_one(
+            {"_id": data.parent_id},
+            {"$addToSet": {"child_kvn_ids": result["id"]}}
+        )
+    
+    # Update person and team links
+    if data.person_ids:
+        await linking_service.update_person_links("kvn", result["id"], data.person_ids)
+    if data.team_ids:
+        await linking_service.update_team_links("kvn", result["id"], data.team_ids)
+    
+    return result
+
+
+@router.get("/kvn", response_model=dict)
+async def list_kvn(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
+    status: Optional[ContentStatus] = None,
+    include_children: bool = False
+):
+    """List KVN pages"""
+    db = await get_db()
+    query = {}
+    
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"name": {"$regex": search, "$options": "i"}},
+            {"slug": {"$regex": search, "$options": "i"}}
+        ]
+    
+    if status:
+        query["status"] = status.value
+    
+    if not include_children:
+        query["parent_id"] = None  # Only root pages
+    
+    count = await db.kvn.count_documents(query)
+    cursor = db.kvn.find(query, {"_id": 0}).sort("title", 1).skip(skip).limit(limit)
+    items = await cursor.to_list(limit)
+    
+    return {"items": items, "total": count, "skip": skip, "limit": limit}
+
+
+@router.get("/kvn/by-path/{path:path}", response_model=dict)
+async def get_kvn_by_path(path: str):
+    """Get KVN page by full path"""
+    db = await get_db()
+    kvn = await db.kvn.find_one({"full_path": path}, {"_id": 0})
+    if not kvn:
+        kvn = await db.kvn.find_one({"slug": path}, {"_id": 0})
+    if not kvn:
+        raise HTTPException(status_code=404, detail="KVN page not found")
+    return kvn
+
+
+@router.get("/kvn/{parent_slug}/children", response_model=dict)
+async def get_kvn_children(parent_slug: str):
+    """Get children of a KVN page"""
+    db = await get_db()
+    parent = await db.kvn.find_one({"slug": parent_slug})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent KVN page not found")
+    
+    parent_id = parent.get("id")
+    children = await db.kvn.find(
+        {"parent_id": parent_id},
+        {"_id": 0}
+    ).sort("title", 1).to_list(100)
+    
+    return {"items": children, "total": len(children), "parent": parent.get("title")}
+
+
+@router.get("/kvn/{id_or_slug}", response_model=dict)
+async def get_kvn(id_or_slug: str):
+    """Get KVN page by ID or slug"""
+    return await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
+
+
+@router.get("/kvn-hierarchy", response_model=dict)
+async def get_kvn_hierarchy(
+    status: Optional[ContentStatus] = None
+):
+    """Get all KVN pages with hierarchy for admin panel"""
+    db = await get_db()
+    
+    query = {}
+    if status:
+        query["status"] = status.value
+    
+    all_kvn = await db.kvn.find(query, {"_id": 0}).sort([("level", 1), ("title", 1)]).to_list(1000)
+    
+    kvn_by_id = {}
+    for k in all_kvn:
+        kvn_by_id[k.get('id')] = k
+    
+    root_kvn = []
+    
+    for kvn in all_kvn:
+        kvn['children'] = []
+        parent_id = kvn.get('parent_id')
+        
+        if not parent_id:
+            root_kvn.append(kvn)
+        else:
+            parent = kvn_by_id.get(parent_id)
+            if parent:
+                if 'children' not in parent:
+                    parent['children'] = []
+                parent['children'].append(kvn)
+    
+    return {"items": root_kvn, "total": len(all_kvn)}
+
+
+@router.put("/kvn/{id}", response_model=dict)
+async def update_kvn(id: str, data: KVNUpdate):
+    """Update KVN page"""
+    db = await get_db()
+    
+    update_data = {}
+    
+    if data.title is not None:
+        update_data["title"] = data.title
+    if data.slug is not None:
+        await check_slug_unique("kvn", data.slug, exclude_id=id)
+        update_data["slug"] = data.slug
+    if data.name is not None:
+        update_data["name"] = data.name
+    if data.poster is not None:
+        if isinstance(data.poster, dict) and not data.poster.get('url'):
+            update_data["poster"] = None
+        else:
+            update_data["poster"] = data.poster.model_dump() if hasattr(data.poster, 'model_dump') else data.poster
+    if data.description is not None:
+        update_data["description"] = data.description
+    if data.parent_id is not None:
+        update_data["parent_id"] = data.parent_id
+        if data.parent_id:
+            parent = await db.kvn.find_one({"_id": data.parent_id})
+            if parent:
+                parent_level = parent.get("level", 0)
+                if parent_level >= 4:
+                    raise HTTPException(status_code=400, detail="Maximum hierarchy level (4) reached")
+                update_data["level"] = parent_level + 1
+                parent_path = parent.get("full_path", parent.get("slug"))
+                current_slug = data.slug or (await db.kvn.find_one({"_id": id}, {"slug": 1})).get("slug")
+                update_data["full_path"] = f"{parent_path}/{current_slug}"
+        else:
+            current_slug = data.slug or (await db.kvn.find_one({"_id": id}, {"slug": 1})).get("slug")
+            update_data["level"] = 0
+            update_data["full_path"] = current_slug
+    if data.facts is not None:
+        update_data["facts"] = data.facts
+    if data.social_links is not None:
+        update_data["social_links"] = data.social_links.model_dump() if hasattr(data.social_links, 'model_dump') else data.social_links
+    if data.modules is not None:
+        update_data["modules"] = [
+            m.model_dump() if hasattr(m, 'model_dump') else (m if isinstance(m, dict) else {})
+            for m in data.modules
+        ]
+    if data.tags is not None:
+        update_data["tags"] = data.tags
+        await tag_service.sync_tags(data.tags)
+    if data.seo is not None:
+        update_data["seo"] = data.seo.model_dump() if hasattr(data.seo, 'model_dump') else data.seo
+    if data.status is not None:
+        update_data["status"] = data.status.value if hasattr(data.status, 'value') else data.status
+    if data.team_ids is not None:
+        update_data["team_ids"] = data.team_ids
+    if data.person_ids is not None:
+        update_data["person_ids"] = data.person_ids
+    if data.related_kvn_ids is not None:
+        update_data["related_kvn_ids"] = data.related_kvn_ids
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.kvn.update_one({"_id": id}, {"$set": update_data})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="KVN page not found")
+    
+    if data.person_ids is not None:
+        await linking_service.update_person_links("kvn", id, data.person_ids)
+    if data.team_ids is not None:
+        await linking_service.update_team_links("kvn", id, data.team_ids)
+    
+    updated = await db.kvn.find_one({"_id": id}, {"_id": 0})
+    return updated
+
+
+@router.delete("/kvn/{id}")
+async def delete_kvn(id: str):
+    """Delete KVN page"""
+    db = await get_db()
+    
+    kvn = await db.kvn.find_one({"_id": id})
+    if not kvn:
+        raise HTTPException(status_code=404, detail="KVN page not found")
+    
+    if kvn.get("child_kvn_ids"):
+        raise HTTPException(status_code=400, detail="Cannot delete KVN page with children. Delete children first.")
+    
+    if kvn.get("parent_id"):
+        await db.kvn.update_one(
+            {"_id": kvn["parent_id"]},
+            {"$pull": {"child_kvn_ids": id}}
+        )
+    
+    await linking_service.remove_content_links("kvn", id)
+    
+    result = await db.kvn.delete_one({"_id": id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="KVN page not found")
+    
+    return {"success": True}
 
 
 # === ARTICLE ROUTES ===

@@ -1,0 +1,279 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { contentApi, getErrorMessage } from '../utils/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
+import ModuleEditor from '../components/ModuleEditor';
+import TagSelector from '../components/TagSelector';
+import PersonSelector from '../components/PersonSelector';
+// import TeamSelector from '../components/TeamSelector'; // TODO: создать компонент
+import MediaSelector from '../components/MediaSelector';
+
+const emptyKvn = {
+  title: '', slug: '', name: '', status: 'draft',
+  poster: null, description: '',
+  facts: {},
+  social_links: {},
+  modules: [], tags: [], person_ids: [], team_ids: [],
+  seo: { meta_title: '', meta_description: '' }
+};
+
+export default function KVNEditPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isNew = id === 'new';
+
+  const [kvn, setKvn] = useState(emptyKvn);
+  const [loading, setLoading] = useState(!isNew);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [newFactKey, setNewFactKey] = useState('');
+  const [newFactValue, setNewFactValue] = useState('');
+
+  useEffect(() => {
+    if (!isNew) {
+      contentApi.getKvn(id).then(res => {
+        let poster = res.data.poster;
+        if (poster) {
+          if (typeof poster === 'string') {
+            poster = { url: poster, alt: '', caption: '', thumbnail: poster };
+          }
+        }
+        
+        setKvn({ 
+          ...emptyKvn, 
+          ...res.data, 
+          poster: poster,
+          facts: res.data.facts || {},
+          social_links: res.data.social_links || {},
+          seo: { ...emptyKvn.seo, ...res.data.seo } 
+        });
+      }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
+    }
+  }, [id, isNew]);
+
+  const generateSlug = (t) => t.toLowerCase().replace(/[а-яё]/g, c => ({ 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ы':'y','э':'e','ю':'yu','я':'ya' }[c] || '')).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const handleSave = async () => {
+    setError(''); setSuccess(''); setSaving(true);
+    try {
+      const dataToSend = {};
+      
+      if (kvn.title !== undefined) dataToSend.title = kvn.title;
+      if (kvn.slug !== undefined) dataToSend.slug = kvn.slug;
+      if (kvn.name !== undefined) dataToSend.name = kvn.name || '';
+      if (kvn.poster) {
+        if (typeof kvn.poster === 'string') {
+          dataToSend.poster = { url: kvn.poster, alt: '', caption: '', thumbnail: kvn.poster };
+        } else if (kvn.poster.url) {
+          dataToSend.poster = kvn.poster;
+        }
+      } else if (kvn.poster === null) {
+        dataToSend.poster = null;
+      }
+      if (kvn.facts && Object.keys(kvn.facts).length > 0) dataToSend.facts = kvn.facts;
+      if (kvn.description) dataToSend.description = kvn.description;
+      if (kvn.parent_id) dataToSend.parent_id = kvn.parent_id;
+      if (kvn.modules) dataToSend.modules = kvn.modules;
+      if (kvn.tags) dataToSend.tags = kvn.tags;
+      if (kvn.seo) dataToSend.seo = kvn.seo;
+      if (kvn.status) dataToSend.status = kvn.status;
+      if (kvn.person_ids !== undefined) dataToSend.person_ids = Array.isArray(kvn.person_ids) ? kvn.person_ids : [];
+      if (kvn.team_ids !== undefined) dataToSend.team_ids = Array.isArray(kvn.team_ids) ? kvn.team_ids : [];
+      if (kvn.social_links) dataToSend.social_links = kvn.social_links;
+      
+      if (isNew) {
+        const res = await contentApi.createKvn(dataToSend);
+        setSuccess('Создано!');
+        navigate(`/admin/kvn/${res.data.id}`, { replace: true });
+      } else {
+        await contentApi.updateKvn(id, dataToSend);
+        setSuccess('Сохранено!');
+      }
+    } catch (err) {
+      setError(getErrorMessage(err, 'Ошибка сохранения'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/kvn')}><ArrowLeft className="h-5 w-5" /></Button>
+          <div>
+            <h1 className="text-2xl font-bold">{isNew ? 'Новая страница КВН' : kvn.name || 'Редактирование'}</h1>
+            {!isNew && <p className="text-sm text-muted-foreground">/{kvn.full_path || kvn.slug}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={kvn.status} onValueChange={(v) => setKvn(p => ({ ...p, status: v }))}>
+            <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Черновик</SelectItem>
+              <SelectItem value="published">Опубликовать</SelectItem>
+              <SelectItem value="archived">В архив</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Сохранить
+          </Button>
+        </div>
+      </div>
+
+      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+      {success && <Alert><AlertDescription>{success}</AlertDescription></Alert>}
+
+      <Tabs defaultValue="main" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="main">Основное</TabsTrigger>
+          <TabsTrigger value="facts">Факты</TabsTrigger>
+          <TabsTrigger value="modules">Модули ({kvn.modules.length})</TabsTrigger>
+          <TabsTrigger value="seo">SEO</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="main" className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Основная информация</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Название</Label>
+                  <Input value={kvn.name} onChange={(e) => setKvn(p => ({ ...p, name: e.target.value, title: p.title || e.target.value, slug: p.slug || generateSlug(e.target.value) }))} placeholder="Название страницы" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Заголовок страницы</Label>
+                  <Input value={kvn.title} onChange={(e) => setKvn(p => ({ ...p, title: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>URL (slug)</Label>
+                  <Input value={kvn.slug} onChange={(e) => setKvn(p => ({ ...p, slug: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Описание</Label>
+                  <Textarea value={kvn.description || ''} onChange={(e) => setKvn(p => ({ ...p, description: e.target.value }))} rows={4} />
+                </div>
+                <MediaSelector
+                  value={kvn.poster}
+                  onChange={(poster) => setKvn(p => ({ ...p, poster }))}
+                  label="Постер"
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Теги</CardTitle></CardHeader>
+              <CardContent>
+                <TagSelector value={kvn.tags} onChange={(tags) => setKvn(p => ({ ...p, tags }))} placeholder="Выберите или добавьте тег..." />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Связанные люди</CardTitle></CardHeader>
+              <CardContent>
+                <PersonSelector value={kvn.person_ids || []} onChange={(ids) => setKvn(p => ({ ...p, person_ids: ids }))} placeholder="Выберите людей..." />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Связанные команды</CardTitle></CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Выбор команд будет добавлен позже</p>
+                {/* TODO: добавить TeamSelector */}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="facts" className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Факты</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              {Object.entries(kvn.facts || {}).length > 0 ? (
+                <div className="space-y-2">
+                  {Object.entries(kvn.facts).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <Input value={key} className="w-1/3 bg-background" onChange={(e) => {
+                        const newFacts = { ...kvn.facts };
+                        delete newFacts[key];
+                        newFacts[e.target.value] = value;
+                        setKvn(p => ({ ...p, facts: newFacts }));
+                      }} />
+                      <Input value={value} className="flex-1 bg-background" onChange={(e) => setKvn(p => ({ ...p, facts: { ...p.facts, [key]: e.target.value } }))} />
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        const newFacts = { ...kvn.facts };
+                        delete newFacts[key];
+                        setKvn(p => ({ ...p, facts: newFacts }));
+                      }}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Нет фактов</p>
+              )}
+              
+              <div className="flex items-center gap-2 pt-4 border-t">
+                <Input value={newFactKey} onChange={(e) => setNewFactKey(e.target.value)} placeholder="Название" className="w-1/3" />
+                <Input value={newFactValue} onChange={(e) => setNewFactValue(e.target.value)} placeholder="Значение" className="flex-1" onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
+                    setKvn(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                    setNewFactKey('');
+                    setNewFactValue('');
+                  }
+                }} />
+                <Button variant="outline" onClick={() => {
+                  if (newFactKey.trim() && newFactValue.trim()) {
+                    setKvn(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                    setNewFactKey('');
+                    setNewFactValue('');
+                  }
+                }}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Ссылки</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {['website', 'vk', 'telegram', 'youtube', 'instagram'].map(key => (
+                  <div key={key} className="space-y-2">
+                    <Label>{key === 'website' ? 'Официальный сайт' : key === 'vk' ? 'ВКонтакте' : key.charAt(0).toUpperCase() + key.slice(1)}</Label>
+                    <Input value={kvn.social_links?.[key] || ''} onChange={(e) => setKvn(p => ({ ...p, social_links: { ...p.social_links, [key]: e.target.value } }))} placeholder="https://..." />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="modules">
+          <ModuleEditor modules={kvn.modules} onChange={(m) => setKvn(p => ({ ...p, modules: m }))} contentType="kvn" />
+        </TabsContent>
+
+        <TabsContent value="seo">
+          <Card>
+            <CardHeader><CardTitle>SEO настройки</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2"><Label>Meta Title</Label><Input value={kvn.seo.meta_title || ''} onChange={(e) => setKvn(p => ({ ...p, seo: { ...p.seo, meta_title: e.target.value } }))} /></div>
+              <div className="space-y-2"><Label>Meta Description</Label><Textarea value={kvn.seo.meta_description || ''} onChange={(e) => setKvn(p => ({ ...p, seo: { ...p.seo, meta_description: e.target.value } }))} rows={3} /></div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+

@@ -14,6 +14,7 @@ const menuItems = [
   { path: '/admin/people', icon: Users, label: 'Люди' },
   { path: '/admin/teams', icon: UsersRound, label: 'Команды' },
   { path: '/admin/shows', icon: Tv, label: 'Шоу' },
+  { path: '/admin/kvn', icon: Tv, label: 'КВН' },
   { path: '/admin/articles', icon: FileText, label: 'Статьи' },
   { path: '/admin/news', icon: Newspaper, label: 'Новости' },
   { path: '/admin/quizzes', icon: HelpCircle, label: 'Квизы' },

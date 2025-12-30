@@ -25,6 +25,7 @@ class ContentType(str, Enum):
     WIKI = "wiki"
     WIKI_HEADER = "wiki_header"
     PAGE = "page"
+    KVN = "kvn"
 
 
 class TeamType(str, Enum):

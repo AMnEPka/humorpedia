@@ -397,3 +397,73 @@ class WikiUpdate(BaseModel):
     seo: Optional[SEOData] = None
     status: Optional[ContentStatus] = None
     related_ids: Optional[List[str]] = None
+
+
+# === KVN ===
+
+class KVN(BaseContent):
+    """KVN page - hierarchical structure like Shows"""
+    content_type: ContentType = ContentType.KVN
+    
+    # Basic info
+    name: str
+    poster: Optional[MediaFile] = None
+    description: Optional[str] = None  # HTML
+    
+    # Hierarchy support (up to 4 levels)
+    parent_id: Optional[str] = None  # For child KVN pages
+    child_kvn_ids: List[str] = Field(default_factory=list)  # List of child KVN pages
+    level: int = 0  # Level in hierarchy (0 = root, 1-4 = nested)
+    full_path: Optional[str] = None  # Full path for URL (e.g., "kvn/liga/season-1"), computed automatically
+    
+    # Facts (key-value pairs)
+    facts: Dict[str, str] = Field(default_factory=dict)
+    
+    # Social links
+    social_links: SocialLinks = Field(default_factory=SocialLinks)
+    
+    # Modular content
+    modules: List[PageModule] = Field(default_factory=list)
+    
+    # Relations
+    team_ids: List[str] = Field(default_factory=list)  # Related teams
+    person_ids: List[str] = Field(default_factory=list)  # Related people
+    article_ids: List[str] = Field(default_factory=list)
+    related_kvn_ids: List[str] = Field(default_factory=list)
+
+
+class KVNCreate(BaseModel):
+    """Create KVN request"""
+    title: str
+    slug: str
+    name: str
+    poster: Optional[MediaFile] = None
+    description: Optional[str] = None
+    parent_id: Optional[str] = None  # For child KVN pages
+    facts: Optional[Dict[str, str]] = None
+    social_links: Optional[SocialLinks] = None
+    modules: List[PageModule] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
+    seo: Optional[SEOData] = None
+    status: ContentStatus = ContentStatus.DRAFT
+    team_ids: Optional[List[str]] = None
+    person_ids: Optional[List[str]] = None
+
+
+class KVNUpdate(BaseModel):
+    """Update KVN request"""
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    name: Optional[str] = None
+    poster: Optional[MediaFile] = None
+    description: Optional[str] = None
+    parent_id: Optional[str] = None  # For child KVN pages
+    facts: Optional[Dict[str, str]] = None
+    social_links: Optional[SocialLinks] = None
+    modules: Optional[List[PageModule]] = None
+    tags: Optional[List[str]] = None
+    seo: Optional[SEOData] = None
+    status: Optional[ContentStatus] = None
+    team_ids: Optional[List[str]] = None
+    person_ids: Optional[List[str]] = None
+    related_kvn_ids: Optional[List[str]] = None
