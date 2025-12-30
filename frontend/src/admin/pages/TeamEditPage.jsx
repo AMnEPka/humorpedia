@@ -81,19 +81,55 @@ export default function TeamEditPage() {
         try {
           const response = await contentApi.getTeam(id);
           // Преобразуем logo из строки в объект MediaFile, если нужно
-          let logo = response.data.logo;
-          if (logo) {
+          // Также проверяем альтернативные поля: image, cover_image, poster
+          let logo = response.data.logo || response.data.image || response.data.cover_image?.url || response.data.cover_image || response.data.poster;
+          
+          // Проверяем, есть ли реальный логотип
+          const hasValidLogo = logo && (
+            (typeof logo === 'string' && logo.trim() !== '') ||
+            (typeof logo === 'object' && logo !== null && 
+             ((logo.url && logo.url.trim() !== '') || (logo.thumbnail && logo.thumbnail.trim() !== '')))
+          );
+          
+          if (hasValidLogo) {
             if (typeof logo === 'string') {
+              // Добавляем / в начало если путь не абсолютный
+              const logoUrl = logo.startsWith('/') || logo.startsWith('http') ? logo : `/${logo}`;
               logo = {
-                url: logo,
+                url: logoUrl,
                 alt: '',
                 caption: '',
-                thumbnail: logo
+                thumbnail: logoUrl
               };
+            } else if (typeof logo === 'object' && logo !== null) {
+              // Если logo уже объект, нормализуем структуру
+              let logoUrl = (logo.url && logo.url.trim() !== '') ? logo.url : 
+                            (logo.thumbnail && logo.thumbnail.trim() !== '') ? logo.thumbnail : '';
+              // Добавляем / в начало если путь не абсолютный
+              if (logoUrl && !logoUrl.startsWith('/') && !logoUrl.startsWith('http')) {
+                logoUrl = `/${logoUrl}`;
+              }
+              let logoThumbnail = (logo.thumbnail && logo.thumbnail.trim() !== '') ? logo.thumbnail : 
+                                  (logo.url && logo.url.trim() !== '') ? logo.url : '';
+              if (logoThumbnail && !logoThumbnail.startsWith('/') && !logoThumbnail.startsWith('http')) {
+                logoThumbnail = `/${logoThumbnail}`;
+              }
+              
+              // Если есть хотя бы один валидный URL, создаём нормализованный объект
+              if (logoUrl) {
+                logo = {
+                  url: logoUrl,
+                  alt: logo.alt || '',
+                  caption: logo.caption || '',
+                  thumbnail: logoThumbnail
+                };
+              } else {
+                // Если нет валидного URL, считаем что логотипа нет
+                logo = getRandomPattern();
+              }
             }
-            // Если logo уже объект, оставляем как есть
           } else {
-            // Если логотипа нет, устанавливаем случайный паттерн
+            // Если логотипа нет или пустой, устанавливаем случайный паттерн
             logo = getRandomPattern();
           }
           
