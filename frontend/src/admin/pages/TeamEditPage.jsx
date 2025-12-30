@@ -215,12 +215,25 @@ export default function TeamEditPage() {
     setSaving(true);
 
     try {
+      // Объединяем структурированные и произвольные факты перед сохранением
+      const combinedFacts = {
+        ...team.structured_facts,
+        ...team.facts
+      };
+      
+      const teamToSave = {
+        ...team,
+        facts: combinedFacts
+      };
+      // Удаляем временное поле structured_facts
+      delete teamToSave.structured_facts;
+      
       if (isNew) {
-        const response = await contentApi.createTeam(team);
+        const response = await contentApi.createTeam(teamToSave);
         setSuccess('Создано!');
         navigate(`/admin/teams/${response.data.id}`, { replace: true });
       } else {
-        await contentApi.updateTeam(id, team);
+        await contentApi.updateTeam(id, teamToSave);
         setSuccess('Сохранено!');
       }
     } catch (err) {
