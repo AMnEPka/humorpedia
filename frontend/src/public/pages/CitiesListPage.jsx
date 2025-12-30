@@ -168,10 +168,10 @@ export default function CitiesListPage() {
                       {city.description}
                     </p>
                   )}
-                  {city.rating > 0 && (
+                  {(city.rating?.average > 0 || (typeof city.rating === 'number' && city.rating > 0)) && (
                     <div className="mt-2 flex items-center gap-1 text-sm text-yellow-600">
                       <span>★</span>
-                      <span>{city.rating.toFixed(1)}</span>
+                      <span>{(city.rating?.average || city.rating).toFixed(1)}</span>
                     </div>
                   )}
                 </div>
