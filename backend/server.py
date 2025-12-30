@@ -223,7 +223,8 @@ app = FastAPI(
     title="Humorpedia API",
     description="API для энциклопедии российского юмора и КВН",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False  # Disable trailing slash redirects to avoid HTTP/HTTPS issues
 )
 
 # Create API router
