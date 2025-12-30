@@ -123,6 +123,10 @@ function AppRoutes() {
         <Route path="/quizzes" element={<QuizzesListPage />} />
         <Route path="/quizzes/:slug" element={<QuizDetailPage />} />
         
+        {/* Cities (Geography) */}
+        <Route path="/city" element={<CitiesListPagePublic />} />
+        <Route path="/city/:slug" element={<CityDetailPage />} />
+        
         {/* Static pages */}
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/policy" element={<PolicyPage />} />
