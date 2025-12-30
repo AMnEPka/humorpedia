@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import {
   Users, FileText, Newspaper, HelpCircle, BookOpen, Tv, 
   UsersRound, Tags, MessageSquare, Image, LayoutTemplate,
-  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database
+  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
