@@ -205,6 +205,14 @@ async def create_indexes(db):
         await db.sections.create_index("tags")
         await db.sections.create_index([("title", "text")])
         
+        # Cities indexes
+        await db.cities.create_index("slug", unique=True)
+        await db.cities.create_index("title")
+        await db.cities.create_index("name")
+        await db.cities.create_index("tags")
+        await db.cities.create_index("status")
+        await db.cities.create_index([("title", "text"), ("name", "text")])
+        
         logger.info("MongoDB indexes created successfully")
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
