@@ -52,6 +52,163 @@ export function PosterPhotoModule({ data, moduleData, className = '' }) {
 }
 
 /**
+ * Функция для парсинга даты из текстового формата (например, "9 декабря 1988 года" или "25 мая")
+ */
+function parseDateFromText(dateText) {
+  if (!dateText) return null;
+  
+  // Убираем возраст в скобках, если он есть
+  const textWithoutAge = dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+  
+  // Пытаемся найти год (4 цифры)
+  const yearMatch = textWithoutAge.match(/\b(\d{4})\b/);
+  if (!yearMatch) {
+    // Если года нет, возвращаем null (не можем рассчитать возраст)
+    return null;
+  }
+  
+  const year = parseInt(yearMatch[1]);
+  
+  // Парсим месяц
+  const months = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ];
+  
+  let month = -1;
+  let day = 1;
+  
+  for (let i = 0; i < months.length; i++) {
+    if (textWithoutAge.includes(months[i])) {
+      month = i;
+      // Пытаемся найти день перед месяцем
+      const dayMatch = textWithoutAge.match(new RegExp(`(\\d+)\\s+${months[i]}`));
+      if (dayMatch) {
+        day = parseInt(dayMatch[1]);
+      }
+      break;
+    }
+  }
+  
+  if (month === -1) return null;
+  
+  try {
+    const date = new Date(year, month, day);
+    if (isNaN(date.getTime())) return null;
+    return date;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Функция для проверки наличия года в текстовой дате
+ */
+function hasYearInDate(dateText) {
+  if (!dateText) return false;
+  // Убираем возраст в скобках перед проверкой
+  const textWithoutAge = dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+  return /\b\d{4}\b/.test(textWithoutAge);
+}
+
+/**
+ * Функция для удаления возраста из текста даты (если он есть)
+ */
+function removeAgeFromDate(dateText) {
+  if (!dateText) return dateText;
+  return dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+}
+
+/**
+ * Функция для расчёта возраста
+ */
+function calculateAge(birthDate, endDate = null) {
+  if (!birthDate) return null;
+  try {
+    const birth = birthDate instanceof Date ? birthDate : new Date(birthDate);
+    if (isNaN(birth.getTime())) return null;
+    const end = endDate ? (endDate instanceof Date ? endDate : new Date(endDate)) : new Date();
+    if (endDate && isNaN(end.getTime())) return null;
+    let age = end.getFullYear() - birth.getFullYear();
+    const monthDiff = end.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && end.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Функция для добавления возраста к дате (если возможно)
+ */
+function addAgeToDate(dateText, key, birthDate, deathDate = null) {
+  if (!dateText) return dateText;
+  
+  // Убираем существующий возраст, если он есть
+  const textWithoutAge = removeAgeFromDate(dateText);
+  
+  // Проверяем, есть ли год в дате
+  if (!hasYearInDate(textWithoutAge)) {
+    // Если года нет, не добавляем возраст
+    return textWithoutAge;
+  }
+  
+  // Если это дата рождения и есть дата смерти, не добавляем возраст
+  if (key === 'Дата рождения' && deathDate) {
+    return textWithoutAge;
+  }
+  
+  // Если это дата смерти, используем дату смерти для расчета возраста на момент смерти
+  if (key === 'Дата смерти' && birthDate && deathDate) {
+    try {
+      const birth = birthDate instanceof Date ? birthDate : new Date(birthDate);
+      const death = deathDate instanceof Date ? deathDate : new Date(deathDate);
+      if (!isNaN(birth.getTime()) && !isNaN(death.getTime())) {
+        const ageAtDeath = calculateAge(birth, death);
+        if (ageAtDeath !== null) {
+          return `${textWithoutAge} (${ageAtDeath} лет)`;
+        }
+      }
+    } catch (e) {
+      // Игнорируем ошибку
+    }
+    return textWithoutAge;
+  }
+  
+  // Для даты рождения без даты смерти - добавляем текущий возраст
+  if (key === 'Дата рождения' && !deathDate) {
+    // Пытаемся распарсить дату
+    let dateForAge = null;
+    if (birthDate) {
+      try {
+        dateForAge = birthDate instanceof Date ? birthDate : new Date(birthDate);
+        if (isNaN(dateForAge.getTime())) {
+          dateForAge = null;
+        }
+      } catch (e) {
+        dateForAge = null;
+      }
+    }
+    
+    // Если не удалось получить дату из birthDate, пытаемся распарсить из текста
+    if (!dateForAge) {
+      dateForAge = parseDateFromText(textWithoutAge);
+    }
+    
+    if (dateForAge) {
+      const currentAge = calculateAge(dateForAge);
+      if (currentAge !== null) {
+        return `${textWithoutAge} (${currentAge} лет)`;
+      }
+    }
+  }
+  
+  return textWithoutAge;
+}
+
+/**
  * Модуль таблицы фактов
  */
 export function FactsTableModule({ data, moduleData, className = '' }) {
@@ -59,7 +216,29 @@ export function FactsTableModule({ data, moduleData, className = '' }) {
   const title = moduleData?.title || 'Информация';
   const style = moduleData?.style || 'card';
   
-  const factEntries = Object.entries(facts).filter(([_, v]) => v);
+  // Получаем даты из bio для расчета возраста
+  const birthDate = data.bio?.birth_date || null;
+  // Проверяем дату смерти в bio И в facts (может быть добавлена вручную)
+  const deathDateFromBio = data.bio?.death_date || null;
+  const deathDateFromFacts = facts['Дата смерти'] ? parseDateFromText(removeAgeFromDate(facts['Дата смерти'])) : null;
+  const deathDate = deathDateFromBio || deathDateFromFacts;
+  
+  // Обрабатываем факты: добавляем возраст к датам
+  const processedFacts = Object.entries(facts).reduce((acc, [key, value]) => {
+    if (!value) return acc;
+    
+    let processedValue = value;
+    
+    // Если это дата рождения или дата смерти, добавляем возраст
+    if (key === 'Дата рождения' || key === 'Дата смерти') {
+      processedValue = addAgeToDate(value, key, birthDate, deathDate);
+    }
+    
+    acc[key] = processedValue;
+    return acc;
+  }, {});
+  
+  const factEntries = Object.entries(processedFacts).filter(([_, v]) => v);
   
   if (factEntries.length === 0) return null;
 

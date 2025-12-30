@@ -66,6 +66,97 @@ export default function PersonEditPage() {
   const [newFactKey, setNewFactKey] = useState('');
   const [newFactValue, setNewFactValue] = useState('');
 
+  // Функция для расчёта возраста
+  const calculateAge = (birthDate, endDate = null) => {
+    if (!birthDate) return null;
+    try {
+      const birth = new Date(birthDate);
+      if (isNaN(birth.getTime())) return null;
+      const end = endDate ? new Date(endDate) : new Date();
+      if (endDate && isNaN(end.getTime())) return null;
+      let age = end.getFullYear() - birth.getFullYear();
+      const monthDiff = end.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && end.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age >= 0 ? age : null;
+    } catch (e) {
+      console.warn('Ошибка при расчете возраста:', e);
+      return null;
+    }
+  };
+  
+  // Функция для форматирования даты в читаемый формат "9 декабря 1988 года"
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      const months = [
+        'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+      ];
+      return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} года`;
+    } catch (e) {
+      return '';
+    }
+  };
+
+  // Функция для удаления возраста из текста даты (если он есть)
+  // Используется для очистки фактов от возраста перед сохранением
+  const removeAgeFromDate = (dateText) => {
+    if (!dateText) return dateText;
+    return dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+  };
+
+  // Функция для синхронизации facts с полями биографии (БЕЗ добавления возраста)
+  // Возраст добавляется только на фронтенде при отображении
+  // ВАЖНО: Не удаляет факты, добавленные вручную, если их нет в bio
+  const syncFactsWithBio = (facts, bio, fullName) => {
+    const syncedFacts = { ...facts };
+    
+    // Полное имя - обновляем только если есть значение
+    if (fullName) {
+      syncedFacts['Полное имя'] = fullName;
+    }
+    // НЕ удаляем "Полное имя", если его нет в fullName - возможно оно было добавлено вручную
+    
+    // Дата рождения - обновляем только если есть birth_date, БЕЗ возраста
+    if (bio?.birth_date) {
+      try {
+        const formattedBirthDate = formatDate(bio.birth_date);
+        if (formattedBirthDate) {
+          // Убираем возраст, если он был добавлен ранее
+          syncedFacts['Дата рождения'] = removeAgeFromDate(formattedBirthDate);
+        }
+      } catch (e) {
+        console.warn('Ошибка при форматировании даты рождения:', e);
+      }
+    }
+    // НЕ удаляем "Дата рождения", если birth_date пустое - возможно она была добавлена вручную
+    
+    // Дата смерти - обновляем только если есть death_date в bio, БЕЗ возраста
+    if (bio?.death_date) {
+      try {
+        const formattedDeathDate = formatDate(bio.death_date);
+        if (formattedDeathDate) {
+          syncedFacts['Дата смерти'] = removeAgeFromDate(formattedDeathDate);
+        }
+      } catch (e) {
+        console.warn('Ошибка при форматировании даты смерти:', e);
+      }
+    }
+    // НЕ удаляем "Дата смерти", если death_date пустое - возможно она была добавлена вручную
+    
+    // Место рождения - обновляем только если есть значение
+    if (bio?.birth_place) {
+      syncedFacts['Место рождения'] = bio.birth_place;
+    }
+    // НЕ удаляем "Место рождения", если его нет в bio - возможно оно было добавлено вручную
+    
+    return syncedFacts;
+  };
+
   // Функция для получения случайного паттерна
   const getRandomPattern = () => {
     const patterns = [
@@ -141,19 +232,9 @@ export default function PersonEditPage() {
           }
           
           // Синхронизируем facts с полями биографии при загрузке
+          // ВАЖНО: syncFactsWithBio не удаляет факты, добавленные вручную
           const loadedFacts = response.data.facts || {};
-          const syncedFacts = { ...loadedFacts };
-          
-          // Всегда обновляем эти три поля из полей биографии (приоритет у полей биографии)
-          if (response.data.full_name) {
-            syncedFacts['Полное имя'] = response.data.full_name;
-          }
-          if (response.data.bio?.birth_date) {
-            syncedFacts['Дата рождения'] = response.data.bio.birth_date;
-          }
-          if (response.data.bio?.birth_place) {
-            syncedFacts['Место рождения'] = response.data.bio.birth_place;
-          }
+          const syncedFacts = syncFactsWithBio(loadedFacts, response.data.bio, response.data.full_name);
           
           setPerson({
             ...emptyPerson,
@@ -213,69 +294,10 @@ export default function PersonEditPage() {
 
     try {
       // Синхронизируем facts с полями биографии перед сохранением
-      const factsToSave = { ...person.facts };
+      // ВАЖНО: syncFactsWithBio не удаляет факты, добавленные вручную
+      const factsToSave = syncFactsWithBio(person.facts, person.bio, person.full_name);
       
-      // Функция для расчёта возраста
-      const calculateAge = (birthDate, endDate = null) => {
-        if (!birthDate) return null;
-        const birth = new Date(birthDate);
-        const end = endDate ? new Date(endDate) : new Date();
-        let age = end.getFullYear() - birth.getFullYear();
-        const monthDiff = end.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && end.getDate() < birth.getDate())) {
-          age--;
-        }
-        return age;
-      };
-      
-      // Функция для форматирования даты в читаемый формат
-      const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        const months = [
-          'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-          'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-        ];
-        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
-      };
-      
-      // Обновляем facts из полей биографии (всегда синхронизируем эти три поля)
-      if (person.full_name) {
-        factsToSave['Полное имя'] = person.full_name;
-      } else {
-        delete factsToSave['Полное имя'];
-      }
-      
-      // Дата рождения с расчётом возраста
-      if (person.bio.birth_date) {
-        const formattedBirthDate = formatDate(person.bio.birth_date);
-        
-        if (person.bio.death_date) {
-          // Если есть дата смерти - показываем только дату рождения без возраста
-          factsToSave['Дата рождения'] = formattedBirthDate;
-          
-          // Добавляем дату смерти с возрастом на момент смерти
-          const ageAtDeath = calculateAge(person.bio.birth_date, person.bio.death_date);
-          const formattedDeathDate = formatDate(person.bio.death_date);
-          factsToSave['Дата смерти'] = `${formattedDeathDate} (${ageAtDeath} лет)`;
-        } else {
-          // Если жив - показываем дату рождения с текущим возрастом
-          const currentAge = calculateAge(person.bio.birth_date);
-          factsToSave['Дата рождения'] = `${formattedBirthDate} (${currentAge} лет)`;
-          // Удаляем дату смерти из фактов, если она была
-          delete factsToSave['Дата смерти'];
-        }
-      } else {
-        delete factsToSave['Дата рождения'];
-        delete factsToSave['Дата смерти'];
-      }
-      
-      if (person.bio.birth_place) {
-        factsToSave['Место рождения'] = person.bio.birth_place;
-      } else {
-        delete factsToSave['Место рождения'];
-      }
-      
+      // Убеждаемся, что все факты сохранены (включая добавленные вручную)
       const personToSave = {
         ...person,
         facts: factsToSave
@@ -288,6 +310,73 @@ export default function PersonEditPage() {
       } else {
         await contentApi.updatePerson(id, personToSave);
         setSuccess('Сохранено!');
+        
+        // Перезагружаем данные после сохранения, чтобы обновить состояние
+        try {
+          const response = await contentApi.getPerson(id);
+          let photo = response.data.photo || response.data.image || response.data.cover_image?.url || response.data.cover_image || response.data.poster;
+          
+          const hasValidPhoto = photo && (
+            (typeof photo === 'string' && photo.trim() !== '') ||
+            (typeof photo === 'object' && photo !== null && 
+             ((photo.url && photo.url.trim() !== '') || (photo.thumbnail && photo.thumbnail.trim() !== '')))
+          );
+          
+          if (hasValidPhoto) {
+            if (typeof photo === 'string') {
+              const photoUrl = photo.startsWith('/') || photo.startsWith('http') ? photo : `/${photo}`;
+              photo = {
+                url: photoUrl,
+                alt: '',
+                caption: '',
+                thumbnail: photoUrl
+              };
+            } else if (typeof photo === 'object' && photo !== null) {
+              let photoUrl = (photo.url && photo.url.trim() !== '') ? photo.url : 
+                               (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : '';
+              if (photoUrl && !photoUrl.startsWith('/') && !photoUrl.startsWith('http')) {
+                photoUrl = `/${photoUrl}`;
+              }
+              let photoThumbnail = (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : 
+                                     (photo.url && photo.url.trim() !== '') ? photo.url : '';
+              if (photoThumbnail && !photoThumbnail.startsWith('/') && !photoThumbnail.startsWith('http')) {
+                photoThumbnail = `/${photoThumbnail}`;
+              }
+              
+              if (photoUrl) {
+                photo = {
+                  url: photoUrl,
+                  alt: photo.alt || '',
+                  caption: photo.caption || '',
+                  thumbnail: photoThumbnail
+                };
+              } else {
+                photo = getRandomPattern();
+              }
+            }
+          } else {
+            photo = getRandomPattern();
+          }
+          
+          // Синхронизируем facts с полями биографии при перезагрузке
+          // ВАЖНО: syncFactsWithBio не удаляет факты, добавленные вручную
+          const loadedFacts = response.data.facts || {};
+          const syncedFacts = syncFactsWithBio(loadedFacts, response.data.bio, response.data.full_name);
+          
+          // Убеждаемся, что все факты сохранены (включая добавленные вручную)
+          setPerson(prev => ({
+            ...prev,
+            ...response.data,
+            photo: photo,
+            bio: { ...emptyPerson.bio, ...response.data.bio },
+            facts: syncedFacts, // Все факты должны быть сохранены
+            social_links: { ...emptyPerson.social_links, ...response.data.social_links },
+            seo: { ...emptyPerson.seo, ...response.data.seo }
+          }));
+        } catch (reloadErr) {
+          // Если перезагрузка не удалась, это не критично
+          console.warn('Не удалось перезагрузить данные после сохранения:', reloadErr);
+        }
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Ошибка сохранения');
@@ -493,10 +582,11 @@ export default function PersonEditPage() {
                     value={person.full_name || ''}
                     onChange={(e) => {
                       const newFullName = e.target.value;
+                      const updatedFacts = syncFactsWithBio(person.facts, person.bio, newFullName);
                       setPerson(prev => ({
                         ...prev,
                         full_name: newFullName,
-                        facts: { ...prev.facts, 'Полное имя': newFullName }
+                        facts: updatedFacts
                       }));
                     }}
                     placeholder="Александр Васильевич Масляков"
@@ -509,10 +599,12 @@ export default function PersonEditPage() {
                     value={person.bio.birth_date || ''}
                     onChange={(e) => {
                       const newBirthDate = e.target.value;
+                      const updatedBio = { ...person.bio, birth_date: newBirthDate };
+                      const updatedFacts = syncFactsWithBio(person.facts, updatedBio, person.full_name);
                       setPerson(prev => ({
                         ...prev,
-                        bio: { ...prev.bio, birth_date: newBirthDate },
-                        facts: { ...prev.facts, 'Дата рождения': newBirthDate }
+                        bio: updatedBio,
+                        facts: updatedFacts
                       }));
                     }}
                   />
@@ -523,10 +615,12 @@ export default function PersonEditPage() {
                     value={person.bio.birth_place || ''}
                     onChange={(e) => {
                       const newBirthPlace = e.target.value;
+                      const updatedBio = { ...person.bio, birth_place: newBirthPlace };
+                      const updatedFacts = syncFactsWithBio(person.facts, updatedBio, person.full_name);
                       setPerson(prev => ({
                         ...prev,
-                        bio: { ...prev.bio, birth_place: newBirthPlace },
-                        facts: { ...prev.facts, 'Место рождения': newBirthPlace }
+                        bio: updatedBio,
+                        facts: updatedFacts
                       }));
                     }}
                     placeholder="Свердловск"
@@ -537,10 +631,16 @@ export default function PersonEditPage() {
                   <Input
                     type="date"
                     value={person.bio.death_date || ''}
-                    onChange={(e) => setPerson(prev => ({
-                      ...prev,
-                      bio: { ...prev.bio, death_date: e.target.value }
-                    }))}
+                    onChange={(e) => {
+                      const newDeathDate = e.target.value;
+                      const updatedBio = { ...person.bio, death_date: newDeathDate };
+                      const updatedFacts = syncFactsWithBio(person.facts, updatedBio, person.full_name);
+                      setPerson(prev => ({
+                        ...prev,
+                        bio: updatedBio,
+                        facts: updatedFacts
+                      }));
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
