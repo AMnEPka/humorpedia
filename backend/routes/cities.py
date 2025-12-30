@@ -224,3 +224,36 @@ async def get_city_related_teams(
     ).limit(limit).to_list(limit)
     
     return {"items": teams, "total": len(teams)}
+
+
+
+# === LINKING ENDPOINTS ===
+
+@router.post("/link-all", response_model=dict)
+async def link_all_cities_endpoint(request: Request):
+    """
+    Связывает все города с людьми и командами на основе:
+    - Люди: facts["Место рождения"] совпадает с названием города
+    - Команды: facts["Город"] совпадает с названием города
+    
+    Рекомендуется запускать после импорта данных или периодически.
+    """
+    from services.city_linking import link_all_cities
+    
+    db = request.app.state.db
+    result = await link_all_cities(db)
+    
+    return result
+
+
+@router.post("/{city_id}/link", response_model=dict)
+async def link_city_endpoint(city_id: str, request: Request):
+    """
+    Связывает конкретный город с людьми и командами.
+    """
+    from services.city_linking import link_city
+    
+    db = request.app.state.db
+    result = await link_city(db, city_id)
+    
+    return result
