@@ -303,8 +303,15 @@ export default function PersonDetailPage() {
                               }
                               
                               // Используем функцию addAgeToDate для расчета возраста
-                              const birthDateText = person.facts['Дата рождения'] ? 
-                                person.facts['Дата рождения'].replace(/\s*\(\d+\s+лет\)\s*$/, '').trim() : null;
+                              // Безопасно получаем текст даты рождения, проверяя тип
+                              let birthDateText = null;
+                              const birthDateFact = person.facts['Дата рождения'];
+                              if (birthDateFact && typeof birthDateFact === 'string') {
+                                birthDateText = birthDateFact.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+                              } else if (birthDateFact && (typeof birthDateFact === 'number' || typeof birthDateFact === 'boolean')) {
+                                // Если это число или boolean, конвертируем в строку
+                                birthDateText = String(birthDateFact);
+                              }
                               displayValue = addAgeToDate(displayValue, key, birthDate, deathDate, birthDateText);
                             }
                             
