@@ -23,7 +23,8 @@ const emptyTeam = {
   team_type: 'kvn',
   status: 'draft',
   logo: null,
-  facts: {
+  facts: {},  // Гибкая таблица фактов (ключ-значение)
+  structured_facts: {
     founded_year: null,
     disbanded_year: null,
     captain_name: '',
