@@ -1019,6 +1019,8 @@ if __name__ == '__main__':
         importer = create_quiz_importer()
     elif args.type == 'kvn':
         importer = create_kvn_importer()
+    elif args.type == 'city':
+        importer = create_city_importer()
     
     # Переопределяем коллекцию если указана
     if args.collection:
