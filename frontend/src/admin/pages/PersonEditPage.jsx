@@ -297,17 +297,11 @@ export default function PersonEditPage() {
       // ВАЖНО: syncFactsWithBio не удаляет факты, добавленные вручную
       const factsToSave = syncFactsWithBio(person.facts, person.bio, person.full_name);
       
-      console.log('=== SAVING PERSON ===');
-      console.log('person.facts:', person.facts);
-      console.log('factsToSave:', factsToSave);
-      
       // Убеждаемся, что все факты сохранены (включая добавленные вручную)
       const personToSave = {
         ...person,
         facts: factsToSave
       };
-      
-      console.log('personToSave.facts:', personToSave.facts);
 
       if (isNew) {
         const response = await contentApi.createPerson(personToSave);
