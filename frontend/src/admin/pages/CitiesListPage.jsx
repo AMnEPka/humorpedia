@@ -240,7 +240,7 @@ export default function CitiesListPage() {
                       {city.views || 0}
                     </TableCell>
                     <TableCell className="text-right">
-                      {city.rating ? city.rating.toFixed(1) : '-'}
+                      {city.rating?.average ? city.rating.average.toFixed(1) : (typeof city.rating === 'number' ? city.rating.toFixed(1) : '-')}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
