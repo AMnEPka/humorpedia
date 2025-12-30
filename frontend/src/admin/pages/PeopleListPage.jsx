@@ -311,7 +311,8 @@ export default function PeopleListPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
