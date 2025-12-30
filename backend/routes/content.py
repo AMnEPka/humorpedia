@@ -63,16 +63,6 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
     update_data = {k: v for k, v in data.model_dump(exclude_unset=True).items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    # Debug logging for facts
-    if 'facts' in update_data:
-        logger.info(f"Updating {collection_name}/{item_id} with facts: {update_data['facts']}")
-    else:
-        logger.info(f"Updating {collection_name}/{item_id} - NO facts in update_data")
-        # Check if facts was in original data
-        raw_data = data.model_dump()
-        if 'facts' in raw_data:
-            logger.info(f"Facts in raw_data: {raw_data['facts']}")
-    
     # Sync tags if present
     if hasattr(data, 'tags') and data.tags:
         await tag_service.sync_tags(data.tags)
