@@ -176,6 +176,10 @@ function AppRoutes() {
       <Route path="/admin/wiki" element={<ProtectedRoute><WikiListPage /></ProtectedRoute>} />
       <Route path="/admin/wiki/:id" element={<ProtectedRoute><WikiEditPage /></ProtectedRoute>} />
       
+      {/* Admin - Cities (Geography) */}
+      <Route path="/admin/cities" element={<ProtectedRoute><CitiesListPage /></ProtectedRoute>} />
+      <Route path="/admin/cities/:id" element={<ProtectedRoute><CityEditPage /></ProtectedRoute>} />
+      
       {/* Admin - Sections */}
       <Route path="/admin/sections" element={<ProtectedRoute><SectionsListPage /></ProtectedRoute>} />
       <Route path="/admin/sections/:id" element={<ProtectedRoute><SectionEditPage /></ProtectedRoute>} />
