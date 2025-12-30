@@ -54,7 +54,7 @@ export const publicApi = {
   getSectionChildren: (sectionId, params) => api.get(`/sections/${sectionId}/children`, { params }),
   
   // Cities (Geography)
-  getCities: (params) => api.get('/cities', { params }),
+  getCities: (params) => api.get('/cities/', { params }),
   getCity: (slug) => api.get(`/cities/${slug}`),
   getCityRelatedPeople: (cityId, limit = 20) => api.get(`/cities/${cityId}/related-people`, { params: { limit } }),
   getCityRelatedTeams: (cityId, limit = 20) => api.get(`/cities/${cityId}/related-teams`, { params: { limit } }),
