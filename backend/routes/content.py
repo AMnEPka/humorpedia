@@ -241,10 +241,6 @@ async def get_person(id_or_slug: str):
 @router.put("/people/{id}", response_model=dict)
 async def update_person(id: str, data: PersonUpdate):
     """Update person"""
-    logger.info(f"=== UPDATE PERSON {id} ===")
-    logger.info(f"data.facts: {data.facts}")
-    logger.info(f"data.model_dump(): {data.model_dump()}")
-    logger.info(f"data.model_dump(exclude_unset=True): {data.model_dump(exclude_unset=True)}")
     return await update_content("people", id, data, "Person not found")
 
 
