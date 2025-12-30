@@ -118,6 +118,13 @@ export const contentApi = {
   updateWiki: (id, data) => api.put(`/content/wiki/${id}`, data),
   deleteWiki: (id) => api.delete(`/content/wiki/${id}`),
 
+  // Cities (Geography)
+  listCities: (params) => api.get('/cities', { params }),
+  getCity: (id) => api.get(`/cities/${id}`),
+  createCity: (data) => api.post('/cities', data),
+  updateCity: (id, data) => api.put(`/cities/${id}`, data),
+  deleteCity: (id) => api.delete(`/cities/${id}`),
+
   // Search
   search: (params) => api.get('/content/search', { params }),
 };
