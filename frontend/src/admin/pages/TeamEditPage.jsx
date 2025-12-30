@@ -244,12 +244,13 @@ export default function TeamEditPage() {
   };
 
   const addAchievement = () => {
-    if (achievementInput.trim() && !team.facts.achievements.includes(achievementInput.trim())) {
+    const achievements = team.structured_facts?.achievements || [];
+    if (achievementInput.trim() && !achievements.includes(achievementInput.trim())) {
       setTeam(prev => ({
         ...prev,
-        facts: {
-          ...prev.facts,
-          achievements: [...prev.facts.achievements, achievementInput.trim()]
+        structured_facts: {
+          ...prev.structured_facts,
+          achievements: [...(prev.structured_facts?.achievements || []), achievementInput.trim()]
         }
       }));
       setAchievementInput('');
