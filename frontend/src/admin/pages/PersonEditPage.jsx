@@ -88,7 +88,8 @@ export default function PersonEditPage() {
         try {
           const response = await contentApi.getPerson(id);
           // Преобразуем photo из строки в объект MediaFile, если нужно
-          let photo = response.data.photo;
+          // Также проверяем альтернативные поля: image, cover_image, poster
+          let photo = response.data.photo || response.data.image || response.data.cover_image?.url || response.data.cover_image || response.data.poster;
           
           // Проверяем, есть ли реальное фото
           const hasValidPhoto = photo && (
@@ -99,18 +100,27 @@ export default function PersonEditPage() {
           
           if (hasValidPhoto) {
             if (typeof photo === 'string') {
+              // Добавляем / в начало если путь не абсолютный
+              const photoUrl = photo.startsWith('/') || photo.startsWith('http') ? photo : `/${photo}`;
               photo = {
-                url: photo,
+                url: photoUrl,
                 alt: '',
                 caption: '',
-                thumbnail: photo
+                thumbnail: photoUrl
               };
             } else if (typeof photo === 'object' && photo !== null) {
               // Если photo уже объект, нормализуем структуру
-              const photoUrl = (photo.url && photo.url.trim() !== '') ? photo.url : 
+              let photoUrl = (photo.url && photo.url.trim() !== '') ? photo.url : 
                                (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : '';
-              const photoThumbnail = (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : 
+              // Добавляем / в начало если путь не абсолютный
+              if (photoUrl && !photoUrl.startsWith('/') && !photoUrl.startsWith('http')) {
+                photoUrl = `/${photoUrl}`;
+              }
+              let photoThumbnail = (photo.thumbnail && photo.thumbnail.trim() !== '') ? photo.thumbnail : 
                                      (photo.url && photo.url.trim() !== '') ? photo.url : '';
+              if (photoThumbnail && !photoThumbnail.startsWith('/') && !photoThumbnail.startsWith('http')) {
+                photoThumbnail = `/${photoThumbnail}`;
+              }
               
               // Если есть хотя бы один валидный URL, создаём нормализованный объект
               if (photoUrl) {
