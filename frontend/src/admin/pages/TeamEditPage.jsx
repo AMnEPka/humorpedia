@@ -530,6 +530,98 @@ export default function TeamEditPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Таблица фактов</CardTitle>
+              <CardDescription>
+                Дополнительные факты о команде, которые отображаются в модуле facts_table
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Существующие факты */}
+              {Object.entries(team.facts || {}).length > 0 ? (
+                <div className="space-y-2">
+                  {Object.entries(team.facts).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <Input 
+                        value={key} 
+                        className="w-1/3 bg-background"
+                        onChange={(e) => {
+                          const newFacts = { ...team.facts };
+                          delete newFacts[key];
+                          newFacts[e.target.value] = value;
+                          setTeam(prev => ({ ...prev, facts: newFacts }));
+                        }}
+                      />
+                      <Input 
+                        value={value} 
+                        className="flex-1 bg-background"
+                        onChange={(e) => setTeam(prev => ({ 
+                          ...prev, 
+                          facts: { ...prev.facts, [key]: e.target.value } 
+                        }))}
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          const newFacts = { ...team.facts };
+                          delete newFacts[key];
+                          setTeam(prev => ({ ...prev, facts: newFacts }));
+                        }}
+                      >
+                        <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>
+              )}
+              
+              {/* Добавить новый факт */}
+              <div className="flex items-center gap-2 pt-4 border-t">
+                <Input
+                  value={newFactKey}
+                  onChange={(e) => setNewFactKey(e.target.value)}
+                  placeholder="Название (напр. Лига)"
+                  className="w-1/3"
+                />
+                <Input
+                  value={newFactValue}
+                  onChange={(e) => setNewFactValue(e.target.value)}
+                  placeholder="Значение"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
+                      setTeam(prev => ({
+                        ...prev,
+                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() }
+                      }));
+                      setNewFactKey('');
+                      setNewFactValue('');
+                    }
+                  }}
+                />
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    if (newFactKey.trim() && newFactValue.trim()) {
+                      setTeam(prev => ({
+                        ...prev,
+                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() }
+                      }));
+                      setNewFactKey('');
+                      setNewFactValue('');
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Modules tab */}
