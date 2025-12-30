@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for Humorpedia
-Tests hierarchical import feature and show children endpoint
+Tests hierarchical import feature, show children endpoint, and Cities API
 """
 
 import requests
