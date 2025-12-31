@@ -156,12 +156,12 @@ export default function CityDetailPage() {
           )}
 
           {/* Rating */}
-          {city.rating > 0 && (
+          {(city.rating?.average > 0 || (typeof city.rating === 'number' && city.rating > 0)) && (
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="font-semibold text-gray-900 mb-2">Рейтинг</h3>
               <div className="flex items-center gap-2">
                 <span className="text-3xl font-bold text-yellow-500">★</span>
-                <span className="text-2xl font-bold text-gray-900">{city.rating.toFixed(1)}</span>
+                <span className="text-2xl font-bold text-gray-900">{(city.rating?.average || city.rating).toFixed(1)}</span>
                 {city.votes_count > 0 && (
                   <span className="text-sm text-gray-500">({city.votes_count} голосов)</span>
                 )}
