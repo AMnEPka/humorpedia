@@ -502,6 +502,18 @@ metadata:
         agent: "testing"
         comment: "Полное тестирование иерархической структуры завершено успешно. ✅ GET /api/content/shows/comedy-battle/children возвращает 2 дочерних сезона (9 и 10) с корректными полями parent_id, level=1, full_path. ✅ GET /api/content/shows/by-path/comedy-battle/season9 работает корректно. ✅ GET /api/content/shows/season9 возвращает сезон по slug. ✅ Проверена целостность данных - дочерние элементы корректно ссылаются на parent_id. ✅ Список шоу по умолчанию исключает дочерние элементы, но включает их при include_children=true. Все 22 теста прошли успешно."
 
+  - task: "Cities API for Geography section"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/cities.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Полное тестирование Cities API завершено успешно. ✅ GET /api/cities/ возвращает список городов (Москва и СПБ). ✅ GET /api/cities/moscow и /api/cities/spb работают корректно с правильными полями (title, slug, name, description, facts, tags, status). ✅ PUT /api/cities/{id} обновление работает и сохраняется корректно (протестировано на Москве с ID 7f973cf7-2b9b-4dba-a5ca-15936d3d3f8b). ✅ DELETE endpoint существует. ✅ Фильтрация по статусу работает. ✅ Поиск по имени работает (протестировано поиск 'Москва' и 'Петербург'). ✅ Пагинация работает корректно с метаданными. Все 33 теста Cities API прошли успешно."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -523,3 +535,5 @@ agent_communication:
     message: "Завершил реализацию иерархического импорта в universal_importer.py. Добавлены аргументы --parent-slug и --parent-old-id для указания родительской страницы. Протестировано успешно: импортированы сезоны 9 и 10 шоу Comedy Баттл как дочерние страницы. Исправлен баг в эндпоинте /shows/{slug}/children - теперь корректно использует поле 'id' вместо MongoDB '_id' для поиска дочерних элементов. Страница сезона /shows/season9 отображается корректно с breadcrumbs показывающими иерархию. Обновлена документация UNIVERSAL_IMPORTER.md."
   - agent: "testing"
     message: "Завершено полное тестирование иерархической функциональности шоу. ✅ Все backend API endpoints работают корректно: /api/content/shows/comedy-battle/children возвращает 2 дочерних сезона с правильными полями (parent_id, level=1, full_path), /api/content/shows/by-path/comedy-battle/season9 и /api/content/shows/season9 работают. ✅ Проверена целостность данных - дочерние элементы корректно ссылаются на родительский ID. ✅ Список шоу правильно исключает дочерние элементы по умолчанию и включает при include_children=true. ✅ Frontend страница /shows/season9 загружается корректно. Все 22 теста прошли успешно. Создан backend_test.py для автоматизированного тестирования."
+  - agent: "testing"
+    message: "Завершено полное тестирование нового Cities API для Geography section. ✅ Все основные CRUD операции работают: GET /api/cities/ (список городов), GET /api/cities/{slug} (получение по slug), PUT /api/cities/{id} (обновление), DELETE /api/cities/{id} (endpoint существует). ✅ В базе данных найдены ожидаемые города: Москва (moscow) и Санкт-Петербург (spb). ✅ Все обязательные поля присутствуют: title, slug, name, description, facts, tags, status. ✅ Фильтрация и поиск работают корректно: фильтр по статусу, поиск по имени ('Москва', 'Петербург'). ✅ Пагинация работает с правильными метаданными (total, skip, limit). ✅ Обновление данных сохраняется корректно (протестировано на Москве). Все 33 теста Cities API прошли успешно. Обновлен backend_test.py с новыми тестами."

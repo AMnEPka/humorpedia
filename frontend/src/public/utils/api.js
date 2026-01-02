@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+console.log('[Public API] BACKEND_URL:', BACKEND_URL);
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL + '/api',
+  baseURL: BACKEND_URL + '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,6 +52,12 @@ export const publicApi = {
     return api.get(`/sections/path/${cleanPath}`);
   },
   getSectionChildren: (sectionId, params) => api.get(`/sections/${sectionId}/children`, { params }),
+  
+  // Cities (Geography)
+  getCities: (params) => api.get('/cities/', { params }),
+  getCity: (slug) => api.get(`/cities/${slug}`),
+  getCityRelatedPeople: (cityId, limit = 20) => api.get(`/cities/${cityId}/related-people`, { params: { limit } }),
+  getCityRelatedTeams: (cityId, limit = 20) => api.get(`/cities/${cityId}/related-teams`, { params: { limit } }),
   
   // Search
   search: (query, params) => api.get('/content/search', { params: { q: query, ...params } }),

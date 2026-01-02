@@ -205,6 +205,14 @@ async def create_indexes(db):
         await db.sections.create_index("tags")
         await db.sections.create_index([("title", "text")])
         
+        # Cities indexes
+        await db.cities.create_index("slug", unique=True)
+        await db.cities.create_index("title")
+        await db.cities.create_index("name")
+        await db.cities.create_index("tags")
+        await db.cities.create_index("status")
+        await db.cities.create_index([("title", "text"), ("name", "text")])
+        
         logger.info("MongoDB indexes created successfully")
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
@@ -215,7 +223,8 @@ app = FastAPI(
     title="Humorpedia API",
     description="API для энциклопедии российского юмора и КВН",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False  # Disable trailing slash redirects to avoid HTTP/HTTPS issues
 )
 
 # Create API router
@@ -243,6 +252,7 @@ from routes.media import router as media_router
 from routes.templates import router as templates_router
 from routes.sections import router as sections_router
 from routes.mongo_admin import router as mongo_admin_router
+from routes.cities import router as cities_router
 
 api_router.include_router(content_router)
 api_router.include_router(auth_router)
@@ -253,6 +263,7 @@ api_router.include_router(media_router)
 api_router.include_router(templates_router)
 api_router.include_router(sections_router)
 api_router.include_router(mongo_admin_router)
+api_router.include_router(cities_router)
 
 
 # Statistics endpoint
@@ -270,6 +281,7 @@ async def get_stats(request: Request):
         "quizzes": await db.quizzes.count_documents({"status": "published"}),
         "wiki": await db.wiki.count_documents({"status": "published"}),
         "sections": await db.sections.count_documents({"status": "published"}),
+        "cities": await db.cities.count_documents({"status": "published"}),
         "users": await db.users.count_documents({"active": True}),
         "comments": await db.comments.count_documents({"deleted": False}),
         "tags": await db.tags.count_documents({})

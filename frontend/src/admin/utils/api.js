@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 export const API_BASE = `${BACKEND_URL}/api`;
+
+console.log('[API] BACKEND_URL:', BACKEND_URL);
+console.log('[API] API_BASE:', API_BASE);
 
 // Create axios instance
 const api = axios.create({
@@ -13,6 +16,7 @@ const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
+  console.log('[API Request]', config.method?.toUpperCase(), config.baseURL + config.url);
   const token = localStorage.getItem('admin_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -117,6 +121,13 @@ export const contentApi = {
   createWiki: (data) => api.post('/content/wiki', data),
   updateWiki: (id, data) => api.put(`/content/wiki/${id}`, data),
   deleteWiki: (id) => api.delete(`/content/wiki/${id}`),
+
+  // Cities (Geography)
+  listCities: (params) => api.get('/cities/', { params }),
+  getCity: (id) => api.get(`/cities/${id}`),
+  createCity: (data) => api.post('/cities/', data),
+  updateCity: (id, data) => api.put(`/cities/${id}`, data),
+  deleteCity: (id) => api.delete(`/cities/${id}`),
 
   // Search
   search: (params) => api.get('/content/search', { params }),

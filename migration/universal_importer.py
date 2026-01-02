@@ -910,6 +910,27 @@ def create_kvn_importer() -> UniversalImporter:
     )
 
 
+def create_city_importer() -> UniversalImporter:
+    """
+    Создаёт импортер для городов (География, parent_id=34).
+    
+    Использование:
+        python universal_importer.py --type city --parent-id 34 --apply
+    """
+    return UniversalImporter(
+        content_type='city',
+        collection='cities',
+        modules=[
+            ModuleConfig('poster_photo'),
+            ModuleConfig('facts_table', title='Факты', style='card'),
+            ModuleConfig('rating_widget', title='Оценка', style='smileys'),
+            ModuleConfig('tags_cloud', style='badges'),
+            ModuleConfig('text_block', title='', migx_section='info', migx_field='subtitle', strip_first_heading=True),
+            ModuleConfig('text_block', title='', all_text_sections=True),
+        ]
+    )
+
+
 # ============================================================================
 # CLI
 # ============================================================================
@@ -950,9 +971,12 @@ if __name__ == '__main__':
   
   # Импорт всех страниц КВН (parent=32) пакетами
   python universal_importer.py --type kvn --parent-id 32 --apply
+
+  # Импорт всех городов (parent=34) пакетами
+  python universal_importer.py --type city --parent-id 34 --apply
         """
     )
-    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz', 'kvn'], required=True,
+    parser.add_argument('--type', choices=['show', 'person', 'team', 'news', 'article', 'quiz', 'kvn', 'city'], required=True,
                         help='Тип шаблона для импорта (определяет набор модулей)')
     parser.add_argument('--collection', type=str, default=None,
                         help='Коллекция MongoDB (по умолчанию: shows/people/teams)')
@@ -995,6 +1019,8 @@ if __name__ == '__main__':
         importer = create_quiz_importer()
     elif args.type == 'kvn':
         importer = create_kvn_importer()
+    elif args.type == 'city':
+        importer = create_city_importer()
     
     # Переопределяем коллекцию если указана
     if args.collection:

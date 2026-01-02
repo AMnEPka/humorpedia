@@ -27,6 +27,9 @@ import QuizEditPage from './admin/pages/QuizEditPage';
 // Admin - Wiki
 import WikiListPage from './admin/pages/WikiListPage';
 import WikiEditPage from './admin/pages/WikiEditPage';
+// Admin - Cities (Geography)
+import CitiesListPage from './admin/pages/CitiesListPage';
+import CityEditPage from './admin/pages/CityEditPage';
 // Admin - Sections
 import SectionsListPage from './admin/pages/SectionsListPage';
 import SectionEditPage from './admin/pages/SectionEditPage';
@@ -59,6 +62,8 @@ import PolicyPage from './public/pages/PolicyPage';
 import SectionDetailPage from './public/pages/SectionDetailPage';
 import SearchPage from './public/pages/SearchPage';
 import TagSearchPage from './public/pages/TagSearchPage';
+import CitiesListPagePublic from './public/pages/CitiesListPage';
+import CityDetailPage from './public/pages/CityDetailPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
@@ -118,6 +123,10 @@ function AppRoutes() {
         <Route path="/quizzes" element={<QuizzesListPage />} />
         <Route path="/quizzes/:slug" element={<QuizDetailPage />} />
         
+        {/* Cities (Geography) */}
+        <Route path="/city" element={<CitiesListPagePublic />} />
+        <Route path="/city/:slug" element={<CityDetailPage />} />
+        
         {/* Static pages */}
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/policy" element={<PolicyPage />} />
@@ -166,6 +175,10 @@ function AppRoutes() {
       {/* Admin - Wiki */}
       <Route path="/admin/wiki" element={<ProtectedRoute><WikiListPage /></ProtectedRoute>} />
       <Route path="/admin/wiki/:id" element={<ProtectedRoute><WikiEditPage /></ProtectedRoute>} />
+      
+      {/* Admin - Cities (Geography) */}
+      <Route path="/admin/cities" element={<ProtectedRoute><CitiesListPage /></ProtectedRoute>} />
+      <Route path="/admin/cities/:id" element={<ProtectedRoute><CityEditPage /></ProtectedRoute>} />
       
       {/* Admin - Sections */}
       <Route path="/admin/sections" element={<ProtectedRoute><SectionsListPage /></ProtectedRoute>} />

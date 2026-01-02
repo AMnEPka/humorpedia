@@ -18,6 +18,7 @@ const staticNavigation = [
   { name: 'Люди', href: '/people' },
   { name: 'Команды КВН', href: '/kvn/teams' },
   { name: 'Шоу', href: '/shows' },
+  { name: 'География', href: '/city' },
   { name: 'Квизы', href: '/quizzes' },
   { name: 'Контакты', href: '/contacts' },
 ];

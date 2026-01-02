@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import {
   Users, FileText, Newspaper, HelpCircle, BookOpen, Tv, 
   UsersRound, Tags, MessageSquare, Image, LayoutTemplate,
-  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database
+  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ const menuItems = [
   { path: '/admin/teams', icon: UsersRound, label: 'Команды' },
   { path: '/admin/shows', icon: Tv, label: 'Шоу' },
   { path: '/admin/kvn', icon: Tv, label: 'КВН' },
+  { path: '/admin/cities', icon: MapPin, label: 'География' },
   { path: '/admin/articles', icon: FileText, label: 'Статьи' },
   { path: '/admin/news', icon: Newspaper, label: 'Новости' },
   { path: '/admin/quizzes', icon: HelpCircle, label: 'Квизы' },
