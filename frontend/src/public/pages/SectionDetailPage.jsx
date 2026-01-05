@@ -22,17 +22,43 @@ export default function SectionDetailPage() {
       try {
         // Get current path
         const path = location.pathname;
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        let res;
         
-        // Fetch section by path
-        const res = await publicApi.getSectionByPath(path);
+        // Check if this is a KVN page
+        if (cleanPath.startsWith('kvn') && !cleanPath.startsWith('kvn/teams')) {
+          // Try KVN API first
+          try {
+            res = await publicApi.getKvnByPath(cleanPath);
+          } catch (kvnErr) {
+            // Fall back to sections API
+            res = await publicApi.getSectionByPath(path);
+          }
+        } else {
+          // Use sections API
+          res = await publicApi.getSectionByPath(path);
+        }
+        
         setSection(res.data);
 
         // Fetch children if show_children_list is true
         if (res.data.show_children_list) {
           const childrenRes = await publicApi.getSectionChildren(res.data._id);
           setChildren(childrenRes.data.items || []);
+        } else if (res.data.children && res.data.children.length > 0) {
+          // For KVN pages, children are already in the response
+          setChildren(res.data.children || []);
+        } else if (res.data.content_type === 'kvn') {
+          // For KVN, try to fetch children if not included
+          try {
+            const childrenRes = await publicApi.getKvnChildren(res.data.slug);
+            setChildren(childrenRes.data.items || []);
+          } catch (err) {
+            console.log('No children or error fetching children');
+          }
         }
       } catch (err) {
+        console.error('Error fetching section:', err);
         setError('Раздел не найден');
       } finally {
         setLoading(false);
@@ -90,7 +116,7 @@ export default function SectionDetailPage() {
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          {section.title}
+          {section.name || section.title}
         </h1>
 
         {section.description && (
@@ -110,12 +136,12 @@ export default function SectionDetailPage() {
         )}
       </header>
 
-      {/* Cover Image */}
-      {section.cover_image && (
+      {/* Cover Image / Poster */}
+      {(section.cover_image || section.poster) && (
         <div className="mb-8">
           <img
-            src={section.cover_image.url}
-            alt={section.cover_image.alt || section.title}
+            src={(section.cover_image || section.poster)?.url}
+            alt={(section.cover_image || section.poster)?.alt || section.name || section.title}
             className="w-full h-auto rounded-lg shadow-lg object-cover max-h-[500px]"
           />
         </div>
@@ -137,12 +163,12 @@ export default function SectionDetailPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {children.map((child) => (
               <Card
-                key={child._id}
+                key={child.id || child._id}
                 className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => navigate(child.full_path)}
+                onClick={() => navigate(child.full_path || `/${child.slug}`)}
               >
                 <CardHeader>
-                  <CardTitle className="text-lg">{child.title}</CardTitle>
+                  <CardTitle className="text-lg">{child.name || child.title}</CardTitle>
                 </CardHeader>
                 {child.description && (
                   <CardContent>

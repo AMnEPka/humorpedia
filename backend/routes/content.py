@@ -616,13 +616,56 @@ async def list_kvn(
 
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
 async def get_kvn_by_path(path: str):
-    """Get KVN page by full path"""
+    """Get KVN page by full path with children and breadcrumbs"""
     db = await get_db()
-    kvn = await db.kvn.find_one({"full_path": path}, {"_id": 0})
+    
+    # Try both with and without leading slash
+    path_clean = path.lstrip("/")
+    
+    kvn = await db.kvn.find_one({"full_path": path_clean})
     if not kvn:
-        kvn = await db.kvn.find_one({"slug": path}, {"_id": 0})
+        kvn = await db.kvn.find_one({"full_path": f"/{path_clean}"})
+    if not kvn:
+        kvn = await db.kvn.find_one({"slug": path_clean})
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
+    
+    # Increment views
+    await db.kvn.update_one({"_id": kvn["_id"]}, {"$inc": {"views": 1}})
+    
+    # Get children
+    section_id = kvn.get("id")
+    if section_id:
+        children = await db.kvn.find(
+            {"parent_id": section_id},
+            {"_id": 0}
+        ).sort("title", 1).to_list(100)
+        kvn["children"] = children
+    else:
+        kvn["children"] = []
+    
+    # Get breadcrumbs
+    breadcrumbs = []
+    if kvn.get("parent_id"):
+        current_parent_id = kvn["parent_id"]
+        while current_parent_id:
+            parent = await db.kvn.find_one({"id": current_parent_id})
+            if parent:
+                breadcrumbs.insert(0, {
+                    "id": parent.get("id"),
+                    "title": parent.get("name") or parent.get("title"),
+                    "full_path": parent.get("full_path") or parent.get("slug")
+                })
+                current_parent_id = parent.get("parent_id")
+            else:
+                break
+    
+    kvn["breadcrumbs"] = breadcrumbs
+    
+    # Remove MongoDB _id from response
+    if "_id" in kvn:
+        del kvn["_id"]
+    
     return kvn
 
 

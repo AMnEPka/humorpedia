@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Star } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Star, Eye } from 'lucide-react';
 
 const statusLabels = { draft: { label: 'Черновик', variant: 'secondary' }, published: { label: 'Опубликовано', variant: 'default' }, archived: { label: 'В архиве', variant: 'outline' } };
 
@@ -58,13 +58,25 @@ export default function ArticlesListPage() {
 
       <Card><CardContent className="p-0">
         {loading ? <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : articles.length === 0 ? <div className="text-center py-12 text-muted-foreground">Ничего не найдено</div> : (
-          <Table><TableHeader><TableRow><TableHead>Заголовок</TableHead><TableHead>Автор</TableHead><TableHead>Статус</TableHead><TableHead>Рейтинг</TableHead><TableHead className="text-right">Просмотры</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
+          <Table><TableHeader><TableRow><TableHead>Заголовок</TableHead><TableHead>Автор</TableHead><TableHead>Статус</TableHead><TableHead>Рейтинг</TableHead><TableHead className="w-[100px]">Просмотр</TableHead><TableHead className="text-right">Просмотры</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
             <TableBody>{articles.map((a) => (
               <TableRow key={a._id}>
                 <TableCell><Link to={`/admin/articles/${a._id}`} className="font-medium hover:underline">{a.title}</Link>{a.featured && <Badge variant="outline" className="ml-2"><Star className="h-3 w-3 mr-1" />Избранное</Badge>}<div className="text-sm text-muted-foreground">/{a.slug}</div></TableCell>
                 <TableCell>{a.author_name || '-'}</TableCell>
                 <TableCell><Badge variant={statusLabels[a.status]?.variant}>{statusLabels[a.status]?.label}</Badge></TableCell>
                 <TableCell>{a.rating ? `${a.rating}/10` : '-'}</TableCell>
+                <TableCell>
+                  {a.slug && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`/articles/${a.slug}`, '_blank')}
+                      className="h-8"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">{a.views || 0}</TableCell>
                 <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/articles/${a._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(a._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>

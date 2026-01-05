@@ -150,6 +150,11 @@ export default function KVNEditPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!isNew && kvn.full_path && (
+            <Button variant="outline" onClick={() => window.open(`/${kvn.full_path}`, '_blank')}>
+              <ExternalLink className="mr-2 h-4 w-4" />Предпросмотр
+            </Button>
+          )}
           <Select value={kvn.status} onValueChange={(v) => setKvn(p => ({ ...p, status: v }))}>
             <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>

@@ -423,23 +423,44 @@ async def delete_section(id: str, request: Request, cascade: bool = Query(False)
 
 @router.get("/path/{path:path}", response_model=dict)
 async def get_section_by_path(path: str, request: Request):
-    """Get section by full path (e.g., /kvn/vysshaya-liga/2005)"""
+    """Get section or KVN page by full path (e.g., /kvn/vysshaya-liga/2005)"""
     db = request.app.state.db
     
-    # Normalize path
-    if not path.startswith("/"):
-        path = f"/{path}"
+    # Normalize path - try both with and without leading slash
+    path_with_slash = f"/{path}" if not path.startswith("/") else path
+    path_without_slash = path.lstrip("/")
     
-    section = await db.sections.find_one({"full_path": path})
+    # First try sections (both path formats)
+    section = await db.sections.find_one({"full_path": path_with_slash})
+    if not section:
+        section = await db.sections.find_one({"full_path": path_without_slash})
+    collection_name = "sections"
+    
+    # If not found, try KVN pages (both path formats and slug)
+    if not section:
+        section = await db.kvn.find_one({"full_path": path_with_slash})
+        collection_name = "kvn"
+    if not section:
+        section = await db.kvn.find_one({"full_path": path_without_slash})
+        collection_name = "kvn"
+    # Also try by slug for root KVN pages
+    if not section:
+        section = await db.kvn.find_one({"slug": path_without_slash})
+        collection_name = "kvn"
     
     if not section:
-        raise HTTPException(status_code=404, detail="Section not found")
+        raise HTTPException(status_code=404, detail="Section or KVN page not found")
     
     # Increment views
-    await db.sections.update_one({"_id": section["_id"]}, {"$inc": {"views": 1}})
+    await db[collection_name].update_one({"_id": section["_id"]}, {"$inc": {"views": 1}})
     
     # Get children count
-    children_count = await db.sections.count_documents({"parent_id": section["_id"]})
+    # For KVN, parent_id references the 'id' field, not '_id'
+    if collection_name == "kvn":
+        section_id = section.get("id")
+        children_count = await db.kvn.count_documents({"parent_id": section_id}) if section_id else 0
+    else:
+        children_count = await db[collection_name].count_documents({"parent_id": section["_id"]})
     section["children_count"] = children_count
     
     # Get breadcrumbs
@@ -447,17 +468,30 @@ async def get_section_by_path(path: str, request: Request):
     if section.get("parent_id"):
         current_parent_id = section["parent_id"]
         while current_parent_id:
-            parent = await db.sections.find_one({"_id": current_parent_id})
+            parent = await db[collection_name].find_one({"id": current_parent_id})
+            if not parent:
+                # Try by _id if id didn't work
+                parent = await db[collection_name].find_one({"_id": current_parent_id})
             if parent:
                 breadcrumbs.insert(0, {
-                    "id": parent["_id"],
-                    "title": parent["title"],
-                    "full_path": parent["full_path"]
+                    "id": parent.get("id") or str(parent["_id"]),
+                    "title": parent.get("name") or parent.get("title"),
+                    "full_path": parent.get("full_path") or parent.get("slug")
                 })
                 current_parent_id = parent.get("parent_id")
             else:
                 break
     
     section["breadcrumbs"] = breadcrumbs
+    
+    # For KVN pages, get children by parent_id
+    if collection_name == "kvn":
+        section_id = section.get("id")
+        if section_id:
+            children = await db.kvn.find(
+                {"parent_id": section_id},
+                {"_id": 0}
+            ).sort("title", 1).to_list(100)
+            section["children"] = children
     
     return section

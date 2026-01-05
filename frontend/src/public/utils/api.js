@@ -53,6 +53,14 @@ export const publicApi = {
   },
   getSectionChildren: (sectionId, params) => api.get(`/sections/${sectionId}/children`, { params }),
   
+  // KVN
+  getKvn: (slugOrId) => api.get(`/content/kvn/${slugOrId}`),
+  getKvnByPath: (path) => {
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return api.get(`/content/kvn/by-path/${cleanPath}`);
+  },
+  getKvnChildren: (parentSlug) => api.get(`/content/kvn/${parentSlug}/children`),
+  
   // Cities (Geography)
   getCities: (params) => api.get('/cities/', { params }),
   getCity: (slug) => api.get(`/cities/${slug}`),

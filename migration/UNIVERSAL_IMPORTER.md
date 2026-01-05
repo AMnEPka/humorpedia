@@ -5,6 +5,54 @@
 Универсальный импортер позволяет создавать скрипты импорта для любого типа контента,
 просто указывая последовательность модулей на странице.
 
+## Источники данных из БД
+
+Парсер извлекает данные из следующих таблиц MySQL/MODX:
+
+### Основные таблицы
+
+- **`modx_site_content`** - основная таблица ресурсов:
+  - `id` - ID ресурса
+  - `pagetitle` - заголовок страницы
+  - `longtitle` - расширенный заголовок
+  - `description` - описание/HTML контент
+  - `alias` - алиас (slug)
+  - `parent` (индекс 12) - ID родительского ресурса (для иерархии)
+  - `rating` - рейтинг (число от 0 до 10)
+  - `votes` - количество голосов
+  - `createdon`, `editedon`, `publishedon` - временные метки
+
+- **`modx_site_tmplvar_contentvalues`** - значения TV переменных:
+  - `contentid` - ID ресурса
+  - `tmplvarid` - ID TV переменной
+  - `value` - значение TV переменной
+
+- **`modx_site_tmplvars`** - маппинг TV переменных:
+  - `id` - ID TV переменной
+  - `name` - название TV переменной (используется для конвертации ID → имя)
+
+### Маппинги (JSON файлы)
+
+- **`tag_mapping.json`** - маппинг `tag_id → tag_name` (для конвертации ID тегов в названия)
+- **`image_mapping.json`** - маппинг `image_id/path → url` (для нормализации путей к изображениям)
+- **`tv_map.json`** - маппинг `tv_id → tv_name` (для конвертации TV ID в имена полей)
+
+### Источники данных для модулей
+
+| Модуль | Источник данных |
+|--------|----------------|
+| `poster_photo` | TV поле `image` (или fallback: `photo`, `poster`, `img`), или первое изображение из HTML (`modx_site_content.description`) |
+| `facts_table` | TV поле `config` → MIGX секция `info` → поле `table`, или HTML таблица из `description` |
+| `rating_widget` | `modx_site_content.rating` и `modx_site_content.votes` |
+| `tags_cloud` | TV поле `tags` (разделитель `||`), конвертация через `tag_mapping.json` |
+| `social_links` | TV поле `config` → MIGX секция `info` → поле `list_social`, или ссылки из HTML |
+| `text_block` | TV поле `config` → MIGX секции (`info.subtitle`, `text.content`, и т.д.), или HTML из `description` |
+| `timeline` | TV поле `config` → MIGX секция `timeline` |
+| `team_members` | TV поле с данными о составе команды |
+| `image_gallery` | TV поле с массивом изображений |
+
+**Примечание:** MIGX данные хранятся в TV поле `config` в формате JSON массива объектов с полями `MIGX_formname` (тип секции), `MIGX_id`, и различными полями в зависимости от типа секции (`subtitle`, `content`, `table`, `list_social`, и т.д.).
+
 ## Доступные модули
 
 | Тип модуля | Описание | Основные параметры |
@@ -227,6 +275,111 @@ python universal_importer.py --type quiz --ids 9012 --apply
 # Импорт всех квизов (parent=31) пакетами
 python universal_importer.py --type quiz --parent-id 31 --apply
 ```
+
+### КВН (parent=32)
+
+Импортер для страниц КВН поддерживает иерархическую структуру до 4 уровней вложенности.
+
+#### Структура иерархии
+
+КВН страницы имеют иерархическую структуру:
+- **Уровень 0**: Корневая страница (например, "КВН", `parent=0` в MODX)
+- **Уровень 1**: Лиги, сезоны (например, "Высшая лига", `parent=32`)
+- **Уровень 2**: Конкретные сезоны (например, "Сезон 2024")
+- **Уровень 3**: Игры, этапы
+- **Уровень 4**: Конкретные игры
+
+Иерархия определяется полем `parent` в таблице `modx_site_content` (индекс 12). При импорте автоматически устанавливаются:
+- `parent_id` - MongoDB ID родительского документа (если указан `--parent-slug` или `--parent-old-id`)
+- `full_path` - полный путь (например: `kvn/vysshaya-liga/season-2024`)
+- `level` - уровень вложенности (0 для корневой страницы, +1 для каждого уровня)
+
+#### Извлекаемые данные
+
+Импортер извлекает следующие модули:
+
+1. **`poster_photo`** - Постер/фото:
+   - Источник: TV поле `image` (или fallback: `photo`, `poster`, `img`)
+   - Альтернатива: первое изображение из HTML (`modx_site_content.description`)
+   - Результат: преобразуется в формат `MediaFile` с полями `url`, `alt`, `caption`, `thumbnail`
+
+2. **`facts_table`** - Таблица фактов (заголовок "Информация", стиль "card"):
+   - Источник: TV поле `config` → MIGX секция `info` → поле `table`
+   - Альтернатива: HTML таблица из `description`
+   - Результат: словарь ключ-значение (например: "Год", "Лига", и т.д.)
+
+3. **`rating_widget`** - Виджет рейтинга (заголовок "Оценка", стиль "smileys"):
+   - Источник: `modx_site_content.rating` и `modx_site_content.votes`
+   - Результат: объект `{average: float, count: int}`
+
+4. **`tags_cloud`** - Облако тегов (стиль "badges"):
+   - Источник: TV поле `tags` (разделитель `||`)
+   - Конвертация: ID тегов → названия через `tag_mapping.json`
+   - Результат: массив строк с названиями тегов
+
+5. **`social_links`** - Социальные ссылки (заголовок "Ссылки", стиль "list"):
+   - Источник: TV поле `config` → MIGX секция `info` → поле `list_social`
+   - Формат: JSON массив объектов `[{"name": "vk", "link": "https://..."}, ...]` или словарь
+   - Результат: словарь `{vk: url, youtube: url, ...}`
+
+6. **`text_block`** (первый) - Основной текст из секции info:
+   - Источник: TV поле `config` → MIGX секция `info` → поле `subtitle`
+   - Параметры: `strip_first_heading=True` (удаляет первый заголовок, если совпадает с названием страницы)
+   - Результат: HTML контент с нормализованными путями к изображениям
+
+7. **`text_block`** (второй) - Все текстовые секции:
+   - Источник: TV поле `config` → все MIGX секции с `MIGX_formname='text'`
+   - Параметры: `all_text_sections=True`
+   - Результат: отдельные модули для каждой `text` секции (с заголовками, если есть)
+
+#### Специфичные поля для КВН
+
+В документ MongoDB добавляются дополнительные поля:
+- `name` - название (из `longtitle` или `pagetitle`)
+- `child_kvn_ids` - массив ID дочерних страниц КВН (пустой при импорте, заполняется отдельно)
+- `person_ids` - массив ID связанных людей (пустой при импорте)
+- `team_ids` - массив ID связанных команд (пустой при импорте)
+- `related_kvn_ids` - массив ID связанных страниц КВН (пустой при импорте)
+- `poster` - преобразуется в формат `MediaFile` (если был строкой)
+
+#### Использование
+
+```bash
+# Импорт корневой страницы КВН (id=32)
+python universal_importer.py --type kvn --ids 32 --apply
+
+# Импорт всех страниц КВН первого уровня (parent=32) пакетами
+python universal_importer.py --type kvn --parent-id 32 --batch-size 25 --apply
+
+# Импорт дочерней страницы с указанием родителя по slug
+python universal_importer.py --type kvn --ids 1234 --parent-slug vysshaya-liga --apply
+
+# Импорт дочерней страницы с указанием родителя по old_id из MODX
+python universal_importer.py --type kvn --ids 1234 --parent-old-id 5678 --apply
+```
+
+#### Порядок импорта
+
+1. **Сначала импортируйте корневую страницу** (если её нет в MongoDB):
+   ```bash
+   python universal_importer.py --type kvn --ids 32 --apply
+   ```
+
+2. **Затем импортируйте страницы по уровням** (сначала уровень 1, потом 2, и т.д.):
+   ```bash
+   # Уровень 1 (прямые дочерние корневой страницы)
+   python universal_importer.py --type kvn --parent-id 32 --apply
+   
+   # Уровень 2 (дочерние страниц уровня 1) - для каждой родительской страницы
+   python universal_importer.py --type kvn --ids 1234 --parent-slug vysshaya-liga --apply
+   ```
+
+3. **Или используйте пакетный импорт** для всех страниц с определённым `parent_id`:
+   ```bash
+   python universal_importer.py --type kvn --parent-id 32 --batch-size 25 --apply
+   ```
+
+**Важно:** При импорте дочерних страниц убедитесь, что родительская страница уже существует в MongoDB, иначе `parent_id` не будет установлен корректно.
 
 ## Импорт по parent_id
 

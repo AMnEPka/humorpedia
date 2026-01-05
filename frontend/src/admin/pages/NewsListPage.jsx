@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, AlertTriangle, Eye } from 'lucide-react';
 
 const statusLabels = { draft: { label: 'Черновик', variant: 'secondary' }, published: { label: 'Опубликовано', variant: 'default' }, archived: { label: 'В архиве', variant: 'outline' } };
 
@@ -56,12 +56,24 @@ export default function NewsListPage() {
 
       <Card><CardContent className="p-0">
         {loading ? <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : news.length === 0 ? <div className="text-center py-12 text-muted-foreground">Ничего не найдено</div> : (
-          <Table><TableHeader><TableRow><TableHead>Заголовок</TableHead><TableHead>Дата</TableHead><TableHead>Статус</TableHead><TableHead className="text-right">Просмотры</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
+          <Table><TableHeader><TableRow><TableHead>Заголовок</TableHead><TableHead>Дата</TableHead><TableHead>Статус</TableHead><TableHead className="w-[100px]">Просмотр</TableHead><TableHead className="text-right">Просмотры</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
             <TableBody>{news.map((n) => (
               <TableRow key={n._id}>
                 <TableCell><Link to={`/admin/news/${n._id}`} className="font-medium hover:underline">{n.title}</Link>{n.important && <Badge variant="destructive" className="ml-2"><AlertTriangle className="h-3 w-3 mr-1" />Важно</Badge>}<div className="text-sm text-muted-foreground">/{n.slug}</div></TableCell>
                 <TableCell>{formatDate(n.published_at)}</TableCell>
                 <TableCell><Badge variant={statusLabels[n.status]?.variant}>{statusLabels[n.status]?.label}</Badge></TableCell>
+                <TableCell>
+                  {n.slug && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`/news/${n.slug}`, '_blank')}
+                      className="h-8"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">{n.views || 0}</TableCell>
                 <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/news/${n._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(n._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>

@@ -212,6 +212,7 @@ export default function CitiesListPage() {
                   <TableHead>Название</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Статус</TableHead>
+                  <TableHead className="w-[100px]">Просмотр</TableHead>
                   <TableHead className="text-right">Просмотры</TableHead>
                   <TableHead className="text-right">Рейтинг</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
@@ -235,6 +236,18 @@ export default function CitiesListPage() {
                       <Badge variant={statusLabels[city.status]?.variant || 'secondary'}>
                         {statusLabels[city.status]?.label || city.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {city.slug && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(`/city/${city.slug}`, '_blank')}
+                          className="h-8"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       {city.views || 0}

@@ -211,6 +211,7 @@ export default function PeopleListPage() {
                   <TableHead>Имя</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Теги</TableHead>
+                  <TableHead className="w-[100px]">Просмотр</TableHead>
                   <TableHead className="text-right">Просмотры</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -281,6 +282,18 @@ export default function PeopleListPage() {
                           </Badge>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {person.slug && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(`/people/${person.slug}`, '_blank')}
+                          className="h-8"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">{person.views || 0}</TableCell>
                     <TableCell>

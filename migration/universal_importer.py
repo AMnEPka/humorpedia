@@ -606,6 +606,25 @@ class UniversalImporter:
         total = len(resource_ids)
         print(f"  ✅ Найдено {total} ресурсов")
         
+        # Находим родителя в MongoDB по old_id
+        parent_mongo_id = None
+        parent_path = None
+        parent_level = 0
+        
+        if apply:
+            import pymongo
+            client = pymongo.MongoClient(self.mongo_url)
+            db = client[self.db_name]
+            parent_doc = db[self.collection].find_one({'old_id': parent_id})
+            if parent_doc:
+                parent_mongo_id = parent_doc.get('id')
+                parent_path = parent_doc.get('full_path', parent_doc.get('slug'))
+                parent_level = parent_doc.get('level', 0)
+                print(f"  📂 Родитель найден в MongoDB: {parent_doc.get('title')} (path: {parent_path})")
+            else:
+                print(f"  ⚠️  Родитель с old_id={parent_id} не найден в MongoDB. Импорт будет на верхнем уровне.")
+            client.close()
+        
         if not apply:
             print(f"  🔍 Dry-run: ресурсы не будут сохранены")
             print(f"     Используйте --apply для записи в БД")
@@ -624,9 +643,9 @@ class UniversalImporter:
                 doc = self.import_resource(
                     resource_id,
                     apply=apply,
-                    parent_id=None,
-                    parent_path=None,
-                    level=0
+                    parent_id=parent_mongo_id,
+                    parent_path=parent_path,
+                    level=parent_level + 1 if parent_mongo_id else 0
                 )
                 if doc:
                     imported.append(doc)

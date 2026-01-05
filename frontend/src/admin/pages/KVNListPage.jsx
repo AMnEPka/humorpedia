@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, ChevronDown, ChevronRight as ChevronRightIcon, FolderTree } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, ChevronDown, ChevronRight as ChevronRightIcon, FolderTree, Eye } from 'lucide-react';
 
 const statusLabels = {
   draft: { label: 'Черновик', variant: 'secondary' },
@@ -58,6 +58,18 @@ function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete }) {
           )}
         </TableCell>
         <TableCell><Badge variant={statusLabels[kvn.status]?.variant}>{statusLabels[kvn.status]?.label}</Badge></TableCell>
+        <TableCell>
+          {kvn.full_path && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open(`/${kvn.full_path}`, '_blank')}
+              className="h-8"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
+        </TableCell>
         <TableCell className="text-right">{kvn.views || 0}</TableCell>
         <TableCell>
           <DropdownMenu>
@@ -237,6 +249,7 @@ export default function KVNListPage() {
                   <TableHead>Название</TableHead>
                   <TableHead>Дочерние</TableHead>
                   <TableHead>Статус</TableHead>
+                  <TableHead className="w-[100px]">Просмотр</TableHead>
                   <TableHead className="text-right">Просмотры</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -265,6 +278,18 @@ export default function KVNListPage() {
                       </TableCell>
                       <TableCell>-</TableCell>
                       <TableCell><Badge variant={statusLabels[k.status]?.variant}>{statusLabels[k.status]?.label}</Badge></TableCell>
+                      <TableCell>
+                        {k.full_path && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(`/${k.full_path}`, '_blank')}
+                            className="h-8"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">{k.views || 0}</TableCell>
                       <TableCell>
                         <DropdownMenu>

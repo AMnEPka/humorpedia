@@ -205,6 +205,7 @@ export default function TeamsListPage() {
                   <TableHead>Тип</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Город</TableHead>
+                  <TableHead className="w-[100px]">Просмотр</TableHead>
                   <TableHead className="text-right">Просмотры</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -268,6 +269,18 @@ export default function TeamsListPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>{team.facts?.city || '-'}</TableCell>
+                    <TableCell>
+                      {team.slug && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
+                          className="h-8"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">{team.views || 0}</TableCell>
                     <TableCell>
                       <DropdownMenu>

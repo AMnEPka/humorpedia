@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Eye } from 'lucide-react';
 
 const statusLabels = { draft: { label: 'Черновик', variant: 'secondary' }, published: { label: 'Опубликовано', variant: 'default' }, archived: { label: 'В архиве', variant: 'outline' } };
 
@@ -53,12 +53,24 @@ export default function QuizzesListPage() {
 
       <Card><CardContent className="p-0">
         {loading ? <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : quizzes.length === 0 ? <div className="text-center py-12 text-muted-foreground">Ничего не найдено</div> : (
-          <Table><TableHeader><TableRow><TableHead>Название</TableHead><TableHead>Статус</TableHead><TableHead>Прохождения</TableHead><TableHead className="text-right">Просмотры</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
+          <Table><TableHeader><TableRow><TableHead>Название</TableHead><TableHead>Статус</TableHead><TableHead>Прохождения</TableHead><TableHead className="w-[100px]">Просмотр</TableHead><TableHead className="text-right">Просмотры</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader>
             <TableBody>{quizzes.map((q) => (
               <TableRow key={q._id}>
                 <TableCell><Link to={`/admin/quizzes/${q._id}`} className="font-medium hover:underline">{q.title}</Link><div className="text-sm text-muted-foreground">/{q.slug}</div></TableCell>
                 <TableCell><Badge variant={statusLabels[q.status]?.variant}>{statusLabels[q.status]?.label}</Badge></TableCell>
                 <TableCell>{q.attempts_count || 0}</TableCell>
+                <TableCell>
+                  {q.slug && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(`/quizzes/${q.slug}`, '_blank')}
+                      className="h-8"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                </TableCell>
                 <TableCell className="text-right">{q.views || 0}</TableCell>
                 <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/quizzes/${q._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(q._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>
