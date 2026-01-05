@@ -230,6 +230,112 @@ python parsers/kvn_season.py kvn/premier-liga/2023
 # season_premier-liga_2023.json
 ```
 
+## Обработка сезонов
+
+### Что делает process_seasons.py?
+
+Скрипт **НЕ создаёт новую коллекцию**, а:
+
+1. **Берёт существующие документы** из коллекции `kvn` (которые уже импортированы через `universal_importer.py`)
+2. **Парсит их HTML-контент** из модулей `text_block`
+3. **Добавляет поле `season_data`** в те же документы с структурированными данными
+
+**Важно:** Данные остаются в той же коллекции `kvn`, просто добавляется новое поле.
+
+### Запуск обработки
+
+```bash
+# Один сезон (dry-run, без записи)
+python kvn/process_seasons.py --path kvn/premier-liga/2023
+
+# Один сезон с записью в БД
+python kvn/process_seasons.py --path kvn/premier-liga/2023 --apply
+
+# Все сезоны лиги
+python kvn/process_seasons.py --league premier-liga --apply
+
+# Все сезоны всех лиг
+python kvn/process_seasons.py --all --apply
+```
+
+### Получение обработанных сезонов
+
+После обработки используйте скрипт `get_seasons.py`:
+
+```bash
+# Показать все обработанные сезоны
+python kvn/get_seasons.py
+
+# Сезоны конкретной лиги
+python kvn/get_seasons.py --league premier-liga
+
+# Детали одного сезона
+python kvn/get_seasons.py --path kvn/premier-liga/2023 --details
+
+# Экспорт в JSON
+python kvn/get_seasons.py --export seasons.json
+
+# Только количество
+python kvn/get_seasons.py --count-only
+```
+
+### Получение через MongoDB
+
+```python
+import pymongo
+
+client = pymongo.MongoClient('mongodb://localhost:27017')
+db = client['humorpedia']
+
+# Все обработанные сезоны
+seasons = list(db.kvn.find({'season_data': {'$exists': True}}))
+
+# Сезоны конкретной лиги
+seasons = list(db.kvn.find({
+    'season_data': {'$exists': True},
+    'full_path': {'$regex': '^kvn/premier-liga/'}
+}))
+
+# Один сезон
+season = db.kvn.find_one({'full_path': 'kvn/premier-liga/2023'})
+season_data = season.get('season_data', {})
+
+# Доступ к данным
+stages = season_data.get('stages', [])
+winners = season_data.get('winners', [])
+teams = season_data.get('all_teams', [])
+```
+
+### Структура данных в MongoDB
+
+После обработки документ сезона выглядит так:
+
+```json
+{
+  "_id": "...",
+  "title": "Сезон 2023 Премьер-лиги КВН",
+  "full_path": "kvn/premier-liga/2023",
+  "modules": [...],
+  "season_data": {
+    "league_slug": "premier-liga",
+    "year": 2023,
+    "stages": [
+      {
+        "name": "1/8 финала",
+        "order": 1,
+        "games": [...]
+      }
+    ],
+    "winners": ["karakuz"],
+    "all_teams": ["stolik", "error-404", ...],
+    "jury": [...],
+    "editors": [...]
+  }
+}
+```
+
+Поле `season_data` содержит всю структурированную информацию о сезоне.
+
 ## Интеграция с universal_importer.py
 
 Для использования в процессе импорта:

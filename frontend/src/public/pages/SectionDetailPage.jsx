@@ -48,8 +48,8 @@ export default function SectionDetailPage() {
         } else if (res.data.children && res.data.children.length > 0) {
           // For KVN pages, children are already in the response
           setChildren(res.data.children || []);
-        } else if (res.data.content_type === 'kvn') {
-          // For KVN, try to fetch children if not included
+        } else if (res.data.id) {
+          // For KVN pages (identified by presence of 'id' field), try to fetch children if not included
           try {
             const childrenRes = await publicApi.getKvnChildren(res.data.slug);
             setChildren(childrenRes.data.items || []);
