@@ -24,6 +24,7 @@ const emptyTeam = {
   status: 'draft',
   logo: null,
   facts: {},  // Гибкая таблица фактов (ключ-значение)
+  aliases: [],  // Алиасы названий команды (например, "Пермский край" для "Сборная Пермского края")
   social_links: {
     vk: '',
     telegram: '',
@@ -402,6 +403,60 @@ export default function TeamEditPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Алиасы названий</CardTitle>
+              <CardDescription>
+                Альтернативные названия команды для сопоставления в сезонах КВН.
+                Например, для команды "Сборная Пермского края" можно добавить алиас "Пермский край".
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                {team.aliases && team.aliases.length > 0 && (
+                  <div className="space-y-2">
+                    {team.aliases.map((alias, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input
+                          value={alias}
+                          onChange={(e) => {
+                            const newAliases = [...team.aliases];
+                            newAliases[idx] = e.target.value;
+                            setTeam(prev => ({ ...prev, aliases: newAliases }));
+                          }}
+                          placeholder="Альтернативное название"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newAliases = team.aliases.filter((_, i) => i !== idx);
+                            setTeam(prev => ({ ...prev, aliases: newAliases }));
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setTeam(prev => ({
+                      ...prev,
+                      aliases: [...(prev.aliases || []), '']
+                    }));
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Добавить алиас
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

@@ -786,10 +786,59 @@ async def update_kvn(id: str, data: KVNUpdate):
         update_data["person_ids"] = data.person_ids
     if data.related_kvn_ids is not None:
         update_data["related_kvn_ids"] = data.related_kvn_ids
+    if data.season_data is not None:
+        # Валидируем и очищаем season_data перед сохранением
+        # Убеждаемся, что все вложенные структуры сериализуемы
+        try:
+            import json
+            # Рекурсивно очищаем данные от несериализуемых объектов
+            def clean_data(obj, depth=0, max_depth=10):
+                if depth > max_depth:
+                    logger.warning(f"Max depth reached in clean_data, converting to string")
+                    return str(obj)
+                
+                if isinstance(obj, dict):
+                    return {k: clean_data(v, depth+1, max_depth) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [clean_data(item, depth+1, max_depth) for item in obj]
+                elif isinstance(obj, (str, int, float, bool, type(None))):
+                    return obj
+                elif hasattr(obj, '__dict__'):
+                    # Объект с атрибутами - преобразуем в словарь
+                    return clean_data(obj.__dict__, depth+1, max_depth)
+                else:
+                    # Преобразуем в строку если не сериализуемо
+                    return str(obj)
+            
+            cleaned_data = clean_data(data.season_data)
+            # Пробуем сериализовать для проверки
+            json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
+            logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
+            # Если данные слишком большие - логируем предупреждение, но сохраняем
+            if len(json_str) > 1000000:  # 1MB
+                logger.warning(f"Season data is large: {len(json_str)} bytes")
+            update_data["season_data"] = cleaned_data
+        except (TypeError, ValueError) as e:
+            logger.error(f"Error serializing season_data: {e}", exc_info=True)
+            # Пробуем сохранить хотя бы структуру без проблемных данных
+            try:
+                # Упрощаем данные - убираем сложные вложенные структуры
+                simplified = json.loads(json.dumps(data.season_data, default=str, ensure_ascii=False))
+                update_data["season_data"] = simplified
+                logger.warning("Used simplified season_data after serialization error")
+            except Exception as e2:
+                logger.error(f"Failed to simplify season_data: {e2}", exc_info=True)
+                # В крайнем случае - не сохраняем season_data, но не падаем
+                logger.error("Skipping season_data update due to serialization errors")
+                # Не добавляем season_data в update_data
     
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    result = await db.kvn.update_one({"_id": id}, {"$set": update_data})
+    try:
+        result = await db.kvn.update_one({"_id": id}, {"$set": update_data})
+    except Exception as e:
+        logger.error(f"Error updating KVN {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update KVN: {str(e)}")
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")

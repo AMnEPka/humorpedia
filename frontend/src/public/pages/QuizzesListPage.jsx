@@ -20,7 +20,7 @@ export default function QuizzesListPage() {
       setLoading(true);
       try {
         const res = await publicApi.getQuizzes({ 
-          page, 
+          skip: (page - 1) * limit,
           limit,
           sort: '-published_at' 
         });
@@ -111,7 +111,11 @@ export default function QuizzesListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page <= 1}
-                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page - 1 })}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', String(page - 1));
+                  setSearchParams(params);
+                }}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -122,7 +126,11 @@ export default function QuizzesListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page >= totalPages}
-                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page + 1 })}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', String(page + 1));
+                  setSearchParams(params);
+                }}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

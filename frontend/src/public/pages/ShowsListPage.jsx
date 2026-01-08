@@ -19,7 +19,7 @@ export default function ShowsListPage() {
       setLoading(true);
       try {
         const res = await publicApi.getShows({ 
-          page, 
+          skip: (page - 1) * limit,
           limit,
           sort: 'title' 
         });
@@ -100,7 +100,11 @@ export default function ShowsListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page <= 1}
-                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page - 1 })}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', String(page - 1));
+                  setSearchParams(params);
+                }}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -111,7 +115,11 @@ export default function ShowsListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page >= totalPages}
-                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page + 1 })}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', String(page + 1));
+                  setSearchParams(params);
+                }}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
+import SeasonDetailPage from './SeasonDetailPage';
 
 export default function SectionDetailPage() {
   const location = useLocation();
@@ -39,22 +40,29 @@ export default function SectionDetailPage() {
           res = await publicApi.getSectionByPath(path);
         }
         
-        setSection(res.data);
+        const data = res.data;
+        setSection(data);
 
-        // Fetch children if show_children_list is true
-        if (res.data.show_children_list) {
-          const childrenRes = await publicApi.getSectionChildren(res.data._id);
-          setChildren(childrenRes.data.items || []);
-        } else if (res.data.children && res.data.children.length > 0) {
-          // For KVN pages, children are already in the response
-          setChildren(res.data.children || []);
-        } else if (res.data.id) {
-          // For KVN pages (identified by presence of 'id' field), try to fetch children if not included
-          try {
-            const childrenRes = await publicApi.getKvnChildren(res.data.slug);
+        // Если есть season_data - используем новый формат
+        // (SeasonDetailPage будет показан ниже)
+
+        // Если есть season_data - не загружаем children (они не нужны для нового формата)
+        if (!data.season_data) {
+          // Fetch children if show_children_list is true
+          if (data.show_children_list) {
+            const childrenRes = await publicApi.getSectionChildren(data._id);
             setChildren(childrenRes.data.items || []);
-          } catch (err) {
-            console.log('No children or error fetching children');
+          } else if (data.children && data.children.length > 0) {
+            // For KVN pages, children are already in the response
+            setChildren(data.children || []);
+          } else if (data.id) {
+            // For KVN pages (identified by presence of 'id' field), try to fetch children if not included
+            try {
+              const childrenRes = await publicApi.getKvnChildren(data.slug);
+              setChildren(childrenRes.data.items || []);
+            } catch (err) {
+              console.log('No children or error fetching children');
+            }
           }
         }
       } catch (err) {
@@ -86,6 +94,13 @@ export default function SectionDetailPage() {
     );
   }
 
+  // Если есть season_data - показываем новый формат
+  if (section.season_data) {
+    // Передаём данные через location.state, чтобы SeasonDetailPage не делал повторный запрос
+    return <SeasonDetailPage seasonData={section} />;
+  }
+
+  // Иначе - старый формат
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumbs */}

@@ -85,6 +85,9 @@ class Team(BaseContent):
     facts: Dict[str, str] = Field(default_factory=dict)  # Flexible key-value pairs for team info
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     
+    # Aliases for team name matching (e.g., "Пермский край" -> "Сборная Пермского края")
+    aliases: List[str] = Field(default_factory=list)
+    
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
     
@@ -104,6 +107,7 @@ class TeamCreate(BaseModel):
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
+    aliases: List[str] = Field(default_factory=list)
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
@@ -119,6 +123,7 @@ class TeamUpdate(BaseModel):
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
+    aliases: Optional[List[str]] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None
@@ -467,4 +472,5 @@ class KVNUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     team_ids: Optional[List[str]] = None
     person_ids: Optional[List[str]] = None
+    season_data: Optional[Dict[str, Any]] = None  # Структурированные данные сезона
     related_kvn_ids: Optional[List[str]] = None

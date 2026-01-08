@@ -29,13 +29,15 @@ import sys
 import re
 import json
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
+from uuid import uuid4
 
 # Добавляем путь к парсерам
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pymongo
 from parsers.kvn_season import KVNSeasonParser
+from team_matcher import match_all_teams, normalize_team_name
 
 
 # Лиги для обработки (slug -> название)
@@ -78,6 +80,55 @@ def get_season_html(season_doc: dict) -> str:
     return '\n'.join(html_parts)
 
 
+def transliterate_slug(text: str) -> str:
+    """Транслитерирует текст в slug."""
+    translit_map = {
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+        'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+        'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+        'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+        'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+    }
+    slug = text.lower().replace(" ", "-")
+    slug = ''.join(translit_map.get(c, c) for c in slug)
+    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    return slug.strip('-')
+
+
+def sync_tags_to_collection(tags: list, db) -> None:
+    """Синхронизация тегов с коллекцией tags."""
+    if not tags:
+        return
+    
+    for tag_name in tags:
+        tag_name = tag_name.strip()
+        if not tag_name:
+            continue
+        
+        existing = db.tags.find_one({
+            "name": {"$regex": f"^{re.escape(tag_name)}$", "$options": "i"}
+        })
+        
+        if not existing:
+            tag_doc = {
+                "_id": str(uuid4()),
+                "name": tag_name,
+                "slug": transliterate_slug(tag_name),
+                "old_id": None,
+                "usage_count": 1,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            try:
+                db.tags.insert_one(tag_doc)
+            except Exception:
+                pass
+        else:
+            db.tags.update_one(
+                {"_id": existing["_id"]},
+                {"$inc": {"usage_count": 1}}
+            )
+
+
 def process_season(db, path: str, apply: bool = False, verbose: bool = False) -> dict:
     """
     Обрабатывает один сезон.
@@ -96,7 +147,8 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
         print(f"  ❌ Сезон {path} не найден")
         return None
     
-    # Получаем HTML
+    # Получаем модули и HTML
+    modules = season_doc.get('modules', [])
     html = get_season_html(season_doc)
     if not html:
         print(f"  ⚠️  Нет текстового контента")
@@ -107,21 +159,213 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
     league = path_parts[1] if len(path_parts) > 1 else ''
     year = extract_year(path_parts[-1])
     
-    # Парсим
+    # Парсим с передачей модулей для расширенного парсинга
     parser = KVNSeasonParser()
-    result = parser.parse(html, league=league, year=year)
+    result = parser.parse(html, league=league, year=year, modules=modules)
     result_dict = parser.to_dict(result)
+    
+    # Получаем все существующие команды из БД
+    existing_teams = list(db.teams.find({
+        'content_type': 'team',
+        'team_type': 'kvn'
+    }, {
+        '_id': 1,
+        'slug': 1,
+        'name': 1,
+        'aliases': 1,
+        'tags': 1
+    }))
+    
+    # Сопоставляем команды сезона с существующими
+    season_teams = result_dict.get('all_teams', [])
+    
+    # Строим карту slug -> название из парсера
+    team_slug_map = {}
+    if hasattr(parser, 'stage_parser') and parser.stage_parser:
+        if hasattr(parser.stage_parser, 'game_parser') and parser.stage_parser.game_parser:
+            team_slug_map = getattr(parser.stage_parser.game_parser, 'team_slug_map', {})
+    
+    team_matches = match_all_teams(season_teams, existing_teams, team_slug_map)
+    
+    # Обновляем команды в играх с учетом алиасов
+    # Строим карту названий/алиасов -> (team_id, team_slug, team_name)
+    # ВАЖНО: Алиасы должны иметь приоритет, чтобы "Пермский край" находил "Сборная Пермского края"
+    team_name_map = {}
+    for team in existing_teams:
+        team_id = team['_id']
+        team_slug = team.get('slug', '')
+        team_name = team.get('name', '')
+        aliases = team.get('aliases', [])
+        
+        # Сначала добавляем алиасы (они имеют приоритет для сопоставления)
+        for alias in aliases:
+            if alias and alias.strip():  # Пропускаем пустые алиасы
+                normalized = normalize_team_name(alias)
+                if normalized:  # Убеждаемся, что нормализованное название не пустое
+                    team_name_map[normalized] = (team_id, team_slug, team_name)
+        
+        # Затем добавляем основное название (если еще не добавлено)
+        if team_name:
+            normalized = normalize_team_name(team_name)
+            if normalized not in team_name_map:  # Не перезаписываем алиасы
+                team_name_map[normalized] = (team_id, team_slug, team_name)
+    
+    # Обновляем команды во всех играх (включая победителей)
+    # ВАЖНО: Сохраняем флаги is_winner и passed при обновлении
+    for stage_data in result_dict.get('stages', []):
+        for game_data in stage_data.get('games', []):
+            for team_data in game_data.get('teams', []):
+                # Сохраняем флаги перед обновлением
+                is_winner = team_data.get('is_winner', False)
+                passed = team_data.get('passed', False)
+                is_additional = team_data.get('is_additional', False)
+                
+                team_name = team_data.get('team_name', '')
+                team_slug = team_data.get('team_slug', '')
+                
+                # Пробуем найти по названию (сначала проверяем алиасы)
+                if team_name:
+                    normalized = normalize_team_name(team_name)
+                    if normalized in team_name_map:
+                        team_id, matched_slug, matched_name = team_name_map[normalized]
+                        # Обновляем slug и name команды, сохраняя флаги
+                        team_data['team_slug'] = matched_slug
+                        team_data['team_name'] = matched_name
+                        team_data['team_id'] = team_id
+                        # ВАЖНО: Сохраняем флаги ПОСЛЕ обновления названия
+                        team_data['is_winner'] = is_winner
+                        team_data['passed'] = passed
+                        team_data['is_additional'] = is_additional
+                    elif team_slug in team_matches:
+                        # Пробуем найти по slug через team_matches
+                        team_id, matched_slug = team_matches[team_slug]
+                        matched_team = next((t for t in existing_teams if t['_id'] == team_id), None)
+                        if matched_team:
+                            team_data['team_slug'] = matched_team.get('slug', '')
+                            team_data['team_name'] = matched_team.get('name', team_name)
+                            team_data['team_id'] = team_id
+                            team_data['is_winner'] = is_winner
+                            team_data['passed'] = passed
+                            team_data['is_additional'] = is_additional
+                    else:
+                        # Команда не найдена - но сохраняем флаги
+                        team_data['is_winner'] = is_winner
+                        team_data['passed'] = passed
+                        team_data['is_additional'] = is_additional
+                elif team_slug in team_matches:
+                    # Если есть только slug - обновляем через team_matches
+                    team_id, matched_slug = team_matches[team_slug]
+                    matched_team = next((t for t in existing_teams if t['_id'] == team_id), None)
+                    if matched_team:
+                        team_data['team_slug'] = matched_team.get('slug', '')
+                        team_data['team_name'] = matched_team.get('name', '')
+                        team_data['team_id'] = team_id
+                        team_data['is_winner'] = is_winner
+                        team_data['passed'] = passed
+                        team_data['is_additional'] = is_additional
+    
+    # Собираем теги для сезона
+    season_tags = ['КВН']
+    
+    # Добавляем тег лиги
+    league_name = LEAGUES.get(league, league)
+    if league_name and league_name != 'КВН':
+        season_tags.append(league_name)
+    
+    # Добавляем теги всех команд-участниц
+    # ВАЖНО: Добавляем только название команды как тег, НЕ все теги команды из БД
+    matched_team_tags = set()
+    for team_data in season_teams:
+        team_name = team_data.get('name', '')
+        if team_name:
+            # Добавляем только название команды как тег
+            matched_team_tags.add(team_name)
+    
+    season_tags.extend(sorted(matched_team_tags))
+    
+    # Обновляем модуль "Команды-участники" со ссылками
+    # ВАЖНО: Удаляем ВСЕ старые модули "Команды-участники" и создаем один новый
+    # Также скрываем старые модули с результатами, так как они теперь в season_data
+    updated_modules = []
+    
+    # Сначала собираем все модули, КРОМЕ "Команды-участники" и старых результатов
+    for module in modules:
+        module_title = module.get('title', '').lower()
+        module_type = module.get('type', '').lower()
+        
+        # Пропускаем все модули "Команды-участники" - они будут заменены одним новым
+        if ('команд' in module_title and 'участн' in module_title) or \
+           ('участник' in module_title and 'команд' in module_title):
+            continue  # Пропускаем старые модули "Команды-участники"
+        
+        # Скрываем старые модули с результатами, так как они теперь в season_data
+        # Проверяем как по названию, так и по содержимому
+        module_content = str(module.get('data', {}).get('content', '')).lower()
+        if (module_title in ['результаты', 'результат'] or 
+            'результат' in module_content[:100] or  # Первые 100 символов
+            (module_type == 'text_block' and '1/8 финала' in module_content or 
+             '1/4 финала' in module_content or '1/2 финала' in module_content or
+             'финал' in module_content)):
+            # Скрываем старые модули с результатами
+            module_copy = module.copy()
+            module_copy['visible'] = False
+            updated_modules.append(module_copy)
+        else:
+            # Оставляем другие модули (например, "Облако тегов", "Ссылки", общее описание)
+            updated_modules.append(module)
+    
+    # Создаем один новый модуль "Команды-участники" со ссылками
+    if season_teams:
+        teams_html_parts = []
+        for team_data in season_teams:
+            team_slug = team_data.get('slug', '')
+            team_name = team_data.get('name', '')
+            
+            # Используем обновленные данные из team_matches или team_name_map
+            matched_slug = None
+            if team_slug in team_matches:
+                _, matched_slug = team_matches[team_slug]
+            elif team_name:
+                normalized = normalize_team_name(team_name)
+                if normalized in team_name_map:
+                    _, matched_slug, _ = team_name_map[normalized]
+            
+            if matched_slug:
+                teams_html_parts.append(f'<a href="/kvn/teams/{matched_slug}">{team_name}</a>')
+            else:
+                teams_html_parts.append(team_name)
+        
+        # Находим подходящее место для модуля "Команды-участники"
+        # Размещаем его после модулей с общей информацией, но перед скрытыми модулями с результатами
+        visible_modules = [m for m in updated_modules if m.get('visible', True)]
+        max_order = max([m.get('order', 0) for m in visible_modules], default=0) if visible_modules else 0
+        
+        # Создаем новый модуль "Команды-участники"
+        # Размещаем его после всех видимых модулей
+        new_module = {
+            'id': str(uuid4()),
+            'type': 'text_block',
+            'order': max_order + 1,
+            'title': 'Команды-участники',
+            'visible': True,
+            'data': {
+                'title': 'Команды-участники',
+                'content': ', '.join(teams_html_parts)
+            }
+        }
+        # Вставляем модуль перед скрытыми модулями с результатами
+        # Находим первый скрытый модуль и вставляем перед ним
+        hidden_index = next((i for i, m in enumerate(updated_modules) if not m.get('visible', True)), len(updated_modules))
+        updated_modules.insert(hidden_index, new_module)
     
     # Статистика
     total_games = sum(len(s['games']) for s in result_dict['stages'])
-    total_teams = len(set(
-        t['team_slug'] or t['team_name']
-        for s in result_dict['stages']
-        for g in s['games']
-        for t in g['teams']
-    ))
+    total_teams = len(season_teams)
+    matched_count = len(team_matches)
     
     print(f"  📊 Стадий: {len(result_dict['stages'])}, Игр: {total_games}, Команд: {total_teams}")
+    print(f"  🔗 Сопоставлено команд: {matched_count}/{total_teams}")
+    print(f"  🏷️  Тегов: {len(season_tags)}")
     
     if result_dict['winners']:
         print(f"  🏆 Победители: {result_dict['winners']}")
@@ -134,13 +378,71 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
     
     # Записываем в БД
     if apply:
+        # Синхронизируем теги
+        sync_tags_to_collection(season_tags, db)
+        
+        # ВАЖНО: При парсинге сезона ЗАМЕНЯЕМ весь контент страницы
+        # Создаём минимальный набор модулей (только Команды-участники для отображения в админке)
+        # Результаты теперь хранятся в season_data и рендерятся отдельно
+        clean_modules = []
+        
+        # Оставляем только модуль "Команды-участники" со ссылками
+        for m in updated_modules:
+            title_lower = m.get('title', '').lower()
+            # Оставляем только команды-участники как видимый модуль
+            if 'команд' in title_lower and 'участн' in title_lower and m.get('visible', True):
+                clean_modules.append(m)
+                break
+        
+        # Если не нашли модуль команд-участников - создаём его
+        if not clean_modules and season_teams:
+            teams_html_parts = []
+            for team_data in season_teams:
+                team_slug = team_data.get('slug', '')
+                team_name = team_data.get('name', '')
+                
+                # Пробуем получить ссылку на команду
+                matched_slug = None
+                if team_slug in team_matches:
+                    _, matched_slug = team_matches[team_slug]
+                elif team_name:
+                    normalized = normalize_team_name(team_name)
+                    if normalized in team_name_map:
+                        _, matched_slug, _ = team_name_map[normalized]
+                
+                if matched_slug:
+                    teams_html_parts.append(f'<a href="/kvn/teams/{matched_slug}">{team_name}</a>')
+                else:
+                    teams_html_parts.append(team_name)
+            
+            clean_modules.append({
+                'id': str(uuid4()),
+                'type': 'text_block',
+                'order': 1,
+                'title': 'Команды-участники',
+                'visible': True,
+                'data': {
+                    'title': 'Команды-участники',
+                    'content': ', '.join(teams_html_parts)
+                }
+            })
+        
+        # Обновляем документ сезона - ЗАМЕНЯЕМ весь контент
+        update_data = {
+            'season_data': result_dict,
+            'tags': season_tags,
+            'modules': clean_modules  # Минимальный набор модулей
+        }
+        
         db.kvn.update_one(
             {'_id': season_doc['_id']},
-            {'$set': {'season_data': result_dict}}
+            {'$set': update_data}
         )
-        print(f"  ✅ Записано в БД")
+        print(f"  ✅ Записано в БД (старый контент заменён)")
     else:
         print(f"  🔍 Dry-run: используйте --apply для записи")
+        if verbose:
+            print(f"  📋 Теги для добавления: {season_tags}")
     
     return result_dict
 

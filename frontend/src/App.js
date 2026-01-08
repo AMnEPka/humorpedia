@@ -136,6 +136,7 @@ function AppRoutes() {
         <Route path="/tags/:tag" element={<TagSearchPage />} />
         
         {/* Dynamic sections - catch-all for hierarchical URLs */}
+        {/* SectionDetailPage автоматически определяет формат (старый/новый) по наличию season_data */}
         <Route path="/*" element={<SectionDetailPage />} />
       </Route>
       

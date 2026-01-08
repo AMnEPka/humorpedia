@@ -29,7 +29,7 @@ export default function TeamsListPage() {
       setLoading(true);
       try {
         const res = await publicApi.getTeamsByCategory(category, { 
-          page, 
+          skip: (page - 1) * limit,
           limit,
           search: search || undefined,
           sort: 'title' 
@@ -50,7 +50,10 @@ export default function TeamsListPage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setSearchParams({ q: search, page: 1 });
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    params.set('page', '1');
+    setSearchParams(params);
   };
 
   return (
@@ -161,7 +164,11 @@ export default function TeamsListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page <= 1}
-                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page - 1 })}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', String(page - 1));
+                  setSearchParams(params);
+                }}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -172,7 +179,11 @@ export default function TeamsListPage() {
                 variant="outline"
                 size="icon"
                 disabled={page >= totalPages}
-                onClick={() => setSearchParams({ ...Object.fromEntries(searchParams), page: page + 1 })}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set('page', String(page + 1));
+                  setSearchParams(params);
+                }}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

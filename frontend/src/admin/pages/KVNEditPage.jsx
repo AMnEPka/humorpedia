@@ -15,6 +15,7 @@ import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
 // import TeamSelector from '../components/TeamSelector'; // TODO: создать компонент
 import MediaSelector from '../components/MediaSelector';
+import SeasonDataEditor from '../components/SeasonDataEditor';
 
 const emptyKvn = {
   title: '', slug: '', name: '', status: 'draft',
@@ -83,7 +84,8 @@ export default function KVNEditPage() {
           parent_id: res.data.parent_id || null,  // null для корневой страницы
           facts: res.data.facts || {},
           social_links: res.data.social_links || {},
-          seo: { ...emptyKvn.seo, ...res.data.seo } 
+          seo: { ...emptyKvn.seo, ...res.data.seo },
+          season_data: res.data.season_data || null  // Сохраняем season_data для редактирования
         });
       }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
     }
@@ -121,6 +123,7 @@ export default function KVNEditPage() {
       if (kvn.person_ids !== undefined) dataToSend.person_ids = Array.isArray(kvn.person_ids) ? kvn.person_ids : [];
       if (kvn.team_ids !== undefined) dataToSend.team_ids = Array.isArray(kvn.team_ids) ? kvn.team_ids : [];
       if (kvn.social_links) dataToSend.social_links = kvn.social_links;
+      if (kvn.season_data !== undefined) dataToSend.season_data = kvn.season_data;  // Сохраняем season_data
       
       if (isNew) {
         const res = await contentApi.createKvn(dataToSend);
@@ -177,6 +180,7 @@ export default function KVNEditPage() {
           <TabsTrigger value="main">Основное</TabsTrigger>
           <TabsTrigger value="facts">Факты</TabsTrigger>
           <TabsTrigger value="modules">Модули ({kvn.modules.length})</TabsTrigger>
+          {kvn.season_data && <TabsTrigger value="season">Сезон</TabsTrigger>}
           <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
@@ -322,6 +326,15 @@ export default function KVNEditPage() {
         <TabsContent value="modules">
           <ModuleEditor modules={kvn.modules} onChange={(m) => setKvn(p => ({ ...p, modules: m }))} contentType="kvn" />
         </TabsContent>
+
+        {kvn.season_data && (
+          <TabsContent value="season">
+            <SeasonDataEditor 
+              seasonData={kvn.season_data} 
+              onChange={(seasonData) => setKvn(p => ({ ...p, season_data: seasonData }))} 
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="seo">
           <Card>
