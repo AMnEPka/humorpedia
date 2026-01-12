@@ -9,13 +9,14 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Heading1, Heading2, Heading3, Quote, Minus, Undo, Redo,
-  Table as TableIcon, Palette, Highlighter, RemoveFormatting
+  Table as TableIcon, Palette, Highlighter, RemoveFormatting, Code
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,7 +45,7 @@ const highlightColors = [
   { name: 'Оранжевый', value: '#fed7aa' },
 ];
 
-function MenuBar({ editor }) {
+function MenuBar({ editor, showHtmlMode, onToggleHtmlMode }) {
   if (!editor) return null;
 
   const ToolButton = ({ onClick, isActive, disabled, children, title }) => (
@@ -307,11 +308,25 @@ function MenuBar({ editor }) {
       >
         <RemoveFormatting className="h-4 w-4" />
       </ToolButton>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* HTML Code toggle */}
+      <ToolButton 
+        onClick={onToggleHtmlMode}
+        isActive={showHtmlMode}
+        title={showHtmlMode ? "Визуальный редактор" : "Редактировать HTML"}
+      >
+        <Code className="h-4 w-4" />
+      </ToolButton>
     </div>
   );
 }
 
 export default function RichTextEditor({ content, onChange, placeholder = "Начните вводить текст...", minHeight = 200 }) {
+  const [showHtmlMode, setShowHtmlMode] = useState(false);
+  const [htmlContent, setHtmlContent] = useState(content || '');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -342,7 +357,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "На�
       },
     },
     onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML());
+      const html = editor.getHTML();
+      setHtmlContent(html);
+      onChange?.(html);
     },
   });
 
@@ -350,13 +367,52 @@ export default function RichTextEditor({ content, onChange, placeholder = "На�
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content || '');
+      setHtmlContent(content || '');
     }
   }, [content, editor]);
 
+  // Handle HTML mode toggle
+  const handleToggleHtmlMode = () => {
+    if (showHtmlMode) {
+      // Switching from HTML mode to visual mode
+      // Update editor with HTML content
+      if (editor && htmlContent !== editor.getHTML()) {
+        editor.commands.setContent(htmlContent || '');
+        onChange?.(htmlContent);
+      }
+    } else {
+      // Switching from visual mode to HTML mode
+      // Update HTML content with current editor content
+      if (editor) {
+        setHtmlContent(editor.getHTML());
+      }
+    }
+    setShowHtmlMode(!showHtmlMode);
+  };
+
+  // Handle HTML content change
+  const handleHtmlChange = (newHtml) => {
+    setHtmlContent(newHtml);
+    // Update onChange callback immediately for real-time updates
+    onChange?.(newHtml);
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
-      <MenuBar editor={editor} />
-      <EditorContent editor={editor} />
+      <MenuBar editor={editor} showHtmlMode={showHtmlMode} onToggleHtmlMode={handleToggleHtmlMode} />
+      {showHtmlMode ? (
+        <div className="p-4">
+          <Textarea
+            value={htmlContent}
+            onChange={(e) => handleHtmlChange(e.target.value)}
+            placeholder="Введите HTML-код..."
+            className="font-mono text-sm min-h-[200px]"
+            style={{ minHeight: `${minHeight}px` }}
+          />
+        </div>
+      ) : (
+        <EditorContent editor={editor} />
+      )}
       <style>{`
         .ProseMirror {
           min-height: ${minHeight}px;

@@ -4,6 +4,7 @@ import { Loader2, ChevronLeft, ChevronRight, Trophy, Calendar, Users, Award } fr
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import { GameTable } from '../components/GameTable';
 import { StageSection } from '../components/StageSection';
@@ -184,7 +185,90 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         </div>
       )}
 
-      {/* Metadata - убрано по запросу пользователя */}
+      {/* Информационная таблица сезона */}
+      {seasonData.metadata && Object.keys(seasonData.metadata).length > 0 && (
+        <div className="mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <Table>
+                <TableBody>
+                  {seasonData.season_number > 0 && (
+                    <TableRow>
+                      <TableCell className="font-medium bg-gray-50 w-[200px]">Сезон</TableCell>
+                      <TableCell>{seasonData.season_number}</TableCell>
+                    </TableRow>
+                  )}
+                  {all_teams.length > 0 && (
+                    <TableRow>
+                      <TableCell className="font-medium bg-gray-50">Количество команд</TableCell>
+                      <TableCell>{all_teams.length}</TableCell>
+                    </TableRow>
+                  )}
+                  {stages.length > 0 && (
+                    <TableRow>
+                      <TableCell className="font-medium bg-gray-50">Количество игр</TableCell>
+                      <TableCell>
+                        {stages.reduce((sum, stage) => sum + (stage.games?.length || 0), 0)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {hostsList.length > 0 && (
+                    <TableRow>
+                      <TableCell className="font-medium bg-gray-50">Ведущий</TableCell>
+                      <TableCell>
+                        {hostsList.map((host, idx) => (
+                          <span key={idx}>
+                            {host}
+                            {idx < hostsList.length - 1 && ', '}
+                          </span>
+                        ))}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {editors.length > 0 && (
+                    <TableRow>
+                      <TableCell className="font-medium bg-gray-50">Редактор</TableCell>
+                      <TableCell>
+                        {editors.map((editor, idx) => (
+                          <span key={idx}>
+                            {editor}
+                            {idx < editors.length - 1 && ', '}
+                          </span>
+                        ))}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {winners.length > 0 && (
+                    <TableRow>
+                      <TableCell className="font-medium bg-gray-50">Чемпионы</TableCell>
+                      <TableCell>
+                        {winners.map((winner, idx) => {
+                          // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
+                          const winnerName = typeof winner === 'string' ? winner : winner.name;
+                          const winnerSlug = typeof winner === 'string' ? null : winner.slug;
+                          
+                          return (
+                            <span key={idx}>
+                              {winnerSlug ? (
+                                <Link to={`/kvn/teams/${winnerSlug}`} className="text-blue-600 hover:underline">
+                                  {winnerName}
+                                </Link>
+                              ) : (
+                                winnerName
+                              )}
+                              {idx < winners.length - 1 && ', '}
+                            </span>
+                          );
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Intro HTML (текст до результатов) - базовая информация, должна быть вверху */}
       {intro_html && (
@@ -210,11 +294,23 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
             </h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            {winners.map((winner, idx) => (
-              <Badge key={idx} variant="default" className="bg-yellow-600 text-white">
-                {winner}
-              </Badge>
-            ))}
+            {winners.map((winner, idx) => {
+              // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
+              const winnerName = typeof winner === 'string' ? winner : winner.name;
+              const winnerSlug = typeof winner === 'string' ? null : winner.slug;
+              
+              return (
+                <Badge key={idx} variant="default" className="bg-yellow-600 text-white">
+                  {winnerSlug ? (
+                    <Link to={`/kvn/teams/${winnerSlug}`} className="hover:underline">
+                      {winnerName}
+                    </Link>
+                  ) : (
+                    winnerName
+                  )}
+                </Badge>
+              );
+            })}
           </div>
         </div>
       )}

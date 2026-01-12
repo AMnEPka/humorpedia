@@ -165,15 +165,19 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
     result_dict = parser.to_dict(result)
     
     # Получаем все существующие команды из БД
+    # ВАЖНО: Загружаем также facts для получения города
+    # ИГНОРИРУЕМ фильтр team_type, так как некоторые команды (МИСИ, СПСИ) могут иметь team_type=None
     existing_teams = list(db.teams.find({
-        'content_type': 'team',
-        'team_type': 'kvn'
+        'content_type': 'team'
+        # Убрали фильтр 'team_type': 'kvn' - некоторые команды могут не иметь этого поля
     }, {
         '_id': 1,
         'slug': 1,
         'name': 1,
+        'title': 1,  # Загружаем title как fallback для name
         'aliases': 1,
-        'tags': 1
+        'tags': 1,
+        'facts': 1  # Для получения города
     }))
     
     # Сопоставляем команды сезона с существующими
@@ -194,7 +198,8 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
     for team in existing_teams:
         team_id = team['_id']
         team_slug = team.get('slug', '')
-        team_name = team.get('name', '')
+        # Используем name, если есть, иначе title как fallback
+        team_name = team.get('name', '').strip() or team.get('title', '').strip()
         aliases = team.get('aliases', [])
         
         # Сначала добавляем алиасы (они имеют приоритет для сопоставления)
@@ -242,7 +247,9 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
                         matched_team = next((t for t in existing_teams if t['_id'] == team_id), None)
                         if matched_team:
                             team_data['team_slug'] = matched_team.get('slug', '')
-                            team_data['team_name'] = matched_team.get('name', team_name)
+                            # Используем name, если есть, иначе title как fallback
+                            matched_team_name = matched_team.get('name', '').strip() or matched_team.get('title', '').strip()
+                            team_data['team_name'] = matched_team_name or team_name
                             team_data['team_id'] = team_id
                             team_data['is_winner'] = is_winner
                             team_data['passed'] = passed
@@ -258,13 +265,213 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
                     matched_team = next((t for t in existing_teams if t['_id'] == team_id), None)
                     if matched_team:
                         team_data['team_slug'] = matched_team.get('slug', '')
-                        team_data['team_name'] = matched_team.get('name', '')
+                        # Используем name, если есть, иначе title как fallback
+                        matched_team_name = matched_team.get('name', '').strip() or matched_team.get('title', '').strip()
+                        team_data['team_name'] = matched_team_name
                         team_data['team_id'] = team_id
                         team_data['is_winner'] = is_winner
                         team_data['passed'] = passed
                         team_data['is_additional'] = is_additional
     
+    # Функция для получения полного названия команды с городом
+    def get_full_team_name(team_id: str = None, team_slug: str = None, team_name: str = None) -> str:
+        """Получает полное название команды с городом из БД."""
+        team = None
+        
+        # Извлекаем город и чистое название из исходного названия (если есть)
+        original_city = None
+        original_name_clean = team_name or ''
+        if team_name:
+            city_match = re.search(r'\(([^)]+)\)\s*$', team_name)
+            if city_match:
+                original_city = city_match.group(1).strip()
+                original_name_clean = re.sub(r'\s*\([^)]+\)\s*$', '', team_name).strip()
+        
+        # Ищем команду по ID или slug
+        if team_id:
+            team = next((t for t in existing_teams if t['_id'] == team_id), None)
+        elif team_slug:
+            team = next((t for t in existing_teams if t.get('slug') == team_slug), None)
+        
+        if team:
+            # Если в БД есть название - используем его, иначе используем исходное
+            # Проверяем сначала name, потом title (как fallback)
+            name = team.get('name', '').strip()
+            if not name:
+                name = team.get('title', '').strip()
+            if not name:
+                name = original_name_clean
+            
+            facts = team.get('facts', {})
+            
+            # Ищем город в facts - проверяем разные варианты ключей
+            city = ''
+            if isinstance(facts, dict):
+                # Основной ключ
+                city = facts.get('Город', '') or facts.get('город', '')
+                # Альтернативные варианты
+                if not city:
+                    for key in facts.keys():
+                        if 'город' in key.lower():
+                            city = facts.get(key, '')
+                            break
+            
+            # Если в БД нет города, но есть в исходном названии - используем исходный
+            if not city and original_city:
+                city = original_city
+            
+            # Убираем город из названия, если он уже там есть
+            name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', name).strip()
+            
+            if city:
+                return f"{name_clean} ({city})"
+            return name_clean
+        
+        # Если команда не найдена - возвращаем исходное название (может там уже есть город)
+        return team_name or ''
+    
+    # Обновляем all_teams с полными названиями и городами
+    updated_all_teams = []
+    for team_data in season_teams:
+        team_slug = team_data.get('slug', '')
+        team_name = team_data.get('name', '')
+        
+        # Находим сопоставленную команду
+        matched_team_id = None
+        matched_slug = None
+        
+        if team_slug in team_matches:
+            matched_team_id, matched_slug = team_matches[team_slug]
+        elif team_name:
+            # Пробуем найти по названию
+            team_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', team_name).strip()
+            normalized = normalize_team_name(team_name_clean)
+            if normalized in team_name_map:
+                matched_team_id, matched_slug, _ = team_name_map[normalized]
+            else:
+                # АГРЕССИВНЫЙ ПОИСК: пробуем найти команду по частичному совпадению названия
+                # Это нужно для команд типа МИСИ, СПСИ, которые могут не сопоставляться точно
+                for team in existing_teams:
+                    team_db_name = team.get('name', '')
+                    team_db_slug = team.get('slug', '')
+                    
+                    # Проверяем точное совпадение (без учета регистра и скобок)
+                    team_db_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', team_db_name).strip()
+                    if normalize_team_name(team_name_clean) == normalize_team_name(team_db_name_clean):
+                        matched_team_id = team['_id']
+                        matched_slug = team_db_slug
+                        break
+                    
+                    # Проверяем совпадение по slug
+                    if team_slug and team_db_slug == team_slug:
+                        matched_team_id = team['_id']
+                        matched_slug = team_db_slug
+                        break
+        
+        # Получаем полное название с городом
+        # ВАЖНО: Передаем исходное team_name, чтобы если команда не найдена, использовался город из исходного названия
+        full_name = get_full_team_name(
+            team_id=matched_team_id,
+            team_slug=matched_slug or team_slug,
+            team_name=team_name  # Передаем исходное название с городом, если есть
+        )
+        
+        updated_all_teams.append({
+            'slug': matched_slug or team_slug,
+            'name': full_name
+        })
+    
+    # Обновляем result_dict
+    result_dict['all_teams'] = updated_all_teams
+    
+    # Обновляем winners с полными названиями и городами
+    # ВАЖНО: winners теперь хранит словари {"name": "...", "slug": "..."} для ссылок
+    # Сначала собираем всех победителей из финала (где is_winner=True)
+    final_winners = []
+    for stage_data in result_dict.get('stages', []):
+        # Ищем финал
+        stage_name = stage_data.get('name', '').lower()
+        if 'финал' in stage_name and '/' not in stage_name:
+            for game_data in stage_data.get('games', []):
+                for team_data in game_data.get('teams', []):
+                    if team_data.get('is_winner', False):
+                        team_slug = team_data.get('team_slug', '')
+                        team_name = team_data.get('team_name', '')
+                        team_id = team_data.get('team_id')
+                        
+                        # Находим сопоставленную команду
+                        matched_team_id = team_id
+                        matched_slug = team_slug
+                        
+                        if not matched_team_id and team_slug in team_matches:
+                            matched_team_id, matched_slug = team_matches[team_slug]
+                        elif not matched_team_id and team_name:
+                            team_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', team_name).strip()
+                            normalized = normalize_team_name(team_name_clean)
+                            if normalized in team_name_map:
+                                matched_team_id, matched_slug, _ = team_name_map[normalized]
+                        
+                        # Получаем полное название с городом
+                        full_name = get_full_team_name(
+                            team_id=matched_team_id,
+                            team_slug=matched_slug or team_slug,
+                            team_name=team_name
+                        )
+                        
+                        # Проверяем, не добавлен ли уже этот победитель
+                        winner_exists = any(w.get('name') == full_name for w in final_winners)
+                        if full_name and not winner_exists:
+                            final_winners.append({
+                                'name': full_name,
+                                'slug': matched_slug or team_slug
+                            })
+    
+    # Если нашли победителей в финале - используем их
+    if final_winners:
+        result_dict['winners'] = final_winners
+    else:
+        # Иначе используем список из парсера
+        updated_winners = []
+        for winner_name in result_dict.get('winners', []):
+            # Пробуем найти команду-победителя
+            # winners может содержать как названия, так и slug'и
+            matched_team_id = None
+            matched_slug = None
+            
+            # Если winner_name уже словарь (новая структура) - используем его
+            if isinstance(winner_name, dict):
+                matched_slug = winner_name.get('slug', '')
+                winner_name = winner_name.get('name', '')
+            
+            # Пробуем найти по названию
+            winner_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', winner_name).strip()
+            normalized = normalize_team_name(winner_name_clean)
+            
+            if normalized in team_name_map:
+                matched_team_id, matched_slug, _ = team_name_map[normalized]
+            else:
+                # Пробуем найти по slug (если winner_name - это slug)
+                if winner_name in team_matches:
+                    matched_team_id, matched_slug = team_matches[winner_name]
+            
+            # Получаем полное название с городом
+            full_name = get_full_team_name(
+                team_id=matched_team_id,
+                team_slug=matched_slug or winner_name,  # Используем winner_name как slug, если не нашли
+                team_name=winner_name
+            )
+            
+            if full_name:
+                updated_winners.append({
+                    'name': full_name,
+                    'slug': matched_slug or winner_name  # Используем winner_name как slug, если не нашли
+                })
+        
+        # Обновляем result_dict
+        result_dict['winners'] = updated_winners
+    
     # Собираем теги для сезона
+    # ВАЖНО: Только "КВН", название лиги и названия команд (без городов в скобках)
     season_tags = ['КВН']
     
     # Добавляем тег лиги
@@ -273,13 +480,15 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
         season_tags.append(league_name)
     
     # Добавляем теги всех команд-участниц
-    # ВАЖНО: Добавляем только название команды как тег, НЕ все теги команды из БД
+    # ВАЖНО: Добавляем только название команды как тег (без города в скобках), НЕ все теги команды из БД
     matched_team_tags = set()
     for team_data in season_teams:
         team_name = team_data.get('name', '')
         if team_name:
-            # Добавляем только название команды как тег
-            matched_team_tags.add(team_name)
+            # Убираем город из скобок: "Команда (Город)" -> "Команда"
+            team_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', team_name).strip()
+            if team_name_clean:
+                matched_team_tags.add(team_name_clean)
     
     season_tags.extend(sorted(matched_team_tags))
     
@@ -315,23 +524,16 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
             updated_modules.append(module)
     
     # Создаем один новый модуль "Команды-участники" со ссылками
-    if season_teams:
+    # ВАЖНО: Используем обновленные all_teams с полными названиями и городами
+    if updated_all_teams:
         teams_html_parts = []
-        for team_data in season_teams:
+        for team_data in updated_all_teams:
             team_slug = team_data.get('slug', '')
-            team_name = team_data.get('name', '')
+            team_name = team_data.get('name', '')  # Уже содержит полное название с городом
             
-            # Используем обновленные данные из team_matches или team_name_map
-            matched_slug = None
-            if team_slug in team_matches:
-                _, matched_slug = team_matches[team_slug]
-            elif team_name:
-                normalized = normalize_team_name(team_name)
-                if normalized in team_name_map:
-                    _, matched_slug, _ = team_name_map[normalized]
-            
-            if matched_slug:
-                teams_html_parts.append(f'<a href="/kvn/teams/{matched_slug}">{team_name}</a>')
+            # Показываем полное название с городом и ссылкой
+            if team_slug:
+                teams_html_parts.append(f'<a href="/kvn/teams/{team_slug}">{team_name}</a>')
             else:
                 teams_html_parts.append(team_name)
         
@@ -381,64 +583,20 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
         # Синхронизируем теги
         sync_tags_to_collection(season_tags, db)
         
-        # ВАЖНО: При парсинге сезона ЗАМЕНЯЕМ весь контент страницы
-        # Создаём минимальный набор модулей (только Команды-участники для отображения в админке)
-        # Результаты теперь хранятся в season_data и рендерятся отдельно
-        clean_modules = []
-        
-        # Оставляем только модуль "Команды-участники" со ссылками
-        for m in updated_modules:
-            title_lower = m.get('title', '').lower()
-            # Оставляем только команды-участники как видимый модуль
-            if 'команд' in title_lower and 'участн' in title_lower and m.get('visible', True):
-                clean_modules.append(m)
-                break
-        
-        # Если не нашли модуль команд-участников - создаём его
-        if not clean_modules and season_teams:
-            teams_html_parts = []
-            for team_data in season_teams:
-                team_slug = team_data.get('slug', '')
-                team_name = team_data.get('name', '')
-                
-                # Пробуем получить ссылку на команду
-                matched_slug = None
-                if team_slug in team_matches:
-                    _, matched_slug = team_matches[team_slug]
-                elif team_name:
-                    normalized = normalize_team_name(team_name)
-                    if normalized in team_name_map:
-                        _, matched_slug, _ = team_name_map[normalized]
-                
-                if matched_slug:
-                    teams_html_parts.append(f'<a href="/kvn/teams/{matched_slug}">{team_name}</a>')
-                else:
-                    teams_html_parts.append(team_name)
-            
-            clean_modules.append({
-                'id': str(uuid4()),
-                'type': 'text_block',
-                'order': 1,
-                'title': 'Команды-участники',
-                'visible': True,
-                'data': {
-                    'title': 'Команды-участники',
-                    'content': ', '.join(teams_html_parts)
-                }
-            })
-        
-        # Обновляем документ сезона - ЗАМЕНЯЕМ весь контент
+        # Обновляем документ сезона
+        # ВАЖНО: Сохраняем все модули (не удаляем старый контент)
+        # Результаты хранятся в season_data и рендерятся отдельно
         update_data = {
             'season_data': result_dict,
             'tags': season_tags,
-            'modules': clean_modules  # Минимальный набор модулей
+            'modules': updated_modules  # Сохраняем все модули (включая скрытые старые результаты)
         }
         
         db.kvn.update_one(
             {'_id': season_doc['_id']},
             {'$set': update_data}
         )
-        print(f"  ✅ Записано в БД (старый контент заменён)")
+        print(f"  ✅ Записано в БД")
     else:
         print(f"  🔍 Dry-run: используйте --apply для записи")
         if verbose:

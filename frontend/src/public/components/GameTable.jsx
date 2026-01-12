@@ -3,8 +3,17 @@ import { Calendar, Users, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+// Список известных конкурсов КВН для фильтрации из жюри
+const KNOWN_CONTESTS = [
+  'приветствие', 'разминка', 'добро пожаловаться', 'капитанский', 'домашнее задание',
+  'стэм', 'бриз', 'музыкальный конкурс', 'музыкальное домашнее задание', 'ситуация',
+  'знакомый сюжет', 'биатлон', 'музыкальный фристайл', 'капитанский конкурс',
+  'домашнее задание', 'музыкальный', 'фристайл', 'импровизация', 'одна песня',
+  'конкурс одной песни', 'конкурс капитанов', 'конкурс приветствие'
+];
+
 export function GameTable({ game, stageName = '' }) {
-  const { name, date, date_raw, teams = [], contests = [], jury = [], host = '', notes = '', is_cancelled = false } = game;
+  const { name, date, date_raw, teams = [], contests = [], jury = [], host = '', notes = '', is_cancelled = false, video_links = [] } = game;
   
   // Определяем, является ли это финалом
   const isFinal = stageName.toLowerCase().includes('финал') && !stageName.toLowerCase().includes('1/8') && 
@@ -16,9 +25,6 @@ export function GameTable({ game, stageName = '' }) {
       <div className="p-4 bg-gray-100 border border-gray-300 rounded-lg">
         <h3 className="font-semibold text-gray-700 mb-2">{name}</h3>
         <p className="text-sm text-gray-600 italic">Игра отменена</p>
-        {notes && (
-          <p className="text-sm text-gray-600 mt-2">{notes}</p>
-        )}
       </div>
     );
   }
@@ -44,13 +50,44 @@ export function GameTable({ game, stageName = '' }) {
           {jury.length > 0 && (
             <div className="flex items-center gap-1">
               <Award className="h-4 w-4" />
-              <span>Жюри: {jury.join(', ')}</span>
+              <span>Жюри: {jury
+                .map(name => {
+                  // Обрезаем каждый элемент массива, убирая всё после "Конкурсы:" или "Результат игры:"
+                  let cleanName = name;
+                  const contestsIndex = cleanName.toLowerCase().indexOf('конкурсы:');
+                  if (contestsIndex !== -1) {
+                    cleanName = cleanName.substring(0, contestsIndex).trim();
+                  }
+                  const resultIndex = cleanName.toLowerCase().indexOf('результат игры:');
+                  if (resultIndex !== -1) {
+                    cleanName = cleanName.substring(0, resultIndex).trim();
+                  }
+                  // Убираем "Жюри:" из начала, если есть
+                  cleanName = cleanName.replace(/^[Жж]юри\s*:\s*/i, '').trim();
+                  return cleanName;
+                })
+                .filter(name => {
+                  // Убираем пустые строки и элементы, которые начинаются с "Конкурсы:" или "Результат игры:"
+                  if (!name || name.length === 0) return false;
+                  const trimmed = name.trim();
+                  const lower = trimmed.toLowerCase();
+                  if (lower.startsWith('конкурсы') || lower.startsWith('результат')) return false;
+                  // Убираем названия конкурсов в кавычках (начинаются и заканчиваются кавычками)
+                  if ((trimmed.startsWith('«') && trimmed.endsWith('»')) ||
+                      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+                      (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+                    return false;
+                  }
+                  // Убираем служебные слова
+                  if (lower === 'и' || lower === 'а' || lower === 'но' || lower === 'или') {
+                    return false;
+                  }
+                  return true;
+                })
+                .join(', ')}</span>
             </div>
           )}
         </div>
-        {notes && (
-          <p className="text-sm text-gray-600 mt-2">{notes}</p>
-        )}
       </div>
 
       {/* Results table */}
@@ -91,11 +128,15 @@ export function GameTable({ game, stageName = '' }) {
                             to={`/kvn/teams/${team.team_slug}`}
                             className={`font-medium hover:underline ${textColor}`}
                           >
+                            {/* Показываем полное название с городом: "Команда (Город)" */}
                             {team.team_name || team.team_slug}
+                            {team.city && !team.team_name.includes('(') && ` (${team.city})`}
                           </Link>
                         ) : (
                           <span className={`font-medium ${textColor}`}>
+                            {/* Показываем полное название с городом */}
                             {team.team_name}
+                            {team.city && !team.team_name.includes('(') && ` (${team.city})`}
                           </span>
                         )}
                         {isWinner && (
@@ -137,6 +178,29 @@ export function GameTable({ game, stageName = '' }) {
         </div>
       ) : (
         <p className="text-gray-500 italic">Результаты игры отсутствуют</p>
+      )}
+
+      {/* Video links */}
+      {video_links.length > 0 && (
+        <div className="mt-4 pt-4 border-t">
+          <div className="flex items-center gap-2 mb-2">
+            <Video className="h-4 w-4 text-gray-600" />
+            <span className="text-sm font-semibold text-gray-700">Видео:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {video_links.map((link, idx) => (
+              <a
+                key={idx}
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

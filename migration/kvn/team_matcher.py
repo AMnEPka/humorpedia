@@ -95,7 +95,9 @@ def match_team_by_name(
     
     # 2. Точное совпадение по названию
     for team in existing_teams:
-        team_normalized = normalize_team_name(team.get('name', ''))
+        # Используем name, если есть, иначе title как fallback
+        team_name = team.get('name', '').strip() or team.get('title', '').strip()
+        team_normalized = normalize_team_name(team_name)
         if team_normalized == normalized_name:
             return (team['_id'], team['slug'])
     
@@ -109,7 +111,9 @@ def match_team_by_name(
     
     # 4. Частичное совпадение (если одно название содержит другое)
     for team in existing_teams:
-        team_normalized = normalize_team_name(team.get('name', ''))
+        # Используем name, если есть, иначе title как fallback
+        team_name = team.get('name', '').strip() or team.get('title', '').strip()
+        team_normalized = normalize_team_name(team_name)
         # Проверяем вхождение (но не слишком короткие слова)
         if len(normalized_name) > 3 and len(team_normalized) > 3:
             if normalized_name in team_normalized or team_normalized in normalized_name:
@@ -129,7 +133,9 @@ def match_team_by_name(
         if mapped_name:
             mapped_normalized = normalize_team_name(mapped_name)
             for team in existing_teams:
-                team_normalized = normalize_team_name(team.get('name', ''))
+                # Используем name, если есть, иначе title как fallback
+                team_name = team.get('name', '').strip() or team.get('title', '').strip()
+                team_normalized = normalize_team_name(team_name)
                 if team_normalized == mapped_normalized:
                     return (team['_id'], team['slug'])
     

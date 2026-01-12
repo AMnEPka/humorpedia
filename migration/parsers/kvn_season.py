@@ -215,6 +215,7 @@ class Game:
     
     notes: str = ""           # Дополнительная информация (добор, снятие и т.д.)
     is_cancelled: bool = False  # Игра отменена (например, из-за COVID)
+    video_links: List[str] = field(default_factory=list)  # Ссылки на видео игры
 
 
 @dataclass
@@ -362,9 +363,13 @@ class TableParser:
                 team_col = i
             elif h_lower in ('м', 'место', 'place', '#'):
                 place_col = i
-            elif h_lower in ('итого', 'сумма', 'total', 'всего'):
-                total_col = i
-            elif h and h_lower not in ('м', 'место', 'place', '#'):
+            elif h_lower in ('итого', 'сумма', 'total', 'всего', 'итоги'):
+                # ВАЖНО: Если есть "Итоги" - используем его, иначе "Итого"
+                # Если уже есть total_col - пропускаем (избегаем дубликатов)
+                if total_col == -1:
+                    total_col = i
+            elif h and h_lower not in ('м', 'место', 'place', '#', 'результат'):
+                # Пропускаем колонку "Результат" - она не конкурс
                 contests.append(h)
         
         # Корректируем если место в первой колонке
@@ -391,7 +396,15 @@ class TableParser:
             # Команда
             if team_col >= 0 and team_col < len(cells):
                 team_cell = cells[team_col]
-                team_score.team_name = self._clean_text(team_cell.get_text())
+                team_text = self._clean_text(team_cell.get_text())
+                
+                # Извлекаем город из скобок: "Одесские Джентльмены (Одесса)" -> name="Одесские Джентльмены", city="Одесса"
+                city_match = re.search(r'\(([^)]+)\)\s*$', team_text)
+                if city_match:
+                    team_score.city = city_match.group(1).strip()
+                    team_score.team_name = team_text[:city_match.start()].strip()
+                else:
+                    team_score.team_name = team_text
                 
                 # Ищем ссылку на команду
                 link = team_cell.find('a')
@@ -513,9 +526,49 @@ class GameParser:
         # Определяем прошедшие команды если не определено
         self._detect_passed_teams(game, html_section, stage_name)
         
+        # Ищем ссылки на видео
+        game.video_links = self._find_video_links(html_section)
+        
         # Парсим дату с годом по умолчанию
         if game.date_raw and not game.date:
             game.date = self._parse_date(game.date_raw, self.default_year)
+        
+        # Извлекаем текст из HTML секции для notes (только информация о жюри)
+        # Ищем текст с "Жюри:" и сохраняем только его, убирая "Конкурсы:" и "Результат игры:"
+        soup_for_notes = BeautifulSoup(html_section, 'html.parser')
+        # Получаем текст с сохранением структуры (разделители - переносы строк)
+        text_for_notes = soup_for_notes.get_text(separator='\n', strip=False)
+        
+        # Разбиваем на строки
+        lines = text_for_notes.split('\n')
+        
+        # Ищем строку с "Жюри:" и берём только её
+        jury_line = ""
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Если нашли строку с "Жюри:" - берём её
+            if re.search(r'[Жж]юри\s*:', line, re.IGNORECASE):
+                jury_line = line
+                break
+            
+            # Останавливаемся, если встретили "Конкурсы:" или "Результат игры:" до того, как нашли жюри
+            if re.search(r'[Кк]онкурсы\s*:', line, re.IGNORECASE):
+                break
+            if re.search(r'[Рр]езультат\s+игр[ыи]?\s*:', line, re.IGNORECASE):
+                break
+        
+        # Сохраняем только строку с жюри
+        game.notes = jury_line.strip()
+        
+        # Убираем текст "Результат игры" из notes (если есть) - на всякий случай
+        if game.notes:
+            game.notes = re.sub(r'[Рр]езультат\s+игр[ыи]?\s*:?\s*', '', game.notes)
+            game.notes = re.sub(r'[Вв]\s+финал[аеы]?\s+вышл[иа]?\s*:?\s*', '', game.notes)
+            game.notes = re.sub(r'[Вв]\s+следующ[ую]+\s+стади[ую]+\s+вышл[иа]?\s*:?\s*', '', game.notes)
+            game.notes = game.notes.strip()
         
         return game
     
@@ -696,38 +749,154 @@ class GameParser:
         return teams
     
     def _find_jury(self, html: str) -> List[str]:
-        """Находит список жюри."""
+        """
+        Находит список жюри.
+        
+        Поддерживает:
+        1. Текстовый формат: "Жюри: Имя1, Имя2, Имя3"
+        2. Формат со ссылками: "Жюри: <a href="people/...">Имя1</a>, <a href="people/...">Имя2</a>"
+        3. Смешанный формат: "Жюри: Имя1, <a href="people/...">Имя2</a>, Имя3"
+        
+        Всё, что идёт после "Конкурсы:" - обрезается.
+        """
         jury = []
         soup = BeautifulSoup(html, 'html.parser')
         
-        # Ищем "Жюри:" и извлекаем имена
-        match = re.search(r'[Жж]юри:?\s*([^<\n]+)', html)
-        if match:
-            jury_text = match.group(1)
-            # Разделяем по запятым и точкам
-            names = re.split(r'[,;.]', jury_text)
-            for name in names:
-                name = name.strip()
-                # Убираем лишние символы
-                name = re.sub(r'^[:\s]+|[:\s]+$', '', name)
-                if name and len(name) > 2:  # Минимум 3 символа
-                    jury.append(name)
+        # Метод 1: Ищем все ссылки на людей после слова "Жюри"
+        # Это самый надёжный способ, так как ссылки точно указывают на членов жюри
+        jury_keyword = soup.find(string=re.compile(r'^[Жж]юри:?\s*', re.IGNORECASE))
+        if not jury_keyword:
+            # Пробуем найти в любом месте
+            jury_keyword = soup.find(string=re.compile(r'[Жж]юри', re.IGNORECASE))
         
-        # Также ищем ссылки на людей после слова "жюри"
-        jury_section = soup.find(string=re.compile(r'[Жж]юри', re.IGNORECASE))
-        if jury_section:
-            parent = jury_section.find_parent()
+        if jury_keyword:
+            # Находим родительский элемент
+            parent = jury_keyword.find_parent()
             if parent:
-                # Ищем ссылки в родительском элементе и следующих элементах
-                links = parent.find_all('a', href=re.compile(r'people/'))
-                # Также ищем в следующих элементах
-                for sibling in parent.find_next_siblings()[:5]:
-                    links.extend(sibling.find_all('a', href=re.compile(r'people/')))
+                # Ищем ВСЕ ссылки на людей в родительском элементе и следующих элементах
+                # Расширяем поиск на больше элементов, но останавливаемся на "Конкурсы:" или "Результат игры:"
+                all_elements = [parent]
+                # Добавляем следующие элементы (братья и сёстры), но останавливаемся на разделителях
+                for sibling in parent.find_next_siblings():
+                    sibling_text = sibling.get_text() if hasattr(sibling, 'get_text') else str(sibling)
+                    # Останавливаемся, если встретили "Конкурсы:" или "Результат игры:"
+                    if re.search(r'[Кк]онкурсы\s*:', sibling_text, re.IGNORECASE):
+                        break
+                    if re.search(r'[Рр]езультат\s+игр[ыи]?\s*:', sibling_text, re.IGNORECASE):
+                        break
+                    all_elements.append(sibling)
+                    # Ограничиваем количество элементов для безопасности
+                    if len(all_elements) > 10:
+                        break
                 
+                # Собираем все ссылки на людей из всех элементов
+                for elem in all_elements:
+                    elem_text = elem.get_text() if hasattr(elem, 'get_text') else str(elem)
+                    # Обрезаем текст на "Конкурсы:" или "Результат игры:" если есть
+                    contests_idx = elem_text.lower().find('конкурсы:')
+                    if contests_idx != -1:
+                        elem_text = elem_text[:contests_idx]
+                    result_idx = elem_text.lower().find('результат игры:')
+                    if result_idx != -1:
+                        elem_text = elem_text[:result_idx]
+                    
+                    # Парсим обрезанный текст для поиска ссылок
+                    if elem_text:
+                        elem_soup = BeautifulSoup(elem_text, 'html.parser')
+                        links = elem_soup.find_all('a', href=re.compile(r'people/'))
+                    else:
+                        links = elem.find_all('a', href=re.compile(r'people/'))
+                    
+                    for link in links:
+                        name = link.get_text(strip=True)
+                        if name and len(name) > 2:
+                            # Проверяем, что это действительно член жюри (не случайная ссылка)
+                            # Проверяем контекст - ссылка должна быть рядом со словом "Жюри"
+                            link_parent = link.find_parent()
+                            if link_parent:
+                                parent_text = link_parent.get_text()
+                                # Обрезаем на "Конкурсы:" или "Результат игры:"
+                                contests_idx = parent_text.lower().find('конкурсы:')
+                                if contests_idx != -1:
+                                    parent_text = parent_text[:contests_idx]
+                                result_idx = parent_text.lower().find('результат игры:')
+                                if result_idx != -1:
+                                    parent_text = parent_text[:result_idx]
+                                # Если в тексте родителя есть "жюри" - это точно член жюри
+                                if 'жюри' in parent_text.lower():
+                                    if name not in jury:
+                                        jury.append(name)
+        
+        # Метод 2: Если не нашли через ссылки - парсим текст
+        if not jury:
+            # Ищем "Жюри:" и извлекаем весь текст до следующего заголовка или конца блока
+            # Используем более гибкий паттерн, который не останавливается на первом <
+            match = re.search(r'[Жж]юри:?\s*', html, re.IGNORECASE)
+            if match:
+                # Берём текст после "Жюри:" до следующего заголовка или конца
+                start_pos = match.end()
+                # Ищем конец - следующий заголовок (h2, h3, h4), "Конкурсы:" или "Результат игры:"
+                end_match = re.search(r'<(?:h[2-4]|strong|b)[^>]*>', html[start_pos:], re.IGNORECASE)
+                contests_match = re.search(r'[Кк]онкурсы\s*:', html[start_pos:], re.IGNORECASE)
+                result_match = re.search(r'[Рр]езультат\s+игр[ыи]?\s*:', html[start_pos:], re.IGNORECASE)
+                
+                # Берём минимальную позицию из всех найденных разделителей
+                end_pos = len(html) - start_pos
+                if end_match:
+                    end_pos = min(end_pos, end_match.start())
+                if contests_match:
+                    end_pos = min(end_pos, contests_match.start())
+                if result_match:
+                    end_pos = min(end_pos, result_match.start())
+                
+                # Берём текст до найденного разделителя
+                jury_text = html[start_pos:start_pos + end_pos]
+                
+                # Парсим текст через BeautifulSoup для извлечения ссылок и текста
+                jury_soup = BeautifulSoup(jury_text, 'html.parser')
+                
+                # Сначала ищем ссылки на людей
+                links = jury_soup.find_all('a', href=re.compile(r'people/'))
                 for link in links:
                     name = link.get_text(strip=True)
-                    if name and name not in jury:
-                        jury.append(name)
+                    if name and len(name) > 2:
+                        if name not in jury:
+                            jury.append(name)
+                
+                # Если ссылок нет или мало - парсим текст
+                if len(jury) < 3:
+                    text = jury_soup.get_text()
+                    # Обрезаем на "Конкурсы:" или "Результат игры:" если есть
+                    contests_idx = text.lower().find('конкурсы:')
+                    if contests_idx != -1:
+                        text = text[:contests_idx]
+                    result_idx = text.lower().find('результат игры:')
+                    if result_idx != -1:
+                        text = text[:result_idx]
+                    
+                    # Разделяем по запятым, точкам с запятой, переносам строк
+                    names = re.split(r'[,;\n]', text)
+                    for name in names:
+                        name = name.strip()
+                        # Убираем лишние символы и скобки
+                        name = re.sub(r'^[:\s]+|[:\s]+$', '', name)
+                        name = re.sub(r'\([^)]*\)', '', name).strip()
+                        # Пропускаем если это "Конкурсы:" или "Результат игры:"
+                        if name.lower().startswith('конкурсы') or name.lower().startswith('результат'):
+                            continue
+                        # Пропускаем если это название конкурса в кавычках (начинается и заканчивается кавычками)
+                        # Или содержит только слово "и" перед кавычками
+                        name_clean = name.strip()
+                        if (name_clean.startswith('«') and name_clean.endswith('»')) or \
+                           (name_clean.startswith('"') and name_clean.endswith('"')) or \
+                           (name_clean.startswith("'") and name_clean.endswith("'")):
+                            continue
+                        # Пропускаем если это только слово "и" или другие служебные слова
+                        if name_clean.lower() in ('и', 'а', 'но', 'или', 'да', 'нет'):
+                            continue
+                        if name and len(name) > 2:
+                            if name not in jury:
+                                jury.append(name)
         
         # Убираем дубликаты, сохраняя порядок
         seen = set()
@@ -739,6 +908,67 @@ class GameParser:
                 unique_jury.append(name)
         
         return unique_jury
+    
+    def _find_video_links(self, html: str) -> List[str]:
+        """
+        Находит ссылки на видео после результатов игры.
+        
+        Ищет ссылки на YouTube, Rutube и другие видеохостинги.
+        Обычно они находятся после таблицы результатов или в отдельном блоке.
+        """
+        video_links = []
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # Ищем все ссылки на видео
+        # Паттерны для популярных видеохостингов
+        video_patterns = [
+            r'youtube\.com/watch\?v=([\w-]+)',
+            r'youtu\.be/([\w-]+)',
+            r'youtube\.com/embed/([\w-]+)',
+            r'rutube\.ru/video/([\w-]+)',
+            r'rutube\.ru/play/embed/([\w-]+)',
+            r'vk\.com/video(-?\d+_\d+)',
+            r'vimeo\.com/(\d+)',
+        ]
+        
+        # Ищем ссылки в тегах <a>
+        links = soup.find_all('a', href=True)
+        for link in links:
+            href = link.get('href', '')
+            if not href:
+                continue
+            
+            # Проверяем каждый паттерн
+            for pattern in video_patterns:
+                match = re.search(pattern, href, re.IGNORECASE)
+                if match:
+                    # Сохраняем полную ссылку
+                    if href not in video_links:
+                        video_links.append(href)
+                    break
+        
+        # Также ищем в тексте (на случай, если ссылки не в тегах <a>)
+        text = soup.get_text()
+        for pattern in video_patterns:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                # Формируем полную ссылку из найденного ID
+                video_id = match.group(1)
+                if 'youtube' in pattern or 'youtu.be' in pattern:
+                    full_link = f"https://www.youtube.com/watch?v={video_id}"
+                elif 'rutube' in pattern:
+                    full_link = f"https://rutube.ru/video/{video_id}/"
+                elif 'vk.com' in pattern:
+                    full_link = f"https://vk.com/video{video_id}"
+                elif 'vimeo' in pattern:
+                    full_link = f"https://vimeo.com/{video_id}"
+                else:
+                    continue
+                
+                if full_link not in video_links:
+                    video_links.append(full_link)
+        
+        return video_links
     
     def _find_host(self, html: str, league: str = "", year: int = 0) -> str:
         """
@@ -1462,44 +1692,97 @@ class KVNSeasonParser:
                 title = module.get('title', '')
                 content = module.get('data', {}).get('content', '')
                 
+                if not content.strip():
+                    continue
+                
                 # Определяем тип контента
                 title_lower = title.lower()
                 
                 # Проверяем, является ли это модулем с результатами/стадиями
-                is_results_module = ('результат' in title_lower or
-                                    'кубок мэра' in title_lower or
-                                    'утешительн' in title_lower or
-                                    '1/8' in content or '1/4' in content or '1/2' in content or
-                                    re.search(r'(?<!/)\bфинал', content, re.IGNORECASE))
+                # ВАЖНО: проверяем только заголовок модуля, а не весь контент,
+                # так как в описательных блоках могут упоминаться стадии (например, "В 1/8 финала игралось...")
+                # но это не значит, что это блок с результатами
+                is_results_module = (
+                    'результат' in title_lower or
+                    'кубок мэра' in title_lower or
+                    'утешительн' in title_lower or
+                    # Проверяем заголовки стадий в заголовке модуля
+                    re.search(r'\b(1/8|1/4|1/2|четверть|полу)\s*финал', title_lower) or
+                    re.search(r'(?<!/)\bфинал\b(?!\s*\d)', title_lower)
+                )
                 
-                # Проверяем, является ли это списком команд
-                soup = BeautifulSoup(content, 'html.parser')
-                team_links = soup.find_all('a', href=re.compile(r'kvn/teams?/'))
-                text_content = soup.get_text(strip=True)
-                is_teams_list = (('команд' in title_lower and 'участн' in title_lower) or
-                                ('участник' in title_lower and 'команд' in title_lower) or
-                                (len(team_links) > 5) or
-                                (len(team_links) > 3 and len(text_content) < 500))
+                # Дополнительная проверка: если в контенте есть заголовки стадий (h2, h3, h4)
+                # с названиями стадий, то это точно блок с результатами
+                if not is_results_module:
+                    soup = BeautifulSoup(content, 'html.parser')
+                    # Ищем заголовки стадий в HTML
+                    headers = soup.find_all(['h2', 'h3', 'h4', 'h5'])
+                    for header in headers:
+                        header_text = header.get_text().lower()
+                        if (re.search(r'\b(1/8|1/4|1/2|четверть|полу)\s*финал', header_text) or
+                            re.search(r'(?<!/)\bфинал\b(?!\s*\d)', header_text) or
+                            'результат' in header_text):
+                            is_results_module = True
+                            break
                 
                 # Если это результаты - останавливаем сбор intro_html
                 if is_results_module:
                     # Это результаты/стадии - пропускаем для intro_html
-                    pass
-                elif is_teams_list:
-                    # Это список команд - пропускаем для intro_html
-                    pass
+                    # Останавливаем сбор intro_html, так как дальше идут результаты
+                    break
                 else:
-                    # Это обычный текстовый блок - добавляем в intro_html
+                    # Это любой другой текстовый блок - добавляем в intro_html
                     # Собираем ВСЕ текстовые блоки до первого блока с результатами
-                    if content.strip():
-                        if season.intro_html:
-                            # Добавляем к существующему intro_html с разделителем
-                            season.intro_html += f'\n\n{content}'
-                        else:
-                            # Первый блок - начинаем intro_html
-                            season.intro_html = content
-                            # Извлекаем текстовое описание
-                            season.description = text_content
+                    # Включая "Участники сезона", "Схема сезона" и любые другие блоки
+                    soup = BeautifulSoup(content, 'html.parser')
+                    text_content = soup.get_text(strip=True)
+                    
+                    if season.intro_html:
+                        # Добавляем к существующему intro_html с разделителем
+                        season.intro_html += f'\n\n{content}'
+                    else:
+                        # Первый блок - начинаем intro_html
+                        season.intro_html = content
+                        # Извлекаем текстовое описание
+                        season.description = text_content
+        
+        # Удаляем таблицу с годами (оглавление сезонов) из intro_html
+        # Такая таблица всегда содержит только годы (1986, 1987, 1990, 1991, и т.д.)
+        if season.intro_html:
+            soup = BeautifulSoup(season.intro_html, 'html.parser')
+            tables = soup.find_all('table')
+            for table in tables:
+                # Проверяем, является ли это таблицей с годами
+                # Таблица с годами содержит только числа (годы) в ячейках
+                rows = table.find_all('tr')
+                is_years_table = True
+                year_count = 0
+                
+                for row in rows:
+                    cells = row.find_all(['td', 'th'])
+                    for cell in cells:
+                        cell_text = cell.get_text(strip=True)
+                        # Проверяем, что ячейка содержит только год (4 цифры) или несколько лет через пробел/табуляцию
+                        # Также могут быть годы вида "1986/87"
+                        if cell_text:
+                            # Проверяем паттерн: только годы (4 цифры) или "1986/87" или пробелы/табуляция между годами
+                            if not re.match(r'^(\d{4}(?:/\d{2})?[\s\t]*)+$', cell_text):
+                                is_years_table = False
+                                break
+                            else:
+                                # Считаем количество лет в ячейке
+                                years = re.findall(r'\d{4}', cell_text)
+                                year_count += len(years)
+                    
+                    if not is_years_table:
+                        break
+                
+                # Если это таблица с годами (содержит только годы и их достаточно много)
+                if is_years_table and year_count >= 5:  # Минимум 5 лет для уверенности
+                    table.decompose()  # Удаляем таблицу
+            
+            # Обновляем intro_html без таблицы с годами
+            season.intro_html = str(soup)
     
     def _parse_people_list(self, html_or_text: str) -> List[str]:
         """Извлекает список людей из HTML или текста."""
@@ -1750,15 +2033,21 @@ class KVNSeasonParser:
             for team in game.teams:
                 team_name = team.team_name or ''
                 team_slug = team.team_slug or ''
+                team_city = team.city or ''  # Извлекаем город
+                
+                # Формируем полное название с городом: "Команда (Город)"
+                full_name = team_name
+                if team_city:
+                    full_name = f"{team_name} ({team_city})"
                 
                 if team_slug:
-                    # Сохраняем slug и название
+                    # Сохраняем slug и полное название с городом
                     if team_slug not in teams_dict:
-                        teams_dict[team_slug] = team_name or team_slug
+                        teams_dict[team_slug] = full_name
                 elif team_name:
                     # Если нет slug, но есть название - используем название как ключ
                     if team_name not in teams_by_name:
-                        teams_by_name[team_name] = team_name
+                        teams_by_name[team_name] = full_name
         
         # Преобразуем в список словарей
         result = []
@@ -1766,10 +2055,10 @@ class KVNSeasonParser:
         for slug, name in teams_dict.items():
             result.append({"slug": slug, "name": name})
         # Затем команды без slug (только по названию)
-        for name, slug in teams_by_name.items():
+        for name, full_name in teams_by_name.items():
             # Проверяем, не добавлена ли уже команда с таким названием
-            if not any(t.get('name') == name for t in result):
-                result.append({"slug": slug, "name": name})
+            if not any(t.get('name') == full_name for t in result):
+                result.append({"slug": "", "name": full_name})
         
         return result
     
@@ -1780,7 +2069,7 @@ class KVNSeasonParser:
         ВАЖНО: Ищет только команды с флагом is_winner=True в финале.
         Это команды, которые получили бейдж "Победитель" в финале.
         
-        Возвращает список НАЗВАНИЙ команд (не slug'ов).
+        Возвращает список полных названий команд с городом: "Команда (Город)".
         """
         winners = []
         
@@ -1791,10 +2080,14 @@ class KVNSeasonParser:
                 for team in game.teams:
                     # Только команды с флагом is_winner=True (бейдж "Победитель")
                     if team.is_winner:
-                        # Используем название команды, если есть, иначе slug
+                        # Формируем полное название с городом: "Команда (Город)"
                         team_name = team.team_name or team.team_slug
-                        if team_name and team_name not in winners:
-                            winners.append(team_name)
+                        if team_name:
+                            full_name = team_name
+                            if team.city:
+                                full_name = f"{team_name} ({team.city})"
+                            if full_name not in winners:
+                                winners.append(full_name)
         
         return winners
     

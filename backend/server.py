@@ -343,12 +343,19 @@ if imported_media_dir.exists():
 
 
 # CORS middleware
+cors_origins = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins == '*':
+    allow_origins = ['*']
+else:
+    allow_origins = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=allow_origins,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 
@@ -385,6 +392,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    import traceback
+    logger.error(f"Traceback: {traceback.format_exc()}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"}
+    )
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"}

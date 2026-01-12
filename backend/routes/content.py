@@ -791,18 +791,36 @@ async def update_kvn(id: str, data: KVNUpdate):
         # Убеждаемся, что все вложенные структуры сериализуемы
         try:
             import json
+            from bson import ObjectId
+            from datetime import datetime as dt, date
+            
+            # Преобразуем Pydantic модель в dict, если нужно
+            season_data_dict = data.season_data
+            if hasattr(season_data_dict, 'model_dump'):
+                season_data_dict = season_data_dict.model_dump()
+            elif hasattr(season_data_dict, 'dict'):
+                season_data_dict = season_data_dict.dict()
+            
             # Рекурсивно очищаем данные от несериализуемых объектов
-            def clean_data(obj, depth=0, max_depth=10):
+            def clean_data(obj, depth=0, max_depth=15):
                 if depth > max_depth:
                     logger.warning(f"Max depth reached in clean_data, converting to string")
                     return str(obj)
                 
-                if isinstance(obj, dict):
+                # Обрабатываем специальные типы BSON и Python
+                if isinstance(obj, ObjectId):
+                    return str(obj)
+                elif isinstance(obj, (dt, date)):
+                    return obj.isoformat()
+                elif isinstance(obj, dict):
                     return {k: clean_data(v, depth+1, max_depth) for k, v in obj.items()}
                 elif isinstance(obj, list):
                     return [clean_data(item, depth+1, max_depth) for item in obj]
                 elif isinstance(obj, (str, int, float, bool, type(None))):
                     return obj
+                elif hasattr(obj, 'model_dump'):
+                    # Pydantic модель
+                    return clean_data(obj.model_dump(), depth+1, max_depth)
                 elif hasattr(obj, '__dict__'):
                     # Объект с атрибутами - преобразуем в словарь
                     return clean_data(obj.__dict__, depth+1, max_depth)
@@ -810,7 +828,7 @@ async def update_kvn(id: str, data: KVNUpdate):
                     # Преобразуем в строку если не сериализуемо
                     return str(obj)
             
-            cleaned_data = clean_data(data.season_data)
+            cleaned_data = clean_data(season_data_dict)
             # Пробуем сериализовать для проверки
             json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
             logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
@@ -818,12 +836,19 @@ async def update_kvn(id: str, data: KVNUpdate):
             if len(json_str) > 1000000:  # 1MB
                 logger.warning(f"Season data is large: {len(json_str)} bytes")
             update_data["season_data"] = cleaned_data
-        except (TypeError, ValueError) as e:
-            logger.error(f"Error serializing season_data: {e}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Error processing season_data: {e}", exc_info=True)
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             # Пробуем сохранить хотя бы структуру без проблемных данных
             try:
                 # Упрощаем данные - убираем сложные вложенные структуры
-                simplified = json.loads(json.dumps(data.season_data, default=str, ensure_ascii=False))
+                season_data_dict = data.season_data
+                if hasattr(season_data_dict, 'model_dump'):
+                    season_data_dict = season_data_dict.model_dump()
+                elif hasattr(season_data_dict, 'dict'):
+                    season_data_dict = season_data_dict.dict()
+                simplified = json.loads(json.dumps(season_data_dict, default=str, ensure_ascii=False))
                 update_data["season_data"] = simplified
                 logger.warning("Used simplified season_data after serialization error")
             except Exception as e2:
@@ -834,19 +859,54 @@ async def update_kvn(id: str, data: KVNUpdate):
     
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
+    # Логируем размер данных для отладки
+    try:
+        import json
+        update_data_size = len(json.dumps(update_data, default=str, ensure_ascii=False))
+        logger.info(f"Updating KVN {id}, data size: {update_data_size} bytes")
+        if 'season_data' in update_data:
+            season_data_size = len(json.dumps(update_data['season_data'], default=str, ensure_ascii=False))
+            logger.info(f"Season data size: {season_data_size} bytes")
+    except Exception as e:
+        logger.warning(f"Could not calculate data size: {e}")
+    
     try:
         result = await db.kvn.update_one({"_id": id}, {"$set": update_data})
     except Exception as e:
         logger.error(f"Error updating KVN {id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to update KVN: {str(e)}")
+        # Логируем детали ошибки
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        # Проверяем, не связана ли ошибка с сериализацией
+        if 'ObjectId' in str(e) or 'serialize' in str(e).lower() or 'bson' in str(e).lower():
+            logger.error("Error appears to be related to BSON serialization")
+            # Пробуем преобразовать ObjectId в строки
+            try:
+                def convert_objectid(obj):
+                    if isinstance(obj, dict):
+                        return {k: convert_objectid(v) for k, v in obj.items()}
+                    elif isinstance(obj, list):
+                        return [convert_objectid(item) for item in obj]
+                    elif hasattr(obj, '__class__') and 'ObjectId' in str(type(obj)):
+                        return str(obj)
+                    return obj
+                
+                cleaned_update_data = convert_objectid(update_data)
+                result = await db.kvn.update_one({"_id": id}, {"$set": cleaned_update_data})
+                logger.info("Successfully updated after ObjectId conversion")
+            except Exception as e2:
+                logger.error(f"Error after ObjectId conversion: {e2}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"Failed to update KVN after ObjectId conversion: {str(e2)}")
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to update KVN: {str(e)}")
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")
     
+    # Update person links if provided (team_ids are already saved in update_data above)
     if data.person_ids is not None:
         await linking_service.update_person_links("kvn", id, data.person_ids)
-    if data.team_ids is not None:
-        await linking_service.update_team_links("kvn", id, data.team_ids)
+    # Note: team_ids are already saved in the document via update_data, no additional linking needed
     
     updated = await db.kvn.find_one({"_id": id}, {"_id": 0})
     return updated
