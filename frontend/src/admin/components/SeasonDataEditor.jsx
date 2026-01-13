@@ -1,4 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { 
+  DndContext, closestCenter, KeyboardSensor, 
+  PointerSensor, useSensor, useSensors
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates,
+  verticalListSortingStrategy, useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +21,671 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from '@/components/ui/accordion';
-import { Plus, X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { 
+  Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
+  Copy, ArrowRight, MoreHorizontal 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import TeamSelector from './TeamSelector';
 import RichTextEditor from './RichTextEditor';
 
+// Sortable Stage Component
+function SortableStage({ 
+  stage, 
+  stageIndex, 
+  isExpanded, 
+  onToggle, 
+  onUpdate, 
+  onDelete, 
+  onMoveGame, 
+  onCopyGame, 
+  data,
+  onAddGame,
+  onUpdateGame,
+  onDeleteGame,
+  onAddContest,
+  onRemoveContest,
+  onAddTeam,
+  onRemoveTeam,
+  onUpdateTeam,
+  sensors,
+  handleGameDragEnd
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `stage-${stageIndex}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Accordion 
+        type="single" 
+        collapsible
+        value={isExpanded ? `stage-${stageIndex}` : undefined}
+        onValueChange={onToggle}
+      >
+        <AccordionItem value={`stage-${stageIndex}`}>
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center justify-between w-full pr-4">
+              <div className="flex items-center gap-2 flex-1">
+                <button
+                  {...attributes}
+                  {...listeners}
+                  className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical className="h-5 w-5" />
+                </button>
+                <div>
+                  <span className="font-semibold">{stage.name || `Стадия ${stageIndex + 1}`}</span>
+                  <Badge variant="outline" className="ml-2">
+                    {stage.games?.length || 0} игр
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <StageContent 
+              stage={stage}
+              stageIndex={stageIndex}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              onMoveGame={onMoveGame}
+              onCopyGame={onCopyGame}
+              allStages={data.stages || []}
+              onAddGame={onAddGame}
+              onUpdateGame={onUpdateGame}
+              onDeleteGame={onDeleteGame}
+              onAddContest={onAddContest}
+              onRemoveContest={onRemoveContest}
+              onAddTeam={onAddTeam}
+              onRemoveTeam={onRemoveTeam}
+              onUpdateTeam={onUpdateTeam}
+              sensors={sensors}
+              handleGameDragEnd={handleGameDragEnd}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
+}
+
+// Sortable Game Component
+function SortableGame({ game, gameIndex, stageIndex, onUpdate, onDelete, onMove, onCopy, allStages, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `game-${stageIndex}-${gameIndex}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-gray-50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1">
+              <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
+              >
+                <GripVertical className="h-4 w-4" />
+              </button>
+              <CardTitle className="text-base">{game.name || `Игра ${gameIndex + 1}`}</CardTitle>
+            </div>
+            <div className="flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="px-2 py-1.5 text-sm font-semibold">Копировать в стадию:</div>
+                  {allStages.map((stage, idx) => {
+                    if (idx === stageIndex) return null;
+                    return (
+                      <DropdownMenuItem 
+                        key={`copy-${idx}`}
+                        onClick={() => onCopy(stageIndex, gameIndex, idx)}
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        {stage.name || `Стадия ${idx + 1}`}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  {allStages.length <= 1 && (
+                    <DropdownMenuItem disabled>
+                      Нет других стадий
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-sm font-semibold">Перенести в стадию:</div>
+                  {allStages.map((stage, idx) => {
+                    if (idx === stageIndex) return null;
+                    return (
+                      <DropdownMenuItem 
+                        key={`move-${idx}`}
+                        onClick={() => onMove(stageIndex, gameIndex, idx)}
+                      >
+                        <ArrowRight className="mr-2 h-4 w-4" />
+                        {stage.name || `Стадия ${idx + 1}`}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  {allStages.length <= 1 && (
+                    <DropdownMenuItem disabled>
+                      Нет других стадий
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(stageIndex, gameIndex)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Удалить
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </CardHeader>
+        <GameContent 
+          game={game}
+          gameIndex={gameIndex}
+          stageIndex={stageIndex}
+          onUpdate={onUpdate}
+          onAddContest={onAddContest}
+          onRemoveContest={onRemoveContest}
+          onAddTeam={onAddTeam}
+          onRemoveTeam={onRemoveTeam}
+          onUpdateTeam={onUpdateTeam}
+        />
+      </Card>
+    </div>
+  );
+}
+
+// Stage Content Component
+function StageContent({ 
+  stage, 
+  stageIndex, 
+  onUpdate, 
+  onDelete, 
+  onMoveGame, 
+  onCopyGame, 
+  allStages,
+  onAddGame,
+  onUpdateGame,
+  onDeleteGame,
+  onAddContest,
+  onRemoveContest,
+  onAddTeam,
+  onRemoveTeam,
+  onUpdateTeam,
+  sensors,
+  handleGameDragEnd
+}) {
+  const updateStage = (updates) => {
+    onUpdate(stageIndex, updates);
+  };
+
+  const gameIds = (stage.games || []).map((_, idx) => `game-${stageIndex}-${idx}`);
+
+  return (
+    <div className="space-y-4 pt-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Настройки стадии</h4>
+        <Button 
+          onClick={() => onDelete(stageIndex)} 
+          size="sm" 
+          variant="destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Удалить стадию
+        </Button>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Название стадии</Label>
+          <Input 
+            value={stage.name || ''} 
+            onChange={(e) => updateStage({ name: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Порядок</Label>
+          <Input 
+            type="number"
+            value={stage.order || 0} 
+            onChange={(e) => updateStage({ order: parseInt(e.target.value) || 0 })}
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Заметки к стадии (HTML)</Label>
+        <Textarea 
+          value={stage.notes || ''} 
+          onChange={(e) => updateStage({ notes: e.target.value })}
+          rows={3}
+          className="font-mono text-sm"
+          placeholder="Дополнительная информация по стадии"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Доборы после стадии (команды через запятую)</Label>
+        <Input 
+          value={Array.isArray(stage.additional_teams) ? stage.additional_teams.join(', ') : ''} 
+          onChange={(e) => {
+            const additional_teams = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+            updateStage({ additional_teams });
+          }}
+          placeholder="Названия команд, прошедших добором"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Комментарий к доборам</Label>
+        <Textarea 
+          value={stage.additional_notes || ''} 
+          onChange={(e) => updateStage({ additional_notes: e.target.value })}
+          rows={2}
+          placeholder="Текст о доборах (например: 'После всех игр жюри добрали...')"
+        />
+      </div>
+
+      {/* Игры */}
+      <div className="space-y-4 mt-4 border-t pt-4">
+        <div className="flex items-center justify-between">
+          <Label className="text-lg">Игры ({stage.games?.length || 0})</Label>
+          <Button onClick={() => onAddGame(stageIndex)} size="sm" variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Добавить игру
+          </Button>
+        </div>
+        {stage.games && stage.games.length > 0 ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(e) => handleGameDragEnd(e, stageIndex)}
+          >
+            <SortableContext
+              items={gameIds}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {stage.games.map((game, gameIndex) => (
+                  <SortableGame
+                    key={gameIndex}
+                    game={game}
+                    gameIndex={gameIndex}
+                    stageIndex={stageIndex}
+                    onUpdate={onUpdateGame}
+                    onDelete={onDeleteGame}
+                    onMove={onMoveGame}
+                    onCopy={onCopyGame}
+                    allStages={allStages}
+                    onAddContest={onAddContest}
+                    onRemoveContest={onRemoveContest}
+                    onAddTeam={onAddTeam}
+                    onRemoveTeam={onRemoveTeam}
+                    onUpdateTeam={onUpdateTeam}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        ) : (
+          <p className="text-sm text-muted-foreground">Нет игр. Добавьте игру для начала.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Game Content Component
+function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam }) {
+  const updateGame = (updates) => {
+    onUpdate(stageIndex, gameIndex, updates);
+  };
+
+  return (
+    <CardContent className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Название игры</Label>
+          <Input 
+            value={game.name || ''} 
+            onChange={(e) => updateGame({ name: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Дата</Label>
+          <Input 
+            value={game.date || ''} 
+            onChange={(e) => updateGame({ date: e.target.value })}
+            placeholder="YYYY-MM-DD"
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Ведущий</Label>
+        <Input 
+          value={game.host || ''} 
+          onChange={(e) => updateGame({ host: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Жюри (через запятую)</Label>
+        <Input 
+          value={Array.isArray(game.jury) ? game.jury.join(', ') : ''} 
+          onChange={(e) => {
+            const jury = e.target.value.split(',').map(j => j.trim()).filter(j => j);
+            updateGame({ jury });
+          }}
+        />
+      </div>
+
+      {/* Конкурсы */}
+      <div className="space-y-2 mt-4 border-t pt-4">
+        <div className="flex items-center justify-between">
+          <Label>Конкурсы ({game.contests?.length || 0})</Label>
+          <Button 
+            onClick={() => onAddContest(stageIndex, gameIndex)} 
+            size="sm" 
+            variant="outline"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Добавить конкурс
+          </Button>
+        </div>
+        {game.contests && game.contests.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {game.contests.map((contest, contestIndex) => (
+              <Badge key={contestIndex} variant="secondary" className="pr-1">
+                {contest}
+                <button
+                  type="button"
+                  onClick={() => onRemoveContest(stageIndex, gameIndex, contest)}
+                  className="ml-1 hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Команды */}
+      <div className="space-y-2 mt-4 border-t pt-4">
+        <div className="flex items-center justify-between">
+          <Label>Команды ({game.teams?.length || 0})</Label>
+          <Button 
+            onClick={() => onAddTeam(stageIndex, gameIndex)} 
+            size="sm" 
+            variant="outline"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Добавить команду
+          </Button>
+        </div>
+        {game.teams && game.teams.length > 0 ? (
+          <div className="space-y-2">
+            {game.teams.map((team, teamIndex) => (
+              <Card key={teamIndex} className="bg-white">
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="font-semibold">Команда {teamIndex + 1}</h5>
+                    <Button 
+                      onClick={() => onRemoveTeam(stageIndex, gameIndex, teamIndex)} 
+                      size="sm" 
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label>Название команды</Label>
+                      <Input 
+                        value={team.team_name || ''} 
+                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { team_name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Место</Label>
+                      <Input 
+                        type="number"
+                        value={team.place || ''} 
+                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { place: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Итого</Label>
+                      <Input 
+                        type="number"
+                        step="0.1"
+                        value={team.total || ''} 
+                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-2 flex flex-col">
+                      <Label>Флаги</Label>
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox 
+                            checked={team.passed || false}
+                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { passed: checked })}
+                          />
+                          <Label className="text-sm">Прошёл</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox 
+                            checked={team.is_winner || false}
+                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { is_winner: checked })}
+                          />
+                          <Label className="text-sm">Победитель</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox 
+                            checked={team.is_additional || false}
+                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { is_additional: checked })}
+                          />
+                          <Label className="text-sm">Добор</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Баллы по конкурсам */}
+                  {game.contests && game.contests.length > 0 && (
+                    <div className="mt-4 space-y-2 border-t pt-4">
+                      <Label className="text-sm font-semibold">Баллы по конкурсам</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {game.contests.map((contest) => (
+                          <div key={contest} className="flex items-center gap-2">
+                            <Label className="text-xs w-24 truncate">{contest}:</Label>
+                            <Input 
+                              type="number"
+                              step="0.1"
+                              className="h-8 text-sm"
+                              value={team.scores?.[contest] || ''} 
+                              onChange={(e) => {
+                                const newScores = { ...(team.scores || {}) };
+                                newScores[contest] = parseFloat(e.target.value) || 0;
+                                onUpdateTeam(stageIndex, gameIndex, teamIndex, { scores: newScores });
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Нет команд. Добавьте команду для начала.</p>
+        )}
+      </div>
+    </CardContent>
+  );
+}
+
 export default function SeasonDataEditor({ seasonData, onChange }) {
   const [expandedStages, setExpandedStages] = useState(new Set());
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
+  // Инициализируем seasonData если его нет
+  const data = seasonData || {
+    league_name: '',
+    year: 0,
+    season_number: 0,
+    winners: [],
+    all_teams: [],
+    intro_html: '',
+    description: '',
+    stages: []
+  };
+
+  // ID для drag-and-drop
+  const stageIds = useMemo(() => 
+    (data.stages || []).map((_, idx) => `stage-${idx}`),
+    [data.stages]
+  );
+
+  // Drag and drop для стадий
+  const handleStageDragEnd = useCallback((event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const activeIndex = parseInt(active.id.toString().replace('stage-', ''));
+    const overIndex = parseInt(over.id.toString().replace('stage-', ''));
+    
+    if (activeIndex !== overIndex && data.stages) {
+      const newData = { ...data };
+      const newStages = arrayMove(newData.stages, activeIndex, overIndex);
+      // Обновляем порядок
+      newStages.forEach((stage, idx) => {
+        stage.order = idx + 1;
+      });
+      onChange({ ...newData, stages: newStages });
+    }
+  }, [data, onChange]);
+
+  // Drag and drop для игр внутри стадии
+  const handleGameDragEnd = useCallback((event, stageIndex) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const activeId = active.id.toString();
+    const overId = over.id.toString();
+    
+    // Извлекаем индексы из ID вида "game-stageIndex-gameIndex"
+    const activeMatch = activeId.match(/game-(\d+)-(\d+)/);
+    const overMatch = overId.match(/game-(\d+)-(\d+)/);
+    
+    if (!activeMatch || !overMatch) return;
+    const activeGameIndex = parseInt(activeMatch[2]);
+    const overGameIndex = parseInt(overMatch[2]);
+    
+    if (activeGameIndex !== overGameIndex && data.stages && data.stages[stageIndex]?.games) {
+      const newData = { ...data };
+      const newGames = arrayMove(newData.stages[stageIndex].games, activeGameIndex, overGameIndex);
+      // Обновляем порядок
+      newGames.forEach((game, idx) => {
+        game.order = idx + 1;
+      });
+      newData.stages[stageIndex].games = newGames;
+      onChange(newData);
+    }
+  }, [data, onChange]);
+
+  // Перенос игры в другую стадию
+  const moveGameToStage = useCallback((fromStageIndex, gameIndex, toStageIndex) => {
+    if (!data.stages) return;
+    const newData = { ...data };
+    
+    const game = newData.stages[fromStageIndex]?.games?.[gameIndex];
+    if (!game) return;
+    
+    // Удаляем игру из исходной стадии
+    newData.stages[fromStageIndex].games = newData.stages[fromStageIndex].games.filter((_, i) => i !== gameIndex);
+    
+    // Добавляем в новую стадию
+    if (!newData.stages[toStageIndex].games) {
+      newData.stages[toStageIndex].games = [];
+    }
+    const maxOrder = newData.stages[toStageIndex].games.length > 0
+      ? Math.max(...newData.stages[toStageIndex].games.map(g => g.order || 0))
+      : 0;
+    game.order = maxOrder + 1;
+    newData.stages[toStageIndex].games = [...newData.stages[toStageIndex].games, game];
+    
+    onChange(newData);
+  }, [data, onChange]);
+
+  // Копирование игры в другую стадию
+  const copyGameToStage = useCallback((fromStageIndex, gameIndex, toStageIndex) => {
+    if (!data.stages) return;
+    const newData = { ...data };
+    
+    const game = newData.stages[fromStageIndex]?.games?.[gameIndex];
+    if (!game) return;
+    
+    // Создаем глубокую копию игры
+    const gameCopy = JSON.parse(JSON.stringify(game));
+    gameCopy.name = `${gameCopy.name || `Игра ${gameIndex + 1}`} (копия)`;
+    
+    // Добавляем в целевую стадию
+    if (!newData.stages[toStageIndex].games) {
+      newData.stages[toStageIndex].games = [];
+    }
+    const maxOrder = newData.stages[toStageIndex].games.length > 0
+      ? Math.max(...newData.stages[toStageIndex].games.map(g => g.order || 0))
+      : 0;
+    gameCopy.order = maxOrder + 1;
+    newData.stages[toStageIndex].games = [...newData.stages[toStageIndex].games, gameCopy];
+    
+    onChange(newData);
+  }, [data, onChange]);
 
   // Если seasonData отсутствует, показываем сообщение
   if (!seasonData) {
@@ -31,18 +699,6 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       </Card>
     );
   }
-
-  // Инициализируем seasonData если его нет
-  const data = seasonData || {
-    league_name: '',
-    year: 0,
-    season_number: 0,
-    winners: [],
-    all_teams: [],
-    intro_html: '',
-    description: '',
-    stages: []
-  };
 
   const toggleStage = (stageIndex) => {
     const newExpanded = new Set(expandedStages);
@@ -369,310 +1025,51 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {data.stages && data.stages.length > 0 ? (
-              data.stages.map((stage, stageIndex) => (
-                <Accordion 
-                  key={stageIndex} 
-                  type="single" 
-                  collapsible
-                  value={expandedStages.has(stageIndex) ? `stage-${stageIndex}` : undefined}
-                  onValueChange={() => toggleStage(stageIndex)}
-                >
-                  <AccordionItem value={`stage-${stageIndex}`}>
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center justify-between w-full pr-4">
-                        <div>
-                          <span className="font-semibold">{stage.name || `Стадия ${stageIndex + 1}`}</span>
-                          <Badge variant="outline" className="ml-2">
-                            {stage.games?.length || 0} игр
-                          </Badge>
-                        </div>
+          {data.stages && data.stages.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleStageDragEnd}
+            >
+              <SortableContext
+                items={stageIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4">
+                  {data.stages.map((stage, stageIndex) => {
+                    const gameIds = (stage.games || []).map((_, idx) => `game-${stageIndex}-${idx}`);
+                    return (
+                      <div key={stageIndex}>
+                        <SortableStage
+                          stage={stage}
+                          stageIndex={stageIndex}
+                          isExpanded={expandedStages.has(stageIndex)}
+                          onToggle={() => toggleStage(stageIndex)}
+                          onUpdate={updateStage}
+                          onDelete={removeStage}
+                          onMoveGame={moveGameToStage}
+                          onCopyGame={copyGameToStage}
+                          data={data}
+                          onAddGame={addGame}
+                          onUpdateGame={updateGame}
+                          onDeleteGame={removeGame}
+                          onAddContest={addContest}
+                          onRemoveContest={removeContest}
+                          onAddTeam={addTeamToGame}
+                          onRemoveTeam={removeTeamFromGame}
+                          onUpdateTeam={updateTeam}
+                          sensors={sensors}
+                          handleGameDragEnd={handleGameDragEnd}
+                        />
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-semibold">Настройки стадии</h4>
-                          <Button 
-                            onClick={() => removeStage(stageIndex)} 
-                            size="sm" 
-                            variant="destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Удалить стадию
-                          </Button>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Название стадии</Label>
-                            <Input 
-                              value={stage.name || ''} 
-                              onChange={(e) => updateStage(stageIndex, { name: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Порядок</Label>
-                            <Input 
-                              type="number"
-                              value={stage.order || 0} 
-                              onChange={(e) => updateStage(stageIndex, { order: parseInt(e.target.value) || 0 })}
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Заметки к стадии (HTML)</Label>
-                          <Textarea 
-                            value={stage.notes || ''} 
-                            onChange={(e) => updateStage(stageIndex, { notes: e.target.value })}
-                            rows={3}
-                            className="font-mono text-sm"
-                            placeholder="Дополнительная информация по стадии"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Доборы после стадии (команды через запятую)</Label>
-                          <Input 
-                            value={Array.isArray(stage.additional_teams) ? stage.additional_teams.join(', ') : ''} 
-                            onChange={(e) => {
-                              const additional_teams = e.target.value.split(',').map(t => t.trim()).filter(t => t);
-                              updateStage(stageIndex, { additional_teams });
-                            }}
-                            placeholder="Названия команд, прошедших добором"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Комментарий к доборам</Label>
-                          <Textarea 
-                            value={stage.additional_notes || ''} 
-                            onChange={(e) => updateStage(stageIndex, { additional_notes: e.target.value })}
-                            rows={2}
-                            placeholder="Текст о доборах (например: 'После всех игр жюри добрали...')"
-                          />
-                        </div>
-
-                        {/* Игры */}
-                        <div className="space-y-4 mt-4 border-t pt-4">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-lg">Игры ({stage.games?.length || 0})</Label>
-                            <Button onClick={() => addGame(stageIndex)} size="sm" variant="outline">
-                              <Plus className="h-4 w-4 mr-2" />
-                              Добавить игру
-                            </Button>
-                          </div>
-                          {stage.games && stage.games.length > 0 ? (
-                            stage.games.map((game, gameIndex) => (
-                              <Card key={gameIndex} className="bg-gray-50">
-                                <CardHeader className="pb-3">
-                                  <div className="flex items-center justify-between">
-                                    <CardTitle className="text-base">{game.name || `Игра ${gameIndex + 1}`}</CardTitle>
-                                    <Button 
-                                      onClick={() => removeGame(stageIndex, gameIndex)} 
-                                      size="sm" 
-                                      variant="ghost"
-                                      className="text-destructive hover:text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                  <div className="grid md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                      <Label>Название игры</Label>
-                                      <Input 
-                                        value={game.name || ''} 
-                                        onChange={(e) => updateGame(stageIndex, gameIndex, { name: e.target.value })}
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label>Дата</Label>
-                                      <Input 
-                                        value={game.date || ''} 
-                                        onChange={(e) => updateGame(stageIndex, gameIndex, { date: e.target.value })}
-                                        placeholder="YYYY-MM-DD"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label>Ведущий</Label>
-                                    <Input 
-                                      value={game.host || ''} 
-                                      onChange={(e) => updateGame(stageIndex, gameIndex, { host: e.target.value })}
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label>Жюри (через запятую)</Label>
-                                    <Input 
-                                      value={Array.isArray(game.jury) ? game.jury.join(', ') : ''} 
-                                      onChange={(e) => {
-                                        const jury = e.target.value.split(',').map(j => j.trim()).filter(j => j);
-                                        updateGame(stageIndex, gameIndex, { jury });
-                                      }}
-                                    />
-                                  </div>
-
-                                  {/* Конкурсы */}
-                                  <div className="space-y-2 mt-4 border-t pt-4">
-                                    <div className="flex items-center justify-between">
-                                      <Label>Конкурсы ({game.contests?.length || 0})</Label>
-                                      <Button 
-                                        onClick={() => addContest(stageIndex, gameIndex)} 
-                                        size="sm" 
-                                        variant="outline"
-                                      >
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Добавить конкурс
-                                      </Button>
-                                    </div>
-                                    {game.contests && game.contests.length > 0 && (
-                                      <div className="flex flex-wrap gap-2">
-                                        {game.contests.map((contest, contestIndex) => (
-                                          <Badge key={contestIndex} variant="secondary" className="pr-1">
-                                            {contest}
-                                            <button
-                                              type="button"
-                                              onClick={() => removeContest(stageIndex, gameIndex, contest)}
-                                              className="ml-1 hover:text-destructive"
-                                            >
-                                              <X className="h-3 w-3" />
-                                            </button>
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Команды */}
-                                  <div className="space-y-2 mt-4 border-t pt-4">
-                                    <div className="flex items-center justify-between">
-                                      <Label>Команды ({game.teams?.length || 0})</Label>
-                                      <Button 
-                                        onClick={() => addTeamToGame(stageIndex, gameIndex)} 
-                                        size="sm" 
-                                        variant="outline"
-                                      >
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Добавить команду
-                                      </Button>
-                                    </div>
-                                    {game.teams && game.teams.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {game.teams.map((team, teamIndex) => (
-                                          <Card key={teamIndex} className="bg-white">
-                                            <CardContent className="pt-4">
-                                              <div className="flex items-center justify-between mb-4">
-                                                <h5 className="font-semibold">Команда {teamIndex + 1}</h5>
-                                                <Button 
-                                                  onClick={() => removeTeamFromGame(stageIndex, gameIndex, teamIndex)} 
-                                                  size="sm" 
-                                                  variant="ghost"
-                                                  className="text-destructive hover:text-destructive"
-                                                >
-                                                  <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                              </div>
-                                              <div className="grid md:grid-cols-4 gap-4">
-                                                <div className="space-y-2">
-                                                  <Label>Название команды</Label>
-                                                  <Input 
-                                                    value={team.team_name || ''} 
-                                                    onChange={(e) => updateTeam(stageIndex, gameIndex, teamIndex, { team_name: e.target.value })}
-                                                  />
-                                                </div>
-                                                <div className="space-y-2">
-                                                  <Label>Место</Label>
-                                                  <Input 
-                                                    type="number"
-                                                    value={team.place || ''} 
-                                                    onChange={(e) => updateTeam(stageIndex, gameIndex, teamIndex, { place: parseInt(e.target.value) || 0 })}
-                                                  />
-                                                </div>
-                                                <div className="space-y-2">
-                                                  <Label>Итого</Label>
-                                                  <Input 
-                                                    type="number"
-                                                    step="0.1"
-                                                    value={team.total || ''} 
-                                                    onChange={(e) => updateTeam(stageIndex, gameIndex, teamIndex, { total: parseFloat(e.target.value) || 0 })}
-                                                  />
-                                                </div>
-                                                <div className="space-y-2 flex flex-col">
-                                                  <Label>Флаги</Label>
-                                                  <div className="flex flex-col gap-2 mt-2">
-                                                    <div className="flex items-center gap-2">
-                                                      <Checkbox 
-                                                        checked={team.passed || false}
-                                                        onCheckedChange={(checked) => updateTeam(stageIndex, gameIndex, teamIndex, { passed: checked })}
-                                                      />
-                                                      <Label className="text-sm">Прошёл</Label>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                      <Checkbox 
-                                                        checked={team.is_winner || false}
-                                                        onCheckedChange={(checked) => updateTeam(stageIndex, gameIndex, teamIndex, { is_winner: checked })}
-                                                      />
-                                                      <Label className="text-sm">Победитель</Label>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                      <Checkbox 
-                                                        checked={team.is_additional || false}
-                                                        onCheckedChange={(checked) => updateTeam(stageIndex, gameIndex, teamIndex, { is_additional: checked })}
-                                                      />
-                                                      <Label className="text-sm">Добор</Label>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                              
-                                              {/* Баллы по конкурсам */}
-                                              {game.contests && game.contests.length > 0 && (
-                                                <div className="mt-4 space-y-2 border-t pt-4">
-                                                  <Label className="text-sm font-semibold">Баллы по конкурсам</Label>
-                                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                    {game.contests.map((contest) => (
-                                                      <div key={contest} className="flex items-center gap-2">
-                                                        <Label className="text-xs w-24 truncate">{contest}:</Label>
-                                                        <Input 
-                                                          type="number"
-                                                          step="0.1"
-                                                          className="h-8 text-sm"
-                                                          value={team.scores?.[contest] || ''} 
-                                                          onChange={(e) => {
-                                                            const newScores = { ...(team.scores || {}) };
-                                                            newScores[contest] = parseFloat(e.target.value) || 0;
-                                                            updateTeam(stageIndex, gameIndex, teamIndex, { scores: newScores });
-                                                          }}
-                                                        />
-                                                      </div>
-                                                    ))}
-                                                  </div>
-                                                </div>
-                                              )}
-                                            </CardContent>
-                                          </Card>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-muted-foreground">Нет команд. Добавьте команду для начала.</p>
-                                    )}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground">Нет игр. Добавьте игру для начала.</p>
-                          )}
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">Нет стадий. Добавьте стадию для начала.</p>
-            )}
-          </div>
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <p className="text-sm text-muted-foreground">Нет стадий. Добавьте стадию для начала.</p>
+          )}
         </CardContent>
       </Card>
     </div>
