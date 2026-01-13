@@ -7,6 +7,12 @@ services:
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   backend:
     build:
@@ -20,17 +26,21 @@ services:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=humorpedia
       - CORS_ORIGINS=*
+      - BACKUP_DIR=/app/backups
     volumes:
       - ./backend:/app
       - ./uploads:/app/uploads
+      - ./backups:/app/backups
       # Important: allow backend to serve /media/imported/* from frontend public folder
       - ./frontend/public/media:/app/frontend/public/media:ro
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     ports:
       - "8001:8001"
     # Hot reload: watch Python files in /app directory
     # Exclude __pycache__, .pyc files, and node_modules for better performance
+    # start.sh автоматически восстанавливает БД из бэкапа перед запуском сервера
     command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload --reload-dir /app --reload-include "*.py" --reload-exclude "*/__pycache__/*" --reload-exclude "*.pyc"
     restart: unless-stopped
 
@@ -63,6 +73,26 @@ services:
     ports:
       - "3000:3000"
     command: yarn start
+    restart: unless-stopped
+
+  backup:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: humorpedia-backup
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=humorpedia
+      - BACKUP_DIR=/app/backups
+      - BACKUP_CHECK_INTERVAL=3600
+    volumes:
+      - ./backups:/app/backups
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    command: python scripts/backup_service.py
     restart: unless-stopped
 
 volumes:
