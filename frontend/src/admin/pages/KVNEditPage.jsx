@@ -180,7 +180,7 @@ export default function KVNEditPage() {
           <TabsTrigger value="main">Основное</TabsTrigger>
           <TabsTrigger value="facts">Факты</TabsTrigger>
           <TabsTrigger value="modules">Модули ({kvn.modules.length})</TabsTrigger>
-          {kvn.season_data && <TabsTrigger value="season">Сезон</TabsTrigger>}
+          <TabsTrigger value="season">Сезон</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
@@ -327,14 +327,42 @@ export default function KVNEditPage() {
           <ModuleEditor modules={kvn.modules} onChange={(m) => setKvn(p => ({ ...p, modules: m }))} contentType="kvn" />
         </TabsContent>
 
-        {kvn.season_data && (
-          <TabsContent value="season">
-            <SeasonDataEditor 
-              seasonData={kvn.season_data} 
-              onChange={(seasonData) => setKvn(p => ({ ...p, season_data: seasonData }))} 
-            />
-          </TabsContent>
-        )}
+        <TabsContent value="season">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Данные сезона</CardTitle>
+                {!kvn.season_data && (
+                  <Button 
+                    onClick={() => {
+                      const newSeasonData = {
+                        league_name: '',
+                        year: new Date().getFullYear(),
+                        season_number: 0,
+                        winners: [],
+                        all_teams: [],
+                        intro_html: '',
+                        description: '',
+                        stages: []
+                      };
+                      setKvn(p => ({ ...p, season_data: newSeasonData }));
+                    }}
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать шаблон сезона
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <SeasonDataEditor 
+                seasonData={kvn.season_data} 
+                onChange={(seasonData) => setKvn(p => ({ ...p, season_data: seasonData }))} 
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="seo">
           <Card>

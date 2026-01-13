@@ -296,8 +296,14 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
           <div className="flex flex-wrap gap-2">
             {winners.map((winner, idx) => {
               // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
-              const winnerName = typeof winner === 'string' ? winner : winner.name;
+              let winnerName = typeof winner === 'string' ? winner : winner.name;
               const winnerSlug = typeof winner === 'string' ? null : winner.slug;
+              const winnerCity = typeof winner === 'object' && winner !== null ? (winner.city || '') : '';
+              
+              // Формируем полное название с городом, если город есть и его еще нет в названии
+              if (winnerCity && !winnerName.includes(`(${winnerCity})`)) {
+                winnerName = `${winnerName} (${winnerCity})`;
+              }
               
               return (
                 <Badge key={idx} variant="default" className="bg-yellow-600 text-white">
@@ -326,10 +332,21 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
             {all_teams.map((team, idx) => {
               // Поддерживаем старый формат (строка) и новый (объект)
               const teamSlug = typeof team === 'string' ? team : team.slug;
-              const teamName = typeof team === 'string' ? team : (team.name || team.slug);
+              let teamName = typeof team === 'string' ? team : (team.name || team.slug);
+              const teamCity = typeof team === 'object' && team !== null ? (team.city || '') : '';
+              
+              // Формируем полное название с городом, если город есть и его еще нет в названии
+              if (teamCity && !teamName.includes(`(${teamCity})`)) {
+                teamName = `${teamName} (${teamCity})`;
+              }
+              
               return (
                 <Badge key={idx} variant="outline" asChild>
-                  <Link to={`/kvn/teams/${teamSlug}`}>{teamName}</Link>
+                  {teamSlug ? (
+                    <Link to={`/kvn/teams/${teamSlug}`}>{teamName}</Link>
+                  ) : (
+                    <span>{teamName}</span>
+                  )}
                 </Badge>
               );
             })}
