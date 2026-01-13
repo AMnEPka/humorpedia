@@ -9,12 +9,46 @@ import publicApi from '../utils/api';
 import { GameTable } from '../components/GameTable';
 import { StageSection } from '../components/StageSection';
 
+// Вспомогательная функция для извлечения города из facts
+// Поддерживает поля "Город", "город", "Города", "города"
+// Обрабатывает случаи, когда городов несколько (разделенных новой строкой или запятой)
+// Удаляет HTML-теги (особенно <br>) из значения
+function getCityFromFacts(facts) {
+  if (!facts || typeof facts !== 'object') return '';
+  
+  // Ищем город по разным вариантам названия поля
+  const cityValue = facts['Город'] || facts['город'] || facts['Города'] || facts['города'] || '';
+  
+  if (!cityValue) return '';
+  
+  // Если это строка, обрабатываем возможные разделители
+  if (typeof cityValue === 'string') {
+    // Сначала удаляем HTML-теги (особенно <br>, <br/>, <br />)
+    let cleaned = cityValue
+      .replace(/<br\s*\/?>/gi, '\n') // Заменяем <br> на новую строку
+      .replace(/<[^>]+>/g, '') // Удаляем все остальные HTML-теги
+      .trim();
+    
+    // Разделяем по новой строке, запятой или слэшу
+    const cities = cleaned
+      .split(/[\n,;/]/)
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
+    
+    // Возвращаем все города через запятую
+    return cities.length > 0 ? cities.join(', ') : '';
+  }
+  
+  return String(cityValue).trim();
+}
+
 export default function SeasonDetailPage({ seasonData: initialSeasonData = null }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [season, setSeason] = useState(initialSeasonData);
   const [loading, setLoading] = useState(!initialSeasonData);
   const [error, setError] = useState('');
+  const [teamNames, setTeamNames] = useState({}); // Кэш полных названий команд по slug
 
   useEffect(() => {
     // Если данные уже переданы через props - используем их
@@ -51,6 +85,67 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     };
     fetchSeason();
   }, [location.pathname, initialSeasonData]);
+
+  // Загружаем полные названия команд из базы данных для winners и all_teams
+  useEffect(() => {
+    const loadTeamNames = async () => {
+      if (!season?.season_data) return;
+      
+      const { winners = [], all_teams = [] } = season.season_data;
+      const slugsToLoad = new Set();
+      
+      // Собираем все slug из winners и all_teams
+      winners.forEach(winner => {
+        const slug = typeof winner === 'string' ? winner : (winner.slug || '');
+        if (slug && !teamNames[slug]) {
+          slugsToLoad.add(slug);
+        }
+      });
+      
+      all_teams.forEach(team => {
+        const slug = typeof team === 'string' ? team : (team.slug || '');
+        if (slug && !teamNames[slug]) {
+          slugsToLoad.add(slug);
+        }
+      });
+      
+      if (slugsToLoad.size === 0) return;
+      
+      const namesMap = { ...teamNames };
+      
+      // Загружаем команды параллельно
+      await Promise.all(
+        Array.from(slugsToLoad).map(async (slug) => {
+          try {
+            const res = await publicApi.getTeam(slug);
+            const teamData = res.data;
+            // Используем полное название из базы данных
+            const teamName = teamData.name || teamData.title || '';
+            const cityFromFacts = getCityFromFacts(teamData.facts);
+            namesMap[slug] = {
+              name: teamName,
+              city: cityFromFacts
+            };
+          } catch (err) {
+            // Если команда не найдена, используем данные из сезона
+            const winner = winners.find(w => (typeof w === 'string' ? w : w.slug) === slug);
+            const team = all_teams.find(t => (typeof t === 'string' ? t : t.slug) === slug);
+            const teamData = winner || team;
+            if (teamData) {
+              const name = typeof teamData === 'string' ? teamData : (teamData.name || slug);
+              const city = typeof teamData === 'object' ? (teamData.city || '') : '';
+              namesMap[slug] = { name, city };
+            }
+          }
+        })
+      );
+      
+      setTeamNames(namesMap);
+    };
+    
+    loadTeamNames();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [season]);
 
   if (loading) {
     return (
@@ -296,9 +391,21 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
           <div className="flex flex-wrap gap-2">
             {winners.map((winner, idx) => {
               // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
-              let winnerName = typeof winner === 'string' ? winner : winner.name;
-              const winnerSlug = typeof winner === 'string' ? null : winner.slug;
-              const winnerCity = typeof winner === 'object' && winner !== null ? (winner.city || '') : '';
+              const winnerSlug = typeof winner === 'string' ? winner : (winner.slug || '');
+              
+              // Используем полное название из базы данных, если оно загружено
+              let winnerName;
+              let winnerCity = '';
+              
+              if (winnerSlug && teamNames[winnerSlug]) {
+                // Используем название из базы данных
+                winnerName = teamNames[winnerSlug].name;
+                winnerCity = teamNames[winnerSlug].city || '';
+              } else {
+                // Fallback на данные из сезона
+                winnerName = typeof winner === 'string' ? winner : winner.name;
+                winnerCity = typeof winner === 'object' && winner !== null ? (winner.city || '') : '';
+              }
               
               // Формируем полное название с городом, если город есть и его еще нет в названии
               if (winnerCity && !winnerName.includes(`(${winnerCity})`)) {
@@ -331,9 +438,21 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
           <div className="flex flex-wrap gap-2">
             {all_teams.map((team, idx) => {
               // Поддерживаем старый формат (строка) и новый (объект)
-              const teamSlug = typeof team === 'string' ? team : team.slug;
-              let teamName = typeof team === 'string' ? team : (team.name || team.slug);
-              const teamCity = typeof team === 'object' && team !== null ? (team.city || '') : '';
+              const teamSlug = typeof team === 'string' ? team : (team.slug || '');
+              
+              // Используем полное название из базы данных, если оно загружено
+              let teamName;
+              let teamCity = '';
+              
+              if (teamSlug && teamNames[teamSlug]) {
+                // Используем название из базы данных
+                teamName = teamNames[teamSlug].name;
+                teamCity = teamNames[teamSlug].city || '';
+              } else {
+                // Fallback на данные из сезона
+                teamName = typeof team === 'string' ? team : (team.name || team.slug || '');
+                teamCity = typeof team === 'object' && team !== null ? (team.city || '') : '';
+              }
               
               // Формируем полное название с городом, если город есть и его еще нет в названии
               if (teamCity && !teamName.includes(`(${teamCity})`)) {

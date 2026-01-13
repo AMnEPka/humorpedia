@@ -34,18 +34,19 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TeamSelector from './TeamSelector';
+import GameTeamSelector from './GameTeamSelector';
 import RichTextEditor from './RichTextEditor';
 
 // Sortable Stage Component
-function SortableStage({ 
-  stage, 
-  stageIndex, 
-  isExpanded, 
-  onToggle, 
-  onUpdate, 
-  onDelete, 
-  onMoveGame, 
-  onCopyGame, 
+function SortableStage({
+  stage,
+  stageIndex,
+  isExpanded,
+  onToggle,
+  onUpdate,
+  onDelete,
+  onMoveGame,
+  onCopyGame,
   data,
   onAddGame,
   onUpdateGame,
@@ -56,7 +57,8 @@ function SortableStage({
   onRemoveTeam,
   onUpdateTeam,
   sensors,
-  handleGameDragEnd
+  handleGameDragEnd,
+  seasonAllTeams = []
 }) {
   const {
     attributes,
@@ -116,12 +118,13 @@ function SortableStage({
               onDeleteGame={onDeleteGame}
               onAddContest={onAddContest}
               onRemoveContest={onRemoveContest}
-              onAddTeam={onAddTeam}
-              onRemoveTeam={onRemoveTeam}
-              onUpdateTeam={onUpdateTeam}
-              sensors={sensors}
-              handleGameDragEnd={handleGameDragEnd}
-            />
+                          onAddTeam={onAddTeam}
+                          onRemoveTeam={onRemoveTeam}
+                          onUpdateTeam={onUpdateTeam}
+                          sensors={sensors}
+                          handleGameDragEnd={handleGameDragEnd}
+                          seasonAllTeams={seasonAllTeams}
+                        />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -130,7 +133,7 @@ function SortableStage({
 }
 
 // Sortable Game Component
-function SortableGame({ game, gameIndex, stageIndex, onUpdate, onDelete, onMove, onCopy, allStages, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam }) {
+function SortableGame({ game, gameIndex, stageIndex, onUpdate, onDelete, onMove, onCopy, allStages, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam, seasonAllTeams = [] }) {
   const {
     attributes,
     listeners,
@@ -229,6 +232,7 @@ function SortableGame({ game, gameIndex, stageIndex, onUpdate, onDelete, onMove,
           onAddTeam={onAddTeam}
           onRemoveTeam={onRemoveTeam}
           onUpdateTeam={onUpdateTeam}
+          seasonAllTeams={seasonAllTeams}
         />
       </Card>
     </div>
@@ -253,7 +257,8 @@ function StageContent({
   onRemoveTeam,
   onUpdateTeam,
   sensors,
-  handleGameDragEnd
+  handleGameDragEnd,
+  seasonAllTeams = []
 }) {
   const updateStage = (updates) => {
     onUpdate(stageIndex, updates);
@@ -293,12 +298,11 @@ function StageContent({
       </div>
       <div className="space-y-2">
         <Label>Заметки к стадии (HTML)</Label>
-        <Textarea 
-          value={stage.notes || ''} 
-          onChange={(e) => updateStage({ notes: e.target.value })}
-          rows={3}
-          className="font-mono text-sm"
+        <RichTextEditor
+          content={stage.notes || ''}
+          onChange={(html) => updateStage({ notes: html })}
           placeholder="Дополнительная информация по стадии"
+          minHeight={200}
         />
       </div>
       <div className="space-y-2">
@@ -358,6 +362,7 @@ function StageContent({
                     onAddTeam={onAddTeam}
                     onRemoveTeam={onRemoveTeam}
                     onUpdateTeam={onUpdateTeam}
+                    seasonAllTeams={seasonAllTeams}
                   />
                 ))}
               </div>
@@ -372,7 +377,7 @@ function StageContent({
 }
 
 // Game Content Component
-function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam }) {
+function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam, seasonAllTeams = [] }) {
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
   };
@@ -477,9 +482,23 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                   <div className="grid md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>Название команды</Label>
-                      <Input 
-                        value={team.team_name || ''} 
-                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { team_name: e.target.value })}
+                      <GameTeamSelector
+                        value={team}
+                        onChange={(selectedTeam) => {
+                          if (selectedTeam) {
+                            onUpdateTeam(stageIndex, gameIndex, teamIndex, selectedTeam);
+                          } else {
+                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
+                              team_slug: '', 
+                              team_name: '', 
+                              city: '' 
+                            });
+                          }
+                        }}
+                        existingTeams={game.teams?.filter((t, idx) => idx !== teamIndex) || []}
+                        seasonAllTeams={seasonAllTeams}
+                        placeholder="Выберите команду..."
+                        allowCustom={false}
                       />
                     </div>
                     <div className="space-y-2">
@@ -491,12 +510,30 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Итого</Label>
+                      <Label>Итого (автосумма)</Label>
                       <Input 
                         type="number"
                         step="0.1"
-                        value={team.total || ''} 
-                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: parseFloat(e.target.value) || 0 })}
+                        value={(() => {
+                          // Автоматически вычисляем сумму баллов за все конкурсы
+                          if (game.contests && game.contests.length > 0 && team.scores) {
+                            const sum = game.contests.reduce((acc, contest) => {
+                              const score = team.scores[contest];
+                              return acc + (typeof score === 'number' ? score : 0);
+                            }, 0);
+                            return sum.toFixed(1);
+                          }
+                          return team.total || '';
+                        })()}
+                        onChange={(e) => {
+                          // Позволяем вручную изменить, если нужно
+                          const manualTotal = parseFloat(e.target.value);
+                          if (!isNaN(manualTotal)) {
+                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: manualTotal });
+                          }
+                        }}
+                        readOnly={game.contests && game.contests.length > 0}
+                        className={game.contests && game.contests.length > 0 ? "bg-muted" : ""}
                       />
                     </div>
                     <div className="space-y-2 flex flex-col">
@@ -539,11 +576,32 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                               type="number"
                               step="0.1"
                               className="h-8 text-sm"
-                              value={team.scores?.[contest] || ''} 
+                              value={(() => {
+                                const score = team.scores?.[contest];
+                                if (score === null || score === undefined) return '';
+                                return score;
+                              })()} 
                               onChange={(e) => {
                                 const newScores = { ...(team.scores || {}) };
-                                newScores[contest] = parseFloat(e.target.value) || 0;
-                                onUpdateTeam(stageIndex, gameIndex, teamIndex, { scores: newScores });
+                                const val = e.target.value;
+                                // Разрешаем 0 и пустую строку
+                                if (val === '' || val === null || val === undefined) {
+                                  newScores[contest] = 0;
+                                } else {
+                                  const numVal = parseFloat(val);
+                                  newScores[contest] = isNaN(numVal) ? 0 : numVal;
+                                }
+                                
+                                // Автоматически вычисляем сумму
+                                const total = game.contests.reduce((acc, c) => {
+                                  const score = newScores[c] ?? 0;
+                                  return acc + (typeof score === 'number' ? score : 0);
+                                }, 0);
+                                
+                                onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
+                                  scores: newScores,
+                                  total: total
+                                });
                               }}
                             />
                           </div>
@@ -861,20 +919,31 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     }
     const contestName = prompt('Введите название конкурса:');
     if (contestName && contestName.trim()) {
+      const trimmedContestName = contestName.trim();
       newData.stages[stageIndex].games[gameIndex].contests = [
         ...newData.stages[stageIndex].games[gameIndex].contests,
-        contestName.trim()
+        trimmedContestName
       ];
-      // Добавляем поле scores для всех команд, если его еще нет
+      // Добавляем поле scores для всех команд и пересчитываем total
       if (newData.stages[stageIndex].games[gameIndex].teams) {
+        const allContests = newData.stages[stageIndex].games[gameIndex].contests;
         newData.stages[stageIndex].games[gameIndex].teams = 
-          newData.stages[stageIndex].games[gameIndex].teams.map(team => ({
-            ...team,
-            scores: {
+          newData.stages[stageIndex].games[gameIndex].teams.map(team => {
+            const newScores = {
               ...(team.scores || {}),
-              [contestName.trim()]: 0
-            }
-          }));
+              [trimmedContestName]: 0
+            };
+            // Пересчитываем total
+            const total = allContests.reduce((acc, c) => {
+              const score = newScores[c] ?? 0;
+              return acc + (typeof score === 'number' ? score : 0);
+            }, 0);
+            return {
+              ...team,
+              scores: newScores,
+              total: total
+            };
+          });
       }
       onChange(newData);
     }
@@ -889,13 +958,19 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages[stageIndex].games[gameIndex].contests) return;
     newData.stages[stageIndex].games[gameIndex].contests = 
       newData.stages[stageIndex].games[gameIndex].contests.filter(c => c !== contestName);
-    // Удаляем scores для этого конкурса у всех команд
+    // Удаляем scores для этого конкурса у всех команд и пересчитываем total
     if (newData.stages[stageIndex].games[gameIndex].teams) {
+      const remainingContests = newData.stages[stageIndex].games[gameIndex].contests;
       newData.stages[stageIndex].games[gameIndex].teams = 
         newData.stages[stageIndex].games[gameIndex].teams.map(team => {
           const newScores = { ...(team.scores || {}) };
           delete newScores[contestName];
-          return { ...team, scores: newScores };
+          // Пересчитываем total
+          const total = remainingContests.reduce((acc, c) => {
+            const score = newScores[c] ?? 0;
+            return acc + (typeof score === 'number' ? score : 0);
+          }, 0);
+          return { ...team, scores: newScores, total };
         });
     }
     onChange(newData);
@@ -1060,6 +1135,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
                           onUpdateTeam={updateTeam}
                           sensors={sensors}
                           handleGameDragEnd={handleGameDragEnd}
+                          seasonAllTeams={data.all_teams || []}
                         />
                       </div>
                     );

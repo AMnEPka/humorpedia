@@ -1,24 +1,73 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Award } from 'lucide-react';
+import { Calendar, Users, Award, Video } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import publicApi from '../utils/api';
 
-// Список известных конкурсов КВН для фильтрации из жюри
-const KNOWN_CONTESTS = [
-  'приветствие', 'разминка', 'добро пожаловаться', 'капитанский', 'домашнее задание',
-  'стэм', 'бриз', 'музыкальный конкурс', 'музыкальное домашнее задание', 'ситуация',
-  'знакомый сюжет', 'биатлон', 'музыкальный фристайл', 'капитанский конкурс',
-  'домашнее задание', 'музыкальный', 'фристайл', 'импровизация', 'одна песня',
-  'конкурс одной песни', 'конкурс капитанов', 'конкурс приветствие'
-];
+// Функция для очистки названия команды от города в скобках в конце
+// Удаляет только скобки с городом (без кавычек и других специальных символов)
+function cleanTeamName(teamName) {
+  if (!teamName) return '';
+  let cleaned = teamName.trim();
+  // Убираем последние скобки в конце строки, но только если они не содержат кавычек
+  // Это позволяет сохранить скобки как часть названия (например, "НГУ («В джазе только девушки»)")
+  const lastParenMatch = cleaned.match(/\s+\(([^)]*)\)\s*$/);
+  if (lastParenMatch) {
+    const content = lastParenMatch[1];
+    // Если в скобках нет кавычек и других специальных символов - это скорее всего город
+    if (!content.includes('«') && !content.includes('»') && !content.includes('"') && !content.includes("'")) {
+      cleaned = cleaned.replace(/\s+\([^)]*\)\s*$/, '').trim();
+    }
+  }
+  return cleaned;
+}
 
 export function GameTable({ game, stageName = '' }) {
   const { name, date, date_raw, teams = [], contests = [], jury = [], host = '', notes = '', is_cancelled = false, video_links = [] } = game;
+  const [teamNames, setTeamNames] = useState({}); // Кэш названий команд по slug
   
   // Определяем, является ли это финалом
   const isFinal = stageName.toLowerCase().includes('финал') && !stageName.toLowerCase().includes('1/8') && 
                   !stageName.toLowerCase().includes('1/4') && !stageName.toLowerCase().includes('1/2') &&
                   !stageName.toLowerCase().includes('четверть') && !stageName.toLowerCase().includes('полу');
+
+  // Загружаем названия команд из базы данных по их slug
+  useEffect(() => {
+    const loadTeamNames = async () => {
+      const slugsToLoad = teams
+        .filter(team => team.team_slug && !teamNames[team.team_slug])
+        .map(team => team.team_slug);
+      
+      if (slugsToLoad.length === 0) return;
+      
+      const namesMap = { ...teamNames };
+      
+      // Загружаем команды параллельно
+      await Promise.all(
+        slugsToLoad.map(async (slug) => {
+          try {
+            const res = await publicApi.getTeam(slug);
+            const teamData = res.data;
+            // Используем name или title из базы данных
+            const teamName = teamData.name || teamData.title || '';
+            namesMap[slug] = teamName;
+          } catch (err) {
+            // Если команда не найдена, используем название из данных игры
+            const team = teams.find(t => t.team_slug === slug);
+            if (team) {
+              namesMap[slug] = team.team_name || '';
+            }
+          }
+        })
+      );
+      
+      setTeamNames(namesMap);
+    };
+    
+    loadTeamNames();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teams]);
 
   if (is_cancelled) {
     return (
@@ -128,15 +177,12 @@ export function GameTable({ game, stageName = '' }) {
                             to={`/kvn/teams/${team.team_slug}`}
                             className={`font-medium hover:underline ${textColor}`}
                           >
-                            {/* Показываем полное название с городом: "Команда (Город)" */}
-                            {team.team_name || team.team_slug}
-                            {team.city && !team.team_name.includes('(') && ` (${team.city})`}
+                            {/* Используем название из базы данных, если оно загружено, иначе из данных игры */}
+                            {teamNames[team.team_slug] || cleanTeamName(team.team_name) || team.team_slug}
                           </Link>
                         ) : (
                           <span className={`font-medium ${textColor}`}>
-                            {/* Показываем полное название с городом */}
-                            {team.team_name}
-                            {team.city && !team.team_name.includes('(') && ` (${team.city})`}
+                            {cleanTeamName(team.team_name)}
                           </span>
                         )}
                         {isWinner && (

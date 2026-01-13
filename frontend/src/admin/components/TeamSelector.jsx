@@ -17,6 +17,39 @@ import {
 } from '@/components/ui/popover';
 import { contentApi } from '../utils/api';
 
+// Вспомогательная функция для извлечения города из facts
+// Поддерживает поля "Город", "город", "Города", "города"
+// Обрабатывает случаи, когда городов несколько (разделенных новой строкой или запятой)
+// Удаляет HTML-теги (особенно <br>) из значения
+function getCityFromFacts(facts) {
+  if (!facts || typeof facts !== 'object') return '';
+  
+  // Ищем город по разным вариантам названия поля
+  const cityValue = facts['Город'] || facts['город'] || facts['Города'] || facts['города'] || '';
+  
+  if (!cityValue) return '';
+  
+  // Если это строка, обрабатываем возможные разделители
+  if (typeof cityValue === 'string') {
+    // Сначала удаляем HTML-теги (особенно <br>, <br/>, <br />)
+    let cleaned = cityValue
+      .replace(/<br\s*\/?>/gi, '\n') // Заменяем <br> на новую строку
+      .replace(/<[^>]+>/g, '') // Удаляем все остальные HTML-теги
+      .trim();
+    
+    // Разделяем по новой строке, запятой или слэшу
+    const cities = cleaned
+      .split(/[\n,;/]/)
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
+    
+    // Возвращаем все города через запятую
+    return cities.length > 0 ? cities.join(', ') : '';
+  }
+  
+  return String(cityValue).trim();
+}
+
 export default function TeamSelector({ 
   value = [], 
   onChange, 
@@ -57,10 +90,8 @@ export default function TeamSelector({
           try {
             const res = await contentApi.getTeam(teamId);
             const teamData = res.data;
-            // Извлекаем город из facts["Город"]
-            const cityFromFacts = teamData.facts && typeof teamData.facts === 'object' 
-              ? (teamData.facts['Город'] || teamData.facts['город'] || '')
-              : '';
+            // Извлекаем город из facts
+            const cityFromFacts = getCityFromFacts(teamData.facts);
             teams.push({
               id: teamData._id || teamData.id || teamId,
               slug: teamData.slug || teamSlug,
@@ -102,18 +133,38 @@ export default function TeamSelector({
     const searchTeams = async () => {
       setLoading(true);
       try {
+        const searchTerm = search.trim();
         const res = await contentApi.listTeams({ 
-          search: search.trim(),
+          search: searchTerm,
           limit: 20,
           team_type: 'kvn' // По умолчанию ищем команды КВН
         });
         // Добавляем город из facts для каждой команды
-        const teamsWithCity = (res.data.items || []).map(team => ({
+        let teamsWithCity = (res.data.items || []).map(team => ({
           ...team,
-          city: team.facts && typeof team.facts === 'object' 
-            ? (team.facts['Город'] || team.facts['город'] || '')
-            : ''
+          city: getCityFromFacts(team.facts)
         }));
+        
+        // Если поиск не дал результатов, пробуем найти по slug напрямую
+        if (teamsWithCity.length === 0 && searchTerm.length >= 2) {
+          // Нормализуем поисковый запрос (убираем пробелы, приводим к нижнему регистру)
+          const normalizedSearch = searchTerm.toLowerCase().replace(/\s+/g, '');
+          try {
+            // Пробуем получить команду по slug
+            const teamBySlug = await contentApi.getTeam(normalizedSearch);
+            if (teamBySlug.data) {
+              const teamData = teamBySlug.data;
+              const cityFromFacts = getCityFromFacts(teamData.facts);
+              teamsWithCity = [{
+                ...teamData,
+                city: cityFromFacts
+              }];
+            }
+          } catch (slugErr) {
+            // Игнорируем ошибку, если команда не найдена по slug
+          }
+        }
+        
         setSearchResults(teamsWithCity);
       } catch (err) {
         console.error('Error searching teams:', err);
@@ -140,31 +191,75 @@ export default function TeamSelector({
     }
   );
 
-  const addTeam = useCallback((team) => {
+  const addTeam = useCallback(async (team) => {
     if (!team) return;
     
-    // Извлекаем город из team (может быть уже добавлен при поиске)
-    const teamCity = team.city || '';
+    // Если у команды есть slug, загружаем полную информацию из базы данных
+    // чтобы получить актуальное название и город
+    const teamSlug = team.slug || team.id;
     
-    // Формат: {slug, name, city} или просто slug
-    const teamValue = team.id || team.slug 
-      ? { slug: team.slug || team.id, name: team.name || team.title, city: teamCity }
-      : (team.name || team.title);
-    
-    // Проверяем, не добавлена ли уже команда
-    const isAlreadyAdded = value.some(v => {
-      if (typeof v === 'object' && typeof teamValue === 'object') {
-        return (v.slug || v.id) === (teamValue.slug || teamValue.id);
-      }
-      if (typeof v === 'string' && typeof teamValue === 'string') {
-        return v === teamValue;
-      }
-      return false;
-    });
+    if (teamSlug) {
+      try {
+        // Загружаем полную информацию о команде из базы данных
+        const res = await contentApi.getTeam(teamSlug);
+        const teamData = res.data;
+        // Извлекаем город из facts
+        const cityFromFacts = getCityFromFacts(teamData.facts);
+        // Используем полное название из базы данных
+        const teamName = teamData.name || teamData.title || team.name || team.title || '';
+        
+        const teamValue = {
+          slug: teamData.slug || teamSlug,
+          name: teamName,
+          city: cityFromFacts || ''
+        };
+        
+        // Проверяем, не добавлена ли уже команда
+        const isAlreadyAdded = value.some(v => {
+          if (typeof v === 'object') {
+            return (v.slug || v.id) === teamValue.slug;
+          }
+          return v === teamValue.slug;
+        });
 
-    if (!isAlreadyAdded) {
-      onChange([...value, teamValue]);
+        if (!isAlreadyAdded) {
+          onChange([...value, teamValue]);
+        }
+      } catch (err) {
+        // Если команда не найдена в базе, используем данные из поиска
+        const teamCity = team.city || '';
+        const teamValue = {
+          slug: teamSlug,
+          name: team.name || team.title || '',
+          city: teamCity
+        };
+        
+        const isAlreadyAdded = value.some(v => {
+          if (typeof v === 'object') {
+            return (v.slug || v.id) === teamValue.slug;
+          }
+          return v === teamValue.slug;
+        });
+
+        if (!isAlreadyAdded) {
+          onChange([...value, teamValue]);
+        }
+      }
+    } else {
+      // Команда без slug (текстовая)
+      const teamValue = team.name || team.title || '';
+      const isAlreadyAdded = value.some(v => {
+        if (typeof v === 'string') {
+          return v === teamValue;
+        }
+        return false;
+      });
+
+      if (!isAlreadyAdded) {
+        onChange([...value, teamValue]);
+      }
     }
+    
     setSearch('');
     setOpen(false);
   }, [value, onChange]);
