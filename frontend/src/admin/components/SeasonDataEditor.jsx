@@ -33,6 +33,7 @@ import {
   Copy, ArrowRight, MoreHorizontal 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDecimalTrim, roundTo } from '@/utils/number';
 import TeamSelector from './TeamSelector';
 import GameTeamSelector from './GameTeamSelector';
 import RichTextEditor from './RichTextEditor';
@@ -53,6 +54,10 @@ function SortableStage({
   onDeleteGame,
   onAddContest,
   onRemoveContest,
+  onRenameContest,
+  onMoveContest,
+  onCopyContests,
+  contestCopySources = [],
   onAddTeam,
   onRemoveTeam,
   onUpdateTeam,
@@ -118,13 +123,17 @@ function SortableStage({
               onDeleteGame={onDeleteGame}
               onAddContest={onAddContest}
               onRemoveContest={onRemoveContest}
-                          onAddTeam={onAddTeam}
-                          onRemoveTeam={onRemoveTeam}
-                          onUpdateTeam={onUpdateTeam}
-                          sensors={sensors}
-                          handleGameDragEnd={handleGameDragEnd}
-                          seasonAllTeams={seasonAllTeams}
-                        />
+              onRenameContest={onRenameContest}
+              onMoveContest={onMoveContest}
+              onCopyContests={onCopyContests}
+              contestCopySources={contestCopySources}
+              onAddTeam={onAddTeam}
+              onRemoveTeam={onRemoveTeam}
+              onUpdateTeam={onUpdateTeam}
+              sensors={sensors}
+              handleGameDragEnd={handleGameDragEnd}
+              seasonAllTeams={seasonAllTeams}
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -133,7 +142,26 @@ function SortableStage({
 }
 
 // Sortable Game Component
-function SortableGame({ game, gameIndex, stageIndex, onUpdate, onDelete, onMove, onCopy, allStages, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam, seasonAllTeams = [] }) {
+function SortableGame({ 
+  game, 
+  gameIndex, 
+  stageIndex, 
+  onUpdate, 
+  onDelete, 
+  onMove, 
+  onCopy, 
+  allStages, 
+  onAddContest, 
+  onRemoveContest,
+  onRenameContest,
+  onMoveContest,
+  onCopyContests,
+  contestCopySources = [],
+  onAddTeam, 
+  onRemoveTeam, 
+  onUpdateTeam, 
+  seasonAllTeams = [] 
+}) {
   const {
     attributes,
     listeners,
@@ -229,6 +257,10 @@ function SortableGame({ game, gameIndex, stageIndex, onUpdate, onDelete, onMove,
           onUpdate={onUpdate}
           onAddContest={onAddContest}
           onRemoveContest={onRemoveContest}
+          onRenameContest={onRenameContest}
+          onMoveContest={onMoveContest}
+          onCopyContests={onCopyContests}
+          contestCopySources={contestCopySources}
           onAddTeam={onAddTeam}
           onRemoveTeam={onRemoveTeam}
           onUpdateTeam={onUpdateTeam}
@@ -253,6 +285,10 @@ function StageContent({
   onDeleteGame,
   onAddContest,
   onRemoveContest,
+  onRenameContest,
+  onMoveContest,
+  onCopyContests,
+  contestCopySources = [],
   onAddTeam,
   onRemoveTeam,
   onUpdateTeam,
@@ -359,6 +395,10 @@ function StageContent({
                     allStages={allStages}
                     onAddContest={onAddContest}
                     onRemoveContest={onRemoveContest}
+                    onRenameContest={onRenameContest}
+                    onMoveContest={onMoveContest}
+                    onCopyContests={onCopyContests}
+                    contestCopySources={contestCopySources.filter(s => s.value !== `${stageIndex}:${gameIndex}`)}
                     onAddTeam={onAddTeam}
                     onRemoveTeam={onRemoveTeam}
                     onUpdateTeam={onUpdateTeam}
@@ -377,7 +417,22 @@ function StageContent({
 }
 
 // Game Content Component
-function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRemoveContest, onAddTeam, onRemoveTeam, onUpdateTeam, seasonAllTeams = [] }) {
+function GameContent({ 
+  game, 
+  gameIndex, 
+  stageIndex, 
+  onUpdate, 
+  onAddContest, 
+  onRemoveContest,
+  onRenameContest,
+  onMoveContest,
+  onCopyContests,
+  contestCopySources = [],
+  onAddTeam, 
+  onRemoveTeam, 
+  onUpdateTeam, 
+  seasonAllTeams = [] 
+}) {
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
   };
@@ -432,19 +487,70 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
             Добавить конкурс
           </Button>
         </div>
+        {contestCopySources.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Скопировать из игры:</Label>
+            <select
+              className="h-8 rounded-md border bg-background px-2 text-sm"
+              defaultValue=""
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) return;
+                const [srcStage, srcGame] = val.split(':').map(v => parseInt(v, 10));
+                if (Number.isFinite(srcStage) && Number.isFinite(srcGame)) {
+                  onCopyContests(stageIndex, gameIndex, srcStage, srcGame);
+                  e.target.value = '';
+                }
+              }}
+            >
+              <option value="">— выбрать —</option>
+              {contestCopySources.map(src => (
+                <option key={src.key} value={src.value}>{src.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
         {game.contests && game.contests.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {game.contests.map((contest, contestIndex) => (
-              <Badge key={contestIndex} variant="secondary" className="pr-1">
-                {contest}
-                <button
+              <div key={`contest-${contestIndex}`} className="flex items-center gap-2">
+                <Input
+                  className="h-8"
+                  value={contest}
+                  onChange={(e) => onRenameContest(stageIndex, gameIndex, contestIndex, e.target.value)}
+                  placeholder="Название конкурса"
+                />
+                <Button
                   type="button"
-                  onClick={() => onRemoveContest(stageIndex, gameIndex, contest)}
-                  className="ml-1 hover:text-destructive"
+                  size="icon"
+                  variant="outline"
+                  disabled={contestIndex === 0}
+                  onClick={() => onMoveContest(stageIndex, gameIndex, contestIndex, contestIndex - 1)}
+                  title="Вверх"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  disabled={contestIndex === (game.contests.length - 1)}
+                  onClick={() => onMoveContest(stageIndex, gameIndex, contestIndex, contestIndex + 1)}
+                  title="Вниз"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => onRemoveContest(stageIndex, gameIndex, contest)}
+                  title="Удалить"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
           </div>
         )}
@@ -513,7 +619,7 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                       <Label>Итого (автосумма)</Label>
                       <Input 
                         type="number"
-                        step="0.1"
+                        step="0.01"
                         value={(() => {
                           // Автоматически вычисляем сумму баллов за все конкурсы
                           if (game.contests && game.contests.length > 0 && team.scores) {
@@ -521,15 +627,16 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                               const score = team.scores[contest];
                               return acc + (typeof score === 'number' ? score : 0);
                             }, 0);
-                            return sum.toFixed(1);
+                            return formatDecimalTrim(roundTo(sum, 2), 2);
                           }
-                          return team.total || '';
+                          if (team.total === null || team.total === undefined) return '';
+                          return formatDecimalTrim(roundTo(team.total, 2), 2);
                         })()}
                         onChange={(e) => {
                           // Позволяем вручную изменить, если нужно
                           const manualTotal = parseFloat(e.target.value);
                           if (!isNaN(manualTotal)) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: manualTotal });
+                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
                           }
                         }}
                         readOnly={game.contests && game.contests.length > 0}
@@ -574,12 +681,12 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                             <Label className="text-xs w-24 truncate">{contest}:</Label>
                             <Input 
                               type="number"
-                              step="0.1"
+                              step="0.01"
                               className="h-8 text-sm"
                               value={(() => {
                                 const score = team.scores?.[contest];
                                 if (score === null || score === undefined) return '';
-                                return score;
+                                return formatDecimalTrim(roundTo(score, 2), 2);
                               })()} 
                               onChange={(e) => {
                                 const newScores = { ...(team.scores || {}) };
@@ -589,7 +696,7 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                                   newScores[contest] = 0;
                                 } else {
                                   const numVal = parseFloat(val);
-                                  newScores[contest] = isNaN(numVal) ? 0 : numVal;
+                                  newScores[contest] = isNaN(numVal) ? 0 : roundTo(numVal, 2);
                                 }
                                 
                                 // Автоматически вычисляем сумму
@@ -600,7 +707,7 @@ function GameContent({ game, gameIndex, stageIndex, onUpdate, onAddContest, onRe
                                 
                                 onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
                                   scores: newScores,
-                                  total: total
+                                  total: roundTo(total, 2)
                                 });
                               }}
                             />
@@ -648,6 +755,22 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     (data.stages || []).map((_, idx) => `stage-${idx}`),
     [data.stages]
   );
+
+  const contestCopySources = useMemo(() => {
+    const sources = [];
+    (data.stages || []).forEach((stage, sIdx) => {
+      (stage.games || []).forEach((game, gIdx) => {
+        const gameName = game?.name ? String(game.name) : `Игра ${gIdx + 1}`;
+        const stageName = stage?.name ? String(stage.name) : `Стадия ${sIdx + 1}`;
+        sources.push({
+          key: `${sIdx}:${gIdx}`,
+          value: `${sIdx}:${gIdx}`,
+          label: `${stageName} — ${gameName}`
+        });
+      });
+    });
+    return sources;
+  }, [data.stages]);
 
   // Drag and drop для стадий
   const handleStageDragEnd = useCallback((event) => {
@@ -941,12 +1064,102 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
             return {
               ...team,
               scores: newScores,
-              total: total
+              total: roundTo(total, 2)
             };
           });
       }
       onChange(newData);
     }
+  };
+
+  const moveContest = (stageIndex, gameIndex, fromIndex, toIndex) => {
+    const newData = { ...data };
+    if (!newData.stages) return;
+    newData.stages = [...newData.stages];
+    if (!newData.stages[stageIndex]?.games) return;
+    newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
+    newData.stages[stageIndex].games = [...newData.stages[stageIndex].games];
+    const gameRef = { ...newData.stages[stageIndex].games[gameIndex] };
+    const contests = [...(gameRef.contests || [])];
+    if (fromIndex < 0 || fromIndex >= contests.length) return;
+    if (toIndex < 0 || toIndex >= contests.length) return;
+    const [moved] = contests.splice(fromIndex, 1);
+    contests.splice(toIndex, 0, moved);
+    gameRef.contests = contests;
+    newData.stages[stageIndex].games[gameIndex] = gameRef;
+    onChange(newData);
+  };
+
+  const renameContest = (stageIndex, gameIndex, contestIndex, newNameRaw) => {
+    const newName = (newNameRaw || '').trim();
+    const newData = { ...data };
+    if (!newData.stages) return;
+    newData.stages = [...newData.stages];
+    if (!newData.stages[stageIndex]?.games) return;
+    newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
+    newData.stages[stageIndex].games = [...newData.stages[stageIndex].games];
+    const gameRef = { ...newData.stages[stageIndex].games[gameIndex] };
+    const contests = [...(gameRef.contests || [])];
+    if (contestIndex < 0 || contestIndex >= contests.length) return;
+    const oldName = contests[contestIndex];
+    if (!newName || newName === oldName) return;
+    if (contests.includes(newName)) {
+      alert('Такой конкурс уже есть в списке.');
+      return;
+    }
+    contests[contestIndex] = newName;
+    gameRef.contests = contests;
+
+    if (Array.isArray(gameRef.teams)) {
+      gameRef.teams = gameRef.teams.map(team => {
+        const scores = { ...(team.scores || {}) };
+        if (Object.prototype.hasOwnProperty.call(scores, oldName)) {
+          scores[newName] = scores[oldName];
+          delete scores[oldName];
+        } else if (!Object.prototype.hasOwnProperty.call(scores, newName)) {
+          scores[newName] = 0;
+        }
+        const total = contests.reduce((acc, c) => {
+          const score = scores[c] ?? 0;
+          return acc + (typeof score === 'number' ? score : 0);
+        }, 0);
+        return { ...team, scores, total: roundTo(total, 2) };
+      });
+    }
+
+    newData.stages[stageIndex].games[gameIndex] = gameRef;
+    onChange(newData);
+  };
+
+  const copyContests = (dstStageIndex, dstGameIndex, srcStageIndex, srcGameIndex) => {
+    const sourceGame = data?.stages?.[srcStageIndex]?.games?.[srcGameIndex];
+    if (!sourceGame) return;
+    const sourceContests = Array.isArray(sourceGame.contests) ? sourceGame.contests : [];
+
+    const newData = { ...data };
+    if (!newData.stages) return;
+    newData.stages = [...newData.stages];
+    if (!newData.stages[dstStageIndex]?.games) return;
+    newData.stages[dstStageIndex] = { ...newData.stages[dstStageIndex] };
+    newData.stages[dstStageIndex].games = [...newData.stages[dstStageIndex].games];
+    const dstGame = { ...newData.stages[dstStageIndex].games[dstGameIndex] };
+    dstGame.contests = [...sourceContests];
+
+    if (Array.isArray(dstGame.teams)) {
+      dstGame.teams = dstGame.teams.map(team => {
+        const oldScores = team.scores || {};
+        const scores = {};
+        for (const c of dstGame.contests) {
+          const v = oldScores[c];
+          scores[c] = typeof v === 'number' ? roundTo(v, 2) : 0;
+        }
+        const total = dstGame.contests.reduce((acc, c) => acc + (scores[c] ?? 0), 0);
+        return { ...team, scores, total: roundTo(total, 2) };
+      });
+    }
+
+    newData.stages[dstStageIndex].games[dstGameIndex] = dstGame;
+    onChange(newData);
   };
 
   const removeContest = (stageIndex, gameIndex, contestName) => {
@@ -970,7 +1183,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
             const score = newScores[c] ?? 0;
             return acc + (typeof score === 'number' ? score : 0);
           }, 0);
-          return { ...team, scores: newScores, total };
+          return { ...team, scores: newScores, total: roundTo(total, 2) };
         });
     }
     onChange(newData);
@@ -1130,6 +1343,10 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
                           onDeleteGame={removeGame}
                           onAddContest={addContest}
                           onRemoveContest={removeContest}
+                          onRenameContest={renameContest}
+                          onMoveContest={moveContest}
+                          onCopyContests={copyContests}
+                          contestCopySources={contestCopySources}
                           onAddTeam={addTeamToGame}
                           onRemoveTeam={removeTeamFromGame}
                           onUpdateTeam={updateTeam}

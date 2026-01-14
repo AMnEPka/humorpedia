@@ -4,6 +4,7 @@ import { Calendar, Users, Award, Video } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
+import { formatDecimalTrim } from '@/utils/number';
 
 // Функция для очистки названия команды от города в скобках в конце
 // Удаляет только скобки с городом (без кавычек и других специальных символов)
@@ -195,13 +196,16 @@ export function GameTable({ game, stageName = '' }) {
                     {contests.map((contest, contestIdx) => (
                       <TableCell key={contestIdx} className="text-center">
                         {team.scores && team.scores[contest] !== undefined 
-                          ? team.scores[contest].toFixed(1)
+                          ? formatDecimalTrim(team.scores[contest], 2)
                           : '-'
                         }
                       </TableCell>
                     ))}
                     <TableCell className="text-center font-semibold">
-                      {team.total ? team.total.toFixed(1) : '-'}
+                      {team.total !== null && team.total !== undefined
+                        ? formatDecimalTrim(team.total, 2)
+                        : '-'
+                      }
                     </TableCell>
                     <TableCell>
                       {isPassed && (
