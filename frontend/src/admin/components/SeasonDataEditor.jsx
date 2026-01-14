@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { 
   DndContext, closestCenter, KeyboardSensor, 
   PointerSensor, useSensor, useSensors
@@ -30,13 +30,99 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
-  Copy, ArrowRight, MoreHorizontal 
+  Copy, ArrowRight, MoreHorizontal, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDecimalTrim, roundTo } from '@/utils/number';
 import TeamSelector from './TeamSelector';
 import GameTeamSelector from './GameTeamSelector';
 import RichTextEditor from './RichTextEditor';
+
+// Компонент для ввода баллов с локальным состоянием
+// Синхронизируется с родителем только при потере фокуса
+function ScoreInput({ value, onChange, onBlur, className }) {
+  const [localValue, setLocalValue] = useState(() => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    return String(value);
+  });
+  const isFocusedRef = useRef(false);
+  
+  // Синхронизируем локальное значение с props только когда не в фокусе
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      if (value === null || value === undefined) {
+        setLocalValue('');
+      } else if (typeof value === 'string') {
+        setLocalValue(value);
+      } else {
+        setLocalValue(String(value));
+      }
+    }
+  }, [value]);
+  
+  const handleChange = (e) => {
+    let val = e.target.value;
+    
+    // Заменяем запятую на точку для поддержки русского формата
+    val = val.replace(/,/g, '.');
+    
+    // Удаляем все кроме цифр, точки и минуса
+    let cleaned = val.replace(/[^\d.-]/g, '');
+    
+    // Убираем лишние минусы (оставляем только в начале)
+    if (cleaned.includes('-')) {
+      const firstMinus = cleaned.indexOf('-');
+      cleaned = (firstMinus === 0 ? '-' : '') + cleaned.replace(/-/g, '');
+    }
+    
+    // Ограничиваем одной точкой
+    const dotIndex = cleaned.indexOf('.');
+    if (dotIndex !== -1) {
+      cleaned = cleaned.substring(0, dotIndex + 1) + cleaned.substring(dotIndex + 1).replace(/\./g, '');
+    }
+    
+    setLocalValue(cleaned);
+  };
+  
+  const handleFocus = () => {
+    isFocusedRef.current = true;
+  };
+  
+  const handleBlur = (e) => {
+    isFocusedRef.current = false;
+    
+    let val = localValue;
+    
+    // Очищаем частичный ввод
+    if (val === '' || val === null || val === undefined || val === '-' || val === '.' || val === '-.') {
+      setLocalValue('0');
+      onBlur(0);
+    } else {
+      const numVal = parseFloat(val);
+      if (!isNaN(numVal) && isFinite(numVal)) {
+        const rounded = roundTo(numVal, 2);
+        setLocalValue(String(rounded));
+        onBlur(rounded);
+      } else {
+        setLocalValue('0');
+        onBlur(0);
+      }
+    }
+  };
+  
+  return (
+    <Input 
+      type="text"
+      inputMode="decimal"
+      className={className}
+      value={localValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+    />
+  );
+}
 
 // Sortable Stage Component
 function SortableStage({
@@ -160,7 +246,9 @@ function SortableGame({
   onAddTeam, 
   onRemoveTeam, 
   onUpdateTeam, 
-  seasonAllTeams = [] 
+  seasonAllTeams = [],
+  isExpanded = true,
+  onToggleExpand
 }) {
   const {
     attributes,
@@ -189,6 +277,17 @@ function SortableGame({
                 className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
               >
                 <GripVertical className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
               </button>
               <CardTitle className="text-base">{game.name || `Игра ${gameIndex + 1}`}</CardTitle>
             </div>
@@ -250,7 +349,8 @@ function SortableGame({
             </div>
           </div>
         </CardHeader>
-        <GameContent 
+        {isExpanded && (
+          <GameContent 
           game={game}
           gameIndex={gameIndex}
           stageIndex={stageIndex}
@@ -266,6 +366,7 @@ function SortableGame({
           onUpdateTeam={onUpdateTeam}
           seasonAllTeams={seasonAllTeams}
         />
+        )}
       </Card>
     </div>
   );
@@ -296,8 +397,21 @@ function StageContent({
   handleGameDragEnd,
   seasonAllTeams = []
 }) {
+  const [expandedGames, setExpandedGames] = useState(new Set());
+
   const updateStage = (updates) => {
     onUpdate(stageIndex, updates);
+  };
+
+  const toggleGame = (gameIndex) => {
+    const newExpanded = new Set(expandedGames);
+    const gameKey = `${stageIndex}-${gameIndex}`;
+    if (newExpanded.has(gameKey)) {
+      newExpanded.delete(gameKey);
+    } else {
+      newExpanded.add(gameKey);
+    }
+    setExpandedGames(newExpanded);
   };
 
   const gameIds = (stage.games || []).map((_, idx) => `game-${stageIndex}-${idx}`);
@@ -382,29 +496,35 @@ function StageContent({
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-4">
-                {stage.games.map((game, gameIndex) => (
-                  <SortableGame
-                    key={gameIndex}
-                    game={game}
-                    gameIndex={gameIndex}
-                    stageIndex={stageIndex}
-                    onUpdate={onUpdateGame}
-                    onDelete={onDeleteGame}
-                    onMove={onMoveGame}
-                    onCopy={onCopyGame}
-                    allStages={allStages}
-                    onAddContest={onAddContest}
-                    onRemoveContest={onRemoveContest}
-                    onRenameContest={onRenameContest}
-                    onMoveContest={onMoveContest}
-                    onCopyContests={onCopyContests}
-                    contestCopySources={contestCopySources.filter(s => s.value !== `${stageIndex}:${gameIndex}`)}
-                    onAddTeam={onAddTeam}
-                    onRemoveTeam={onRemoveTeam}
-                    onUpdateTeam={onUpdateTeam}
-                    seasonAllTeams={seasonAllTeams}
-                  />
-                ))}
+                {stage.games.map((game, gameIndex) => {
+                  const gameKey = `${stageIndex}-${gameIndex}`;
+                  const isExpanded = expandedGames.has(gameKey);
+                  return (
+                    <SortableGame
+                      key={gameIndex}
+                      game={game}
+                      gameIndex={gameIndex}
+                      stageIndex={stageIndex}
+                      onUpdate={onUpdateGame}
+                      onDelete={onDeleteGame}
+                      onMove={onMoveGame}
+                      onCopy={onCopyGame}
+                      allStages={allStages}
+                      onAddContest={onAddContest}
+                      onRemoveContest={onRemoveContest}
+                      onRenameContest={onRenameContest}
+                      onMoveContest={onMoveContest}
+                      onCopyContests={onCopyContests}
+                      contestCopySources={contestCopySources.filter(s => s.value !== `${stageIndex}:${gameIndex}`)}
+                      onAddTeam={onAddTeam}
+                      onRemoveTeam={onRemoveTeam}
+                      onUpdateTeam={onUpdateTeam}
+                      seasonAllTeams={seasonAllTeams}
+                      isExpanded={isExpanded}
+                      onToggleExpand={() => toggleGame(gameIndex)}
+                    />
+                  );
+                })}
               </div>
             </SortableContext>
           </DndContext>
@@ -618,8 +738,8 @@ function GameContent({
                     <div className="space-y-2">
                       <Label>Итого (автосумма)</Label>
                       <Input 
-                        type="number"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={(() => {
                           // Автоматически вычисляем сумму баллов за все конкурсы
                           if (game.contests && game.contests.length > 0 && team.scores) {
@@ -634,7 +754,22 @@ function GameContent({
                         })()}
                         onChange={(e) => {
                           // Позволяем вручную изменить, если нужно
-                          const manualTotal = parseFloat(e.target.value);
+                          let val = e.target.value.replace(',', '.');
+                          // Разрешаем только цифры, точку и минус в начале
+                          if (val && !/^-?\d*\.?\d*$/.test(val)) {
+                            return; // Игнорируем недопустимые символы
+                          }
+                          const manualTotal = parseFloat(val);
+                          if (!isNaN(manualTotal)) {
+                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
+                          } else if (val === '') {
+                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: 0 });
+                          }
+                        }}
+                        onBlur={(e) => {
+                          // При потере фокуса округляем значение
+                          let val = e.target.value.replace(',', '.');
+                          const manualTotal = parseFloat(val);
                           if (!isNaN(manualTotal)) {
                             onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
                           }
@@ -679,30 +814,20 @@ function GameContent({
                         {game.contests.map((contest) => (
                           <div key={contest} className="flex items-center gap-2">
                             <Label className="text-xs w-24 truncate">{contest}:</Label>
-                            <Input 
-                              type="number"
-                              step="0.01"
+                            <ScoreInput 
                               className="h-8 text-sm"
-                              value={(() => {
-                                const score = team.scores?.[contest];
-                                if (score === null || score === undefined) return '';
-                                return formatDecimalTrim(roundTo(score, 2), 2);
-                              })()} 
-                              onChange={(e) => {
+                              value={team.scores?.[contest]}
+                              onBlur={(numValue) => {
                                 const newScores = { ...(team.scores || {}) };
-                                const val = e.target.value;
-                                // Разрешаем 0 и пустую строку
-                                if (val === '' || val === null || val === undefined) {
-                                  newScores[contest] = 0;
-                                } else {
-                                  const numVal = parseFloat(val);
-                                  newScores[contest] = isNaN(numVal) ? 0 : roundTo(numVal, 2);
-                                }
+                                newScores[contest] = numValue;
                                 
-                                // Автоматически вычисляем сумму
+                                // Пересчитываем total
                                 const total = game.contests.reduce((acc, c) => {
-                                  const score = newScores[c] ?? 0;
-                                  return acc + (typeof score === 'number' ? score : 0);
+                                  const score = newScores[c];
+                                  if (typeof score === 'number' && isFinite(score)) {
+                                    return acc + score;
+                                  }
+                                  return acc;
                                 }, 0);
                                 
                                 onUpdateTeam(stageIndex, gameIndex, teamIndex, { 

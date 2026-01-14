@@ -281,89 +281,134 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       )}
 
       {/* Информационная таблица сезона */}
-      {seasonData.metadata && Object.keys(seasonData.metadata).length > 0 && (
-        <div className="mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <Table>
-                <TableBody>
-                  {seasonData.season_number > 0 && (
-                    <TableRow>
-                      <TableCell className="font-medium bg-gray-50 w-[200px]">Сезон</TableCell>
-                      <TableCell>{seasonData.season_number}</TableCell>
-                    </TableRow>
-                  )}
-                  {all_teams.length > 0 && (
-                    <TableRow>
-                      <TableCell className="font-medium bg-gray-50">Количество команд</TableCell>
-                      <TableCell>{all_teams.length}</TableCell>
-                    </TableRow>
-                  )}
-                  {stages.length > 0 && (
-                    <TableRow>
-                      <TableCell className="font-medium bg-gray-50">Количество игр</TableCell>
-                      <TableCell>
-                        {stages.reduce((sum, stage) => sum + (stage.games?.length || 0), 0)}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {hostsList.length > 0 && (
-                    <TableRow>
-                      <TableCell className="font-medium bg-gray-50">Ведущий</TableCell>
-                      <TableCell>
-                        {hostsList.map((host, idx) => (
-                          <span key={idx}>
-                            {host}
-                            {idx < hostsList.length - 1 && ', '}
-                          </span>
-                        ))}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {editors.length > 0 && (
-                    <TableRow>
-                      <TableCell className="font-medium bg-gray-50">Редактор</TableCell>
-                      <TableCell>
-                        {editors.map((editor, idx) => (
-                          <span key={idx}>
-                            {editor}
-                            {idx < editors.length - 1 && ', '}
-                          </span>
-                        ))}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {winners.length > 0 && (
-                    <TableRow>
-                      <TableCell className="font-medium bg-gray-50">Чемпионы</TableCell>
-                      <TableCell>
-                        {winners.map((winner, idx) => {
-                          // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
-                          const winnerName = typeof winner === 'string' ? winner : winner.name;
-                          const winnerSlug = typeof winner === 'string' ? null : winner.slug;
+      {(() => {
+        // Приоритет: используем facts из админки, если есть, иначе используем данные из seasonData
+        const facts = season?.facts || {};
+        const hasFacts = facts && Object.keys(facts).length > 0;
+        const hasMetadata = seasonData.metadata && Object.keys(seasonData.metadata).length > 0;
+        const hasSeasonData = seasonData.season_number > 0 || all_teams.length > 0 || stages.length > 0 || hostsList.length > 0 || editors.length > 0 || winners.length > 0;
+        
+        if (!hasFacts && !hasSeasonData) return null;
+        
+        // Функция для проверки, содержит ли строка HTML
+        const containsHTML = (str) => {
+          if (typeof str !== 'string') return false;
+          return /<[a-z][\s\S]*>/i.test(str);
+        };
+        
+        return (
+          <div className="mb-8">
+            <Card>
+              <CardContent className="pt-6">
+                <Table>
+                  <TableBody>
+                    {hasFacts ? (
+                      // Используем данные из facts (редактор в админке)
+                      Object.entries(facts)
+                        .filter(([key, value]) => {
+                          if (!key) return false;
+                          const valueStr = String(value || '').trim();
+                          return valueStr.length > 0;
+                        })
+                        .map(([key, value]) => {
+                          const valueStr = String(value).trim();
                           
                           return (
-                            <span key={idx}>
-                              {winnerSlug ? (
-                                <Link to={`/kvn/teams/${winnerSlug}`} className="text-blue-600 hover:underline">
-                                  {winnerName}
-                                </Link>
-                              ) : (
-                                winnerName
-                              )}
-                              {idx < winners.length - 1 && ', '}
-                            </span>
+                            <TableRow key={key}>
+                              <TableCell className="font-medium bg-gray-50 w-[200px]">{key}</TableCell>
+                              <TableCell>
+                                {containsHTML(valueStr) ? (
+                                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: valueStr }} />
+                                ) : (
+                                  valueStr
+                                )}
+                              </TableCell>
+                            </TableRow>
                           );
-                        })}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                        })
+                    ) : (
+                      // Fallback: используем данные из seasonData (старая логика)
+                      <>
+                        {seasonData.season_number > 0 && (
+                          <TableRow>
+                            <TableCell className="font-medium bg-gray-50 w-[200px]">Сезон</TableCell>
+                            <TableCell>{seasonData.season_number}</TableCell>
+                          </TableRow>
+                        )}
+                        {all_teams.length > 0 && (
+                          <TableRow>
+                            <TableCell className="font-medium bg-gray-50">Количество команд</TableCell>
+                            <TableCell>{all_teams.length}</TableCell>
+                          </TableRow>
+                        )}
+                        {stages.length > 0 && (
+                          <TableRow>
+                            <TableCell className="font-medium bg-gray-50">Количество игр</TableCell>
+                            <TableCell>
+                              {stages.reduce((sum, stage) => sum + (stage.games?.length || 0), 0)}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {hostsList.length > 0 && (
+                          <TableRow>
+                            <TableCell className="font-medium bg-gray-50">Ведущий</TableCell>
+                            <TableCell>
+                              {hostsList.map((host, idx) => (
+                                <span key={idx}>
+                                  {host}
+                                  {idx < hostsList.length - 1 && ', '}
+                                </span>
+                              ))}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {editors.length > 0 && (
+                          <TableRow>
+                            <TableCell className="font-medium bg-gray-50">Редактор</TableCell>
+                            <TableCell>
+                              {editors.map((editor, idx) => (
+                                <span key={idx}>
+                                  {editor}
+                                  {idx < editors.length - 1 && ', '}
+                                </span>
+                              ))}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {winners.length > 0 && (
+                          <TableRow>
+                            <TableCell className="font-medium bg-gray-50">Чемпионы</TableCell>
+                            <TableCell>
+                              {winners.map((winner, idx) => {
+                                // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
+                                const winnerName = typeof winner === 'string' ? winner : winner.name;
+                                const winnerSlug = typeof winner === 'string' ? null : winner.slug;
+                                
+                                return (
+                                  <span key={idx}>
+                                    {winnerSlug ? (
+                                      <Link to={`/kvn/teams/${winnerSlug}`} className="text-blue-600 hover:underline">
+                                        {winnerName}
+                                      </Link>
+                                    ) : (
+                                      winnerName
+                                    )}
+                                    {idx < winners.length - 1 && ', '}
+                                  </span>
+                                );
+                              })}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Intro HTML (текст до результатов) - базовая информация, должна быть вверху */}
       {intro_html && (
