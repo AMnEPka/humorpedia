@@ -144,31 +144,33 @@ export default function KVNEditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/kvn')}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">{isNew ? 'Новая страница КВН' : kvn.name || 'Редактирование'}</h1>
-            {!isNew && <p className="text-sm text-muted-foreground">/{kvn.full_path || kvn.slug}</p>}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b pb-4 pt-4 -mx-6 px-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/kvn')}><ArrowLeft className="h-5 w-5" /></Button>
+            <div>
+              <h1 className="text-2xl font-bold">{isNew ? 'Новая страница КВН' : kvn.name || 'Редактирование'}</h1>
+              {!isNew && <p className="text-sm text-muted-foreground">/{kvn.full_path || kvn.slug}</p>}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isNew && kvn.full_path && (
-            <Button variant="outline" onClick={() => window.open(`/${kvn.full_path}`, '_blank')}>
-              <ExternalLink className="mr-2 h-4 w-4" />Предпросмотр
+          <div className="flex items-center gap-2">
+            {!isNew && kvn.full_path && (
+              <Button variant="outline" onClick={() => window.open(`/${kvn.full_path}`, '_blank')}>
+                <ExternalLink className="mr-2 h-4 w-4" />Предпросмотр
+              </Button>
+            )}
+            <Select value={kvn.status} onValueChange={(v) => setKvn(p => ({ ...p, status: v }))}>
+              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Черновик</SelectItem>
+                <SelectItem value="published">Опубликовать</SelectItem>
+                <SelectItem value="archived">В архив</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Сохранить
             </Button>
-          )}
-          <Select value={kvn.status} onValueChange={(v) => setKvn(p => ({ ...p, status: v }))}>
-            <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Черновик</SelectItem>
-              <SelectItem value="published">Опубликовать</SelectItem>
-              <SelectItem value="archived">В архив</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Сохранить
-          </Button>
+          </div>
         </div>
       </div>
 
