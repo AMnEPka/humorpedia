@@ -15,12 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from '@/components/ui/accordion';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,34 +162,40 @@ function SortableStage({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Accordion 
-        type="single" 
-        collapsible
-        value={isExpanded ? `stage-${stageIndex}` : undefined}
-        onValueChange={onToggle}
-      >
-        <AccordionItem value={`stage-${stageIndex}`}>
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex items-center justify-between w-full pr-4">
-              <div className="flex items-center gap-2 flex-1">
-                <button
-                  {...attributes}
-                  {...listeners}
-                  className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <GripVertical className="h-5 w-5" />
-                </button>
-                <div>
-                  <span className="font-semibold">{stage.name || `Стадия ${stageIndex + 1}`}</span>
-                  <Badge variant="outline" className="ml-2">
-                    {stage.games?.length || 0} игр
-                  </Badge>
-                </div>
+      <Card className="bg-white">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1">
+              <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={onToggle}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
+                )}
+              </button>
+              <div>
+                <span className="font-semibold">{stage.name || `Стадия ${stageIndex + 1}`}</span>
+                <Badge variant="outline" className="ml-2">
+                  {stage.games?.length || 0} игр
+                </Badge>
               </div>
             </div>
-          </AccordionTrigger>
-          <AccordionContent>
+          </div>
+        </CardHeader>
+        {isExpanded && (
+          <>
             <StageContent 
               stage={stage}
               stageIndex={stageIndex}
@@ -220,9 +220,19 @@ function SortableStage({
               handleGameDragEnd={handleGameDragEnd}
               seasonAllTeams={seasonAllTeams}
             />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            <div className="px-6 pb-4 pt-2 border-t">
+              <button
+                type="button"
+                onClick={onToggle}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm"
+              >
+                <ChevronUp className="h-4 w-4" />
+                Свернуть
+              </button>
+            </div>
+          </>
+        )}
+      </Card>
     </div>
   );
 }
@@ -350,22 +360,34 @@ function SortableGame({
           </div>
         </CardHeader>
         {isExpanded && (
-          <GameContent 
-          game={game}
-          gameIndex={gameIndex}
-          stageIndex={stageIndex}
-          onUpdate={onUpdate}
-          onAddContest={onAddContest}
-          onRemoveContest={onRemoveContest}
-          onRenameContest={onRenameContest}
-          onMoveContest={onMoveContest}
-          onCopyContests={onCopyContests}
-          contestCopySources={contestCopySources}
-          onAddTeam={onAddTeam}
-          onRemoveTeam={onRemoveTeam}
-          onUpdateTeam={onUpdateTeam}
-          seasonAllTeams={seasonAllTeams}
-        />
+          <>
+            <GameContent 
+              game={game}
+              gameIndex={gameIndex}
+              stageIndex={stageIndex}
+              onUpdate={onUpdate}
+              onAddContest={onAddContest}
+              onRemoveContest={onRemoveContest}
+              onRenameContest={onRenameContest}
+              onMoveContest={onMoveContest}
+              onCopyContests={onCopyContests}
+              contestCopySources={contestCopySources}
+              onAddTeam={onAddTeam}
+              onRemoveTeam={onRemoveTeam}
+              onUpdateTeam={onUpdateTeam}
+              seasonAllTeams={seasonAllTeams}
+            />
+            <div className="px-6 pb-4 pt-2 border-t">
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm"
+              >
+                <ChevronUp className="h-4 w-4" />
+                Свернуть
+              </button>
+            </div>
+          </>
         )}
       </Card>
     </div>
@@ -417,7 +439,7 @@ function StageContent({
   const gameIds = (stage.games || []).map((_, idx) => `game-${stageIndex}-${idx}`);
 
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-4 pt-4 px-6">
       <div className="flex items-center justify-between">
         <h4 className="font-semibold">Настройки стадии</h4>
         <Button 

@@ -16,6 +16,7 @@ import PersonSelector from '../components/PersonSelector';
 // import TeamSelector from '../components/TeamSelector'; // TODO: создать компонент
 import MediaSelector from '../components/MediaSelector';
 import SeasonDataEditor from '../components/SeasonDataEditor';
+import { cleanTeamName } from '@/utils/team';
 
 const emptyKvn = {
   title: '', slug: '', name: '', status: 'draft',
@@ -143,9 +144,12 @@ export default function KVNEditPage() {
             }
           }
 
-          // Добавляем название команды в список, если его еще нет в тегах
-          if (teamName && !currentTags.some(tag => tag.toLowerCase() === teamName.toLowerCase())) {
-            teamNamesToAdd.push(teamName);
+          // Очищаем название команды от города в скобках и HTML
+          const cleanedTeamName = cleanTeamName(teamName);
+          
+          // Добавляем очищенное название команды в список, если его еще нет в тегах
+          if (cleanedTeamName && !currentTags.some(tag => tag.toLowerCase() === cleanedTeamName.toLowerCase())) {
+            teamNamesToAdd.push(cleanedTeamName);
           }
         })
       );

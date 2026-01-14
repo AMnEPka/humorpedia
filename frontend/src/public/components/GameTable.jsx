@@ -5,24 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import { formatDecimalTrim } from '@/utils/number';
-
-// Функция для очистки названия команды от города в скобках в конце
-// Удаляет только скобки с городом (без кавычек и других специальных символов)
-function cleanTeamName(teamName) {
-  if (!teamName) return '';
-  let cleaned = teamName.trim();
-  // Убираем последние скобки в конце строки, но только если они не содержат кавычек
-  // Это позволяет сохранить скобки как часть названия (например, "НГУ («В джазе только девушки»)")
-  const lastParenMatch = cleaned.match(/\s+\(([^)]*)\)\s*$/);
-  if (lastParenMatch) {
-    const content = lastParenMatch[1];
-    // Если в скобках нет кавычек и других специальных символов - это скорее всего город
-    if (!content.includes('«') && !content.includes('»') && !content.includes('"') && !content.includes("'")) {
-      cleaned = cleaned.replace(/\s+\([^)]*\)\s*$/, '').trim();
-    }
-  }
-  return cleaned;
-}
+import { cleanTeamName } from '@/utils/team';
 
 export function GameTable({ game, stageName = '' }) {
   const { name, date, date_raw, teams = [], contests = [], jury = [], host = '', notes = '', is_cancelled = false, video_links = [] } = game;
