@@ -91,6 +91,78 @@ export default function KVNEditPage() {
     }
   }, [id, isNew]);
 
+  // Автоматически добавляем теги с названиями команд при изменении списка команд-участников
+  useEffect(() => {
+    if (!kvn.season_data?.all_teams || kvn.season_data.all_teams.length === 0) return;
+
+    const updateTagsFromTeams = async () => {
+      const allTeams = kvn.season_data.all_teams || [];
+      const currentTags = kvn.tags || [];
+      const teamNamesToAdd = [];
+
+      // Загружаем полные названия команд из базы данных
+      await Promise.all(
+        allTeams.map(async (teamItem) => {
+          let teamName = '';
+          
+          if (typeof teamItem === 'object' && teamItem !== null) {
+            const teamSlug = teamItem.slug || teamItem.team_slug || teamItem.id || '';
+            teamName = teamItem.name || teamItem.team_name || '';
+            
+            // Если есть slug, загружаем полное название из базы данных
+            if (teamSlug && !teamName) {
+              try {
+                const res = await contentApi.getTeam(teamSlug);
+                const teamData = res.data;
+                teamName = teamData.name || teamData.title || '';
+              } catch (err) {
+                // Если команда не найдена, используем slug или название из объекта
+                teamName = teamItem.name || teamItem.team_name || teamSlug;
+              }
+            } else if (!teamName && teamSlug) {
+              // Если есть slug, но нет названия, загружаем из базы
+              try {
+                const res = await contentApi.getTeam(teamSlug);
+                const teamData = res.data;
+                teamName = teamData.name || teamData.title || teamSlug;
+              } catch (err) {
+                teamName = teamSlug;
+              }
+            } else if (!teamName) {
+              teamName = teamSlug || '';
+            }
+          } else {
+            // Старый формат - строка (slug или название)
+            const teamSlug = String(teamItem);
+            try {
+              const res = await contentApi.getTeam(teamSlug);
+              const teamData = res.data;
+              teamName = teamData.name || teamData.title || teamSlug;
+            } catch (err) {
+              teamName = teamSlug;
+            }
+          }
+
+          // Добавляем название команды в список, если его еще нет в тегах
+          if (teamName && !currentTags.some(tag => tag.toLowerCase() === teamName.toLowerCase())) {
+            teamNamesToAdd.push(teamName);
+          }
+        })
+      );
+
+      // Обновляем теги, добавляя новые названия команд
+      if (teamNamesToAdd.length > 0) {
+        setKvn(prev => ({
+          ...prev,
+          tags: [...(prev.tags || []), ...teamNamesToAdd]
+        }));
+      }
+    };
+
+    updateTagsFromTeams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kvn.season_data?.all_teams]);
+
   const generateSlug = (t) => t.toLowerCase().replace(/[а-яё]/g, c => ({ 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ы':'y','э':'e','ю':'yu','я':'ya' }[c] || '')).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   const handleSave = async () => {
