@@ -101,36 +101,34 @@ export default function KVNEditPage() {
       const currentTags = kvn.tags || [];
       const teamNamesToAdd = [];
 
-      // Загружаем полные названия команд из базы данных
+      // Загружаем базовые теги команд из базы данных
       await Promise.all(
         allTeams.map(async (teamItem) => {
+          let teamTag = '';
           let teamName = '';
           
           if (typeof teamItem === 'object' && teamItem !== null) {
             const teamSlug = teamItem.slug || teamItem.team_slug || teamItem.id || '';
             teamName = teamItem.name || teamItem.team_name || '';
             
-            // Если есть slug, загружаем полное название из базы данных
-            if (teamSlug && !teamName) {
+            // Если есть slug, загружаем данные команды из базы данных
+            if (teamSlug) {
               try {
                 const res = await contentApi.getTeam(teamSlug);
                 const teamData = res.data;
+                // Используем primary_tag, если он задан, иначе используем название команды
+                teamTag = teamData.primary_tag || teamData.name || teamData.title || '';
                 teamName = teamData.name || teamData.title || '';
               } catch (err) {
-                // Если команда не найдена, используем slug или название из объекта
+                // Если команда не найдена, используем данные из объекта
+                teamTag = teamItem.primary_tag || teamItem.name || teamItem.team_name || teamSlug;
                 teamName = teamItem.name || teamItem.team_name || teamSlug;
               }
-            } else if (!teamName && teamSlug) {
-              // Если есть slug, но нет названия, загружаем из базы
-              try {
-                const res = await contentApi.getTeam(teamSlug);
-                const teamData = res.data;
-                teamName = teamData.name || teamData.title || teamSlug;
-              } catch (err) {
-                teamName = teamSlug;
-              }
-            } else if (!teamName) {
-              teamName = teamSlug || '';
+            } else if (teamName) {
+              // Если есть название, но нет slug, используем primary_tag из объекта или название
+              teamTag = teamItem.primary_tag || teamName;
+            } else {
+              teamTag = '';
             }
           } else {
             // Старый формат - строка (slug или название)
@@ -138,18 +136,23 @@ export default function KVNEditPage() {
             try {
               const res = await contentApi.getTeam(teamSlug);
               const teamData = res.data;
+              // Используем primary_tag, если он задан, иначе используем название команды
+              teamTag = teamData.primary_tag || teamData.name || teamData.title || teamSlug;
               teamName = teamData.name || teamData.title || teamSlug;
             } catch (err) {
+              teamTag = teamSlug;
               teamName = teamSlug;
             }
           }
 
-          // Очищаем название команды от города в скобках и HTML
-          const cleanedTeamName = cleanTeamName(teamName);
+          // Если primary_tag не задан, используем очищенное название команды
+          if (!teamTag && teamName) {
+            teamTag = cleanTeamName(teamName);
+          }
           
-          // Добавляем очищенное название команды в список, если его еще нет в тегах
-          if (cleanedTeamName && !currentTags.some(tag => tag.toLowerCase() === cleanedTeamName.toLowerCase())) {
-            teamNamesToAdd.push(cleanedTeamName);
+          // Добавляем базовый тег команды в список, если его еще нет в тегах
+          if (teamTag && !currentTags.some(tag => tag.toLowerCase() === teamTag.toLowerCase())) {
+            teamNamesToAdd.push(teamTag);
           }
         })
       );

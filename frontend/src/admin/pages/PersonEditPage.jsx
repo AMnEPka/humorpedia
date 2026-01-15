@@ -35,6 +35,7 @@ const emptyPerson = {
     achievements: []
   },
   facts: {},  // Facts for facts_table module
+  primary_tag: null,  // Базовый тег человека
   social_links: {
     vk: '',
     telegram: '',
@@ -79,6 +80,18 @@ export default function PersonEditPage() {
       caption: '',
       thumbnail: patterns[randomIndex]
     };
+  };
+
+  // Функция для преобразования "Фамилия Имя" в "Имя Фамилия"
+  const swapNameOrder = (name) => {
+    if (!name) return name;
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 2) {
+      // Если две части, меняем местами: "Фамилия Имя" -> "Имя Фамилия"
+      return `${parts[1]} ${parts[0]}`;
+    }
+    // Если одна часть или больше двух, возвращаем как есть
+    return name;
   };
 
   useEffect(() => {
@@ -148,12 +161,16 @@ export default function PersonEditPage() {
             }
           }
           
+          // Устанавливаем primary_tag по умолчанию в формате "Имя Фамилия"
+          const primaryTag = response.data.primary_tag || swapNameOrder(response.data.title) || swapNameOrder(response.data.full_name) || null;
+          
           setPerson({
             ...emptyPerson,
             ...response.data,
             photo: photo,
             bio: { ...emptyPerson.bio, ...response.data.bio },
             facts: validFacts,
+            primary_tag: primaryTag,
             social_links: { ...emptyPerson.social_links, ...response.data.social_links },
             seo: { ...emptyPerson.seo, ...response.data.seo }
           });
@@ -195,7 +212,11 @@ export default function PersonEditPage() {
       ...prev,
       title,
       full_name: prev.full_name || title,
-      slug: prev.slug || generateSlug(title)
+      slug: prev.slug || generateSlug(title),
+      // Устанавливаем primary_tag по умолчанию в формате "Имя Фамилия"
+      primary_tag: prev.primary_tag === null || prev.primary_tag === undefined 
+        ? swapNameOrder(title) 
+        : prev.primary_tag
     }));
   };
 
@@ -213,9 +234,13 @@ export default function PersonEditPage() {
         }
       }
       
+      // Устанавливаем primary_tag по умолчанию в формате "Имя Фамилия"
+      const primaryTag = person.primary_tag || swapNameOrder(person.title) || swapNameOrder(person.full_name) || null;
+      
       const personToSave = {
         ...person,
-        facts: validFacts
+        facts: validFacts,
+        primary_tag: primaryTag
       };
 
       if (isNew) {
@@ -417,13 +442,30 @@ export default function PersonEditPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Теги</CardTitle>
+                <CardDescription>
+                  Базовый тег используется при автоматическом добавлении человека в сезоны КВН
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <TagSelector
-                  value={person.tags}
-                  onChange={(tags) => setPerson(prev => ({ ...prev, tags }))}
-                  placeholder="Выберите или добавьте тег..."
-                />
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Базовый тег</Label>
+                  <Input
+                    value={person.primary_tag || ''}
+                    onChange={(e) => setPerson(prev => ({ ...prev, primary_tag: e.target.value || null }))}
+                    placeholder={swapNameOrder(person.title) || swapNameOrder(person.full_name) || 'Имя Фамилия'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    По умолчанию совпадает с ФИО в формате "Имя Фамилия". Можно изменить для использования другого тега в сезонах.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Все теги</Label>
+                  <TagSelector
+                    value={person.tags}
+                    onChange={(tags) => setPerson(prev => ({ ...prev, tags }))}
+                    placeholder="Выберите или добавьте тег..."
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>

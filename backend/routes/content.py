@@ -105,14 +105,133 @@ async def create_content(collection_name: str, model_instance, tags: list = None
     return {"id": doc["_id"], "slug": doc.get("slug")}
 
 
+async def update_tags_everywhere(
+    db, old_primary_tag: Optional[str], new_primary_tag: Optional[str]
+):
+    """
+    Универсальная функция для обновления тегов во всех коллекциях при изменении primary_tag.
+    Заменяет старый тег на новый во всех документах, где он встречается в поле tags.
+    Если new_primary_tag пустой, просто удаляет старый тег.
+    
+    Args:
+        db: База данных MongoDB
+        old_primary_tag: Старый базовый тег
+        new_primary_tag: Новый базовый тег (может быть None для удаления)
+    """
+    if old_primary_tag == new_primary_tag:
+        return  # Тег не изменился
+    
+    if not old_primary_tag:
+        # Если старого тега не было, значит он еще нигде не использовался
+        # Обновлять нечего
+        return
+    
+    # Список всех коллекций, где могут быть теги
+    collections_with_tags = [
+        "people", "teams", "shows", "articles", "news", 
+        "quizzes", "wiki", "kvn"
+    ]
+    
+    total_updated = 0
+    
+    for collection_name in collections_with_tags:
+        collection = getattr(db, collection_name)
+        
+        # Находим все документы, где есть старый тег
+        # Используем case-insensitive поиск для надежности
+        documents = await collection.find({
+            "tags": {"$regex": f"^{re.escape(old_primary_tag)}$", "$options": "i"}
+        }).to_list(None)
+        
+        updated_in_collection = 0
+        
+        for doc in documents:
+            doc_id = doc.get("_id")
+            tags = doc.get("tags", [])
+            
+            # Заменяем старый тег на новый (case-insensitive)
+            updated_tags = []
+            tag_updated = False
+            
+            for tag in tags:
+                # Удаляем старый тег (case-insensitive сравнение)
+                if tag.lower() == old_primary_tag.lower():
+                    tag_updated = True
+                    # Добавляем новый тег, если он задан и его еще нет
+                    if new_primary_tag:
+                        # Проверяем, нет ли уже нового тега (case-insensitive)
+                        tag_exists = any(t.lower() == new_primary_tag.lower() for t in updated_tags)
+                        if not tag_exists:
+                            updated_tags.append(new_primary_tag)
+                    continue
+                updated_tags.append(tag)
+            
+            # Если тег был удален, но новый не добавлен (new_primary_tag пустой),
+            # то просто удаляем старый тег
+            if tag_updated:
+                # Для сезонов КВН сохраняем специальную сортировку
+                if collection_name == "kvn":
+                    sorted_tags = sorted(updated_tags, key=lambda x: (
+                        0 if x == "КВН" else 1,
+                        x.lower()
+                    ))
+                else:
+                    sorted_tags = updated_tags
+                
+                await collection.update_one(
+                    {"_id": doc_id},
+                    {"$set": {"tags": sorted_tags, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                
+                # Синхронизируем теги в коллекции tags
+                await tag_service.sync_tags(sorted_tags)
+                updated_in_collection += 1
+        
+        if updated_in_collection > 0:
+            logger.info(f"Обновлено {updated_in_collection} документов в коллекции {collection_name}")
+            total_updated += updated_in_collection
+    
+    if total_updated > 0:
+        logger.info(f"Всего обновлено {total_updated} документов при замене тега '{old_primary_tag}' на '{new_primary_tag}'")
+
+
 async def update_content(collection_name: str, item_id: str, data, not_found_msg: str):
     """Universal update handler"""
     db = await get_db()
     collection = getattr(db, collection_name)
     
+    # Получаем текущий документ для проверки изменений primary_tag
+    current_item = await collection.find_one({"_id": item_id})
+    if not current_item:
+        raise HTTPException(status_code=404, detail=not_found_msg)
+    
+    old_primary_tag = current_item.get("primary_tag")
+    
     # Use model_dump with exclude_unset=True to only include fields that were explicitly set
     update_data = {k: v for k, v in data.model_dump(exclude_unset=True).items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Если primary_tag не задан в обновлении, но его нет в текущем документе, устанавливаем по умолчанию
+    if hasattr(data, 'primary_tag') and 'primary_tag' not in update_data:
+        if not old_primary_tag:
+            if collection_name == "teams":
+                default_tag = current_item.get("name") or current_item.get("title")
+            elif collection_name == "people":
+                # Преобразуем "Фамилия Имя" в "Имя Фамилия"
+                def swap_name_order(name):
+                    if not name:
+                        return name
+                    parts = name.strip().split()
+                    if len(parts) == 2:
+                        return f"{parts[1]} {parts[0]}"
+                    return name
+                title = current_item.get("title") or current_item.get("full_name")
+                default_tag = swap_name_order(title)
+            else:
+                default_tag = None
+            if default_tag:
+                update_data["primary_tag"] = default_tag
+                old_primary_tag = None  # Будет обновление с null -> default_tag
     
     # Sync tags if present
     if hasattr(data, 'tags') and data.tags:
@@ -122,6 +241,32 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail=not_found_msg)
+    
+    # Если изменился primary_tag для команды или человека, обновляем теги в сезонах
+    new_primary_tag = update_data.get("primary_tag") or old_primary_tag
+    if hasattr(data, 'primary_tag'):
+        # Если primary_tag был явно задан в обновлении
+        if 'primary_tag' in update_data:
+            new_primary_tag = update_data["primary_tag"]
+        # Если primary_tag не задан явно, но его нет в базе, используем значение по умолчанию
+        elif not old_primary_tag:
+            if collection_name == "teams":
+                new_primary_tag = current_item.get("name") or current_item.get("title")
+            elif collection_name == "people":
+                # Преобразуем "Фамилия Имя" в "Имя Фамилия"
+                def swap_name_order(name):
+                    if not name:
+                        return name
+                    parts = name.strip().split()
+                    if len(parts) == 2:
+                        return f"{parts[1]} {parts[0]}"
+                    return name
+                title = current_item.get("title") or current_item.get("full_name")
+                new_primary_tag = swap_name_order(title)
+        
+        if new_primary_tag != old_primary_tag:
+            # Обновляем теги везде, где они используются
+            await update_tags_everywhere(db, old_primary_tag, new_primary_tag)
     
     return {"id": item_id, "updated": True}
 
@@ -243,10 +388,24 @@ async def create_person(data: PersonCreate):
     """Create a new person"""
     await check_slug_unique("people", data.slug)
     
+    # Функция для преобразования "Фамилия Имя" в "Имя Фамилия"
+    def swap_name_order(name):
+        if not name:
+            return name
+        parts = name.strip().split()
+        if len(parts) == 2:
+            return f"{parts[1]} {parts[0]}"
+        return name
+    
+    # Устанавливаем primary_tag по умолчанию в формате "Имя Фамилия"
+    primary_tag = data.primary_tag
+    if not primary_tag:
+        primary_tag = swap_name_order(data.title) or swap_name_order(data.full_name)
+    
     person = Person(
         title=data.title, slug=data.slug, full_name=data.full_name,
         photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
-        facts=data.facts or {},
+        facts=data.facts or {}, primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
     return await create_content("people", person, data.tags)
@@ -330,9 +489,13 @@ async def create_team(data: TeamCreate):
     """Create a new team"""
     await check_slug_unique("teams", data.slug)
     
+    # Устанавливаем primary_tag по умолчанию, если не задан
+    primary_tag = data.primary_tag or data.name or data.title
+    
     team = Team(
         title=data.title, slug=data.slug, name=data.name, team_type=data.team_type,
         logo=data.logo, facts=data.facts or {}, social_links=data.social_links or {},
+        primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
     return await create_content("teams", team, data.tags)

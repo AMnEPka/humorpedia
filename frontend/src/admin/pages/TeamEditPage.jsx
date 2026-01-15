@@ -25,6 +25,7 @@ const emptyTeam = {
   logo: null,
   facts: {},  // Гибкая таблица фактов (ключ-значение)
   aliases: [],  // Алиасы названий команды (например, "Пермский край" для "Сборная Пермского края")
+  primary_tag: null,  // Базовый тег команды
   social_links: {
     vk: '',
     telegram: '',
@@ -143,11 +144,15 @@ export default function TeamEditPage() {
             // Игнорируем объекты, массивы и другие типы (включая объекты ошибок валидации)
           });
           
+          // Устанавливаем primary_tag по умолчанию, если он не задан
+          const primaryTag = response.data.primary_tag || response.data.name || response.data.title || null;
+          
           setTeam({
             ...emptyTeam,
             ...response.data,
             logo: logo,
             facts: validFacts,
+            primary_tag: primaryTag,
             social_links: { ...emptyTeam.social_links, ...response.data.social_links },
             seo: { ...emptyTeam.seo, ...response.data.seo }
           });
@@ -189,7 +194,9 @@ export default function TeamEditPage() {
       ...prev,
       name,
       title: prev.title || name,
-      slug: prev.slug || generateSlug(name)
+      slug: prev.slug || generateSlug(name),
+      // Устанавливаем primary_tag по умолчанию, если он не задан
+      primary_tag: prev.primary_tag === null || prev.primary_tag === undefined ? name : prev.primary_tag
     }));
   };
 
@@ -215,9 +222,13 @@ export default function TeamEditPage() {
         return acc;
       }, {});
       
+      // Устанавливаем primary_tag по умолчанию, если он не задан
+      const primaryTag = team.primary_tag || team.name || team.title || null;
+      
       const teamToSave = {
         ...team,
-        facts: validFacts
+        facts: validFacts,
+        primary_tag: primaryTag
       };
       
       if (isNew) {
@@ -393,13 +404,30 @@ export default function TeamEditPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Теги</CardTitle>
+                <CardDescription>
+                  Базовый тег используется при автоматическом добавлении команды в сезоны КВН
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <TagSelector
-                  value={team.tags}
-                  onChange={(tags) => setTeam(prev => ({ ...prev, tags }))}
-                  placeholder="Выберите или добавьте тег..."
-                />
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Базовый тег</Label>
+                  <Input
+                    value={team.primary_tag || ''}
+                    onChange={(e) => setTeam(prev => ({ ...prev, primary_tag: e.target.value || null }))}
+                    placeholder={team.name || 'Название команды'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    По умолчанию совпадает с названием команды. Можно изменить для использования другого тега в сезонах.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Все теги</Label>
+                  <TagSelector
+                    value={team.tags}
+                    onChange={(tags) => setTeam(prev => ({ ...prev, tags }))}
+                    placeholder="Выберите или добавьте тег..."
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>

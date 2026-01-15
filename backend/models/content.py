@@ -29,6 +29,9 @@ class Person(BaseContent):
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     facts: Dict[str, str] = Field(default_factory=dict)  # Facts for facts_table module
     
+    # Primary tag - основной тег человека, используется при добавлении в сезоны
+    primary_tag: Optional[str] = None
+    
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
     
@@ -47,6 +50,7 @@ class PersonCreate(BaseModel):
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
     facts: Optional[Dict[str, str]] = None
+    primary_tag: Optional[str] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
@@ -62,6 +66,7 @@ class PersonUpdate(BaseModel):
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
     facts: Optional[Dict[str, str]] = None
+    primary_tag: Optional[str] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None
@@ -85,6 +90,9 @@ class Team(BaseContent):
     facts: Dict[str, str] = Field(default_factory=dict)  # Flexible key-value pairs for team info
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     
+    # Primary tag - основной тег команды, используется при добавлении в сезоны
+    primary_tag: Optional[str] = None
+    
     # Aliases for team name matching (e.g., "Пермский край" -> "Сборная Пермского края")
     aliases: List[str] = Field(default_factory=list)
     
@@ -107,6 +115,7 @@ class TeamCreate(BaseModel):
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
+    primary_tag: Optional[str] = None
     aliases: List[str] = Field(default_factory=list)
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -123,6 +132,7 @@ class TeamUpdate(BaseModel):
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     social_links: Optional[SocialLinks] = None
+    primary_tag: Optional[str] = None
     aliases: Optional[List[str]] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
