@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, AlertTriangle, Eye } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, AlertTriangle, Eye, Copy } from 'lucide-react';
 
 const statusLabels = { draft: { label: 'Черновик', variant: 'secondary' }, published: { label: 'Опубликовано', variant: 'default' }, archived: { label: 'В архиве', variant: 'outline' } };
 
@@ -38,6 +38,16 @@ export default function NewsListPage() {
   useEffect(() => { fetchNews(); }, [fetchNews]);
 
   const handleDelete = async () => { if (!deleteId) return; try { await contentApi.deleteNews(deleteId); fetchNews(); } catch (e) { console.error(e); } finally { setDeleteId(null); } };
+
+  const handleDuplicate = async (id) => {
+    try {
+      await contentApi.duplicateContent('news', id);
+      fetchNews();
+    } catch (error) {
+      console.error('Error duplicating news:', error);
+      alert('Ошибка при копировании новости');
+    }
+  };
 
   const totalPages = Math.ceil(total / limit);
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('ru-RU') : '-';
@@ -75,7 +85,7 @@ export default function NewsListPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-right">{n.views || 0}</TableCell>
-                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/news/${n._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(n._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/news/${n._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(n._id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(n._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>
             ))}</TableBody></Table>
         )}

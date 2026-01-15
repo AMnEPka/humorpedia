@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { 
   Plus, Search, MoreHorizontal, Edit, Trash2, Eye, 
-  ChevronLeft, ChevronRight, Loader2 
+  ChevronLeft, ChevronRight, Loader2, Copy
 } from 'lucide-react';
 
 const statusLabels = {
@@ -99,6 +99,16 @@ export default function TeamsListPage() {
       console.error('Error deleting team:', error);
     } finally {
       setDeleteId(null);
+    }
+  };
+
+  const handleDuplicate = async (id) => {
+    try {
+      await contentApi.duplicateContent('teams', id);
+      fetchTeams();
+    } catch (error) {
+      console.error('Error duplicating team:', error);
+      alert('Ошибка при копировании команды');
     }
   };
 
@@ -299,6 +309,11 @@ export default function TeamsListPage() {
                             onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
                           >
                             <Eye className="mr-2 h-4 w-4" /> Просмотр
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDuplicate(team._id)}
+                          >
+                            <Copy className="mr-2 h-4 w-4" /> Копировать
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"

@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
 from datetime import datetime, timezone
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,28 @@ async def check_slug_unique(collection_name: str, slug: str, exclude_id: str = N
     existing = await collection.find_one(query)
     if existing:
         raise HTTPException(status_code=400, detail="Slug already exists")
+
+
+async def generate_unique_slug(collection_name: str, base_slug: str) -> str:
+    """Generate unique slug by appending _1, _2, etc. if needed"""
+    db = await get_db()
+    collection = getattr(db, collection_name)
+    
+    # Try base slug first
+    existing = await collection.find_one({"slug": base_slug})
+    if not existing:
+        return base_slug
+    
+    # Try with _1, _2, etc.
+    counter = 1
+    while True:
+        new_slug = f"{base_slug}_{counter}"
+        existing = await collection.find_one({"slug": new_slug})
+        if not existing:
+            return new_slug
+        counter += 1
+        if counter > 1000:  # Safety limit
+            raise HTTPException(status_code=500, detail="Could not generate unique slug")
 
 
 async def create_content(collection_name: str, model_instance, tags: list = None):
@@ -267,9 +290,54 @@ async def list_teams(
     letter: Optional[str] = None
 ):
     """List teams with pagination and filters"""
-    extra = {"team_type": team_type} if team_type else None
-    query = build_query(status, tag, search, ["title", "name"], letter, "name", extra)
-    return await list_content("teams", skip, limit, query, "name", 1)
+    db = await get_db()
+    query = {}
+    
+    if status:
+        query["status"] = status.value
+    if tag:
+        query["tags"] = tag
+    if team_type:
+        query["team_type"] = team_type
+    
+    # Улучшенный поиск для команд: ищем по name, title, slug и aliases
+    if search:
+        # Экранируем специальные символы regex для безопасности
+        # re.escape экранирует только специальные символы (., *, +, ?, ^, $, [, ], {, }, |, \, (, )),
+        # обычные буквы и цифры остаются без изменений
+        search_term = search.strip()
+        search_escaped = re.escape(search_term)
+        
+        # Для массива строк MongoDB автоматически применяет regex к каждому элементу
+        # Используем частичное совпадение - ищем подстроку в любом месте поля
+        # MongoDB regex с опцией "i" (case-insensitive) ищет подстроки, так что "бай" должно находить "Байкал"
+        search_conditions = [
+            {"name": {"$regex": search_escaped, "$options": "i"}},
+            {"title": {"$regex": search_escaped, "$options": "i"}},
+            {"slug": {"$regex": search_escaped, "$options": "i"}},
+            {"aliases": {"$regex": search_escaped, "$options": "i"}}
+        ]
+        query["$or"] = search_conditions
+    
+    # Фильтр по первой букве (применяется дополнительно к поиску, если указан)
+    if letter:
+        letter_condition = {"name": {"$regex": f"^{re.escape(letter)}", "$options": "i"}}
+        if "$or" in query:
+            # Если есть поиск, добавляем фильтр по букве через $and
+            query = {"$and": [{"$or": query["$or"]}, letter_condition]}
+        else:
+            query.update(letter_condition)
+    
+    total = await db.teams.count_documents(query)
+    cursor = db.teams.find(query, {"modules": 0}).skip(skip).limit(limit).sort("name", 1)
+    items = await cursor.to_list(limit)
+    
+    return {
+        "items": items,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
 
 
 @router.get("/teams/{id_or_slug}", response_model=dict)
@@ -1331,4 +1399,105 @@ async def search_by_tag(
         "results": results,
         "skip": skip,
         "limit": limit
+    }
+
+
+# === DUPLICATE CONTENT ===
+
+# Collection name mapping for content types
+COLLECTION_MAP = {
+    "person": "people",
+    "people": "people",
+    "team": "teams",
+    "teams": "teams",
+    "show": "shows",
+    "shows": "shows",
+    "article": "articles",
+    "articles": "articles",
+    "news": "news",
+    "quiz": "quizzes",
+    "quizzes": "quizzes",
+    "wiki": "wiki",
+    "kvn": "kvn",
+    "section": "sections",
+    "sections": "sections"
+}
+
+
+@router.post("/{content_type}/{id}/duplicate", response_model=dict)
+async def duplicate_content(content_type: str, id: str):
+    """
+    Create a copy of a content page.
+    The new page will have the same parent_id, but a new slug (slug_1, slug_2, etc.)
+    """
+    db = await get_db()
+    
+    # Get collection name
+    collection_name = COLLECTION_MAP.get(content_type)
+    if not collection_name:
+        raise HTTPException(status_code=400, detail=f"Unknown content type: {content_type}")
+    
+    collection = getattr(db, collection_name)
+    
+    # Find original content
+    original = await collection.find_one({"_id": id})
+    if not original:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Create copy
+    copy_data = dict(original)
+    
+    # Remove MongoDB-specific fields
+    copy_data.pop("_id", None)
+    copy_data.pop("created_at", None)
+    copy_data.pop("updated_at", None)
+    copy_data.pop("views", None)
+    
+    # Generate unique slug
+    base_slug = copy_data.get("slug", "")
+    if not base_slug:
+        raise HTTPException(status_code=400, detail="Original content has no slug")
+    
+    new_slug = await generate_unique_slug(collection_name, base_slug)
+    copy_data["slug"] = new_slug
+    
+    # Update title to indicate it's a copy (optional, can be removed if not needed)
+    # copy_data["title"] = f"{copy_data.get('title', '')} (копия)"
+    
+    # Set timestamps
+    now = datetime.now(timezone.utc).isoformat()
+    copy_data["created_at"] = now
+    copy_data["updated_at"] = now
+    
+    # Reset views
+    copy_data["views"] = 0
+    
+    # For KVN pages, also need to handle 'id' field (not just _id)
+    if content_type == "kvn" and "id" in copy_data:
+        # Generate new UUID for 'id' field
+        import uuid
+        copy_data["id"] = str(uuid.uuid4())
+    
+    # Insert the copy
+    result = await collection.insert_one(copy_data)
+    
+    # For sections, update full_path after insertion
+    if content_type in ["section", "sections"]:
+        # Import here to avoid circular dependency
+        from routes.sections import build_full_path
+        parent_id = copy_data.get("parent_id")
+        new_full_path, new_level = await build_full_path(parent_id, new_slug, db)
+        await collection.update_one(
+            {"_id": result.inserted_id},
+            {"$set": {"full_path": new_full_path, "level": new_level}}
+        )
+    
+    # Sync tags if present
+    if "tags" in copy_data and copy_data["tags"]:
+        await tag_service.sync_tags(copy_data["tags"])
+    
+    return {
+        "id": result.inserted_id,
+        "slug": new_slug,
+        "message": "Content duplicated successfully"
     }

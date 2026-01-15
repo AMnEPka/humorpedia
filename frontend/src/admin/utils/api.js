@@ -131,6 +131,9 @@ export const contentApi = {
 
   // Search
   search: (params) => api.get('/content/search', { params }),
+
+  // Duplicate content
+  duplicateContent: (contentType, id) => api.post(`/content/${contentType}/${id}/duplicate`),
 };
 
 // Stats API

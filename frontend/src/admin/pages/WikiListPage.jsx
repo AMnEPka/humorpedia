@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Eye } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Eye, Copy } from 'lucide-react';
 
 const statusLabels = { draft: { label: 'Черновик', variant: 'secondary' }, published: { label: 'Опубликовано', variant: 'default' }, archived: { label: 'В архиве', variant: 'outline' } };
 
@@ -38,6 +38,16 @@ export default function WikiListPage() {
   useEffect(() => { fetchPages(); }, [fetchPages]);
 
   const handleDelete = async () => { if (!deleteId) return; try { await contentApi.deleteWiki(deleteId); fetchPages(); } catch (e) { console.error(e); } finally { setDeleteId(null); } };
+
+  const handleDuplicate = async (id) => {
+    try {
+      await contentApi.duplicateContent('wiki', id);
+      fetchPages();
+    } catch (error) {
+      console.error('Error duplicating page:', error);
+      alert('Ошибка при копировании страницы');
+    }
+  };
 
   const totalPages = Math.ceil(total / limit);
 
@@ -74,7 +84,7 @@ export default function WikiListPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-right">{p.views || 0}</TableCell>
-                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/wiki/${p._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(p._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/wiki/${p._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(p._id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(p._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>
             ))}</TableBody></Table>
         )}

@@ -136,8 +136,8 @@ export default function TeamSelector({
         const searchTerm = search.trim();
         const res = await contentApi.listTeams({ 
           search: searchTerm,
-          limit: 20,
-          team_type: 'kvn' // По умолчанию ищем команды КВН
+          limit: 20
+          // Не фильтруем по team_type, так как не у всех команд он указан
         });
         // Добавляем город из facts для каждой команды
         let teamsWithCity = (res.data.items || []).map(team => ({

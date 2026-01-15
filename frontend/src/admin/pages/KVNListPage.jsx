@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, ChevronDown, ChevronRight as ChevronRightIcon, FolderTree, Eye } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, ChevronDown, ChevronRight as ChevronRightIcon, FolderTree, Eye, Copy } from 'lucide-react';
 
 const statusLabels = {
   draft: { label: 'Черновик', variant: 'secondary' },
@@ -18,7 +18,7 @@ const statusLabels = {
 };
 
 // Рекурсивный компонент для отображения строки КВН с вложенностью
-function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete }) {
+function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete, onDuplicate }) {
   const hasChildren = kvn.children && kvn.children.length > 0;
   const isExpanded = expandedIds.has(kvn.id);
   const indent = level * 24;
@@ -76,6 +76,7 @@ function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete }) {
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild><Link to={`/admin/kvn/${kvn.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDuplicate(kvn.id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem>
               <DropdownMenuItem className="text-destructive" onClick={() => onDelete(kvn.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -89,6 +90,7 @@ function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete }) {
           expandedIds={expandedIds}
           toggleExpand={toggleExpand}
           onDelete={onDelete}
+          onDuplicate={onDuplicate}
         />
       ))}
     </>
@@ -179,6 +181,16 @@ export default function KVNListPage() {
     }
   };
 
+  const handleDuplicate = async (id) => {
+    try {
+      await contentApi.duplicateContent('kvn', id);
+      fetchKvn();
+    } catch (error) {
+      console.error('Error duplicating KVN page:', error);
+      alert('Ошибка при копировании страницы КВН');
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
   const isHierarchyMode = viewMode === 'hierarchy' && !search;
 
@@ -264,6 +276,7 @@ export default function KVNListPage() {
                       expandedIds={expandedIds}
                       toggleExpand={toggleExpand}
                       onDelete={setDeleteId}
+                      onDuplicate={handleDuplicate}
                     />
                   ))
                 ) : (
@@ -296,6 +309,7 @@ export default function KVNListPage() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild><Link to={`/admin/kvn/${k.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDuplicate(k.id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(k.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

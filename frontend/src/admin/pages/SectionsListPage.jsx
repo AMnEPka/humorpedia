@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sectionsApi } from '../utils/api';
+import { sectionsApi, contentApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Edit2, Trash2, Loader2, ChevronRight, ChevronDown, Menu } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, ChevronRight, ChevronDown, Menu, Copy } from 'lucide-react';
 
-function SectionTreeItem({ section, onEdit, onDelete, level = 0 }) {
+function SectionTreeItem({ section, onEdit, onDelete, onDuplicate, level = 0 }) {
   const [expanded, setExpanded] = useState(true);
   const hasChildren = section.children && section.children.length > 0;
 
@@ -44,6 +44,9 @@ function SectionTreeItem({ section, onEdit, onDelete, level = 0 }) {
           <Button size="sm" variant="ghost" onClick={() => onEdit(section.id)}>
             <Edit2 className="h-4 w-4" />
           </Button>
+          <Button size="sm" variant="ghost" onClick={() => onDuplicate(section.id)}>
+            <Copy className="h-4 w-4" />
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => onDelete(section.id)}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
@@ -58,6 +61,7 @@ function SectionTreeItem({ section, onEdit, onDelete, level = 0 }) {
               section={child}
               onEdit={onEdit}
               onDelete={onDelete}
+              onDuplicate={onDuplicate}
               level={level + 1}
             />
           ))}
@@ -96,6 +100,16 @@ export default function SectionsListPage() {
       loadTree();
     } catch (err) {
       alert('Ошибка удаления');
+    }
+  };
+
+  const handleDuplicate = async (id) => {
+    try {
+      await contentApi.duplicateContent('sections', id);
+      loadTree();
+    } catch (error) {
+      console.error('Error duplicating section:', error);
+      alert('Ошибка при копировании раздела');
     }
   };
 
@@ -154,6 +168,7 @@ export default function SectionsListPage() {
                   section={section}
                   onEdit={(id) => navigate(`/admin/sections/${id}`)}
                   onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
                 />
               ))}
             </div>

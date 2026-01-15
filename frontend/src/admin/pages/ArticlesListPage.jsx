@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Star, Eye } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Star, Eye, Copy } from 'lucide-react';
 
 const statusLabels = { draft: { label: 'Черновик', variant: 'secondary' }, published: { label: 'Опубликовано', variant: 'default' }, archived: { label: 'В архиве', variant: 'outline' } };
 
@@ -40,6 +40,16 @@ export default function ArticlesListPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try { await contentApi.deleteArticle(deleteId); fetchArticles(); } catch (e) { console.error(e); } finally { setDeleteId(null); }
+  };
+
+  const handleDuplicate = async (id) => {
+    try {
+      await contentApi.duplicateContent('articles', id);
+      fetchArticles();
+    } catch (error) {
+      console.error('Error duplicating article:', error);
+      alert('Ошибка при копировании статьи');
+    }
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -78,7 +88,7 @@ export default function ArticlesListPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-right">{a.views || 0}</TableCell>
-                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/articles/${a._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(a._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/articles/${a._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(a._id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(a._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>
             ))}</TableBody></Table>
         )}
