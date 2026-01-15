@@ -47,94 +47,26 @@ const webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
-      // Critical: Exclude large media directory from file watching
-      // This prevents webpack from scanning 3000+ image files on startup
-      const publicMediaPath = path.resolve(__dirname, 'public/media');
-      const publicPath = path.resolve(__dirname, 'public');
+      const isDocker = process.env.DOCKER_ENV === 'true';
       
-      // Build comprehensive ignore list to prevent ENOMEM errors
-      const ignoredPatterns = [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/build/**',
-        '**/dist/**',
-        '**/coverage/**',
-        // Explicitly exclude the large media directory
-        publicMediaPath,
-        '**/public/media/**',
-        // Exclude all image files in public folder
-        '**/public/**/*.jpg',
-        '**/public/**/*.jpeg',
-        '**/public/**/*.png',
-        '**/public/**/*.gif',
-        '**/public/**/*.webp',
-        '**/public/**/*.svg',
-        '**/public/**/*.ico',
-        '**/public/**/*.bmp',
-        // Exclude entire public directory from watchpack initial scan
-        // Only watch public/index.html and public/manifest.json if needed
-        /^[\\/]?public[\\/](?!index\.html|manifest\.json|robots\.txt)/,
-        // Exclude cache and temp directories
-        '**/.cache/**',
-        '**/.tmp/**',
-        '**/tmp/**',
-        '**/*.log',
-        '**/*.swp',
-        '**/*.swo',
-        '**/.DS_Store',
-        // Exclude backup and migration directories if they exist
-        '**/backups/**',
-        '**/migration/**',
-      ];
-      
-      // Configure watchpack to ignore large directories
-      // This is critical to prevent ENOMEM errors when scanning thousands of files
-      webpackConfig.watchOptions = {
-        ...webpackConfig.watchOptions,
-        ignored: [
-          ...ignoredPatterns,
-          // Additional patterns for watchpack
-          /node_modules/,
-          /\.git/,
-          /build/,
-          /dist/,
-          /coverage/,
-          // Exclude entire public directory - it's served separately
-          // Only essential files (index.html, manifest.json) are needed
-          (filePath) => {
-            try {
-              // Convert to normalized path for comparison
-              const normalizedPath = path.normalize(filePath);
-              const publicDir = path.normalize('public');
-              
-              // Exclude public directory except essential files
-              if (normalizedPath.includes(publicDir)) {
-                const relativePath = path.relative(
-                  path.resolve(__dirname, publicDir),
-                  normalizedPath
-                );
-                const fileName = path.basename(normalizedPath);
-                // Only allow index.html, manifest.json, robots.txt in public root
-                if (relativePath === fileName) {
-                  return !['index.html', 'manifest.json', 'robots.txt'].includes(fileName);
-                }
-                // Exclude all subdirectories and files in public
-                return true;
-              }
-              return false;
-            } catch (e) {
-              // If path comparison fails, exclude by default
-              return false;
-            }
-          },
-        ],
-        aggregateTimeout: 500,
-        // Use polling in Docker for better file change detection, but with longer interval
-        // Longer interval reduces file descriptor usage
-        poll: process.env.CHOKIDAR_USEPOLLING === 'true' ? 3000 : false,
-        // Limit the number of files watched to prevent ENOMEM errors
-        followSymlinks: false,
-      };
+      // In Docker, use minimal file watching to prevent ENOMEM errors
+      if (isDocker) {
+        // Ignore everything - effectively disable file watching
+        webpackConfig.watchOptions = {
+          ignored: /./,  // Ignore all files
+          poll: false,
+          followSymlinks: false,
+        };
+      } else {
+        // Local development - normal file watching
+        webpackConfig.watchOptions = {
+          ...webpackConfig.watchOptions,
+          ignored: /node_modules|\.git|build|dist|coverage|public[\\/]media|backups|migration|\.cache|\.tmp|\.log$|\.swp$|\.swo$|\.DS_Store/,
+          aggregateTimeout: 500,
+          poll: false,
+          followSymlinks: false,
+        };
+      }
       
       // Configure webpack to use less aggressive file watching
       // This helps prevent ENOMEM errors when there are many files
@@ -147,14 +79,6 @@ const webpackConfig = {
       webpackConfig.snapshot.immutablePaths = [
         path.resolve(__dirname, 'node_modules'),
       ];
-      
-      // Exclude public directory from snapshot to prevent initial scan
-      if (!webpackConfig.snapshot.ignored) {
-        webpackConfig.snapshot.ignored = [];
-      }
-      webpackConfig.snapshot.ignored.push(
-        /public[\\/](?!index\.html|manifest\.json|robots\.txt)/
-      );
 
       // Optimize module resolution with caching
       if (!webpackConfig.resolve) {
@@ -194,9 +118,11 @@ webpackConfig.devServer = (devServerConfig) => {
   // This prevents webpack from scanning 3000+ images on startup
   // Media files are served by backend at /media/imported/*
   
-  // Enable Hot Module Replacement (HMR) for fast development
-  devServerConfig.hot = true;
-  devServerConfig.liveReload = true;
+  // In Docker, disable hot reload to prevent ENOMEM errors from inotify limits
+  // Manual browser refresh required to see changes
+  const isDocker = process.env.DOCKER_ENV === 'true';
+  devServerConfig.hot = !isDocker;
+  devServerConfig.liveReload = !isDocker;
   devServerConfig.client = {
     ...devServerConfig.client,
     webSocketURL: {

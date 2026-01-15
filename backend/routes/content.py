@@ -174,6 +174,13 @@ async def create_content(collection_name: str, model_instance, tags: list = None
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
     
+    # For KVN, generate a separate UUID 'id' field (not just _id)
+    # This is needed for hierarchy references (parent_id uses this field)
+    if collection_name == "kvn":
+        import uuid
+        if "id" not in doc or not doc.get("id"):
+            doc["id"] = str(uuid.uuid4())
+    
     # Проверка на дубликаты primary_tag для людей и команд
     primary_tag = doc.get("primary_tag")
     if primary_tag and collection_name in ["people", "teams"]:
@@ -193,6 +200,11 @@ async def create_content(collection_name: str, model_instance, tags: list = None
         await tag_service.sync_tags(final_tags)
     
     await collection.insert_one(doc)
+    
+    # For KVN, return the UUID 'id' field instead of _id
+    if collection_name == "kvn":
+        return {"id": doc.get("id"), "slug": doc.get("slug")}
+    
     return {"id": doc["_id"], "slug": doc.get("slug")}
 
 
@@ -920,7 +932,11 @@ async def create_kvn(data: KVNCreate):
     full_path = data.slug
     
     if data.parent_id:
-        parent = await db.kvn.find_one({"_id": data.parent_id})
+        # For KVN, parent_id is a UUID string, not _id
+        # Try to find by 'id' field first, then fallback to _id
+        parent = await db.kvn.find_one({"id": data.parent_id})
+        if not parent:
+            parent = await db.kvn.find_one({"_id": data.parent_id})
         if not parent:
             raise HTTPException(status_code=404, detail="Parent KVN page not found")
         
@@ -955,10 +971,16 @@ async def create_kvn(data: KVNCreate):
     
     # Update parent's child_kvn_ids if parent exists
     if data.parent_id:
-        await db.kvn.update_one(
-            {"_id": data.parent_id},
-            {"$addToSet": {"child_kvn_ids": result["id"]}}
-        )
+        # Find parent by 'id' field (UUID) for KVN
+        parent_doc = await db.kvn.find_one({"id": data.parent_id})
+        if not parent_doc:
+            # Fallback to _id if not found by id
+            parent_doc = await db.kvn.find_one({"_id": data.parent_id})
+        if parent_doc:
+            await db.kvn.update_one(
+                {"_id": parent_doc["_id"]},
+                {"$addToSet": {"child_kvn_ids": result["id"]}}
+            )
     
     # Update person and team links
     if data.person_ids:
@@ -1090,11 +1112,36 @@ async def get_kvn_hierarchy(
     if status:
         query["status"] = status.value
     
-    all_kvn = await db.kvn.find(query, {"_id": 0}).sort([("level", 1), ("title", 1)]).to_list(1000)
+    # We need _id to update records without 'id' field, so don't exclude it
+    all_kvn = await db.kvn.find(query).sort([("level", 1), ("title", 1)]).to_list(1000)
+    
+    # Generate 'id' field for records that don't have it (for backward compatibility)
+    import uuid
+    records_to_update = []
+    for k in all_kvn:
+        if not k.get('id'):
+            # Generate UUID and save it to database
+            new_id = str(uuid.uuid4())
+            k["id"] = new_id
+            records_to_update.append((k["_id"], new_id))
+    
+    # Batch update records without 'id' field
+    if records_to_update:
+        from pymongo import UpdateMany
+        bulk_ops = [UpdateMany({"_id": doc_id}, {"$set": {"id": new_id}}) for doc_id, new_id in records_to_update]
+        if bulk_ops:
+            await db.kvn.bulk_write(bulk_ops)
+    
+    # Remove _id from response (keep only 'id' field)
+    for k in all_kvn:
+        if "_id" in k:
+            del k["_id"]
     
     kvn_by_id = {}
     for k in all_kvn:
-        kvn_by_id[k.get('id')] = k
+        kvn_id = k.get('id')
+        if kvn_id:  # Only add to dict if id exists
+            kvn_by_id[kvn_id] = k
     
     root_kvn = []
     

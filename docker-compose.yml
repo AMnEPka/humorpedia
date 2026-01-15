@@ -42,10 +42,9 @@ services:
         condition: service_healthy
     ports:
       - "8001:8001"
-    # Hot reload: watch Python files in /app directory
-    # Exclude __pycache__, .pyc files, and node_modules for better performance
-    # start.sh автоматически восстанавливает БД из бэкапа перед запуском сервера
-    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload --reload-dir /app --reload-include "*.py" --reload-exclude "*/__pycache__/*" --reload-exclude "*.pyc"
+    # Hot reload disabled due to inotify limits being exceeded in Docker
+    # Restart container manually after code changes: docker-compose restart backend
+    command: uvicorn server:app --host 0.0.0.0 --port 8001
     restart: unless-stopped
 
   frontend:
