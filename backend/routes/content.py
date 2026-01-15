@@ -88,6 +88,83 @@ async def generate_unique_slug(collection_name: str, base_slug: str, parent_path
             raise HTTPException(status_code=500, detail="Could not generate unique slug")
 
 
+async def sync_primary_tag_to_tags(doc: dict) -> dict:
+    """
+    Автоматически добавляет primary_tag в массив tags, если его там нет (case-insensitive).
+    Модифицирует doc напрямую и возвращает обновленный список tags.
+    
+    Args:
+        doc: Словарь документа с полями primary_tag и tags
+        
+    Returns:
+        Обновленный список tags
+    """
+    primary_tag = doc.get("primary_tag")
+    if not primary_tag:
+        return doc.get("tags", [])
+    
+    tags = doc.get("tags", [])
+    
+    # Проверяем, есть ли primary_tag в tags (case-insensitive)
+    tag_exists = any(tag.lower() == primary_tag.lower() for tag in tags)
+    
+    if not tag_exists:
+        tags.append(primary_tag)
+        doc["tags"] = tags
+    
+    return tags
+
+
+async def check_primary_tag_duplicate(
+    collection_name: str, 
+    primary_tag: Optional[str], 
+    exclude_id: str = None
+) -> None:
+    """
+    Проверяет, не используется ли primary_tag другим человеком/командой (case-insensitive).
+    Если найден дубликат, возвращает ошибку с информацией о существующей записи.
+    
+    Args:
+        collection_name: Имя коллекции ("people" или "teams")
+        primary_tag: Базовый тег для проверки
+        exclude_id: ID документа, который нужно исключить из проверки (для обновлений)
+        
+    Raises:
+        HTTPException: Если найден дубликат primary_tag
+    """
+    if not primary_tag:
+        return  # Пустой тег не проверяем
+    
+    # Проверяем только для людей и команд
+    if collection_name not in ["people", "teams"]:
+        return
+    
+    db = await get_db()
+    collection = getattr(db, collection_name)
+    
+    # Ищем документы с таким же primary_tag (case-insensitive)
+    query = {
+        "primary_tag": {"$regex": f"^{re.escape(primary_tag)}$", "$options": "i"}
+    }
+    
+    # Исключаем текущий документ при обновлении
+    if exclude_id:
+        query["_id"] = {"$ne": exclude_id}
+    
+    existing = await collection.find_one(query)
+    
+    if existing:
+        # Формируем информативное сообщение об ошибке
+        item_name = existing.get("full_name") or existing.get("name") or existing.get("title", "Неизвестно")
+        item_type = "человека" if collection_name == "people" else "команды"
+        
+        raise HTTPException(
+            status_code=400,
+            detail=f"Базовый тег '{primary_tag}' уже используется {item_type} '{item_name}'. "
+                   f"Пожалуйста, выберите уникальный тег (например, '{primary_tag} (команда X)')."
+        )
+
+
 async def create_content(collection_name: str, model_instance, tags: list = None):
     """Universal create handler"""
     db = await get_db()
@@ -97,9 +174,23 @@ async def create_content(collection_name: str, model_instance, tags: list = None
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
     
-    # Sync tags
-    if tags:
-        await tag_service.sync_tags(tags)
+    # Проверка на дубликаты primary_tag для людей и команд
+    primary_tag = doc.get("primary_tag")
+    if primary_tag and collection_name in ["people", "teams"]:
+        await check_primary_tag_duplicate(collection_name, primary_tag)
+    
+    # Синхронизация primary_tag в tags для людей и команд
+    # Используем tags из doc, а не из параметра, так как они уже должны совпадать
+    if collection_name in ["people", "teams"]:
+        updated_tags = await sync_primary_tag_to_tags(doc)
+        # Обновляем tags в doc, если они изменились
+        if updated_tags != doc.get("tags", []):
+            doc["tags"] = updated_tags
+    
+    # Sync tags (используем tags из doc, так как они уже синхронизированы с primary_tag)
+    final_tags = doc.get("tags", [])
+    if final_tags:
+        await tag_service.sync_tags(final_tags)
     
     await collection.insert_one(doc)
     return {"id": doc["_id"], "slug": doc.get("slug")}
@@ -233,9 +324,34 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
                 update_data["primary_tag"] = default_tag
                 old_primary_tag = None  # Будет обновление с null -> default_tag
     
+    # Проверка на дубликаты primary_tag для людей и команд
+    new_primary_tag = update_data.get("primary_tag")
+    if new_primary_tag and collection_name in ["people", "teams"]:
+        # Проверяем только если primary_tag изменился
+        if new_primary_tag != old_primary_tag:
+            await check_primary_tag_duplicate(collection_name, new_primary_tag, exclude_id=item_id)
+    
+    # Синхронизация primary_tag в tags для людей и команд
+    if collection_name in ["people", "teams"]:
+        # Объединяем текущие данные с обновлениями для синхронизации
+        merged_item = {**current_item, **update_data}
+        # Если tags обновляются, используем новые tags, иначе текущие
+        if hasattr(data, 'tags') and data.tags is not None:
+            merged_item["tags"] = data.tags
+        else:
+            merged_item["tags"] = current_item.get("tags", [])
+        
+        # Синхронизируем primary_tag в tags
+        updated_tags = await sync_primary_tag_to_tags(merged_item)
+        if updated_tags != merged_item.get("tags", []):
+            update_data["tags"] = updated_tags
+    
     # Sync tags if present
     if hasattr(data, 'tags') and data.tags:
         await tag_service.sync_tags(data.tags)
+    elif "tags" in update_data:
+        # Синхронизируем обновленные tags (включая добавленный primary_tag)
+        await tag_service.sync_tags(update_data["tags"])
     
     result = await collection.update_one({"_id": item_id}, {"$set": update_data})
     
@@ -243,30 +359,11 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
         raise HTTPException(status_code=404, detail=not_found_msg)
     
     # Если изменился primary_tag для команды или человека, обновляем теги в сезонах
-    new_primary_tag = update_data.get("primary_tag") or old_primary_tag
-    if hasattr(data, 'primary_tag'):
-        # Если primary_tag был явно задан в обновлении
-        if 'primary_tag' in update_data:
-            new_primary_tag = update_data["primary_tag"]
-        # Если primary_tag не задан явно, но его нет в базе, используем значение по умолчанию
-        elif not old_primary_tag:
-            if collection_name == "teams":
-                new_primary_tag = current_item.get("name") or current_item.get("title")
-            elif collection_name == "people":
-                # Преобразуем "Фамилия Имя" в "Имя Фамилия"
-                def swap_name_order(name):
-                    if not name:
-                        return name
-                    parts = name.strip().split()
-                    if len(parts) == 2:
-                        return f"{parts[1]} {parts[0]}"
-                    return name
-                title = current_item.get("title") or current_item.get("full_name")
-                new_primary_tag = swap_name_order(title)
-        
-        if new_primary_tag != old_primary_tag:
-            # Обновляем теги везде, где они используются
-            await update_tags_everywhere(db, old_primary_tag, new_primary_tag)
+    # Определяем финальный new_primary_tag (может быть из update_data или остаться старым)
+    final_new_primary_tag = update_data.get("primary_tag") or old_primary_tag
+    if hasattr(data, 'primary_tag') and final_new_primary_tag != old_primary_tag:
+        # Обновляем теги везде, где они используются
+        await update_tags_everywhere(db, old_primary_tag, final_new_primary_tag)
     
     return {"id": item_id, "updated": True}
 
