@@ -22,6 +22,11 @@ Imported images are served by backend via:
 - URL: `/media/imported/...`
 - Mounted from: `./frontend/public/media` into backend container.
 
+Site images (from Docker volume) are served via:
+- URL: `/images/...` (e.g., `/images/kvn-team/maximum.jpg`)
+- Mounted from: Docker named volume `images_volume` into backend container at `/app/images`
+- On production: Mount your actual images directory to this volume
+
 ## Migration scripts
 You can run migration scripts from your host (recommended) or inside backend container.
 

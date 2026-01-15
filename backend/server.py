@@ -342,6 +342,12 @@ imported_media_dir = Path("/app/frontend/public/media")
 if imported_media_dir.exists():
     app.mount("/media", StaticFiles(directory=str(imported_media_dir)), name="media")
 
+# Static files for Docker volume images (site images)
+# Files accessible via https://humorpedia.ru/images/kvn-team/maximum.jpg
+images_dir = Path("/app/images")
+if images_dir.exists():
+    app.mount("/images", StaticFiles(directory=str(images_dir)), name="images")
+
 
 # CORS middleware
 cors_origins = os.environ.get('CORS_ORIGINS', '*')

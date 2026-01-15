@@ -172,6 +172,19 @@ export const commentsApi = {
 
 // Media API
 export const mediaApi = {
+  uploadToSource: async (file, source, prefix = '') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('source', source);
+    if (prefix) {
+      formData.append('prefix', prefix);
+    }
+    return api.post('/media/upload-to-source', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
   list: (params) => api.get('/media', { params }),
   get: (id) => api.get(`/media/${id}`),
   browse: (params) => api.get('/media/browse', { params }),
@@ -186,6 +199,8 @@ export const mediaApi = {
   },
   update: (id, data) => api.put(`/media/${id}`, data),
   delete: (id) => api.delete(`/media/${id}`),
+  deleteFromSource: (source, path) => api.delete('/media/source/delete', { params: { source, path } }),
+  renameInSource: (source, path, newName) => api.put('/media/source/rename', null, { params: { source, path, new_name: newName } }),
 };
 
 // Templates API

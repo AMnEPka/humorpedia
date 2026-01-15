@@ -50,40 +50,111 @@ const webpackConfig = {
       // Critical: Exclude large media directory from file watching
       // This prevents webpack from scanning 3000+ image files on startup
       const publicMediaPath = path.resolve(__dirname, 'public/media');
+      const publicPath = path.resolve(__dirname, 'public');
+      
+      // Build comprehensive ignore list to prevent ENOMEM errors
+      const ignoredPatterns = [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/build/**',
+        '**/dist/**',
+        '**/coverage/**',
+        // Explicitly exclude the large media directory
+        publicMediaPath,
+        '**/public/media/**',
+        // Exclude all image files in public folder
+        '**/public/**/*.jpg',
+        '**/public/**/*.jpeg',
+        '**/public/**/*.png',
+        '**/public/**/*.gif',
+        '**/public/**/*.webp',
+        '**/public/**/*.svg',
+        '**/public/**/*.ico',
+        '**/public/**/*.bmp',
+        // Exclude entire public directory from watchpack initial scan
+        // Only watch public/index.html and public/manifest.json if needed
+        /^[\\/]?public[\\/](?!index\.html|manifest\.json|robots\.txt)/,
+        // Exclude cache and temp directories
+        '**/.cache/**',
+        '**/.tmp/**',
+        '**/tmp/**',
+        '**/*.log',
+        '**/*.swp',
+        '**/*.swo',
+        '**/.DS_Store',
+        // Exclude backup and migration directories if they exist
+        '**/backups/**',
+        '**/migration/**',
+      ];
+      
+      // Configure watchpack to ignore large directories
+      // This is critical to prevent ENOMEM errors when scanning thousands of files
       webpackConfig.watchOptions = {
         ...webpackConfig.watchOptions,
         ignored: [
-          '**/node_modules/**',
-          '**/.git/**',
-          '**/build/**',
-          '**/dist/**',
-          '**/coverage/**',
-          // Explicitly exclude the large media directory
-          publicMediaPath,
-          '**/public/media/**',
-          // Also exclude image files in public folder using glob patterns
-          '**/public/media/**/*.jpg',
-          '**/public/media/**/*.jpeg',
-          '**/public/media/**/*.png',
-          '**/public/media/**/*.gif',
-          '**/public/media/**/*.webp',
-          '**/public/media/**/*.svg',
-          // Exclude cache and temp directories
-          '**/.cache/**',
-          '**/.tmp/**',
-          '**/tmp/**',
-          '**/*.log',
-          '**/*.swp',
-          '**/*.swo',
-          '**/.DS_Store',
+          ...ignoredPatterns,
+          // Additional patterns for watchpack
+          /node_modules/,
+          /\.git/,
+          /build/,
+          /dist/,
+          /coverage/,
+          // Exclude entire public directory - it's served separately
+          // Only essential files (index.html, manifest.json) are needed
+          (filePath) => {
+            try {
+              // Convert to normalized path for comparison
+              const normalizedPath = path.normalize(filePath);
+              const publicDir = path.normalize('public');
+              
+              // Exclude public directory except essential files
+              if (normalizedPath.includes(publicDir)) {
+                const relativePath = path.relative(
+                  path.resolve(__dirname, publicDir),
+                  normalizedPath
+                );
+                const fileName = path.basename(normalizedPath);
+                // Only allow index.html, manifest.json, robots.txt in public root
+                if (relativePath === fileName) {
+                  return !['index.html', 'manifest.json', 'robots.txt'].includes(fileName);
+                }
+                // Exclude all subdirectories and files in public
+                return true;
+              }
+              return false;
+            } catch (e) {
+              // If path comparison fails, exclude by default
+              return false;
+            }
+          },
         ],
         aggregateTimeout: 500,
         // Use polling in Docker for better file change detection, but with longer interval
         // Longer interval reduces file descriptor usage
-        poll: process.env.CHOKIDAR_USEPOLLING === 'true' ? 2000 : false,
+        poll: process.env.CHOKIDAR_USEPOLLING === 'true' ? 3000 : false,
         // Limit the number of files watched to prevent ENOMEM errors
         followSymlinks: false,
       };
+      
+      // Configure webpack to use less aggressive file watching
+      // This helps prevent ENOMEM errors when there are many files
+      if (!webpackConfig.snapshot) {
+        webpackConfig.snapshot = {};
+      }
+      webpackConfig.snapshot.managedPaths = [
+        path.resolve(__dirname, 'node_modules'),
+      ];
+      webpackConfig.snapshot.immutablePaths = [
+        path.resolve(__dirname, 'node_modules'),
+      ];
+      
+      // Exclude public directory from snapshot to prevent initial scan
+      if (!webpackConfig.snapshot.ignored) {
+        webpackConfig.snapshot.ignored = [];
+      }
+      webpackConfig.snapshot.ignored.push(
+        /public[\\/](?!index\.html|manifest\.json|robots\.txt)/
+      );
 
       // Optimize module resolution with caching
       if (!webpackConfig.resolve) {

@@ -32,7 +32,11 @@ services:
       - ./uploads:/app/uploads
       - ./backups:/app/backups
       # Important: allow backend to serve /media/imported/* from frontend public folder
-      - ./frontend/public/media:/app/frontend/public/media:ro
+      # Read-write access for uploading files through web interface
+      - ./frontend/public/media:/app/frontend/public/media
+      # Docker volume with site images (accessible via /images/*)
+      # Read-write access for uploading files through web interface
+      - images_volume:/app/images
     depends_on:
       mongodb:
         condition: service_healthy
@@ -56,11 +60,14 @@ services:
       - DOCKER_ENV=true
       # Suppress deprecation warnings and increase memory limit to prevent ENOMEM errors
       - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096
+      # Increase file descriptor limit for watchpack
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_IGNORED=/app/public
     ulimits:
       # Increase file descriptor limit to prevent ENOMEM errors
       nofile:
-        soft: 65536
-        hard: 65536
+        soft: 131072
+        hard: 131072
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -100,3 +107,6 @@ volumes:
   # Empty volume for frontend public/media to prevent webpack from scanning 3000+ images
   # Media files are served by backend, so frontend doesn't need them
   frontend_media:
+  # Named volume for site images (kvn-team, etc.)
+  # Mount this volume on production server with actual images
+  images_volume:

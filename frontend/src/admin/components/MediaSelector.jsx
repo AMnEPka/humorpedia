@@ -79,10 +79,9 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
   const fetchImportedMedia = useCallback(async () => {
     setLoading(true);
     try {
-      // Если currentPath пустой, используем 'images' как базовый путь
-      const prefix = currentPath ? `images/${currentPath}` : 'images';
       const params = {
-        prefix: prefix,
+        source: 'imported',
+        prefix: currentPath || '',
         limit: 1000, // Больше для импортированных, так как они локальные
         ...(search && { query: search })
       };
@@ -219,18 +218,12 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
     const files = [];
     
     importedMedia.forEach(item => {
-      // Путь всегда начинается с 'images/', убираем этот префикс
-      if (!item.path.startsWith('images/')) {
-        return; // Пропускаем файлы не из images
-      }
-      
-      const pathWithoutImages = item.path.substring('images/'.length);
-      const pathParts = pathWithoutImages.split('/');
+      const pathParts = item.path.split('/');
       
       if (currentPath === '') {
-        // В корне images - показываем только первую папку или файлы в корне
+        // В корне - показываем только первую папку или файлы в корне
         if (pathParts.length === 1) {
-          // Файл в корне images
+          // Файл в корне
           files.push(item);
         } else {
           // Есть подпапка

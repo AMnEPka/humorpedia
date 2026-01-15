@@ -8,7 +8,7 @@ import aiofiles
 from pathlib import Path
 
 from models.user import Media, MediaCreate
-from models.media_browser import MediaBrowseResponse, MediaBrowseItem
+from models.media_browser import MediaBrowseResponse, MediaBrowseItem, MediaBrowseFolder
 from utils.database import get_db
 from routes.auth import get_current_user
 
@@ -44,7 +44,7 @@ async def upload_file(
     alt: Optional[str] = Form(None),
     caption: Optional[str] = Form(None)
 ):
-    """Upload a file"""
+    """Upload a file to the default uploads directory"""
     user = await get_current_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="Необходима авторизация")
@@ -125,6 +125,99 @@ async def upload_file(
     }
 
 
+@router.post("/upload-to-source", response_model=dict)
+async def upload_to_source(
+    request: Request,
+    file: UploadFile = File(...),
+    source: str = Form(..., description="Source directory: 'imported' or 'images'"),
+    prefix: str = Form("", description="Path prefix (e.g., 'kvn-team' or 'images/people')"),
+):
+    """Upload a file to a specific source directory (imported or images volume)
+    
+    Sources:
+    - 'imported': /app/frontend/public/media/imported
+    - 'images': /app/images (Docker volume)
+    """
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Необходима авторизация")
+    
+    if user.get("role") not in ["admin", "editor", "moderator"]:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+    
+    if source not in ["imported", "images"]:
+        raise HTTPException(status_code=400, detail="Некорректный source. Допустимые значения: 'imported', 'images'")
+    
+    # Определяем базовую директорию в зависимости от источника
+    if source == "images":
+        base_dir = Path("/app/images").resolve()
+        url_prefix = "/images"
+    else:
+        base_dir = Path("/app/frontend/public/media/imported").resolve()
+        url_prefix = "/media/imported"
+    
+    # Validate file type - только изображения для этих источников
+    ext = Path(file.filename).suffix.lower()
+    allowed_exts = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
+    if ext not in allowed_exts:
+        raise HTTPException(status_code=400, detail="Разрешены только изображения (jpg, jpeg, png, webp, gif, svg)")
+    
+    # Read file content
+    content = await file.read()
+    
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail=f"Файл слишком большой. Максимум {MAX_FILE_SIZE // 1024 // 1024} MB")
+    
+    # Определяем целевую директорию
+    if prefix:
+        target_dir = (base_dir / prefix).resolve()
+    else:
+        target_dir = base_dir
+    
+    # Prevent path traversal
+    if base_dir not in target_dir.parents and target_dir != base_dir:
+        raise HTTPException(status_code=400, detail="Некорректный prefix")
+    
+    # Создаем директорию, если её нет
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Используем оригинальное имя файла (можно изменить логику, если нужны уникальные имена)
+    filename = file.filename
+    file_path = target_dir / filename
+    
+    # Проверяем, не существует ли уже файл с таким именем
+    if file_path.exists():
+        # Добавляем суффикс, если файл существует
+        stem = file_path.stem
+        counter = 1
+        while file_path.exists():
+            file_path = target_dir / f"{stem}_{counter}{ext}"
+            counter += 1
+        filename = file_path.name
+    
+    # Сохраняем файл
+    try:
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(content)
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Нет прав на запись в эту директорию")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при сохранении файла: {str(e)}")
+    
+    # Генерируем относительный путь для URL
+    rel_path = file_path.relative_to(base_dir).as_posix()
+    url = f"{url_prefix}/{rel_path}"
+    
+    return {
+        "url": url,
+        "path": rel_path,
+        "filename": filename,
+        "original_name": file.filename,
+        "size": len(content),
+        "source": source
+    }
+
+
 @router.get("", response_model=dict)
 async def list_media(
     request: Request,
@@ -164,11 +257,16 @@ async def list_media(
 @router.get("/browse", response_model=MediaBrowseResponse)
 async def browse_imported_media(
     request: Request,
-    prefix: str = Query("images/people", description="Path prefix under /media/imported"),
+    prefix: str = Query("", description="Path prefix (e.g., 'images/people' or 'kvn-team')"),
+    source: str = Query("imported", description="Source directory: 'imported' or 'images'"),
     query: Optional[str] = Query(None, description="Case-insensitive substring filter"),
     limit: int = Query(200, ge=1, le=2000),
 ):
-    """Browse local imported media files from frontend/public/media/imported.
+    """Browse local media files from different sources.
+
+    Sources:
+    - 'imported': /app/frontend/public/media/imported (legacy imported files)
+    - 'images': /app/images (Docker volume with site images)
 
     Returns URLs usable directly in <img src="...">.
     """
@@ -176,43 +274,219 @@ async def browse_imported_media(
     if not user or user.get("role") not in ["admin", "editor", "moderator"]:
         raise HTTPException(status_code=403, detail="Недостаточно прав")
 
-    base_dir = Path("/app/frontend/public/media/imported").resolve()
-    target_dir = (base_dir / prefix).resolve()
+    # Определяем базовую директорию в зависимости от источника
+    if source == "images":
+        # Docker volume с изображениями сайта
+        base_dir = Path("/app/images").resolve()
+        url_prefix = "/images"
+    else:
+        # Стандартная директория импортированных файлов
+        base_dir = Path("/app/frontend/public/media/imported").resolve()
+        url_prefix = "/media/imported"
+
+    # Если prefix пустой, используем корень базовой директории
+    if prefix:
+        target_dir = (base_dir / prefix).resolve()
+    else:
+        target_dir = base_dir
 
     # prevent path traversal
     if base_dir not in target_dir.parents and target_dir != base_dir:
         raise HTTPException(status_code=400, detail="Некорректный prefix")
 
     if not target_dir.exists() or not target_dir.is_dir():
-        return MediaBrowseResponse(items=[], total=0)
+        return MediaBrowseResponse(items=[], folders=[], total=0)
 
     q = (query or "").lower() if query else None
     items: list[MediaBrowseItem] = []
+    folders: list[MediaBrowseFolder] = []
 
-    exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+    exts = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
 
-    for p in target_dir.rglob("*"):
-        if not p.is_file():
-            continue
-        if p.suffix.lower() not in exts:
-            continue
+    # Получаем только содержимое текущей папки (не рекурсивно)
+    try:
+        for entry in target_dir.iterdir():
+            if entry.is_dir():
+                # Это папка
+                folder_rel = entry.relative_to(base_dir).as_posix()
+                folders.append(
+                    MediaBrowseFolder(
+                        name=entry.name,
+                        path=folder_rel,
+                    )
+                )
+            elif entry.is_file() and entry.suffix.lower() in exts:
+                # Это файл изображения
+                # В корне (когда prefix пустой) не возвращаем файлы, только папки
+                if not prefix:
+                    continue
+                    
+                rel = entry.relative_to(base_dir).as_posix()
+                name = entry.name
+                
+                # Фильтр по поисковому запросу
+                if q and q not in rel.lower() and q not in name.lower():
+                    continue
 
-        rel = p.relative_to(base_dir).as_posix()  # e.g. images/people/kvn/x.jpg
-        name = p.name
-        if q and q not in rel.lower() and q not in name.lower():
-            continue
+                items.append(
+                    MediaBrowseItem(
+                        path=rel,
+                        url=f"{url_prefix}/{rel}",
+                        name=name,
+                    )
+                )
+                if len(items) >= limit:
+                    break
+    except PermissionError:
+        return MediaBrowseResponse(items=[], folders=[], total=0)
 
-        items.append(
-            MediaBrowseItem(
-                path=rel,
-                url=f"/media/imported/{rel}",
-                name=name,
-            )
-        )
-        if len(items) >= limit:
-            break
+    # Сортируем папки и файлы
+    folders.sort(key=lambda x: x.name.lower())
+    items.sort(key=lambda x: x.name.lower())
 
-    return MediaBrowseResponse(items=items, total=len(items))
+    # Определяем путь к родительской папке
+    parent_path = None
+    if prefix:
+        # Получаем родительский путь
+        prefix_parts = prefix.split('/')
+        if len(prefix_parts) > 1:
+            parent_path = '/'.join(prefix_parts[:-1])
+        elif len(prefix_parts) == 1:
+            # Если prefix состоит из одной части, родитель - корень
+            parent_path = ''
+        # Если prefix пустой, parent_path остается None
+
+    return MediaBrowseResponse(items=items, folders=folders, total=len(items), parent_path=parent_path)
+
+
+@router.delete("/source/delete")
+async def delete_from_source(
+    request: Request,
+    source: str = Query(..., description="Source directory: 'imported' or 'images'"),
+    path: str = Query(..., description="File path relative to source base directory"),
+):
+    """Delete a file from a specific source directory (imported or images volume)
+    
+    Sources:
+    - 'imported': /app/frontend/public/media/imported
+    - 'images': /app/images (Docker volume)
+    """
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Необходима авторизация")
+    
+    if user.get("role") not in ["admin", "editor", "moderator"]:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+    
+    if source not in ["imported", "images"]:
+        raise HTTPException(status_code=400, detail="Некорректный source. Допустимые значения: 'imported', 'images'")
+    
+    # Определяем базовую директорию в зависимости от источника
+    if source == "images":
+        base_dir = Path("/app/images").resolve()
+    else:
+        base_dir = Path("/app/frontend/public/media/imported").resolve()
+    
+    # Получаем путь к файлу
+    file_path = (base_dir / path).resolve()
+    
+    # Prevent path traversal
+    if base_dir not in file_path.parents and file_path != base_dir:
+        raise HTTPException(status_code=400, detail="Некорректный путь")
+    
+    # Проверяем, что файл существует
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    if not file_path.is_file():
+        raise HTTPException(status_code=400, detail="Указанный путь не является файлом")
+    
+    # Удаляем файл
+    try:
+        file_path.unlink()
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Нет прав на удаление файла")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при удалении файла: {str(e)}")
+    
+    return {"deleted": True, "path": path, "source": source}
+
+
+@router.put("/source/rename")
+async def rename_file_in_source(
+    request: Request,
+    source: str = Query(..., description="Source directory: 'imported' or 'images'"),
+    path: str = Query(..., description="Current file path relative to source base directory"),
+    new_name: str = Query(..., description="New filename (without path)"),
+):
+    """Rename a file in a specific source directory (imported or images volume)
+    
+    Sources:
+    - 'imported': /app/frontend/public/media/imported
+    - 'images': /app/images (Docker volume)
+    """
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Необходима авторизация")
+    
+    if user.get("role") not in ["admin", "editor", "moderator"]:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+    
+    if source not in ["imported", "images"]:
+        raise HTTPException(status_code=400, detail="Некорректный source. Допустимые значения: 'imported', 'images'")
+    
+    # Валидация нового имени файла
+    if not new_name or '/' in new_name or '\\' in new_name:
+        raise HTTPException(status_code=400, detail="Некорректное имя файла")
+    
+    # Определяем базовую директорию в зависимости от источника
+    if source == "images":
+        base_dir = Path("/app/images").resolve()
+        url_prefix = "/images"
+    else:
+        base_dir = Path("/app/frontend/public/media/imported").resolve()
+        url_prefix = "/media/imported"
+    
+    # Получаем путь к текущему файлу
+    old_file_path = (base_dir / path).resolve()
+    
+    # Prevent path traversal
+    if base_dir not in old_file_path.parents and old_file_path != base_dir:
+        raise HTTPException(status_code=400, detail="Некорректный путь")
+    
+    # Проверяем, что файл существует
+    if not old_file_path.exists():
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    if not old_file_path.is_file():
+        raise HTTPException(status_code=400, detail="Указанный путь не является файлом")
+    
+    # Создаем новый путь с новым именем
+    new_file_path = old_file_path.parent / new_name
+    
+    # Проверяем, не существует ли уже файл с таким именем
+    if new_file_path.exists():
+        raise HTTPException(status_code=400, detail="Файл с таким именем уже существует")
+    
+    # Переименовываем файл
+    try:
+        old_file_path.rename(new_file_path)
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Нет прав на переименование файла")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при переименовании файла: {str(e)}")
+    
+    # Генерируем новый относительный путь для URL
+    new_rel_path = new_file_path.relative_to(base_dir).as_posix()
+    new_url = f"{url_prefix}/{new_rel_path}"
+    
+    return {
+        "success": True,
+        "old_path": path,
+        "new_path": new_rel_path,
+        "new_url": new_url,
+        "new_name": new_name
+    }
 
 
 @router.get("/{media_id}", response_model=dict)
