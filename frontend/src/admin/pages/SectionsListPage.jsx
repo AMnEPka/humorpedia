@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Edit2, Trash2, Loader2, ChevronRight, ChevronDown, Menu, Copy } from 'lucide-react';
 
-function SectionTreeItem({ section, onEdit, onDelete, onDuplicate, level = 0 }) {
+function SectionTreeItem({ section, onEdit, onDelete, onDuplicate, level = 0, duplicatingId }) {
   const [expanded, setExpanded] = useState(true);
   const hasChildren = section.children && section.children.length > 0;
 
@@ -44,8 +44,14 @@ function SectionTreeItem({ section, onEdit, onDelete, onDuplicate, level = 0 }) 
           <Button size="sm" variant="ghost" onClick={() => onEdit(section.id)}>
             <Edit2 className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => onDuplicate(section.id)}>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => onDuplicate(section.id)}
+            disabled={duplicatingId === section.id}
+          >
             <Copy className="h-4 w-4" />
+            {duplicatingId === section.id && <span className="ml-1 text-xs">...</span>}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => onDelete(section.id)}>
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -63,6 +69,7 @@ function SectionTreeItem({ section, onEdit, onDelete, onDuplicate, level = 0 }) 
               onDelete={onDelete}
               onDuplicate={onDuplicate}
               level={level + 1}
+              duplicatingId={duplicatingId}
             />
           ))}
         </div>
@@ -77,6 +84,7 @@ export default function SectionsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [duplicatingId, setDuplicatingId] = useState(null); // Защита от повторных кликов
 
   useEffect(() => {
     loadTree();
@@ -104,12 +112,20 @@ export default function SectionsListPage() {
   };
 
   const handleDuplicate = async (id) => {
+    // Защита от повторных кликов
+    if (duplicatingId === id) {
+      return;
+    }
+    
+    setDuplicatingId(id);
     try {
       await contentApi.duplicateContent('sections', id);
       loadTree();
     } catch (error) {
       console.error('Error duplicating section:', error);
       alert('Ошибка при копировании раздела');
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -169,6 +185,7 @@ export default function SectionsListPage() {
                   onEdit={(id) => navigate(`/admin/sections/${id}`)}
                   onDelete={handleDelete}
                   onDuplicate={handleDuplicate}
+                  duplicatingId={duplicatingId}
                 />
               ))}
             </div>

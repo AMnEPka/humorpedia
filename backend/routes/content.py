@@ -33,28 +33,55 @@ async def check_slug_unique(collection_name: str, slug: str, exclude_id: str = N
     collection = getattr(db, collection_name)
     query = {"slug": slug}
     if exclude_id:
-        query["_id"] = {"$ne": exclude_id}
+        # For KVN, exclude by 'id' field (UUID) or _id
+        if collection_name == "kvn":
+            # Try to find the document to get its _id
+            doc = await collection.find_one({"id": exclude_id})
+            if not doc:
+                doc = await collection.find_one({"_id": exclude_id})
+            if doc:
+                query["_id"] = {"$ne": doc["_id"]}
+        else:
+            query["_id"] = {"$ne": exclude_id}
     existing = await collection.find_one(query)
     if existing:
         raise HTTPException(status_code=400, detail="Slug already exists")
 
 
-async def generate_unique_slug(collection_name: str, base_slug: str) -> str:
-    """Generate unique slug by appending _1, _2, etc. if needed"""
+async def generate_unique_slug(collection_name: str, base_slug: str, parent_path: str = None) -> str:
+    """
+    Generate unique slug by appending _1, _2, etc. if needed.
+    For hierarchical content (KVN, sections), also checks full_path uniqueness.
+    """
     db = await get_db()
     collection = getattr(db, collection_name)
     
+    # Helper to check if slug is unique
+    async def is_slug_unique(slug_to_check: str, expected_full_path: str = None) -> bool:
+        # Check by slug field
+        existing_by_slug = await collection.find_one({"slug": slug_to_check})
+        if existing_by_slug:
+            return False
+        
+        # For hierarchical content, also check full_path
+        if expected_full_path:
+            existing_by_path = await collection.find_one({"full_path": expected_full_path})
+            if existing_by_path:
+                return False
+        
+        return True
+    
     # Try base slug first
-    existing = await collection.find_one({"slug": base_slug})
-    if not existing:
+    expected_full_path = f"{parent_path}/{base_slug}" if parent_path else base_slug
+    if await is_slug_unique(base_slug, expected_full_path):
         return base_slug
     
     # Try with _1, _2, etc.
     counter = 1
     while True:
         new_slug = f"{base_slug}_{counter}"
-        existing = await collection.find_one({"slug": new_slug})
-        if not existing:
+        expected_full_path = f"{parent_path}/{new_slug}" if parent_path else new_slug
+        if await is_slug_unique(new_slug, expected_full_path):
             return new_slug
         counter += 1
         if counter > 1000:  # Safety limit
@@ -111,19 +138,51 @@ async def delete_content(collection_name: str, item_id: str, not_found_msg: str)
     return {"id": item_id, "deleted": True}
 
 
+def convert_objectids_to_strings(obj):
+    """Recursively convert ObjectId to string for JSON serialization"""
+    try:
+        from bson import ObjectId
+    except ImportError:
+        ObjectId = None
+    
+    if ObjectId and isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, dict):
+        return {k: convert_objectids_to_strings(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_objectids_to_strings(item) for item in obj]
+    # Also handle ObjectId-like objects by checking string representation
+    elif hasattr(obj, '__class__') and 'ObjectId' in str(type(obj)):
+        return str(obj)
+    return obj
+
+
 async def get_by_id_or_slug(collection_name: str, id_or_slug: str, not_found_msg: str, increment_views: bool = True):
     """Universal get by ID or slug handler"""
     db = await get_db()
     collection = getattr(db, collection_name)
+
+    # For KVN, also check the 'id' field (UUID)
+    if collection_name == "kvn":
+        query = {"$or": [{"_id": id_or_slug}, {"id": id_or_slug}, {"slug": id_or_slug}]}
+    else:
+        query = {"$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]}
     
-    query = {"$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]}
     item = await collection.find_one(query)
-    
+
     if not item:
         raise HTTPException(status_code=404, detail=not_found_msg)
-    
+
     if increment_views:
         await collection.update_one({"_id": item["_id"]}, {"$inc": {"views": 1}})
+
+    # Convert all ObjectId instances to strings for JSON serialization
+    item = convert_objectids_to_strings(item)
+    
+    # Remove _id field if present (it's already converted to string if needed)
+    # But keep it as string for reference if needed
+    if "_id" in item:
+        item["_id"] = str(item["_id"])
     
     return item
 
@@ -800,6 +859,17 @@ async def update_kvn(id: str, data: KVNUpdate):
     """Update KVN page"""
     db = await get_db()
     
+    # For KVN, try to find by 'id' field (UUID) first, then by _id
+    kvn = await db.kvn.find_one({"id": id})
+    if not kvn:
+        kvn = await db.kvn.find_one({"_id": id})
+    
+    if not kvn:
+        raise HTTPException(status_code=404, detail="KVN page not found")
+    
+    # Get the actual _id for update operations
+    kvn_id = kvn["_id"]
+    
     update_data = {}
     
     if data.title is not None:
@@ -819,17 +889,20 @@ async def update_kvn(id: str, data: KVNUpdate):
     if data.parent_id is not None:
         update_data["parent_id"] = data.parent_id
         if data.parent_id:
-            parent = await db.kvn.find_one({"_id": data.parent_id})
+            # Find parent by 'id' field (UUID) first, then by _id
+            parent = await db.kvn.find_one({"id": data.parent_id})
+            if not parent:
+                parent = await db.kvn.find_one({"_id": data.parent_id})
             if parent:
                 parent_level = parent.get("level", 0)
                 if parent_level >= 4:
                     raise HTTPException(status_code=400, detail="Maximum hierarchy level (4) reached")
                 update_data["level"] = parent_level + 1
                 parent_path = parent.get("full_path", parent.get("slug"))
-                current_slug = data.slug or (await db.kvn.find_one({"_id": id}, {"slug": 1})).get("slug")
+                current_slug = data.slug or kvn.get("slug")
                 update_data["full_path"] = f"{parent_path}/{current_slug}"
         else:
-            current_slug = data.slug or (await db.kvn.find_one({"_id": id}, {"slug": 1})).get("slug")
+            current_slug = data.slug or kvn.get("slug")
             update_data["level"] = 0
             update_data["full_path"] = current_slug
     if data.facts is not None:
@@ -939,7 +1012,7 @@ async def update_kvn(id: str, data: KVNUpdate):
         logger.warning(f"Could not calculate data size: {e}")
     
     try:
-        result = await db.kvn.update_one({"_id": id}, {"$set": update_data})
+        result = await db.kvn.update_one({"_id": kvn_id}, {"$set": update_data})
     except Exception as e:
         logger.error(f"Error updating KVN {id}: {e}", exc_info=True)
         # Логируем детали ошибки
@@ -960,7 +1033,7 @@ async def update_kvn(id: str, data: KVNUpdate):
                     return obj
                 
                 cleaned_update_data = convert_objectid(update_data)
-                result = await db.kvn.update_one({"_id": id}, {"$set": cleaned_update_data})
+                result = await db.kvn.update_one({"_id": kvn_id}, {"$set": cleaned_update_data})
                 logger.info("Successfully updated after ObjectId conversion")
             except Exception as e2:
                 logger.error(f"Error after ObjectId conversion: {e2}", exc_info=True)
@@ -973,10 +1046,15 @@ async def update_kvn(id: str, data: KVNUpdate):
     
     # Update person links if provided (team_ids are already saved in update_data above)
     if data.person_ids is not None:
-        await linking_service.update_person_links("kvn", id, data.person_ids)
+        # Use UUID for linking service
+        kvn_uuid = kvn.get("id") or str(kvn_id)
+        await linking_service.update_person_links("kvn", kvn_uuid, data.person_ids)
     # Note: team_ids are already saved in the document via update_data, no additional linking needed
     
-    updated = await db.kvn.find_one({"_id": id}, {"_id": 0})
+    # Return updated document, converting ObjectIds to strings
+    updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
+    if updated:
+        updated = convert_objectids_to_strings(updated)
     return updated
 
 
@@ -984,23 +1062,42 @@ async def update_kvn(id: str, data: KVNUpdate):
 async def delete_kvn(id: str):
     """Delete KVN page"""
     db = await get_db()
+
+    # For KVN, try to find by 'id' field (UUID) first, then by _id
+    kvn = await db.kvn.find_one({"id": id})
+    if not kvn:
+        kvn = await db.kvn.find_one({"_id": id})
     
-    kvn = await db.kvn.find_one({"_id": id})
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
-    
+
+    # Get the actual _id for deletion
+    kvn_id = kvn["_id"]
+    kvn_uuid = kvn.get("id")  # UUID field
+
     if kvn.get("child_kvn_ids"):
         raise HTTPException(status_code=400, detail="Cannot delete KVN page with children. Delete children first.")
-    
+
+    # Update parent's child_kvn_ids if parent exists
     if kvn.get("parent_id"):
-        await db.kvn.update_one(
-            {"_id": kvn["parent_id"]},
-            {"$pull": {"child_kvn_ids": id}}
-        )
+        parent_id = kvn["parent_id"]
+        # Find parent by 'id' field (UUID) first, then by _id
+        parent = await db.kvn.find_one({"id": parent_id})
+        if not parent:
+            parent = await db.kvn.find_one({"_id": parent_id})
+        
+        if parent:
+            # Use the UUID for removing from child_kvn_ids
+            child_id_to_remove = kvn_uuid if kvn_uuid else str(kvn_id)
+            await db.kvn.update_one(
+                {"_id": parent["_id"]},
+                {"$pull": {"child_kvn_ids": child_id_to_remove}}
+            )
     
-    await linking_service.remove_content_links("kvn", id)
-    
-    result = await db.kvn.delete_one({"_id": id})
+    # Delete using the actual _id from the found document
+    # Note: person_ids and team_ids are stored in the document itself,
+    # so they will be deleted automatically when the document is deleted
+    result = await db.kvn.delete_one({"_id": kvn_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")
     
@@ -1430,74 +1527,169 @@ async def duplicate_content(content_type: str, id: str):
     Create a copy of a content page.
     The new page will have the same parent_id, but a new slug (slug_1, slug_2, etc.)
     """
-    db = await get_db()
-    
-    # Get collection name
-    collection_name = COLLECTION_MAP.get(content_type)
-    if not collection_name:
-        raise HTTPException(status_code=400, detail=f"Unknown content type: {content_type}")
-    
-    collection = getattr(db, collection_name)
-    
-    # Find original content
-    original = await collection.find_one({"_id": id})
-    if not original:
-        raise HTTPException(status_code=404, detail="Content not found")
-    
-    # Create copy
-    copy_data = dict(original)
-    
-    # Remove MongoDB-specific fields
-    copy_data.pop("_id", None)
-    copy_data.pop("created_at", None)
-    copy_data.pop("updated_at", None)
-    copy_data.pop("views", None)
-    
-    # Generate unique slug
-    base_slug = copy_data.get("slug", "")
-    if not base_slug:
-        raise HTTPException(status_code=400, detail="Original content has no slug")
-    
-    new_slug = await generate_unique_slug(collection_name, base_slug)
-    copy_data["slug"] = new_slug
-    
-    # Update title to indicate it's a copy (optional, can be removed if not needed)
-    # copy_data["title"] = f"{copy_data.get('title', '')} (копия)"
-    
-    # Set timestamps
-    now = datetime.now(timezone.utc).isoformat()
-    copy_data["created_at"] = now
-    copy_data["updated_at"] = now
-    
-    # Reset views
-    copy_data["views"] = 0
-    
-    # For KVN pages, also need to handle 'id' field (not just _id)
-    if content_type == "kvn" and "id" in copy_data:
-        # Generate new UUID for 'id' field
-        import uuid
-        copy_data["id"] = str(uuid.uuid4())
-    
-    # Insert the copy
-    result = await collection.insert_one(copy_data)
-    
-    # For sections, update full_path after insertion
-    if content_type in ["section", "sections"]:
-        # Import here to avoid circular dependency
-        from routes.sections import build_full_path
-        parent_id = copy_data.get("parent_id")
-        new_full_path, new_level = await build_full_path(parent_id, new_slug, db)
-        await collection.update_one(
-            {"_id": result.inserted_id},
-            {"$set": {"full_path": new_full_path, "level": new_level}}
-        )
-    
-    # Sync tags if present
-    if "tags" in copy_data and copy_data["tags"]:
-        await tag_service.sync_tags(copy_data["tags"])
-    
-    return {
-        "id": result.inserted_id,
-        "slug": new_slug,
-        "message": "Content duplicated successfully"
-    }
+    try:
+        db = await get_db()
+        
+        # Get collection name
+        collection_name = COLLECTION_MAP.get(content_type)
+        if not collection_name:
+            raise HTTPException(status_code=400, detail=f"Unknown content type: {content_type}")
+        
+        collection = getattr(db, collection_name)
+        
+        # Find original content
+        # For KVN, try to find by 'id' field first, then by _id
+        if content_type == "kvn":
+            original = await collection.find_one({"id": id})
+            if not original:
+                original = await collection.find_one({"_id": id})
+        else:
+            original = await collection.find_one({"_id": id})
+        
+        if not original:
+            raise HTTPException(status_code=404, detail="Content not found")
+        
+        # Create copy - use deep copy to avoid modifying original
+        import copy as copy_module
+        copy_data = copy_module.deepcopy(dict(original))
+        
+        # Remove MongoDB-specific fields
+        copy_data.pop("_id", None)
+        copy_data.pop("created_at", None)
+        copy_data.pop("updated_at", None)
+        copy_data.pop("views", None)
+        
+        # Convert any remaining ObjectId instances to strings in nested structures
+        # This is important for fields like person_ids, team_ids, etc. that may contain ObjectIds
+        copy_data = convert_objectids_to_strings(copy_data)
+        
+        # For hierarchical content (KVN, sections), we'll recalculate full_path
+        # So we keep it for now but will update it after insertion
+        
+        # Generate unique slug
+        base_slug = copy_data.get("slug", "")
+        if not base_slug:
+            raise HTTPException(status_code=400, detail="Original content has no slug")
+        
+        # For hierarchical content, get parent path to check full_path uniqueness
+        parent_path_for_slug = None
+        if content_type in ["kvn", "section", "sections"]:
+            parent_id = copy_data.get("parent_id")
+            if parent_id:
+                if content_type == "kvn":
+                    parent_doc = await db.kvn.find_one({"id": parent_id})
+                    if not parent_doc:
+                        parent_doc = await db.kvn.find_one({"_id": parent_id})
+                else:
+                    parent_doc = await db.sections.find_one({"_id": parent_id})
+                if parent_doc:
+                    parent_path_for_slug = parent_doc.get("full_path", parent_doc.get("slug", ""))
+        
+        new_slug = await generate_unique_slug(collection_name, base_slug, parent_path_for_slug)
+        copy_data["slug"] = new_slug
+        
+        # Update title to indicate it's a copy (optional, can be removed if not needed)
+        # copy_data["title"] = f"{copy_data.get('title', '')} (копия)"
+        
+        # Set timestamps
+        now = datetime.now(timezone.utc).isoformat()
+        copy_data["created_at"] = now
+        copy_data["updated_at"] = now
+        
+        # Reset views
+        copy_data["views"] = 0
+        
+        # For KVN pages, also need to handle 'id' field (not just _id)
+        if content_type == "kvn":
+            # Generate new UUID for 'id' field
+            import uuid
+            copy_data["id"] = str(uuid.uuid4())
+            # Clear child_kvn_ids as children are not copied automatically
+            copy_data["child_kvn_ids"] = []
+        
+        # Insert the copy
+        result = await collection.insert_one(copy_data)
+        
+        # For sections, update full_path after insertion
+        if content_type in ["section", "sections"]:
+            # Import here to avoid circular dependency
+            from routes.sections import build_full_path
+            parent_id = copy_data.get("parent_id")
+            new_full_path, new_level = await build_full_path(parent_id, new_slug, db)
+            await collection.update_one(
+                {"_id": result.inserted_id},
+                {"$set": {"full_path": new_full_path, "level": new_level}}
+            )
+        
+        # For KVN pages, update full_path and level after insertion
+        if content_type == "kvn":
+            parent_id = copy_data.get("parent_id")
+            level = 0
+            full_path = new_slug
+            
+            if parent_id:
+                # Find parent by 'id' field (not _id) for KVN
+                parent = await db.kvn.find_one({"id": parent_id})
+                if not parent:
+                    # Fallback to _id if not found by id
+                    parent = await db.kvn.find_one({"_id": parent_id})
+                
+                if parent:
+                    parent_level = parent.get("level", 0)
+                    if parent_level >= 4:
+                        # If max level reached, set to root
+                        level = 0
+                        full_path = new_slug
+                    else:
+                        level = parent_level + 1
+                        parent_path = parent.get("full_path", parent.get("slug", ""))
+                        full_path = f"{parent_path}/{new_slug}"
+            
+            await collection.update_one(
+                {"_id": result.inserted_id},
+                {"$set": {"full_path": full_path, "level": level}}
+            )
+            
+            # Update parent's child_kvn_ids if parent exists
+            if parent_id:
+                # Use the new 'id' field from copy_data
+                new_id = copy_data.get("id")
+                if new_id:
+                    # Find parent by 'id' field first (KVN uses 'id' for parent_id references)
+                    parent_doc = await db.kvn.find_one({"id": parent_id})
+                    if not parent_doc:
+                        # Fallback to _id if not found by id
+                        parent_doc = await db.kvn.find_one({"_id": parent_id})
+                    if parent_doc:
+                        await db.kvn.update_one(
+                            {"_id": parent_doc["_id"]},
+                            {"$addToSet": {"child_kvn_ids": new_id}}
+                        )
+        
+        # Sync tags if present
+        if "tags" in copy_data and copy_data["tags"]:
+            await tag_service.sync_tags(copy_data["tags"])
+        
+        # Convert ObjectId to string for JSON serialization
+        inserted_id_str = str(result.inserted_id)
+        
+        # For KVN, also return the 'id' field (UUID) instead of _id
+        if content_type == "kvn":
+            kvn_id = copy_data.get("id")
+            return {
+                "id": kvn_id or inserted_id_str,
+                "_id": inserted_id_str,
+                "slug": new_slug,
+                "message": "Content duplicated successfully"
+            }
+        
+        return {
+            "id": inserted_id_str,
+            "slug": new_slug,
+            "message": "Content duplicated successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error duplicating {content_type} {id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error duplicating content: {str(e)}")

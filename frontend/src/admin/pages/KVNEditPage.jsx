@@ -206,8 +206,33 @@ export default function KVNEditPage() {
         setSuccess('Создано!');
         navigate(`/admin/kvn/${res.data.id}`, { replace: true });
       } else {
+        const oldSlug = kvn.slug;
         await contentApi.updateKvn(id, dataToSend);
         setSuccess('Сохранено!');
+        // Reload data after save to get updated full_path and other fields
+        // This is especially important if slug changed
+        try {
+          const res = await contentApi.getKvn(id);
+          let poster = res.data.poster;
+          if (poster) {
+            if (typeof poster === 'string') {
+              poster = { url: poster, alt: '', caption: '', thumbnail: poster };
+            }
+          }
+          setKvn({ 
+            ...emptyKvn, 
+            ...res.data, 
+            poster: poster,
+            parent_id: res.data.parent_id || null,
+            facts: res.data.facts || {},
+            social_links: res.data.social_links || {},
+            seo: { ...emptyKvn.seo, ...res.data.seo },
+            season_data: res.data.season_data || null
+          });
+        } catch (reloadErr) {
+          console.error('Error reloading data after save:', reloadErr);
+          // Don't show error to user, just log it
+        }
       }
     } catch (err) {
       setError(getErrorMessage(err, 'Ошибка сохранения'));

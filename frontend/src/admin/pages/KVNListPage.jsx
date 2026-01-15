@@ -18,7 +18,7 @@ const statusLabels = {
 };
 
 // Рекурсивный компонент для отображения строки КВН с вложенностью
-function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete, onDuplicate }) {
+function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete, onDuplicate, duplicatingId }) {
   const hasChildren = kvn.children && kvn.children.length > 0;
   const isExpanded = expandedIds.has(kvn.id);
   const indent = level * 24;
@@ -76,7 +76,13 @@ function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete, onDuplica
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild><Link to={`/admin/kvn/${kvn.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDuplicate(kvn.id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onDuplicate(kvn.id)}
+                disabled={duplicatingId === kvn.id}
+              >
+                <Copy className="mr-2 h-4 w-4" /> 
+                {duplicatingId === kvn.id ? 'Копирование...' : 'Копировать'}
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-destructive" onClick={() => onDelete(kvn.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -91,6 +97,7 @@ function KVNRow({ kvn, level = 0, expandedIds, toggleExpand, onDelete, onDuplica
           toggleExpand={toggleExpand}
           onDelete={onDelete}
           onDuplicate={onDuplicate}
+          duplicatingId={duplicatingId}
         />
       ))}
     </>
@@ -102,6 +109,7 @@ export default function KVNListPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState(null);
+  const [duplicatingId, setDuplicatingId] = useState(null); // Защита от повторных кликов
   const [viewMode, setViewMode] = useState('hierarchy');
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [searchParams, setSearchParams] = useSearchParams();
@@ -182,12 +190,20 @@ export default function KVNListPage() {
   };
 
   const handleDuplicate = async (id) => {
+    // Защита от повторных кликов
+    if (duplicatingId === id) {
+      return;
+    }
+    
+    setDuplicatingId(id);
     try {
       await contentApi.duplicateContent('kvn', id);
       fetchKvn();
     } catch (error) {
       console.error('Error duplicating KVN page:', error);
       alert('Ошибка при копировании страницы КВН');
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -277,6 +293,7 @@ export default function KVNListPage() {
                       toggleExpand={toggleExpand}
                       onDelete={setDeleteId}
                       onDuplicate={handleDuplicate}
+                      duplicatingId={duplicatingId}
                     />
                   ))
                 ) : (
@@ -309,7 +326,13 @@ export default function KVNListPage() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild><Link to={`/admin/kvn/${k.id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(k.id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDuplicate(k.id)}
+                              disabled={duplicatingId === k.id}
+                            >
+                              <Copy className="mr-2 h-4 w-4" /> 
+                              {duplicatingId === k.id ? 'Копирование...' : 'Копировать'}
+                            </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(k.id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

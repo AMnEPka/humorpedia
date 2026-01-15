@@ -41,6 +41,7 @@ export default function PeopleListPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState(null);
+  const [duplicatingId, setDuplicatingId] = useState(null); // Защита от повторных кликов
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -120,12 +121,20 @@ export default function PeopleListPage() {
   };
 
   const handleDuplicate = async (id) => {
+    // Защита от повторных кликов
+    if (duplicatingId === id) {
+      return;
+    }
+    
+    setDuplicatingId(id);
     try {
       await contentApi.duplicateContent('people', id);
       fetchPeople();
     } catch (error) {
       console.error('Error duplicating person:', error);
       alert('Ошибка при копировании профиля');
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -326,8 +335,10 @@ export default function PeopleListPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDuplicate(person._id)}
+                            disabled={duplicatingId === person._id}
                           >
-                            <Copy className="mr-2 h-4 w-4" /> Копировать
+                            <Copy className="mr-2 h-4 w-4" /> 
+                            {duplicatingId === person._id ? 'Копирование...' : 'Копировать'}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"

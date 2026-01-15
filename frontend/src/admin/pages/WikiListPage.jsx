@@ -18,6 +18,7 @@ export default function WikiListPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState(null);
+  const [duplicatingId, setDuplicatingId] = useState(null); // Защита от повторных кликов
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -40,12 +41,20 @@ export default function WikiListPage() {
   const handleDelete = async () => { if (!deleteId) return; try { await contentApi.deleteWiki(deleteId); fetchPages(); } catch (e) { console.error(e); } finally { setDeleteId(null); } };
 
   const handleDuplicate = async (id) => {
+    // Защита от повторных кликов
+    if (duplicatingId === id) {
+      return;
+    }
+    
+    setDuplicatingId(id);
     try {
       await contentApi.duplicateContent('wiki', id);
       fetchPages();
     } catch (error) {
       console.error('Error duplicating page:', error);
       alert('Ошибка при копировании страницы');
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -84,7 +93,7 @@ export default function WikiListPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-right">{p.views || 0}</TableCell>
-                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/wiki/${p._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(p._id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(p._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/wiki/${p._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(p._id)} disabled={duplicatingId === p._id}><Copy className="mr-2 h-4 w-4" /> {duplicatingId === p._id ? 'Копирование...' : 'Копировать'}</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(p._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>
             ))}</TableBody></Table>
         )}

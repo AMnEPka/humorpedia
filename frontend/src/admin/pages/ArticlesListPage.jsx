@@ -18,6 +18,7 @@ export default function ArticlesListPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState(null);
+  const [duplicatingId, setDuplicatingId] = useState(null); // Защита от повторных кликов
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -43,12 +44,20 @@ export default function ArticlesListPage() {
   };
 
   const handleDuplicate = async (id) => {
+    // Защита от повторных кликов
+    if (duplicatingId === id) {
+      return;
+    }
+    
+    setDuplicatingId(id);
     try {
       await contentApi.duplicateContent('articles', id);
       fetchArticles();
     } catch (error) {
       console.error('Error duplicating article:', error);
       alert('Ошибка при копировании статьи');
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -88,7 +97,7 @@ export default function ArticlesListPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-right">{a.views || 0}</TableCell>
-                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/articles/${a._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(a._id)}><Copy className="mr-2 h-4 w-4" /> Копировать</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(a._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
+                <TableCell><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to={`/admin/articles/${a._id}`}><Edit className="mr-2 h-4 w-4" /> Редактировать</Link></DropdownMenuItem><DropdownMenuItem onClick={() => handleDuplicate(a._id)} disabled={duplicatingId === a._id}><Copy className="mr-2 h-4 w-4" /> {duplicatingId === a._id ? 'Копирование...' : 'Копировать'}</DropdownMenuItem><DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(a._id)}><Trash2 className="mr-2 h-4 w-4" /> Удалить</DropdownMenuItem></DropdownMenuContent></DropdownMenu></TableCell>
               </TableRow>
             ))}</TableBody></Table>
         )}
