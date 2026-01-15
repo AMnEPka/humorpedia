@@ -176,13 +176,47 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     hosts = [],
     host = '', 
     year = 0, 
-    league_slug = '',
+    league_slug: seasonLeagueSlug = '',
     intro_html = '',
     extra_sections = [],
     metadata = {}
   } = seasonData;
   const prevSeason = seasonData.prev_season;
   const nextSeason = seasonData.next_season;
+  
+  // Извлекаем league_slug из текущего URL, если он не заполнен в seasonData
+  // Формат URL: /kvn/vl-kvn/vl-2010 -> league_slug = "vl-kvn"
+  let league_slug = seasonLeagueSlug;
+  if (!league_slug && location.pathname) {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    // Ищем структуру: kvn / league-slug / season-slug
+    if (pathParts.length >= 3 && pathParts[0] === 'kvn') {
+      league_slug = pathParts[1];
+    } else if (pathParts.length >= 2 && pathParts[0] === 'kvn') {
+      // Если только 2 части, возможно это лига без сезона
+      league_slug = pathParts[1];
+    }
+  }
+  
+  // Если все еще нет league_slug, пытаемся извлечь из full_path сезона
+  if (!league_slug && season?.full_path) {
+    const pathParts = season.full_path.split('/').filter(Boolean);
+    if (pathParts.length >= 2 && pathParts[0] === 'kvn') {
+      league_slug = pathParts[1];
+    }
+  }
+  
+  // Функция для извлечения года из slug
+  const extractYearFromSlug = (slug) => {
+    if (!slug) return '';
+    // Ищем 4-значное число в slug
+    const match = slug.match(/\d{4}/);
+    return match ? match[0] : slug;
+  };
+  
+  // Извлекаем годы для отображения
+  const prevSeasonYear = prevSeason ? extractYearFromSlug(prevSeason) : '';
+  const nextSeasonYear = nextSeason ? extractYearFromSlug(nextSeason) : '';
   
   // Ведущие - используем список hosts или одиночный host
   const hostsList = hosts.length > 0 ? hosts : (host ? [host] : []);
@@ -227,15 +261,15 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       {/* Header with navigation */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          {prevSeason && (
+          {prevSeason && league_slug && (
             <Button variant="outline" asChild>
               <Link to={`/kvn/${league_slug}/${prevSeason}`}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                {prevSeason}
+                {prevSeasonYear}
               </Link>
             </Button>
           )}
-          {!prevSeason && <div />}
+          {(!prevSeason || !league_slug) && <div />}
           
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
@@ -246,15 +280,15 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
             </p>
           </div>
           
-          {nextSeason && (
+          {nextSeason && league_slug && (
             <Button variant="outline" asChild>
               <Link to={`/kvn/${league_slug}/${nextSeason}`}>
-                {nextSeason}
+                {nextSeasonYear}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           )}
-          {!nextSeason && <div />}
+          {(!nextSeason || !league_slug) && <div />}
         </div>
       </div>
 

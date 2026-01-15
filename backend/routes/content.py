@@ -1023,6 +1023,150 @@ async def list_kvn(
     return {"items": items, "total": count, "skip": skip, "limit": limit}
 
 
+def extract_year_from_slug(slug: str) -> int:
+    """Извлекает год из slug сезона."""
+    # Ищем 4-значное число
+    match = re.search(r'(\d{4})', slug)
+    if match:
+        return int(match.group(1))
+    
+    # Ищем 2-значное число (для старых сезонов)
+    match = re.search(r'-(\d{2})(?:$|[^0-9])', slug)
+    if match:
+        year = int(match.group(1))
+        return 1900 + year if year > 50 else 2000 + year
+    
+    return 0
+
+
+async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
+    """
+    Находит соседние сезоны для текущего сезона.
+    
+    Returns:
+        Tuple (prev_season_slug, next_season_slug)
+    """
+    season_data = current_season.get("season_data", {})
+    year = season_data.get("year", 0)
+    league_slug = season_data.get("league_slug", "")
+    
+    # Если нет года или лиги, пытаемся извлечь из slug или full_path
+    if not year:
+        slug = current_season.get("slug", "")
+        full_path = current_season.get("full_path", "")
+        year = extract_year_from_slug(slug) or extract_year_from_slug(full_path)
+    
+    if not league_slug:
+        # Пытаемся извлечь из full_path (формат: kvn/league-slug/season-slug)
+        full_path = current_season.get("full_path", "")
+        path_parts = full_path.split("/")
+        if len(path_parts) >= 2 and path_parts[0] == "kvn":
+            league_slug = path_parts[1]
+    
+    if not year or not league_slug:
+        return "", ""
+    
+    prev_season_slug = ""
+    next_season_slug = ""
+    
+    # Ищем предыдущий сезон (year - 1)
+    prev_year = year - 1
+    # Ищем следующий сезон (year + 1)
+    next_year = year + 1
+    
+    # Ищем сезоны в той же лиге
+    # Вариант 1 (самый надежный): ищем по season_data.year напрямую
+    if not prev_season_slug:
+        prev_season = await db.kvn.find_one({
+            "season_data.year": prev_year,
+            "season_data.league_slug": league_slug
+        }, {"slug": 1})
+        if prev_season:
+            prev_season_slug = prev_season.get("slug", "")
+    
+    if not next_season_slug:
+        next_season = await db.kvn.find_one({
+            "season_data.year": next_year,
+            "season_data.league_slug": league_slug
+        }, {"slug": 1})
+        if next_season:
+            next_season_slug = next_season.get("slug", "")
+    
+    # Вариант 2: по parent_id (если сезоны - дочерние страницы лиги)
+    if not prev_season_slug or not next_season_slug:
+        parent_id = current_season.get("parent_id")
+        if parent_id:
+            # Ищем все сезоны той же лиги
+            all_seasons = await db.kvn.find(
+                {"parent_id": parent_id},
+                {"slug": 1, "season_data": 1, "full_path": 1}
+            ).to_list(1000)
+            
+            # Сортируем по году
+            seasons_by_year = {}
+            for season in all_seasons:
+                s_year = season.get("season_data", {}).get("year", 0)
+                if not s_year:
+                    s_year = extract_year_from_slug(season.get("slug", ""))
+                if s_year:
+                    seasons_by_year[s_year] = season.get("slug", "")
+            
+            if not prev_season_slug and prev_year in seasons_by_year:
+                prev_season_slug = seasons_by_year[prev_year]
+            if not next_season_slug and next_year in seasons_by_year:
+                next_season_slug = seasons_by_year[next_year]
+    
+    # Вариант 3: по full_path с regex (если не нашли предыдущими способами)
+    if not prev_season_slug or not next_season_slug:
+        # Ищем сезоны по full_path с годом
+        for target_year in [prev_year, next_year]:
+            if target_year == prev_year and prev_season_slug:
+                continue
+            if target_year == next_year and next_season_slug:
+                continue
+            
+            # Ищем сезон с нужным годом в той же лиге
+            # Варианты full_path: kvn/vl-kvn/vl-2009, kvn/vl-kvn/2009 и т.д.
+            # Ищем по regex, который ищет год как отдельное число (не часть другого числа)
+            # Используем границы слова или начало/конец строки для точного совпадения года
+            escaped_league = re.escape(league_slug)
+            patterns = [
+                f"^kvn/{escaped_league}/.*-{target_year}$",  # kvn/vl-kvn/vl-2009
+                f"^kvn/{escaped_league}/{target_year}$",      # kvn/vl-kvn/2009
+                f"^kvn/{escaped_league}/.*{target_year}$",     # любой вариант с годом в конце
+                f"kvn/{escaped_league}/.*-{target_year}$",     # без ^ в начале (на случай если путь без начального слэша)
+                f"kvn/{escaped_league}/{target_year}$",
+                f"kvn/{escaped_league}/.*{target_year}$",
+            ]
+            
+            for pattern in patterns:
+                seasons = await db.kvn.find({
+                    "full_path": {"$regex": pattern}
+                }, {"slug": 1, "season_data": 1}).to_list(10)
+                
+                # Проверяем каждый найденный сезон, чтобы убедиться, что год совпадает
+                for season in seasons:
+                    # Проверяем год в season_data
+                    s_year = season.get("season_data", {}).get("year", 0)
+                    if not s_year:
+                        # Если нет в season_data, извлекаем из slug
+                        s_year = extract_year_from_slug(season.get("slug", ""))
+                    
+                    # Если год совпадает - это наш сезон
+                    if s_year == target_year:
+                        found_slug = season.get("slug", "")
+                        if target_year == prev_year:
+                            prev_season_slug = found_slug
+                        else:
+                            next_season_slug = found_slug
+                        break
+                
+                if (target_year == prev_year and prev_season_slug) or (target_year == next_year and next_season_slug):
+                    break
+    
+    return prev_season_slug, next_season_slug
+
+
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
 async def get_kvn_by_path(path: str):
     """Get KVN page by full path with children and breadcrumbs"""
@@ -1070,6 +1214,30 @@ async def get_kvn_by_path(path: str):
                 break
     
     kvn["breadcrumbs"] = breadcrumbs
+    
+    # Автоматически определяем соседние сезоны
+    # Пытаемся найти соседние сезоны, даже если season_data отсутствует
+    # (можем извлечь год и лигу из slug или full_path)
+    prev_season_slug, next_season_slug = await find_adjacent_seasons(db, kvn)
+    
+    # Обновляем season_data с найденными соседними сезонами
+    if kvn.get("season_data"):
+        # Всегда обновляем, чтобы исправить неправильные значения и добавить отсутствующие
+        if prev_season_slug:
+            kvn["season_data"]["prev_season"] = prev_season_slug
+        elif not kvn["season_data"].get("prev_season"):
+            kvn["season_data"]["prev_season"] = ""
+        
+        if next_season_slug:
+            kvn["season_data"]["next_season"] = next_season_slug
+        elif not kvn["season_data"].get("next_season"):
+            kvn["season_data"]["next_season"] = ""
+    elif prev_season_slug or next_season_slug:
+        # Если season_data отсутствует, но мы нашли соседние сезоны, создаем season_data
+        kvn["season_data"] = {
+            "prev_season": prev_season_slug or "",
+            "next_season": next_season_slug or ""
+        }
     
     # Remove MongoDB _id from response
     if "_id" in kvn:
