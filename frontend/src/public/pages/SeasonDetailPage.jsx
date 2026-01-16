@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
-import { GameTable } from '../components/GameTable';
 import { StageSection } from '../components/StageSection';
 
 // Вспомогательная функция для извлечения города из facts

@@ -185,8 +185,13 @@ code {
 }
 
 .prose li {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.prose li p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .prose ul > li {
