@@ -408,19 +408,11 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Traceback: {traceback.format_exc()}")
     # #region agent log
     with open('c:\\Users\\user\\humorpedia\\.cursor\\debug.log', 'a', encoding='utf-8') as f:
-        f.write(json.dumps({"id":f"log_{int(__import__('time').time()*1000)}_ret1","timestamp":int(__import__('time').time()*1000),"location":"server.py:404","message":"First return statement executed","data":{},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+'\n')
+        f.write(json.dumps({"id":f"log_{int(__import__('time').time()*1000)}_ret1","timestamp":int(__import__('time').time()*1000),"location":"server.py:404","message":"First return statement executed","data":{},"sessionId":"debug-session","runId":"post-fix","hypothesisId":"A"})+'\n')
     # #endregion
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"}
-    )
-    # #region agent log
-    with open('c:\\Users\\user\\humorpedia\\.cursor\\debug.log', 'a', encoding='utf-8') as f:
-        f.write(json.dumps({"id":f"log_{int(__import__('time').time()*1000)}_ret2","timestamp":int(__import__('time').time()*1000),"location":"server.py:408","message":"UNREACHABLE CODE - Second return statement","data":{},"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+'\n')
-    # #endregion
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"}
     )
 
 
