@@ -482,5 +482,6 @@ class KVNUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     team_ids: Optional[List[str]] = None
     person_ids: Optional[List[str]] = None
+    jury_cards: Optional[Dict[str, Dict[str, Any]]] = None  # { [juryName]: { photo: MediaFile, text: str } }
     season_data: Optional[Dict[str, Any]] = None  # Структурированные данные сезона
     related_kvn_ids: Optional[List[str]] = None

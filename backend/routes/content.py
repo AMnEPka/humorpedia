@@ -1263,6 +1263,138 @@ async def get_kvn_children(parent_slug: str):
     return {"items": children, "total": len(children), "parent": parent.get("title")}
 
 
+@router.get("/kvn/jury-stats", response_model=dict)
+async def get_kvn_jury_stats(
+    league_slug: str = "vl-kvn",
+    min_year: Optional[int] = None,
+    max_year: Optional[int] = None
+):
+    """
+    Get jury statistics for KVN seasons.
+    Returns aggregated data about all jury members with their game counts and details.
+    """
+    db = await get_db()
+    
+    # Get all teams from teams collection (without filtering by team_type)
+    all_teams_from_db = await db.teams.find({}, {"slug": 1, "name": 1, "title": 1}).to_list(1000)
+    team_slug_to_name = {}
+    all_team_slugs = set()
+    for team in all_teams_from_db:
+        slug = team.get("slug", "")
+        name = team.get("name") or team.get("title", "")
+        if slug:
+            all_team_slugs.add(slug)
+            team_slug_to_name[slug] = name
+    
+    # Build query for seasons
+    query = {
+        "season_data.league_slug": league_slug
+    }
+    
+    # Build year filter
+    year_filter = {}
+    if min_year is not None:
+        year_filter["$gte"] = min_year
+    if max_year is not None:
+        year_filter["$lte"] = max_year
+    
+    if year_filter:
+        query["season_data.year"] = year_filter
+    
+    # Get all seasons for the league
+    seasons = await db.kvn.find(query).to_list(1000)
+    
+    # Aggregate jury statistics
+    jury_stats = {}  # jury_name -> { games_count, games: [...], years: set(), teams: set() }
+    all_years = set()
+    
+    for season in seasons:
+        season_data = season.get("season_data", {})
+        year = season_data.get("year", 0)
+        season_slug = season.get("slug", "")
+        season_name = season.get("name") or season.get("title", "")
+        all_years.add(year)
+        
+        stages = season_data.get("stages", [])
+        for stage in stages:
+            games = stage.get("games", [])
+            for game in games:
+                jury = game.get("jury", [])
+                game_name = game.get("name", "")
+                game_date = game.get("date", "")
+                stage_name = stage.get("name", "")
+                
+                # Get teams from this game
+                teams = game.get("teams", [])
+                team_slugs = []
+                for team in teams:
+                    team_slug = team.get("team_slug", "")
+                    if team_slug and team_slug in all_team_slugs:
+                        team_slugs.append(team_slug)
+                
+                # Process each jury member
+                for jury_member in jury:
+                    if not jury_member:
+                        continue
+                    
+                    if jury_member not in jury_stats:
+                        jury_stats[jury_member] = {
+                            "games_count": 0,
+                            "games": [],
+                            "years": set(),
+                            "teams": set()
+                        }
+                    
+                    jury_stats[jury_member]["games_count"] += 1
+                    jury_stats[jury_member]["years"].add(year)
+                    for team_slug in team_slugs:
+                        jury_stats[jury_member]["teams"].add(team_slug)
+                    
+                    # Add game details
+                    jury_stats[jury_member]["games"].append({
+                        "year": year,
+                        "season_slug": season_slug,
+                        "season_name": season_name,
+                        "stage_name": stage_name,
+                        "game_name": game_name,
+                        "game_date": game_date,
+                        "teams": team_slugs
+                    })
+    
+    # Function to get last name (last word) for sorting
+    def get_last_name_for_sort(name):
+        """Get last name (last word) from full name for sorting"""
+        if not name:
+            return ""
+        parts = name.strip().split()
+        if len(parts) > 0:
+            return parts[-1].lower()  # Return last word in lowercase for sorting
+        return name.lower()
+    
+    # Convert sets to lists for JSON serialization
+    result = {
+        "jury_members": [],
+        "all_years": sorted(list(all_years)),
+        "all_teams": sorted(list(all_team_slugs)),
+        "team_names": team_slug_to_name,
+        "total_games": sum(stats["games_count"] for stats in jury_stats.values())
+    }
+    
+    for jury_name, stats in jury_stats.items():
+        result["jury_members"].append({
+            "name": jury_name,
+            "games_count": stats["games_count"],
+            "years": sorted(list(stats["years"])),
+            "teams": sorted(list(stats["teams"])),
+            "games": stats["games"]
+        })
+    
+    # Sort jury members by last name (alphabetically)
+    result["jury_members"].sort(key=lambda x: get_last_name_for_sort(x["name"]))
+    
+    return result
+
+
 @router.get("/kvn/{id_or_slug}", response_model=dict)
 async def get_kvn(id_or_slug: str):
     """Get KVN page by ID or slug"""
@@ -1402,6 +1534,8 @@ async def update_kvn(id: str, data: KVNUpdate):
         update_data["person_ids"] = data.person_ids
     if data.related_kvn_ids is not None:
         update_data["related_kvn_ids"] = data.related_kvn_ids
+    if data.jury_cards is not None:
+        update_data["jury_cards"] = data.jury_cards
     if data.season_data is not None:
         # Валидируем и очищаем season_data перед сохранением
         # Убеждаемся, что все вложенные структуры сериализуемы
