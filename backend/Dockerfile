@@ -23,10 +23,10 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY . /app
 
 # Make start script executable
-RUN chmod +x /app/start.sh
+#RUN chmod +x /app/start.sh
 
 EXPOSE 8001
 
 # Use start script for automatic DB restoration
-ENTRYPOINT ["/app/start.sh"]
+#ENTRYPOINT ["/app/start.sh"]
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
