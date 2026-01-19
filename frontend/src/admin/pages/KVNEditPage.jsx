@@ -176,19 +176,36 @@ export default function KVNEditPage() {
 
   // Load jury members if this is the jury stats page
   useEffect(() => {
-    if (kvn.slug === 'vl-jury' && !loadingJury) {
-      setLoadingJury(true);
-      contentApi.getKvnJuryStats({ league_slug: 'vl-kvn', min_year: 1987, max_year: 2015 })
-        .then(res => {
-          setJuryMembers(res.data.jury_members || []);
-        })
-        .catch(err => {
-          console.error('Error loading jury members:', err);
-        })
-        .finally(() => {
-          setLoadingJury(false);
-        });
+    // Reset loading state when slug changes
+    if (kvn.slug !== 'vl-jury') {
+      setLoadingJury(false);
+      setJuryMembers([]);
+      return;
     }
+
+    let cancelled = false;
+    setLoadingJury(true);
+    contentApi.getKvnJuryStats({ league_slug: 'vl-kvn', min_year: 1987, max_year: 2015 })
+      .then(res => {
+        if (!cancelled) {
+          setJuryMembers(res.data.jury_members || []);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('Error loading jury members:', err);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingJury(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      setLoadingJury(false);
+    };
   }, [kvn.slug]);
 
   const generateSlug = (t) => t.toLowerCase().replace(/[а-яё]/g, c => ({ 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ы':'y','э':'e','ю':'yu','я':'ya' }[c] || '')).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

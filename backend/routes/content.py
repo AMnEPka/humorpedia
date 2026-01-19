@@ -1236,102 +1236,6 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
     return prev_season_slug, next_season_slug
 
 
-@router.get("/kvn/by-path/{path:path}", response_model=dict)
-async def get_kvn_by_path(path: str):
-    """Get KVN page by full path with children and breadcrumbs"""
-    db = await get_db()
-    
-    # Try both with and without leading slash
-    path_clean = path.lstrip("/")
-    
-    kvn = await db.kvn.find_one({"full_path": path_clean})
-    if not kvn:
-        kvn = await db.kvn.find_one({"full_path": f"/{path_clean}"})
-    if not kvn:
-        kvn = await db.kvn.find_one({"slug": path_clean})
-    if not kvn:
-        raise HTTPException(status_code=404, detail="KVN page not found")
-    
-    # Increment views
-    await db.kvn.update_one({"_id": kvn["_id"]}, {"$inc": {"views": 1}})
-    
-    # Get children
-    section_id = kvn.get("id")
-    if section_id:
-        children = await db.kvn.find(
-            {"parent_id": section_id},
-            {"_id": 0}
-        ).sort("title", 1).to_list(100)
-        kvn["children"] = children
-    else:
-        kvn["children"] = []
-    
-    # Get breadcrumbs
-    breadcrumbs = []
-    if kvn.get("parent_id"):
-        current_parent_id = kvn["parent_id"]
-        while current_parent_id:
-            parent = await db.kvn.find_one({"id": current_parent_id})
-            if parent:
-                breadcrumbs.insert(0, {
-                    "id": parent.get("id"),
-                    "title": parent.get("name") or parent.get("title"),
-                    "full_path": parent.get("full_path") or parent.get("slug")
-                })
-                current_parent_id = parent.get("parent_id")
-            else:
-                break
-    
-    kvn["breadcrumbs"] = breadcrumbs
-    
-    # Автоматически определяем соседние сезоны
-    # Пытаемся найти соседние сезоны, даже если season_data отсутствует
-    # (можем извлечь год и лигу из slug или full_path)
-    prev_season_slug, next_season_slug = await find_adjacent_seasons(db, kvn)
-    
-    # Обновляем season_data с найденными соседними сезонами
-    if kvn.get("season_data"):
-        # Всегда обновляем, чтобы исправить неправильные значения и добавить отсутствующие
-        if prev_season_slug:
-            kvn["season_data"]["prev_season"] = prev_season_slug
-        elif not kvn["season_data"].get("prev_season"):
-            kvn["season_data"]["prev_season"] = ""
-        
-        if next_season_slug:
-            kvn["season_data"]["next_season"] = next_season_slug
-        elif not kvn["season_data"].get("next_season"):
-            kvn["season_data"]["next_season"] = ""
-    elif prev_season_slug or next_season_slug:
-        # Если season_data отсутствует, но мы нашли соседние сезоны, создаем season_data
-        kvn["season_data"] = {
-            "prev_season": prev_season_slug or "",
-            "next_season": next_season_slug or ""
-        }
-    
-    # Remove MongoDB _id from response
-    if "_id" in kvn:
-        del kvn["_id"]
-    
-    return kvn
-
-
-@router.get("/kvn/{parent_slug}/children", response_model=dict)
-async def get_kvn_children(parent_slug: str):
-    """Get children of a KVN page"""
-    db = await get_db()
-    parent = await db.kvn.find_one({"slug": parent_slug})
-    if not parent:
-        raise HTTPException(status_code=404, detail="Parent KVN page not found")
-    
-    parent_id = parent.get("id")
-    children = await db.kvn.find(
-        {"parent_id": parent_id},
-        {"_id": 0}
-    ).sort("title", 1).to_list(100)
-    
-    return {"items": children, "total": len(children), "parent": parent.get("title")}
-
-
 @router.get("/kvn/jury-stats", response_model=dict)
 async def get_kvn_jury_stats(
     league_slug: str = "vl-kvn",
@@ -1462,6 +1366,102 @@ async def get_kvn_jury_stats(
     result["jury_members"].sort(key=lambda x: get_last_name_for_sort(x["name"]))
     
     return result
+
+
+@router.get("/kvn/by-path/{path:path}", response_model=dict)
+async def get_kvn_by_path(path: str):
+    """Get KVN page by full path with children and breadcrumbs"""
+    db = await get_db()
+    
+    # Try both with and without leading slash
+    path_clean = path.lstrip("/")
+    
+    kvn = await db.kvn.find_one({"full_path": path_clean})
+    if not kvn:
+        kvn = await db.kvn.find_one({"full_path": f"/{path_clean}"})
+    if not kvn:
+        kvn = await db.kvn.find_one({"slug": path_clean})
+    if not kvn:
+        raise HTTPException(status_code=404, detail="KVN page not found")
+    
+    # Increment views
+    await db.kvn.update_one({"_id": kvn["_id"]}, {"$inc": {"views": 1}})
+    
+    # Get children
+    section_id = kvn.get("id")
+    if section_id:
+        children = await db.kvn.find(
+            {"parent_id": section_id},
+            {"_id": 0}
+        ).sort("title", 1).to_list(100)
+        kvn["children"] = children
+    else:
+        kvn["children"] = []
+    
+    # Get breadcrumbs
+    breadcrumbs = []
+    if kvn.get("parent_id"):
+        current_parent_id = kvn["parent_id"]
+        while current_parent_id:
+            parent = await db.kvn.find_one({"id": current_parent_id})
+            if parent:
+                breadcrumbs.insert(0, {
+                    "id": parent.get("id"),
+                    "title": parent.get("name") or parent.get("title"),
+                    "full_path": parent.get("full_path") or parent.get("slug")
+                })
+                current_parent_id = parent.get("parent_id")
+            else:
+                break
+    
+    kvn["breadcrumbs"] = breadcrumbs
+    
+    # Автоматически определяем соседние сезоны
+    # Пытаемся найти соседние сезоны, даже если season_data отсутствует
+    # (можем извлечь год и лигу из slug или full_path)
+    prev_season_slug, next_season_slug = await find_adjacent_seasons(db, kvn)
+    
+    # Обновляем season_data с найденными соседними сезонами
+    if kvn.get("season_data"):
+        # Всегда обновляем, чтобы исправить неправильные значения и добавить отсутствующие
+        if prev_season_slug:
+            kvn["season_data"]["prev_season"] = prev_season_slug
+        elif not kvn["season_data"].get("prev_season"):
+            kvn["season_data"]["prev_season"] = ""
+        
+        if next_season_slug:
+            kvn["season_data"]["next_season"] = next_season_slug
+        elif not kvn["season_data"].get("next_season"):
+            kvn["season_data"]["next_season"] = ""
+    elif prev_season_slug or next_season_slug:
+        # Если season_data отсутствует, но мы нашли соседние сезоны, создаем season_data
+        kvn["season_data"] = {
+            "prev_season": prev_season_slug or "",
+            "next_season": next_season_slug or ""
+        }
+    
+    # Remove MongoDB _id from response
+    if "_id" in kvn:
+        del kvn["_id"]
+    
+    return kvn
+
+
+@router.get("/kvn/{parent_slug}/children", response_model=dict)
+async def get_kvn_children(parent_slug: str):
+    """Get children of a KVN page"""
+    db = await get_db()
+    parent = await db.kvn.find_one({"slug": parent_slug})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent KVN page not found")
+    
+    parent_id = parent.get("id")
+    children = await db.kvn.find(
+        {"parent_id": parent_id},
+        {"_id": 0}
+    ).sort("title", 1).to_list(100)
+    
+    return {"items": children, "total": len(children), "parent": parent.get("title")}
 
 
 @router.get("/kvn/{id_or_slug}", response_model=dict)
