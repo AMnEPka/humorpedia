@@ -295,6 +295,9 @@ async def browse_imported_media(
         raise HTTPException(status_code=400, detail="Некорректный prefix")
 
     if not target_dir.exists() or not target_dir.is_dir():
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Директория не существует или не является папкой: {target_dir} (source={source}, prefix={prefix})")
         return MediaBrowseResponse(items=[], folders=[], total=0)
 
     q = (query or "").lower() if query else None
@@ -305,7 +308,12 @@ async def browse_imported_media(
 
     # Получаем только содержимое текущей папки (не рекурсивно)
     try:
-        for entry in target_dir.iterdir():
+        entries = list(target_dir.iterdir())
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Просмотр директории {target_dir}: найдено {len(entries)} элементов (source={source}, prefix={prefix})")
+        
+        for entry in entries:
             if entry.is_dir():
                 # Это папка
                 folder_rel = entry.relative_to(base_dir).as_posix()
@@ -317,10 +325,6 @@ async def browse_imported_media(
                 )
             elif entry.is_file() and entry.suffix.lower() in exts:
                 # Это файл изображения
-                # В корне (когда prefix пустой) не возвращаем файлы, только папки
-                if not prefix:
-                    continue
-                    
                 rel = entry.relative_to(base_dir).as_posix()
                 name = entry.name
                 

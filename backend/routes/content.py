@@ -27,6 +27,41 @@ router = APIRouter(prefix="/content", tags=["content"])
 
 # === HELPER FUNCTIONS ===
 
+def get_league_slug_from_parent(parent_doc):
+    """Определяет league_slug из родительского документа KVN"""
+    if not parent_doc:
+        return None
+    
+    parent_slug = parent_doc.get("slug", "")
+    parent_full_path = parent_doc.get("full_path", "")
+    
+    # Проверяем slug родителя
+    if parent_slug == "vl-kvn":
+        return "vl-kvn"
+    elif parent_slug == "premier-liga":
+        return "premier-liga"
+    elif parent_slug == "1l-kvn":
+        return "1l-kvn"
+    elif parent_slug == "ml-kvn":
+        return "ml-kvn"
+    elif parent_slug == "vul":
+        return "vul"
+    
+    # Проверяем full_path
+    if "/vl-kvn" in parent_full_path or parent_full_path.startswith("kvn/vl-kvn"):
+        return "vl-kvn"
+    elif "/premier-liga" in parent_full_path:
+        return "premier-liga"
+    elif "/1l-kvn" in parent_full_path:
+        return "1l-kvn"
+    elif "/ml-kvn" in parent_full_path:
+        return "ml-kvn"
+    elif "/vul" in parent_full_path:
+        return "vul"
+    
+    return None
+
+
 async def check_slug_unique(collection_name: str, slug: str, exclude_id: str = None):
     """Check if slug is unique in collection"""
     db = await get_db()
@@ -930,7 +965,7 @@ async def create_kvn(data: KVNCreate):
     # Calculate level and full_path based on parent
     level = 0
     full_path = data.slug
-    
+    parent = None
     if data.parent_id:
         # For KVN, parent_id is a UUID string, not _id
         # Try to find by 'id' field first, then fallback to _id
@@ -968,6 +1003,40 @@ async def create_kvn(data: KVNCreate):
     )
     
     result = await create_content("kvn", kvn, data.tags)
+    
+    # Автоматически добавляем league_slug в season_data, если создается дочерняя страница с родителем "Высшая лига КВН"
+    if parent:
+        league_slug = get_league_slug_from_parent(parent)
+        if league_slug:
+            # Проверяем, есть ли уже season_data в документе
+            created_doc = await db.kvn.find_one({"id": result["id"]})
+            if created_doc:
+                season_data = created_doc.get("season_data", {})
+                # Если season_data существует, но нет league_slug - добавляем
+                if season_data and not season_data.get("league_slug"):
+                    season_data["league_slug"] = league_slug
+                    await db.kvn.update_one(
+                        {"_id": created_doc["_id"]},
+                        {"$set": {"season_data": season_data}}
+                    )
+                    logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data для нового документа KVN")
+                # Если season_data не существует, но это сезон (определяем по full_path или slug, содержащему год)
+                elif not season_data:
+                    # Проверяем, является ли это сезоном (slug или full_path содержит год)
+                    import re
+                    year_match = re.search(r'\b(19|20)\d{2}\b', full_path)
+                    if year_match:
+                        # Создаем базовую структуру season_data с league_slug
+                        year = int(year_match.group())
+                        season_data = {
+                            "league_slug": league_slug,
+                            "year": year
+                        }
+                        await db.kvn.update_one(
+                            {"_id": created_doc["_id"]},
+                            {"$set": {"season_data": season_data}}
+                        )
+                        logger.info(f"Автоматически создан season_data с league_slug '{league_slug}' для нового сезона {year}")
     
     # Update parent's child_kvn_ids if parent exists
     if data.parent_id:
@@ -1579,6 +1648,24 @@ async def update_kvn(id: str, data: KVNUpdate):
                     return str(obj)
             
             cleaned_data = clean_data(season_data_dict)
+            
+            # Автоматически добавляем league_slug, если его нет и есть родитель "Высшая лига КВН"
+            if not cleaned_data.get("league_slug"):
+                parent_id = kvn.get("parent_id")
+                if parent_id:
+                    # Находим родителя
+                    parent = await db.kvn.find_one({"id": parent_id})
+                    if not parent:
+                        parent = await db.kvn.find_one({"_id": parent_id})
+                    
+                    if parent:
+                        # Определяем league_slug из родителя
+                        league_slug = get_league_slug_from_parent(parent)
+                        
+                        if league_slug:
+                            cleaned_data["league_slug"] = league_slug
+                            logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data при обновлении")
+            
             # Пробуем сериализовать для проверки
             json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
             logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")

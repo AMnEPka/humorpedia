@@ -20,6 +20,7 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
   
   // Imported media state
   const [importedMedia, setImportedMedia] = useState([]);
+  const [importedFolders, setImportedFolders] = useState([]); // Папки из API
   const [importedTotal, setImportedTotal] = useState(0);
   const [currentPath, setCurrentPath] = useState(''); // Текущий путь для импортированных (пустой = корень images)
   const [pathHistory, setPathHistory] = useState(['']); // История путей для навигации
@@ -38,8 +39,9 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    // Если URL начинается с /, используем как есть
+    // Если URL начинается с /, используем как есть (относительно текущего домена)
     if (url.startsWith('/')) {
+      // Для uploads, images, media - используем как есть, они отдаются бэкендом
       return url;
     }
     // Иначе добавляем / в начало
@@ -50,7 +52,8 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
   const getValueUrl = () => {
     if (!value) return null;
     if (typeof value === 'string') return value;
-    return value.url || null;
+    // Проверяем различные варианты структуры объекта
+    return value.url || value.thumbnail || null;
   };
 
   // Загрузка загруженных медиа
@@ -79,18 +82,60 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
   const fetchImportedMedia = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {
-        source: 'imported',
-        prefix: currentPath || '',
-        limit: 1000, // Больше для импортированных, так как они локальные
-        ...(search && { query: search })
-      };
-      const response = await mediaApi.browse(params);
-      setImportedMedia(response.data.items || []);
-      setImportedTotal(response.data.total || 0);
-    } catch (err) {
-      console.error('Ошибка загрузки импортированных медиа:', err);
+      // Пробуем оба источника: сначала 'imported', потом 'images'
+      let response = null;
+      let items = [];
+      let folders = [];
+      
+      // Пробуем 'imported' (legacy imported files)
+      try {
+        const paramsImported = {
+          source: 'imported',
+          prefix: currentPath || '',
+          limit: 1000,
+          ...(search && { query: search })
+        };
+        console.log('[MediaSelector] Запрос imported с параметрами:', paramsImported);
+        response = await mediaApi.browse(paramsImported);
+        items = response.data.items || [];
+        folders = response.data.folders || [];
+        console.log('[MediaSelector] Ответ imported:', { items: items.length, folders: folders.length, total: response.data.total });
+      } catch (err) {
+        console.warn('[MediaSelector] Ошибка загрузки из source=imported:', err);
+      }
+      
+      // Если ничего не найдено, пробуем 'images' (Docker volume)
+      if (items.length === 0 && folders.length === 0) {
+        try {
+          const paramsImages = {
+            source: 'images',
+            prefix: currentPath || '',
+            limit: 1000,
+            ...(search && { query: search })
+          };
+          console.log('[MediaSelector] Запрос images с параметрами:', paramsImages);
+          response = await mediaApi.browse(paramsImages);
+          items = response.data.items || [];
+          folders = response.data.folders || [];
+          console.log('[MediaSelector] Ответ images:', { items: items.length, folders: folders.length, total: response.data.total });
+        } catch (err) {
+          console.warn('[MediaSelector] Ошибка загрузки из source=images:', err);
+        }
+      }
+      
+      // Сохраняем папки и файлы отдельно
+      setImportedMedia(items);
+      setImportedFolders(folders);
+      setImportedTotal(response?.data?.total || items.length);
+      
+      // Если есть папки, но нет файлов, это нормально - показываем папки
+      if (folders.length > 0 && items.length === 0) {
+        console.log('[MediaSelector] Найдены папки, но нет файлов в корне:', folders);
+      }
+      } catch (err) {
+      console.error('[MediaSelector] Ошибка загрузки импортированных медиа:', err);
       setImportedMedia([]);
+      setImportedFolders([]);
       setImportedTotal(0);
     } finally {
       setLoading(false);
@@ -214,55 +259,40 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
 
   // Группировка импортированных файлов по папкам
   const getFoldersAndFiles = () => {
-    const folders = new Set();
-    const files = [];
+    // Используем папки напрямую из API ответа
+    const folders = importedFolders
+      .filter(folder => {
+        // Фильтруем папки по currentPath
+        if (currentPath === '') {
+          // В корне - показываем только папки первого уровня
+          return folder.path.split('/').length === 1;
+        } else {
+          // В подпапке - проверяем, что путь начинается с currentPath
+          return folder.path.startsWith(currentPath + '/') && 
+                 folder.path.split('/').length === currentPath.split('/').length + 1;
+        }
+      })
+      .map(folder => folder.name);
     
-    importedMedia.forEach(item => {
+    // Фильтруем файлы по currentPath
+    const files = importedMedia.filter(item => {
       const pathParts = item.path.split('/');
       
       if (currentPath === '') {
-        // В корне - показываем только первую папку или файлы в корне
-        if (pathParts.length === 1) {
-          // Файл в корне
-          files.push(item);
-        } else {
-          // Есть подпапка
-          folders.add(pathParts[0]);
-        }
+        // В корне - показываем только файлы в корне
+        return pathParts.length === 1;
       } else {
-        // В подпапке - проверяем, начинается ли путь с currentPath
-        const currentPathParts = currentPath.split('/');
-        if (pathParts.length <= currentPathParts.length) {
-          return; // Файл не в этой папке или глубже
+        // В подпапке - проверяем, что путь начинается с currentPath
+        if (!item.path.startsWith(currentPath + '/')) {
+          return false;
         }
-        
-        // Проверяем, что путь соответствует currentPath
-        let matches = true;
-        for (let i = 0; i < currentPathParts.length; i++) {
-          if (pathParts[i] !== currentPathParts[i]) {
-            matches = false;
-            break;
-          }
-        }
-        
-        if (!matches) {
-          return; // Файл не в этой папке
-        }
-        
-        // Относительный путь от currentPath
-        const relativeParts = pathParts.slice(currentPathParts.length);
-        
-        if (relativeParts.length > 1) {
-          // Есть подпапка
-          folders.add(relativeParts[0]);
-        } else {
-          // Файл в текущей папке
-          files.push(item);
-        }
+        // Проверяем, что файл находится непосредственно в currentPath (не глубже)
+        const relativePath = item.path.substring(currentPath.length + 1);
+        return relativePath.split('/').length === 1;
       }
     });
 
-    return { folders: Array.from(folders).sort(), files };
+    return { folders: folders.sort(), files };
   };
 
   const { folders, files } = activeTab === 'imported' ? getFoldersAndFiles() : { folders: [], files: [] };
@@ -404,6 +434,16 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
                               src={getImageUrl(item.url)}
                               alt={item.alt || item.filename}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error('Ошибка загрузки изображения:', item.url, getImageUrl(item.url));
+                                e.target.style.display = 'none';
+                                if (!e.target.nextSibling) {
+                                  const placeholder = document.createElement('div');
+                                  placeholder.className = 'w-full h-full flex items-center justify-center bg-muted';
+                                  placeholder.innerHTML = '<svg class="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>';
+                                  e.target.parentElement.appendChild(placeholder);
+                                }
+                              }}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-muted">
@@ -473,7 +513,7 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
                     </Button>
                   )}
                   <div className="flex-1 text-sm text-muted-foreground truncate">
-                    images{currentPath ? '/' + currentPath : ''}
+                    /images{currentPath ? '/' + currentPath : ''}
                   </div>
                 </div>
 
@@ -506,17 +546,19 @@ export default function MediaSelector({ value, onChange, label = 'Изображ
                   ) : (
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       {/* Папки */}
-                      {folders.map((folder) => {
-                        const folderPath = currentPath === '' ? folder : `${currentPath}/${folder}`;
+                      {folders.map((folderName) => {
+                        // Находим полный путь папки из importedFolders
+                        const folder = importedFolders.find(f => f.name === folderName);
+                        const folderPath = folder ? folder.path : (currentPath === '' ? folderName : `${currentPath}/${folderName}`);
                         return (
                           <div
-                            key={folder}
+                            key={folderName}
                             onClick={() => handleFolderClick(folderPath)}
                             className="relative aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 overflow-hidden cursor-pointer transition-all hover:shadow-md hover:border-primary"
                           >
                             <div className="w-full h-full flex flex-col items-center justify-center bg-muted/50">
                               <FolderOpen className="h-12 w-12 text-muted-foreground mb-2" />
-                              <span className="text-xs text-center px-2 truncate w-full">{folder}</span>
+                              <span className="text-xs text-center px-2 truncate w-full">{folderName}</span>
                             </div>
                           </div>
                         );

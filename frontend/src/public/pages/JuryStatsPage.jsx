@@ -336,15 +336,38 @@ export default function JuryStatsPage() {
                     {/* Photo and text from jury_cards */}
                     {juryCards[jury.name] && (
                       <div className="mt-4 pt-4 border-t space-y-3">
-                        {juryCards[jury.name].photo && (
-                          <div className="w-full">
-                            <img
-                              src={juryCards[jury.name].photo.url || juryCards[jury.name].photo}
-                              alt={juryCards[jury.name].photo.alt || jury.name}
-                              className="w-full h-auto rounded-lg object-cover"
-                            />
-                          </div>
-                        )}
+                        {juryCards[jury.name].photo && (() => {
+                          // Получаем URL фото - может быть строкой или объектом
+                          let photoUrl = null;
+                          let photoAlt = jury.name;
+                          
+                          if (typeof juryCards[jury.name].photo === 'string') {
+                            photoUrl = juryCards[jury.name].photo;
+                          } else if (juryCards[jury.name].photo && typeof juryCards[jury.name].photo === 'object') {
+                            photoUrl = juryCards[jury.name].photo.url || juryCards[jury.name].photo.thumbnail;
+                            photoAlt = juryCards[jury.name].photo.alt || jury.name;
+                          }
+                          
+                          // Формируем правильный URL
+                          if (photoUrl) {
+                            if (!photoUrl.startsWith('/') && !photoUrl.startsWith('http://') && !photoUrl.startsWith('https://')) {
+                              photoUrl = `/${photoUrl}`;
+                            }
+                          }
+                          
+                          return photoUrl ? (
+                            <div className="w-full">
+                              <img
+                                src={photoUrl}
+                                alt={photoAlt}
+                                className="w-full h-auto rounded-lg object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          ) : null;
+                        })()}
                         {juryCards[jury.name].text && (
                           <div className="text-sm text-gray-700 whitespace-pre-line">
                             {juryCards[jury.name].text}
