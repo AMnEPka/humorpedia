@@ -18,9 +18,6 @@ export function GameTable({ game, stageName = '' }) {
 
   // Загружаем названия команд из базы данных по их slug
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GameTable.jsx:20',message:'useEffect entry - loadTeamNames',data:{teamsCount:teams.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     let cancelled = false;
     const loadTeamNames = async () => {
       const slugsToLoad = teams
@@ -38,9 +35,6 @@ export function GameTable({ game, stageName = '' }) {
           try {
             const res = await publicApi.getTeam(slug);
             if (cancelled) {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GameTable.jsx:35',message:'RACE CONDITION - Cancelled after API call',data:{slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-              // #endregion
               return;
             }
             const teamData = res.data;
@@ -48,9 +42,6 @@ export function GameTable({ game, stageName = '' }) {
             const teamName = teamData.name || teamData.title || '';
             namesMap[slug] = teamName;
           } catch (err) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GameTable.jsx:43',message:'Error loading team',data:{slug,error:err?.message?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
             if (cancelled) return;
             // Если команда не найдена, используем название из данных игры
             const team = teams.find(t => t.team_slug === slug);
@@ -62,23 +53,13 @@ export function GameTable({ game, stageName = '' }) {
       );
       
       if (!cancelled) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GameTable.jsx:54',message:'Before setTeamNames',data:{namesCount:Object.keys(namesMap).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         setTeamNames(namesMap);
-      } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GameTable.jsx:57',message:'RACE CONDITION - Cancelled before setTeamNames',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
       }
     };
     
     loadTeamNames();
     return () => {
       cancelled = true;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GameTable.jsx:64',message:'Cleanup function called - loadTeamNames',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);

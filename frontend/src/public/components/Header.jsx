@@ -46,17 +46,11 @@ export default function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:48',message:'useEffect entry - loadMenuSections',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     let cancelled = false;
     // Load sections that should appear in main menu
     publicApi.getSections({ in_main_menu: true, status: 'published' })
       .then(res => {
         if (cancelled) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:52',message:'RACE CONDITION - Cancelled before setMenuSections',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-          // #endregion
           return;
         }
         const sections = res.data.items || [];
@@ -69,9 +63,6 @@ export default function Header() {
         setMenuSections(sectionLinks.sort((a, b) => a.order - b.order));
       })
       .catch(err => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:64',message:'Error loading menu sections',data:{error:err?.message?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         if (!cancelled) {
           console.error('Error loading menu sections:', err);
           setMenuSections([]);
@@ -79,16 +70,10 @@ export default function Header() {
       });
     return () => {
       cancelled = true;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:71',message:'Cleanup function called - loadMenuSections',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
     };
   }, []);
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:67',message:'useEffect entry - autocomplete',data:{searchQueryLength:searchQuery.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     // Load autocomplete suggestions
     if (searchQuery.length >= 2) {
       setLoadingSuggestions(true);
@@ -97,18 +82,12 @@ export default function Header() {
         publicApi.searchAutocomplete(searchQuery)
           .then(res => {
             if (cancelled) {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:74',message:'RACE CONDITION - Cancelled before setSuggestions',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-              // #endregion
               return;
             }
             setSuggestions(res.data);
             setShowSuggestions(true);
           })
           .catch(err => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:81',message:'Error in autocomplete',data:{error:err?.message?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            // #endregion
             if (!cancelled) {
               console.error('Autocomplete error:', err);
               setSuggestions([]);
@@ -123,13 +102,11 @@ export default function Header() {
       return () => {
         cancelled = true;
         clearTimeout(timer);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.jsx:95',message:'Cleanup function called - autocomplete',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
       };
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
+      setLoadingSuggestions(false);
     }
   }, [searchQuery]);
 

@@ -51,9 +51,6 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const [teamNames, setTeamNames] = useState({}); // Кэш полных названий команд по slug
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:53',message:'useEffect entry - fetchSeason',data:{pathname:location.pathname,hasInitialData:!!initialSeasonData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     // Если данные уже переданы через props - используем их
     if (initialSeasonData) {
       setSeason(initialSeasonData);
@@ -69,17 +66,8 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       try {
         const path = location.pathname;
         const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:69',message:'Before API call',data:{cleanPath},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         const res = await publicApi.getKvnByPath(cleanPath);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:72',message:'After API call',data:{cancelled,hasData:!!res?.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         if (cancelled) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:75',message:'RACE CONDITION - Component unmounted before setState',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-          // #endregion
           return;
         }
         const data = res.data;
@@ -92,9 +80,6 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         
         setSeason(data);
       } catch (err) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:87',message:'Error in fetchSeason',data:{cancelled,error:err?.message?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         if (!cancelled) {
           console.error('Error fetching season:', err);
           setError('Сезон не найден');
@@ -108,17 +93,11 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     fetchSeason();
     return () => {
       cancelled = true;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:98',message:'Cleanup function called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
     };
   }, [location.pathname, initialSeasonData]);
 
   // Загружаем полные названия команд из базы данных для winners и all_teams
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:90',message:'useEffect entry - loadTeamNames',data:{hasSeason:!!season},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     let cancelled = false;
     const loadTeamNames = async () => {
       if (!season?.season_data) return;
@@ -144,9 +123,6 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       if (slugsToLoad.size === 0) return;
       
       const namesMap = { ...teamNames };
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:117',message:'Before Promise.all',data:{slugsCount:slugsToLoad.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       // Загружаем команды параллельно
       await Promise.all(
         Array.from(slugsToLoad).map(async (slug) => {
@@ -154,9 +130,6 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
           try {
             const res = await publicApi.getTeam(slug);
             if (cancelled) {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:123',message:'RACE CONDITION - Cancelled after API call',data:{slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-              // #endregion
               return;
             }
             const teamData = res.data;
@@ -168,9 +141,6 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
               city: cityFromFacts
             };
           } catch (err) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:135',message:'Error loading team',data:{slug,error:err?.message?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
             if (cancelled) return;
             // Если команда не найдена, используем данные из сезона
             const winner = winners.find(w => (typeof w === 'string' ? w : w.slug) === slug);
@@ -186,23 +156,13 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       );
       
       if (!cancelled) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:150',message:'Before setTeamNames',data:{namesCount:Object.keys(namesMap).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         setTeamNames(namesMap);
-      } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:153',message:'RACE CONDITION - Cancelled before setTeamNames',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
       }
     };
     
     loadTeamNames();
     return () => {
       cancelled = true;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/25bae7e8-6342-40cd-b290-5df6e4de1bb7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SeasonDetailPage.jsx:160',message:'Cleanup function called - loadTeamNames',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [season]);
