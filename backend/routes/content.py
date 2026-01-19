@@ -27,6 +27,41 @@ router = APIRouter(prefix="/content", tags=["content"])
 
 # === HELPER FUNCTIONS ===
 
+def get_league_slug_from_parent(parent_doc):
+    """Определяет league_slug из родительского документа KVN"""
+    if not parent_doc:
+        return None
+    
+    parent_slug = parent_doc.get("slug", "")
+    parent_full_path = parent_doc.get("full_path", "")
+    
+    # Проверяем slug родителя
+    if parent_slug == "vl-kvn":
+        return "vl-kvn"
+    elif parent_slug == "premier-liga":
+        return "premier-liga"
+    elif parent_slug == "1l-kvn":
+        return "1l-kvn"
+    elif parent_slug == "ml-kvn":
+        return "ml-kvn"
+    elif parent_slug == "vul":
+        return "vul"
+    
+    # Проверяем full_path
+    if "/vl-kvn" in parent_full_path or parent_full_path.startswith("kvn/vl-kvn"):
+        return "vl-kvn"
+    elif "/premier-liga" in parent_full_path:
+        return "premier-liga"
+    elif "/1l-kvn" in parent_full_path:
+        return "1l-kvn"
+    elif "/ml-kvn" in parent_full_path:
+        return "ml-kvn"
+    elif "/vul" in parent_full_path:
+        return "vul"
+    
+    return None
+
+
 async def check_slug_unique(collection_name: str, slug: str, exclude_id: str = None):
     """Check if slug is unique in collection"""
     db = await get_db()
@@ -930,7 +965,7 @@ async def create_kvn(data: KVNCreate):
     # Calculate level and full_path based on parent
     level = 0
     full_path = data.slug
-    
+    parent = None
     if data.parent_id:
         # For KVN, parent_id is a UUID string, not _id
         # Try to find by 'id' field first, then fallback to _id
@@ -968,6 +1003,40 @@ async def create_kvn(data: KVNCreate):
     )
     
     result = await create_content("kvn", kvn, data.tags)
+    
+    # Автоматически добавляем league_slug в season_data, если создается дочерняя страница с родителем "Высшая лига КВН"
+    if parent:
+        league_slug = get_league_slug_from_parent(parent)
+        if league_slug:
+            # Проверяем, есть ли уже season_data в документе
+            created_doc = await db.kvn.find_one({"id": result["id"]})
+            if created_doc:
+                season_data = created_doc.get("season_data", {})
+                # Если season_data существует, но нет league_slug - добавляем
+                if season_data and not season_data.get("league_slug"):
+                    season_data["league_slug"] = league_slug
+                    await db.kvn.update_one(
+                        {"_id": created_doc["_id"]},
+                        {"$set": {"season_data": season_data}}
+                    )
+                    logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data для нового документа KVN")
+                # Если season_data не существует, но это сезон (определяем по full_path или slug, содержащему год)
+                elif not season_data:
+                    # Проверяем, является ли это сезоном (slug или full_path содержит год)
+                    import re
+                    year_match = re.search(r'\b(19|20)\d{2}\b', full_path)
+                    if year_match:
+                        # Создаем базовую структуру season_data с league_slug
+                        year = int(year_match.group())
+                        season_data = {
+                            "league_slug": league_slug,
+                            "year": year
+                        }
+                        await db.kvn.update_one(
+                            {"_id": created_doc["_id"]},
+                            {"$set": {"season_data": season_data}}
+                        )
+                        logger.info(f"Автоматически создан season_data с league_slug '{league_slug}' для нового сезона {year}")
     
     # Update parent's child_kvn_ids if parent exists
     if data.parent_id:
@@ -1165,6 +1234,138 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
                     break
     
     return prev_season_slug, next_season_slug
+
+
+@router.get("/kvn/jury-stats", response_model=dict)
+async def get_kvn_jury_stats(
+    league_slug: str = "vl-kvn",
+    min_year: Optional[int] = None,
+    max_year: Optional[int] = None
+):
+    """
+    Get jury statistics for KVN seasons.
+    Returns aggregated data about all jury members with their game counts and details.
+    """
+    db = await get_db()
+    
+    # Get all teams from teams collection (without filtering by team_type)
+    all_teams_from_db = await db.teams.find({}, {"slug": 1, "name": 1, "title": 1}).to_list(1000)
+    team_slug_to_name = {}
+    all_team_slugs = set()
+    for team in all_teams_from_db:
+        slug = team.get("slug", "")
+        name = team.get("name") or team.get("title", "")
+        if slug:
+            all_team_slugs.add(slug)
+            team_slug_to_name[slug] = name
+    
+    # Build query for seasons
+    query = {
+        "season_data.league_slug": league_slug
+    }
+    
+    # Build year filter
+    year_filter = {}
+    if min_year is not None:
+        year_filter["$gte"] = min_year
+    if max_year is not None:
+        year_filter["$lte"] = max_year
+    
+    if year_filter:
+        query["season_data.year"] = year_filter
+    
+    # Get all seasons for the league
+    seasons = await db.kvn.find(query).to_list(1000)
+    
+    # Aggregate jury statistics
+    jury_stats = {}  # jury_name -> { games_count, games: [...], years: set(), teams: set() }
+    all_years = set()
+    
+    for season in seasons:
+        season_data = season.get("season_data", {})
+        year = season_data.get("year", 0)
+        season_slug = season.get("slug", "")
+        season_name = season.get("name") or season.get("title", "")
+        all_years.add(year)
+        
+        stages = season_data.get("stages", [])
+        for stage in stages:
+            games = stage.get("games", [])
+            for game in games:
+                jury = game.get("jury", [])
+                game_name = game.get("name", "")
+                game_date = game.get("date", "")
+                stage_name = stage.get("name", "")
+                
+                # Get teams from this game
+                teams = game.get("teams", [])
+                team_slugs = []
+                for team in teams:
+                    team_slug = team.get("team_slug", "")
+                    if team_slug and team_slug in all_team_slugs:
+                        team_slugs.append(team_slug)
+                
+                # Process each jury member
+                for jury_member in jury:
+                    if not jury_member:
+                        continue
+                    
+                    if jury_member not in jury_stats:
+                        jury_stats[jury_member] = {
+                            "games_count": 0,
+                            "games": [],
+                            "years": set(),
+                            "teams": set()
+                        }
+                    
+                    jury_stats[jury_member]["games_count"] += 1
+                    jury_stats[jury_member]["years"].add(year)
+                    for team_slug in team_slugs:
+                        jury_stats[jury_member]["teams"].add(team_slug)
+                    
+                    # Add game details
+                    jury_stats[jury_member]["games"].append({
+                        "year": year,
+                        "season_slug": season_slug,
+                        "season_name": season_name,
+                        "stage_name": stage_name,
+                        "game_name": game_name,
+                        "game_date": game_date,
+                        "teams": team_slugs
+                    })
+    
+    # Function to get last name (last word) for sorting
+    def get_last_name_for_sort(name):
+        """Get last name (last word) from full name for sorting"""
+        if not name:
+            return ""
+        parts = name.strip().split()
+        if len(parts) > 0:
+            return parts[-1].lower()  # Return last word in lowercase for sorting
+        return name.lower()
+    
+    # Convert sets to lists for JSON serialization
+    result = {
+        "jury_members": [],
+        "all_years": sorted(list(all_years)),
+        "all_teams": sorted(list(all_team_slugs)),
+        "team_names": team_slug_to_name,
+        "total_games": sum(stats["games_count"] for stats in jury_stats.values())
+    }
+    
+    for jury_name, stats in jury_stats.items():
+        result["jury_members"].append({
+            "name": jury_name,
+            "games_count": stats["games_count"],
+            "years": sorted(list(stats["years"])),
+            "teams": sorted(list(stats["teams"])),
+            "games": stats["games"]
+        })
+    
+    # Sort jury members by last name (alphabetically)
+    result["jury_members"].sort(key=lambda x: get_last_name_for_sort(x["name"]))
+    
+    return result
 
 
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
@@ -1402,6 +1603,8 @@ async def update_kvn(id: str, data: KVNUpdate):
         update_data["person_ids"] = data.person_ids
     if data.related_kvn_ids is not None:
         update_data["related_kvn_ids"] = data.related_kvn_ids
+    if data.jury_cards is not None:
+        update_data["jury_cards"] = data.jury_cards
     if data.season_data is not None:
         # Валидируем и очищаем season_data перед сохранением
         # Убеждаемся, что все вложенные структуры сериализуемы
@@ -1445,6 +1648,24 @@ async def update_kvn(id: str, data: KVNUpdate):
                     return str(obj)
             
             cleaned_data = clean_data(season_data_dict)
+            
+            # Автоматически добавляем league_slug, если его нет и есть родитель "Высшая лига КВН"
+            if not cleaned_data.get("league_slug"):
+                parent_id = kvn.get("parent_id")
+                if parent_id:
+                    # Находим родителя
+                    parent = await db.kvn.find_one({"id": parent_id})
+                    if not parent:
+                        parent = await db.kvn.find_one({"_id": parent_id})
+                    
+                    if parent:
+                        # Определяем league_slug из родителя
+                        league_slug = get_league_slug_from_parent(parent)
+                        
+                        if league_slug:
+                            cleaned_data["league_slug"] = league_slug
+                            logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data при обновлении")
+            
             # Пробуем сериализовать для проверки
             json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
             logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")

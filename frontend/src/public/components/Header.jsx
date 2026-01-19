@@ -46,9 +46,13 @@ export default function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     // Load sections that should appear in main menu
     publicApi.getSections({ in_main_menu: true, status: 'published' })
       .then(res => {
+        if (cancelled) {
+          return;
+        }
         const sections = res.data.items || [];
         const sectionLinks = sections.map(s => ({
           name: s.menu_title || s.title,
@@ -59,31 +63,50 @@ export default function Header() {
         setMenuSections(sectionLinks.sort((a, b) => a.order - b.order));
       })
       .catch(err => {
-        console.error('Error loading menu sections:', err);
-        setMenuSections([]);
+        if (!cancelled) {
+          console.error('Error loading menu sections:', err);
+          setMenuSections([]);
+        }
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     // Load autocomplete suggestions
     if (searchQuery.length >= 2) {
       setLoadingSuggestions(true);
+      let cancelled = false;
       const timer = setTimeout(() => {
         publicApi.searchAutocomplete(searchQuery)
           .then(res => {
+            if (cancelled) {
+              return;
+            }
             setSuggestions(res.data);
             setShowSuggestions(true);
           })
           .catch(err => {
-            console.error('Autocomplete error:', err);
-            setSuggestions([]);
+            if (!cancelled) {
+              console.error('Autocomplete error:', err);
+              setSuggestions([]);
+            }
           })
-          .finally(() => setLoadingSuggestions(false));
+          .finally(() => {
+            if (!cancelled) {
+              setLoadingSuggestions(false);
+            }
+          });
       }, 300);
-      return () => clearTimeout(timer);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
+      setLoadingSuggestions(false);
     }
   }, [searchQuery]);
 

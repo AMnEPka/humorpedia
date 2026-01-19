@@ -18,6 +18,7 @@ export function GameTable({ game, stageName = '' }) {
 
   // Загружаем названия команд из базы данных по их slug
   useEffect(() => {
+    let cancelled = false;
     const loadTeamNames = async () => {
       const slugsToLoad = teams
         .filter(team => team.team_slug && !teamNames[team.team_slug])
@@ -30,13 +31,18 @@ export function GameTable({ game, stageName = '' }) {
       // Загружаем команды параллельно
       await Promise.all(
         slugsToLoad.map(async (slug) => {
+          if (cancelled) return;
           try {
             const res = await publicApi.getTeam(slug);
+            if (cancelled) {
+              return;
+            }
             const teamData = res.data;
             // Используем name или title из базы данных
             const teamName = teamData.name || teamData.title || '';
             namesMap[slug] = teamName;
           } catch (err) {
+            if (cancelled) return;
             // Если команда не найдена, используем название из данных игры
             const team = teams.find(t => t.team_slug === slug);
             if (team) {
@@ -46,10 +52,15 @@ export function GameTable({ game, stageName = '' }) {
         })
       );
       
-      setTeamNames(namesMap);
+      if (!cancelled) {
+        setTeamNames(namesMap);
+      }
     };
     
     loadTeamNames();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);
 

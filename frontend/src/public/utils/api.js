@@ -60,6 +60,7 @@ export const publicApi = {
     return api.get(`/content/kvn/by-path/${cleanPath}`);
   },
   getKvnChildren: (parentSlug) => api.get(`/content/kvn/${parentSlug}/children`),
+  getKvnJuryStats: (params) => api.get('/content/kvn/jury-stats', { params }),
   
   // Cities (Geography)
   getCities: (params) => api.get('/cities/', { params }),

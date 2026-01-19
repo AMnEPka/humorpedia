@@ -64,6 +64,7 @@ import SearchPage from './public/pages/SearchPage';
 import TagSearchPage from './public/pages/TagSearchPage';
 import CitiesListPagePublic from './public/pages/CitiesListPage';
 import CityDetailPage from './public/pages/CityDetailPage';
+import JuryStatsPage from './public/pages/JuryStatsPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
@@ -135,6 +136,9 @@ function AppRoutes() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/tags/:tag" element={<TagSearchPage />} />
         
+        {/* KVN Jury Stats */}
+        <Route path="/kvn/vl-kvn/vl-jury" element={<JuryStatsPage />} />
+        
         {/* Dynamic sections - catch-all for hierarchical URLs */}
         {/* SectionDetailPage автоматически определяет формат (старый/новый) по наличию season_data */}
         <Route path="/*" element={<SectionDetailPage />} />
@@ -159,7 +163,7 @@ function AppRoutes() {
       
       {/* Admin - KVN */}
       <Route path="/admin/kvn" element={<ProtectedRoute><KVNListPage /></ProtectedRoute>} />
-      <Route path="/admin/kvn/:id" element={<ProtectedRoute><KVNEditPage /></ProtectedRoute>} />
+        <Route path="/admin/kvn/:id" element={<ProtectedRoute><KVNEditPage /></ProtectedRoute>} />
       
       {/* Admin - Articles */}
       <Route path="/admin/articles" element={<ProtectedRoute><AdminArticlesListPage /></ProtectedRoute>} />

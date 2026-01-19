@@ -25,7 +25,8 @@ const emptyKvn = {
   facts: {},
   social_links: {},
   modules: [], tags: [], person_ids: [], team_ids: [],
-  seo: { meta_title: '', meta_description: '' }
+  seo: { meta_title: '', meta_description: '' },
+  jury_cards: {}  // { [juryName]: { photo: {...}, text: '' } }
 };
 
 export default function KVNEditPage() {
@@ -41,12 +42,17 @@ export default function KVNEditPage() {
   const [newFactKey, setNewFactKey] = useState('');
   const [newFactValue, setNewFactValue] = useState('');
   const [parentOptions, setParentOptions] = useState([]);
+  const [juryMembers, setJuryMembers] = useState([]);
+  const [loadingJury, setLoadingJury] = useState(false);
 
   // Загружаем список родителей для выбора
   useEffect(() => {
+    let cancelled = false;
     const loadParents = async () => {
       try {
         const response = await contentApi.listKvnHierarchy();
+        if (cancelled) return;
+        
         // Функция для рекурсивного обхода дерева
         const flattenTree = (nodes, result = [], level = 0) => {
           for (const node of nodes) {
@@ -60,17 +66,27 @@ export default function KVNEditPage() {
           return result;
         };
         const flat = flattenTree(response.data.items || []);
-        setParentOptions(flat);
+        if (!cancelled) {
+          setParentOptions(flat);
+        }
       } catch (err) {
-        console.error('Error loading parents:', err);
+        if (!cancelled) {
+          console.error('Error loading parents:', err);
+        }
       }
     };
     loadParents();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
     if (!isNew) {
+      let cancelled = false;
       contentApi.getKvn(id).then(res => {
+        if (cancelled) return;
+        
         let poster = res.data.poster;
         if (poster) {
           if (typeof poster === 'string') {
@@ -78,17 +94,32 @@ export default function KVNEditPage() {
           }
         }
         
-        setKvn({ 
-          ...emptyKvn, 
-          ...res.data, 
-          poster: poster,
-          parent_id: res.data.parent_id || null,  // null для корневой страницы
-          facts: res.data.facts || {},
-          social_links: res.data.social_links || {},
-          seo: { ...emptyKvn.seo, ...res.data.seo },
-          season_data: res.data.season_data || null  // Сохраняем season_data для редактирования
-        });
-      }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
+        if (!cancelled) {
+          setKvn({ 
+            ...emptyKvn, 
+            ...res.data, 
+            poster: poster,
+            parent_id: res.data.parent_id || null,  // null для корневой страницы
+            facts: res.data.facts || {},
+            social_links: res.data.social_links || {},
+            seo: { ...emptyKvn.seo, ...res.data.seo },
+            season_data: res.data.season_data || null,  // Сохраняем season_data для редактирования
+            jury_cards: res.data.jury_cards || {}  // Сохраняем карточки жюри
+          });
+        }
+      }).catch(() => {
+        if (!cancelled) {
+          setError('Ошибка загрузки');
+        }
+      }).finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+      
+      return () => {
+        cancelled = true;
+      };
     }
   }, [id, isNew]);
 
@@ -170,6 +201,40 @@ export default function KVNEditPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kvn.season_data?.all_teams]);
 
+  // Load jury members if this is the jury stats page
+  useEffect(() => {
+    // Reset loading state when slug changes
+    if (kvn.slug !== 'vl-jury') {
+      setLoadingJury(false);
+      setJuryMembers([]);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingJury(true);
+    contentApi.getKvnJuryStats({ league_slug: 'vl-kvn' })
+      .then(res => {
+        if (!cancelled) {
+          setJuryMembers(res.data.jury_members || []);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('Error loading jury members:', err);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingJury(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      setLoadingJury(false);
+    };
+  }, [kvn.slug]);
+
   const generateSlug = (t) => t.toLowerCase().replace(/[а-яё]/g, c => ({ 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ы':'y','э':'e','ю':'yu','я':'ya' }[c] || '')).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   const handleSave = async () => {
@@ -203,6 +268,7 @@ export default function KVNEditPage() {
       if (kvn.team_ids !== undefined) dataToSend.team_ids = Array.isArray(kvn.team_ids) ? kvn.team_ids : [];
       if (kvn.social_links) dataToSend.social_links = kvn.social_links;
       if (kvn.season_data !== undefined) dataToSend.season_data = kvn.season_data;  // Сохраняем season_data
+      if (kvn.jury_cards !== undefined) dataToSend.jury_cards = kvn.jury_cards;  // Сохраняем карточки жюри
       
       if (isNew) {
         const res = await contentApi.createKvn(dataToSend);
@@ -230,7 +296,8 @@ export default function KVNEditPage() {
             facts: res.data.facts || {},
             social_links: res.data.social_links || {},
             seo: { ...emptyKvn.seo, ...res.data.seo },
-            season_data: res.data.season_data || null
+            season_data: res.data.season_data || null,
+            jury_cards: res.data.jury_cards || {}
           });
         } catch (reloadErr) {
           console.error('Error reloading data after save:', reloadErr);
@@ -287,6 +354,7 @@ export default function KVNEditPage() {
           <TabsTrigger value="facts">Факты</TabsTrigger>
           <TabsTrigger value="modules">Модули ({kvn.modules.length})</TabsTrigger>
           <TabsTrigger value="season">Сезон</TabsTrigger>
+          {kvn.slug === 'vl-jury' && <TabsTrigger value="jury-cards">Карточки жюри</TabsTrigger>}
           <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
@@ -469,6 +537,78 @@ export default function KVNEditPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {kvn.slug === 'vl-jury' && (
+          <TabsContent value="jury-cards">
+            <Card>
+              <CardHeader>
+                <CardTitle>Редактирование карточек судей</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingJury ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {juryMembers.map((jury) => {
+                      const juryCard = kvn.jury_cards?.[jury.name] || { photo: null, text: '' };
+                      return (
+                        <Card key={jury.name}>
+                          <CardHeader>
+                            <CardTitle className="text-lg">{jury.name}</CardTitle>
+                            <p className="text-sm text-muted-foreground">Игр в жюри: {jury.games_count}</p>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>Фото</Label>
+                              <MediaSelector
+                                value={juryCard.photo}
+                                onChange={(photo) => {
+                                  setKvn(p => ({
+                                    ...p,
+                                    jury_cards: {
+                                      ...(p.jury_cards || {}),
+                                      [jury.name]: {
+                                        ...(p.jury_cards?.[jury.name] || {}),
+                                        photo
+                                      }
+                                    }
+                                  }));
+                                }}
+                                label=""
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Текст</Label>
+                              <Textarea
+                                value={juryCard.text || ''}
+                                onChange={(e) => {
+                                  setKvn(p => ({
+                                    ...p,
+                                    jury_cards: {
+                                      ...(p.jury_cards || {}),
+                                      [jury.name]: {
+                                        ...(p.jury_cards?.[jury.name] || {}),
+                                        text: e.target.value
+                                      }
+                                    }
+                                  }));
+                                }}
+                                rows={4}
+                                placeholder="Введите текст для карточки судьи..."
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="seo">
           <Card>

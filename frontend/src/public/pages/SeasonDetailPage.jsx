@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import { StageSection } from '../components/StageSection';
+import { sanitizeHTML, containsHTML } from '../utils/sanitize';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -58,14 +59,17 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     }
 
     // Иначе загружаем данные
+    let cancelled = false;
     const fetchSeason = async () => {
       setLoading(true);
       setError('');
       try {
         const path = location.pathname;
         const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-        
         const res = await publicApi.getKvnByPath(cleanPath);
+        if (cancelled) {
+          return;
+        }
         const data = res.data;
         
         // Проверяем наличие season_data
@@ -76,17 +80,25 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         
         setSeason(data);
       } catch (err) {
-        console.error('Error fetching season:', err);
-        setError('Сезон не найден');
+        if (!cancelled) {
+          console.error('Error fetching season:', err);
+          setError('Сезон не найден');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
     fetchSeason();
+    return () => {
+      cancelled = true;
+    };
   }, [location.pathname, initialSeasonData]);
 
   // Загружаем полные названия команд из базы данных для winners и all_teams
   useEffect(() => {
+    let cancelled = false;
     const loadTeamNames = async () => {
       if (!season?.season_data) return;
       
@@ -111,12 +123,15 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       if (slugsToLoad.size === 0) return;
       
       const namesMap = { ...teamNames };
-      
       // Загружаем команды параллельно
       await Promise.all(
         Array.from(slugsToLoad).map(async (slug) => {
+          if (cancelled) return;
           try {
             const res = await publicApi.getTeam(slug);
+            if (cancelled) {
+              return;
+            }
             const teamData = res.data;
             // Используем полное название из базы данных
             const teamName = teamData.name || teamData.title || '';
@@ -126,6 +141,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
               city: cityFromFacts
             };
           } catch (err) {
+            if (cancelled) return;
             // Если команда не найдена, используем данные из сезона
             const winner = winners.find(w => (typeof w === 'string' ? w : w.slug) === slug);
             const team = all_teams.find(t => (typeof t === 'string' ? t : t.slug) === slug);
@@ -139,10 +155,15 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         })
       );
       
-      setTeamNames(namesMap);
+      if (!cancelled) {
+        setTeamNames(namesMap);
+      }
     };
     
     loadTeamNames();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [season]);
 
@@ -323,12 +344,6 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         
         if (!hasFacts && !hasSeasonData) return null;
         
-        // Функция для проверки, содержит ли строка HTML
-        const containsHTML = (str) => {
-          if (typeof str !== 'string') return false;
-          return /<[a-z][\s\S]*>/i.test(str);
-        };
-        
         return (
           <div className="mb-8">
             <Card>
@@ -351,7 +366,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
                               <TableCell className="font-medium bg-gray-50 w-[200px]">{key}</TableCell>
                               <TableCell>
                                 {containsHTML(valueStr) ? (
-                                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: valueStr }} />
+                                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHTML(valueStr) }} />
                                 ) : (
                                   valueStr
                                 )}
@@ -451,7 +466,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
               <CardTitle>О сезоне</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: intro_html }} />
+              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHTML(intro_html) }} />
             </CardContent>
           </Card>
         </div>
@@ -570,7 +585,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
                 <CardTitle>{section.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: section.html }} />
+                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHTML(section.html) }} />
               </CardContent>
             </Card>
           </div>

@@ -159,6 +159,24 @@ webpackConfig.devServer = (devServerConfig) => {
     secure: false,
     logLevel: 'debug',
   });
+  
+  // Add proxy for uploads to backend
+  devServerConfig.proxy.push({
+    context: ['/uploads'],
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    logLevel: 'debug',
+  });
+  
+  // Add proxy for images to backend
+  devServerConfig.proxy.push({
+    context: ['/images'],
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    logLevel: 'debug',
+  });
 
   // Apply visual edits dev server setup only if enabled
   if (config.enableVisualEdits && setupDevServer) {

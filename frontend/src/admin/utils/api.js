@@ -93,6 +93,7 @@ export const contentApi = {
   createKvn: (data) => api.post('/content/kvn', data),
   updateKvn: (id, data) => api.put(`/content/kvn/${id}`, data),
   deleteKvn: (id) => api.delete(`/content/kvn/${id}`),
+  getKvnJuryStats: (params) => api.get('/content/kvn/jury-stats', { params }),
 
   // Articles
   listArticles: (params) => api.get('/content/articles', { params }),
