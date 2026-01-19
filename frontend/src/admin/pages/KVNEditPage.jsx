@@ -47,9 +47,12 @@ export default function KVNEditPage() {
 
   // Загружаем список родителей для выбора
   useEffect(() => {
+    let cancelled = false;
     const loadParents = async () => {
       try {
         const response = await contentApi.listKvnHierarchy();
+        if (cancelled) return;
+        
         // Функция для рекурсивного обхода дерева
         const flattenTree = (nodes, result = [], level = 0) => {
           for (const node of nodes) {
@@ -63,17 +66,27 @@ export default function KVNEditPage() {
           return result;
         };
         const flat = flattenTree(response.data.items || []);
-        setParentOptions(flat);
+        if (!cancelled) {
+          setParentOptions(flat);
+        }
       } catch (err) {
-        console.error('Error loading parents:', err);
+        if (!cancelled) {
+          console.error('Error loading parents:', err);
+        }
       }
     };
     loadParents();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
     if (!isNew) {
+      let cancelled = false;
       contentApi.getKvn(id).then(res => {
+        if (cancelled) return;
+        
         let poster = res.data.poster;
         if (poster) {
           if (typeof poster === 'string') {
@@ -81,18 +94,32 @@ export default function KVNEditPage() {
           }
         }
         
-        setKvn({ 
-          ...emptyKvn, 
-          ...res.data, 
-          poster: poster,
-          parent_id: res.data.parent_id || null,  // null для корневой страницы
-          facts: res.data.facts || {},
-          social_links: res.data.social_links || {},
-          seo: { ...emptyKvn.seo, ...res.data.seo },
-          season_data: res.data.season_data || null,  // Сохраняем season_data для редактирования
-          jury_cards: res.data.jury_cards || {}  // Сохраняем карточки жюри
-        });
-      }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
+        if (!cancelled) {
+          setKvn({ 
+            ...emptyKvn, 
+            ...res.data, 
+            poster: poster,
+            parent_id: res.data.parent_id || null,  // null для корневой страницы
+            facts: res.data.facts || {},
+            social_links: res.data.social_links || {},
+            seo: { ...emptyKvn.seo, ...res.data.seo },
+            season_data: res.data.season_data || null,  // Сохраняем season_data для редактирования
+            jury_cards: res.data.jury_cards || {}  // Сохраняем карточки жюри
+          });
+        }
+      }).catch(() => {
+        if (!cancelled) {
+          setError('Ошибка загрузки');
+        }
+      }).finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+      
+      return () => {
+        cancelled = true;
+      };
     }
   }, [id, isNew]);
 

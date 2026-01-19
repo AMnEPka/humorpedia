@@ -28,6 +28,7 @@ export default function JuryStatsPage() {
   const [juryCards, setJuryCards] = useState({});
 
   useEffect(() => {
+    let cancelled = false;
     const fetchStats = async () => {
       setLoading(true);
       setError('');
@@ -38,6 +39,8 @@ export default function JuryStatsPage() {
           min_year: 1987,
           max_year: 2015
         });
+        if (cancelled) return;
+        
         setStats(statsRes.data);
         // Use team_names from API response
         if (statsRes.data.team_names) {
@@ -47,21 +50,32 @@ export default function JuryStatsPage() {
         // Load page data to get jury cards
         try {
           const pageRes = await publicApi.getKvnByPath('kvn/vl-kvn/vl-jury');
+          if (cancelled) return;
+          
           if (pageRes.data.jury_cards) {
             setJuryCards(pageRes.data.jury_cards);
           }
         } catch (pageErr) {
-          console.warn('Could not load jury cards:', pageErr);
-          // Not critical, continue without cards
+          if (!cancelled) {
+            console.warn('Could not load jury cards:', pageErr);
+            // Not critical, continue without cards
+          }
         }
       } catch (err) {
-        console.error('Error fetching jury stats:', err);
-        setError('Не удалось загрузить статистику жюри');
+        if (!cancelled) {
+          console.error('Error fetching jury stats:', err);
+          setError('Не удалось загрузить статистику жюри');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
     fetchStats();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Filtered data with recalculated game counts based on all filters
