@@ -33,11 +33,9 @@ export default function JuryStatsPage() {
       setLoading(true);
       setError('');
       try {
-        // Load jury statistics
+        // Load jury statistics (without year filters to get all available data)
         const statsRes = await publicApi.getKvnJuryStats({
-          league_slug: 'vl-kvn',
-          min_year: 1987,
-          max_year: 2015
+          league_slug: 'vl-kvn'
         });
         if (cancelled) return;
         
@@ -287,7 +285,10 @@ export default function JuryStatsPage() {
           Статистика жюри Высшей лиги КВН
         </h1>
         <p className="text-lg text-gray-600">
-          Сезоны 1987-2015 • Всего игр: {stats.total_games} • Членов жюри: {stats.jury_members.length}
+          {stats.all_years && stats.all_years.length > 0 
+            ? `Сезоны ${Math.min(...stats.all_years)}-${Math.max(...stats.all_years)}`
+            : 'Сезоны'
+          } • Всего игр: {stats.total_games} • Членов жюри: {stats.jury_members.length}
         </p>
       </div>
 
@@ -326,19 +327,19 @@ export default function JuryStatsPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredJuryMembers
-              .sort((a, b) => b.games_count - a.games_count)
+              .sort((a, b) => b.filteredGamesCount - a.filteredGamesCount)
               .map((jury) => (
                 <Card key={jury.name} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <CardTitle className="text-lg">{jury.name}</CardTitle>
-                      <Badge variant="secondary">{jury.games_count}</Badge>
+                      <Badge variant="secondary">{jury.filteredGamesCount}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm text-gray-600">
                       <div>
-                        <span className="font-medium">Игр в жюри:</span> {jury.games_count}
+                        <span className="font-medium">Игр в жюри:</span> {jury.filteredGamesCount}
                       </div>
                       <div>
                         <span className="font-medium">Годы:</span> {jury.years.join(', ')}

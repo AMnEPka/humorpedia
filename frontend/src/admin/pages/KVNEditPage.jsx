@@ -212,7 +212,7 @@ export default function KVNEditPage() {
 
     let cancelled = false;
     setLoadingJury(true);
-    contentApi.getKvnJuryStats({ league_slug: 'vl-kvn', min_year: 1987, max_year: 2015 })
+    contentApi.getKvnJuryStats({ league_slug: 'vl-kvn' })
       .then(res => {
         if (!cancelled) {
           setJuryMembers(res.data.jury_members || []);
