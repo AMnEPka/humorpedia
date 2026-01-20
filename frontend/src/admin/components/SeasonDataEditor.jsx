@@ -24,8 +24,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
-  Copy, ArrowRight, MoreHorizontal, ChevronRight
+  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { formatDecimalTrim, roundTo } from '@/utils/number';
 import TeamSelector from './TeamSelector';
@@ -877,6 +887,7 @@ function GameContent({
 
 export default function SeasonDataEditor({ seasonData, onChange }) {
   const [expandedStages, setExpandedStages] = useState(new Set());
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1061,6 +1072,171 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       additional_notes: ''
     }];
     onChange(newData);
+  };
+
+  const createTemplate = () => {
+    // Проверяем, есть ли уже созданные стадии и игры
+    const existingStages = data.stages || [];
+    const totalGames = existingStages.reduce((sum, stage) => {
+      return sum + (stage.games?.length || 0);
+    }, 0);
+    
+    // Если уже есть более одной стадии и более одной игры, показываем предупреждение
+    if (existingStages.length > 1 && totalGames > 1) {
+      setShowTemplateDialog(true);
+      return;
+    }
+    
+    // Иначе сразу создаем шаблон
+    applyTemplate();
+  };
+
+  const applyTemplate = () => {
+    const newData = { ...data };
+    
+    // Создаем 4 стадии
+    const stages = [
+      {
+        name: '1/8 финала',
+        order: 1,
+        games: [
+          {
+            name: 'Первая 1/8 финала',
+            order: 1,
+            date: '',
+            host: '',
+            jury: [],
+            contests: ['Приветствие', 'Биатлон', 'Муз'],
+            teams: [],
+            notes: ''
+          },
+          {
+            name: 'Вторая 1/8 финала',
+            order: 2,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          },
+          {
+            name: 'Третья 1/8 финала',
+            order: 3,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          },
+          {
+            name: 'Четвертая 1/8 финала',
+            order: 4,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          }
+        ],
+        notes: '',
+        additional_teams: [],
+        additional_notes: ''
+      },
+      {
+        name: '1/4 финала',
+        order: 2,
+        games: [
+          {
+            name: 'Первая 1/4 финала',
+            order: 1,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          },
+          {
+            name: 'Вторая 1/4 финала',
+            order: 2,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          },
+          {
+            name: 'Третья 1/4 финала',
+            order: 3,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          }
+        ],
+        notes: '',
+        additional_teams: [],
+        additional_notes: ''
+      },
+      {
+        name: '1/2 финала',
+        order: 3,
+        games: [
+          {
+            name: 'Первая 1/2 финала',
+            order: 1,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          },
+          {
+            name: 'Вторая 1/2 финала',
+            order: 2,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          }
+        ],
+        notes: '',
+        additional_teams: [],
+        additional_notes: ''
+      },
+      {
+        name: 'Финал',
+        order: 4,
+        games: [
+          {
+            name: 'Финал',
+            order: 1,
+            date: '',
+            host: '',
+            jury: [],
+            contests: [],
+            teams: [],
+            notes: ''
+          }
+        ],
+        notes: '',
+        additional_teams: [],
+        additional_notes: ''
+      }
+    ];
+    
+    newData.stages = stages;
+    onChange(newData);
+    setShowTemplateDialog(false);
   };
 
   const removeStage = (stageIndex) => {
@@ -1453,10 +1629,16 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Стадии сезона ({data.stages?.length || 0})</CardTitle>
-            <Button onClick={addStage} size="sm" variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Добавить стадию
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={createTemplate} size="sm" variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Создать шаблон
+              </Button>
+              <Button onClick={addStage} size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Добавить стадию
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -1512,6 +1694,24 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Диалог подтверждения создания шаблона */}
+      <AlertDialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Создать шаблон?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Все уже созданные стадии будут удалены и заменены шаблоном с 4 стадиями (1/8 финала, 1/4 финала, 1/2 финала, Финал) и соответствующими играми.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={applyTemplate} className="bg-destructive text-destructive-foreground">
+              Создать шаблон
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
