@@ -16,6 +16,7 @@ import PersonSelector from '../components/PersonSelector';
 // import TeamSelector from '../components/TeamSelector'; // TODO: создать компонент
 import MediaSelector from '../components/MediaSelector';
 import SeasonDataEditor from '../components/SeasonDataEditor';
+import FactsEditor from '../components/FactsEditor';
 import { cleanTeamName } from '@/utils/team';
 
 const emptyKvn = {
@@ -23,6 +24,7 @@ const emptyKvn = {
   poster: null, description: '',
   parent_id: null,  // Для корневой страницы - null
   facts: {},
+  facts_order: [],
   social_links: {},
   modules: [], tags: [], person_ids: [], team_ids: [],
   seo: { meta_title: '', meta_description: '' },
@@ -101,6 +103,7 @@ export default function KVNEditPage() {
             poster: poster,
             parent_id: res.data.parent_id || null,  // null для корневой страницы
             facts: res.data.facts || {},
+            facts_order: res.data.facts_order || [],
             social_links: res.data.social_links || {},
             seo: { ...emptyKvn.seo, ...res.data.seo },
             season_data: res.data.season_data || null,  // Сохраняем season_data для редактирования
@@ -255,6 +258,9 @@ export default function KVNEditPage() {
         dataToSend.poster = null;
       }
       if (kvn.facts && Object.keys(kvn.facts).length > 0) dataToSend.facts = kvn.facts;
+      if (kvn.facts_order && Array.isArray(kvn.facts_order) && kvn.facts_order.length > 0) {
+        dataToSend.facts_order = kvn.facts_order;
+      }
       if (kvn.description) dataToSend.description = kvn.description;
       // parent_id может быть null для корневой страницы
       if (kvn.parent_id !== undefined) {
@@ -294,6 +300,7 @@ export default function KVNEditPage() {
             poster: poster,
             parent_id: res.data.parent_id || null,
             facts: res.data.facts || {},
+            facts_order: res.data.facts_order || [],
             social_links: res.data.social_links || {},
             seo: { ...emptyKvn.seo, ...res.data.seo },
             season_data: res.data.season_data || null,
@@ -435,43 +442,34 @@ export default function KVNEditPage() {
           <Card>
             <CardHeader><CardTitle>Факты</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {Object.entries(kvn.facts || {}).length > 0 ? (
-                <div className="space-y-2">
-                  {Object.entries(kvn.facts).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      <Input value={key} className="w-1/3 bg-background" onChange={(e) => {
-                        const newFacts = { ...kvn.facts };
-                        delete newFacts[key];
-                        newFacts[e.target.value] = value;
-                        setKvn(p => ({ ...p, facts: newFacts }));
-                      }} />
-                      <Input value={value} className="flex-1 bg-background" onChange={(e) => setKvn(p => ({ ...p, facts: { ...p.facts, [key]: e.target.value } }))} />
-                      <Button variant="ghost" size="icon" onClick={() => {
-                        const newFacts = { ...kvn.facts };
-                        delete newFacts[key];
-                        setKvn(p => ({ ...p, facts: newFacts }));
-                      }}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Нет фактов</p>
-              )}
+              {Object.keys(kvn.facts || {}).length > 0 ? (
+                <FactsEditor
+                  facts={kvn.facts || {}}
+                  factsOrder={kvn.facts_order || []}
+                  onChange={({ facts, facts_order }) => setKvn(p => ({ ...p, facts, facts_order }))}
+                />
+              ) : <p className="text-muted-foreground text-sm">Нет фактов</p>}
               
               <div className="flex items-center gap-2 pt-4 border-t">
                 <Input value={newFactKey} onChange={(e) => setNewFactKey(e.target.value)} placeholder="Название" className="w-1/3" />
                 <Input value={newFactValue} onChange={(e) => setNewFactValue(e.target.value)} placeholder="Значение" className="flex-1" onKeyDown={(e) => {
                   if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
-                    setKvn(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                    setKvn(p => ({
+                      ...p,
+                      facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() },
+                      facts_order: [...(p.facts_order || []), newFactKey.trim()]
+                    }));
                     setNewFactKey('');
                     setNewFactValue('');
                   }
                 }} />
                 <Button variant="outline" onClick={() => {
                   if (newFactKey.trim() && newFactValue.trim()) {
-                    setKvn(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                    setKvn(p => ({
+                      ...p,
+                      facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() },
+                      facts_order: [...(p.facts_order || []), newFactKey.trim()]
+                    }));
                     setNewFactKey('');
                     setNewFactValue('');
                   }

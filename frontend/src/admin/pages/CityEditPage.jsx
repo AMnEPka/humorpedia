@@ -19,6 +19,7 @@ import {
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
+import FactsEditor from '../components/FactsEditor';
 
 const emptyCity = {
   title: '',
@@ -28,6 +29,7 @@ const emptyCity = {
   poster: null,
   description: '',
   facts: {},
+  facts_order: [],
   modules: [],
   tags: [],
   seo: {
@@ -70,6 +72,7 @@ export default function CityEditPage() {
             ...data,
             poster: poster || null,
             facts: data.facts || {},
+            facts_order: data.facts_order || [],
             modules: data.modules || [],
             tags: data.tags || [],
             seo: data.seo || emptyCity.seo,
@@ -124,6 +127,7 @@ export default function CityEditPage() {
       ...city.facts,
       [newFactKey.trim()]: newFactValue.trim()
     });
+    handleChange('facts_order', [...(city.facts_order || []), newFactKey.trim()]);
     setNewFactKey('');
     setNewFactValue('');
   };
@@ -132,6 +136,7 @@ export default function CityEditPage() {
     const newFacts = { ...city.facts };
     delete newFacts[key];
     handleChange('facts', newFacts);
+    handleChange('facts_order', (city.facts_order || []).filter((k) => k !== key));
   };
 
   const handleSubmit = async (e) => {
@@ -148,6 +153,7 @@ export default function CityEditPage() {
         poster: city.poster,
         description: city.description,
         facts: city.facts,
+        facts_order: city.facts_order,
         modules: city.modules,
         tags: city.tags,
         seo: city.seo,
@@ -376,20 +382,16 @@ export default function CityEditPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Existing facts */}
-                {Object.entries(city.facts || {}).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <Input value={key} disabled className="w-1/3" />
-                    <Input value={value} disabled className="flex-1" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveFact(key)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                {Object.keys(city.facts || {}).length > 0 ? (
+                  <FactsEditor
+                    facts={city.facts || {}}
+                    factsOrder={city.facts_order || []}
+                    onChange={({ facts, facts_order }) => {
+                      handleChange('facts', facts);
+                      handleChange('facts_order', facts_order);
+                    }}
+                  />
+                ) : null}
 
                 {/* Add new fact */}
                 <div className="flex items-center gap-2">

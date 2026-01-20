@@ -549,7 +549,7 @@ async def create_person(data: PersonCreate):
     person = Person(
         title=data.title, slug=data.slug, full_name=data.full_name,
         photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
-        facts=data.facts or {}, primary_tag=primary_tag,
+        facts=data.facts or {}, facts_order=data.facts_order or [], primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
     return await create_content("people", person, data.tags)
@@ -638,7 +638,7 @@ async def create_team(data: TeamCreate):
     
     team = Team(
         title=data.title, slug=data.slug, name=data.name, team_type=data.team_type,
-        logo=data.logo, facts=data.facts or {}, social_links=data.social_links or {},
+        logo=data.logo, facts=data.facts or {}, facts_order=data.facts_order or [], social_links=data.social_links or {},
         primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
@@ -993,6 +993,7 @@ async def create_kvn(data: KVNCreate):
         level=level,
         full_path=full_path,
         facts=data.facts or {},
+        facts_order=data.facts_order or [],
         social_links=data.social_links or {},
         modules=data.modules,
         tags=data.tags,
@@ -1583,6 +1584,8 @@ async def update_kvn(id: str, data: KVNUpdate):
             update_data["full_path"] = current_slug
     if data.facts is not None:
         update_data["facts"] = data.facts
+    if getattr(data, "facts_order", None) is not None:
+        update_data["facts_order"] = data.facts_order
     if data.social_links is not None:
         update_data["social_links"] = data.social_links.model_dump() if hasattr(data.social_links, 'model_dump') else data.social_links
     if data.modules is not None:

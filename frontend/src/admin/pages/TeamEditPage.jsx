@@ -15,6 +15,7 @@ import { Save, ArrowLeft, Loader2, Plus, X, ExternalLink } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
+import FactsEditor from '../components/FactsEditor';
 
 const emptyTeam = {
   title: '',
@@ -24,6 +25,7 @@ const emptyTeam = {
   status: 'draft',
   logo: null,
   facts: {},  // Гибкая таблица фактов (ключ-значение)
+  facts_order: [],
   aliases: [],  // Алиасы названий команды (например, "Пермский край" для "Сборная Пермского края")
   primary_tag: null,  // Базовый тег команды
   social_links: {
@@ -152,6 +154,7 @@ export default function TeamEditPage() {
             ...response.data,
             logo: logo,
             facts: validFacts,
+            facts_order: response.data.facts_order || [],
             primary_tag: primaryTag,
             social_links: { ...emptyTeam.social_links, ...response.data.social_links },
             seo: { ...emptyTeam.seo, ...response.data.seo }
@@ -230,6 +233,13 @@ export default function TeamEditPage() {
         facts: validFacts,
         primary_tag: primaryTag
       };
+
+      // facts_order: фильтруем и дополняем по текущим ключам
+      const keys = Object.keys(validFacts);
+      const order = Array.isArray(team.facts_order) ? team.facts_order : [];
+      const filtered = order.filter((k) => keys.includes(k));
+      const rest = keys.filter((k) => !filtered.includes(k));
+      teamToSave.facts_order = [...filtered, ...rest];
       
       if (isNew) {
         const response = await contentApi.createTeam(teamToSave);
@@ -521,63 +531,13 @@ export default function TeamEditPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Существующие факты */}
-              {Object.entries(team.facts || {}).length > 0 ? (
-                <div className="space-y-2">
-                  {Object.entries(team.facts)
-                    .filter(([_, value]) => {
-                      // Фильтруем только валидные значения для отображения
-                      return value !== null && value !== undefined && 
-                             (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
-                    })
-                    .map(([key, value]) => {
-                      // Конвертируем value в строку для безопасного отображения
-                      let displayValue = '';
-                      if (typeof value === 'string') {
-                        displayValue = value;
-                      } else if (typeof value === 'number') {
-                        displayValue = String(value);
-                      } else if (typeof value === 'boolean') {
-                        displayValue = value ? 'Да' : 'Нет';
-                      }
-                      
-                      return (
-                        <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
-                          <Input 
-                            value={key} 
-                            className="w-1/3 bg-background"
-                            onChange={(e) => {
-                              const newFacts = { ...team.facts };
-                              delete newFacts[key];
-                              newFacts[e.target.value] = displayValue;
-                              setTeam(prev => ({ ...prev, facts: newFacts }));
-                            }}
-                          />
-                          <Input 
-                            value={displayValue} 
-                            className="flex-1 bg-background"
-                            onChange={(e) => setTeam(prev => ({ 
-                              ...prev, 
-                              facts: { ...prev.facts, [key]: e.target.value } 
-                            }))}
-                          />
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              const newFacts = { ...team.facts };
-                              delete newFacts[key];
-                              setTeam(prev => ({ ...prev, facts: newFacts }));
-                            }}
-                          >
-                            <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>
-              )}
+              {Object.keys(team.facts || {}).length > 0 ? (
+                <FactsEditor
+                  facts={team.facts || {}}
+                  factsOrder={team.facts_order || []}
+                  onChange={({ facts, facts_order }) => setTeam(prev => ({ ...prev, facts, facts_order }))}
+                />
+              ) : <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>}
               
               {/* Добавить новый факт */}
               <div className="flex items-center gap-2 pt-4 border-t">
@@ -596,7 +556,8 @@ export default function TeamEditPage() {
                     if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
                       setTeam(prev => ({
                         ...prev,
-                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() }
+                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() },
+                        facts_order: [...(prev.facts_order || []), newFactKey.trim()]
                       }));
                       setNewFactKey('');
                       setNewFactValue('');
@@ -609,7 +570,8 @@ export default function TeamEditPage() {
                     if (newFactKey.trim() && newFactValue.trim()) {
                       setTeam(prev => ({
                         ...prev,
-                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() }
+                        facts: { ...prev.facts, [newFactKey.trim()]: newFactValue.trim() },
+                        facts_order: [...(prev.facts_order || []), newFactKey.trim()]
                       }));
                       setNewFactKey('');
                       setNewFactValue('');

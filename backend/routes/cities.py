@@ -46,6 +46,7 @@ async def create_city(data: CityCreate, request: Request):
         poster=data.poster,
         description=data.description,
         facts=data.facts or {},
+        facts_order=data.facts_order or [],
         modules=data.modules,
         tags=data.tags,
         seo=data.seo or {},

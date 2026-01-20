@@ -19,6 +19,7 @@ import {
 import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
+import FactsEditor from '../components/FactsEditor';
 
 const emptyPerson = {
   title: '',
@@ -35,6 +36,7 @@ const emptyPerson = {
     achievements: []
   },
   facts: {},  // Facts for facts_table module
+  facts_order: [],
   primary_tag: null,  // Базовый тег человека
   social_links: {
     vk: '',
@@ -170,6 +172,7 @@ export default function PersonEditPage() {
             photo: photo,
             bio: { ...emptyPerson.bio, ...response.data.bio },
             facts: validFacts,
+            facts_order: response.data.facts_order || [],
             primary_tag: primaryTag,
             social_links: { ...emptyPerson.social_links, ...response.data.social_links },
             seo: { ...emptyPerson.seo, ...response.data.seo }
@@ -242,6 +245,13 @@ export default function PersonEditPage() {
         facts: validFacts,
         primary_tag: primaryTag
       };
+
+      // facts_order: фильтруем и дополняем по текущим ключам
+      const keys = Object.keys(validFacts);
+      const order = Array.isArray(person.facts_order) ? person.facts_order : [];
+      const filtered = order.filter((k) => keys.includes(k));
+      const rest = keys.filter((k) => !filtered.includes(k));
+      personToSave.facts_order = [...filtered, ...rest];
 
       if (isNew) {
         const response = await contentApi.createPerson(personToSave);
@@ -511,63 +521,13 @@ export default function PersonEditPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Существующие факты */}
-              {Object.entries(person.facts || {}).length > 0 ? (
-                <div className="space-y-2">
-                  {Object.entries(person.facts)
-                    .filter(([_, value]) => {
-                      // Фильтруем только валидные значения для отображения
-                      return value !== null && value !== undefined && 
-                             (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
-                    })
-                    .map(([key, value]) => {
-                      // Конвертируем value в строку для безопасного отображения
-                      let displayValue = '';
-                      if (typeof value === 'string') {
-                        displayValue = value;
-                      } else if (typeof value === 'number') {
-                        displayValue = String(value);
-                      } else if (typeof value === 'boolean') {
-                        displayValue = value ? 'Да' : 'Нет';
-                      }
-                      
-                      return (
-                        <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
-                          <Input 
-                            value={key} 
-                            className="w-1/3 bg-background"
-                            onChange={(e) => {
-                              const newFacts = { ...person.facts };
-                              delete newFacts[key];
-                              newFacts[e.target.value] = displayValue;
-                              setPerson(prev => ({ ...prev, facts: newFacts }));
-                            }}
-                          />
-                          <Input 
-                            value={displayValue} 
-                            className="flex-1 bg-background"
-                            onChange={(e) => setPerson(prev => ({ 
-                              ...prev, 
-                              facts: { ...prev.facts, [key]: e.target.value } 
-                            }))}
-                          />
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              const newFacts = { ...person.facts };
-                              delete newFacts[key];
-                              setPerson(prev => ({ ...prev, facts: newFacts }));
-                            }}
-                          >
-                            <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>
-              )}
+              {Object.keys(person.facts || {}).length > 0 ? (
+                <FactsEditor
+                  facts={person.facts || {}}
+                  factsOrder={person.facts_order || []}
+                  onChange={({ facts, facts_order }) => setPerson(prev => ({ ...prev, facts, facts_order }))}
+                />
+              ) : <p className="text-muted-foreground text-sm">Нет дополнительных фактов</p>}
               
               {/* Добавить новый факт */}
               <div className="flex items-center gap-2 pt-4 border-t">
@@ -590,7 +550,8 @@ export default function PersonEditPage() {
                         updatedFacts[newFactKey.trim()] = newFactValue.trim();
                         return {
                           ...prev,
-                          facts: updatedFacts
+                          facts: updatedFacts,
+                          facts_order: [...(prev.facts_order || []), newFactKey.trim()]
                         };
                       });
                       setNewFactKey('');
@@ -608,7 +569,8 @@ export default function PersonEditPage() {
                         updatedFacts[newFactKey.trim()] = newFactValue.trim();
                         return {
                           ...prev,
-                          facts: updatedFacts
+                          facts: updatedFacts,
+                          facts_order: [...(prev.facts_order || []), newFactKey.trim()]
                         };
                       });
                       setNewFactKey('');
