@@ -413,6 +413,18 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
 
         # Project rule: merge split sections into single blocks (avoid empty duplicates)
         new_modules = _merge_team_required_sections(new_modules)
+        
+        # Auto-update "Список игр команды" module for KVN teams
+        team_slug = team.get("slug")
+        if team.get("team_type") == "kvn" and team_slug:
+            try:
+                from routes.content import _update_team_games_module
+                new_modules = await _update_team_games_module(team_slug, new_modules, db)
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
+        
         # Remove empty placeholders unless team is intentionally empty (bulk import)
         if not team.get("allow_empty_modules"):
             new_modules = _prune_empty_modules(new_modules)

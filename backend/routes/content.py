@@ -413,6 +413,323 @@ def _build_team_intro_html(name: str, city: Optional[str]) -> str:
     return f"<p>{name}{city_part} - ...</p>"
 
 
+def _stage_code(stage_name: str) -> str:
+    """
+    Convert stage name like '1/8 финала' -> '1/8', '1/4 финала' -> '1/4', '1/2 финала' -> '1/2', 'финал' -> 'Финал'.
+    """
+    if not stage_name:
+        return ""
+    s = stage_name.strip().lower()
+    m = re.search(r"(\d+)\s*/\s*(\d+)", s)
+    if m:
+        return f"{m.group(1)}/{m.group(2)}"
+    if "финал" in s:
+        if "полу" in s:
+            return "1/2"
+        return "Финал"
+    return stage_name.strip()
+
+
+def _league_code_from_slug(league_slug: str) -> str:
+    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ')"""
+    if league_slug == "vl-kvn":
+        return "ВЛ"
+    # Add more leagues later
+    return league_slug or ""
+
+
+async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
+    """
+    Collect all VL (Высшая лига) results for a team from all seasons.
+    Returns list of result dicts with: year, league, stage, stage_name, result, place, out_of, date, game_name
+    """
+    if not team_slug:
+        return []
+    
+    # Query all VL seasons
+    seasons = await db.kvn.find({
+        "season_data.league_slug": "vl-kvn"
+    }).to_list(1000)
+    
+    results = []
+    
+    for season in seasons:
+        season_data = season.get("season_data") or {}
+        year = season_data.get("year")
+        if not year:
+            # Try to extract from slug
+            slug = season.get("slug", "")
+            m = re.search(r"(19|20)\d{2}", slug)
+            if m:
+                year = int(m.group(0))
+            else:
+                continue
+        
+        league_slug = season_data.get("league_slug", "")
+        league = _league_code_from_slug(league_slug)
+        
+        stages = season_data.get("stages") or []
+        for stage in stages:
+            stage_name = stage.get("name") or ""
+            stage_code = _stage_code(stage_name)
+            games = stage.get("games") or []
+            
+            for game in games:
+                teams = game.get("teams") or []
+                # Filter valid teams
+                valid_teams = [t for t in teams if isinstance(t, dict) and t.get("team_slug")]
+                n = len(valid_teams)
+                if n <= 0:
+                    continue
+                
+                # Find our team in this game
+                our_team = None
+                for t in valid_teams:
+                    if t.get("team_slug") == team_slug:
+                        our_team = t
+                        break
+                
+                if not our_team:
+                    continue
+                
+                place = our_team.get("place")
+                is_winner = our_team.get("is_winner", False)
+                our_total = our_team.get("total")
+                
+                # Special handling for champions: if is_winner=True, treat as place=1
+                # This handles cases like 1992 final where both teams are champions (place=0, is_winner=True)
+                if is_winner and (place is None or place == 0):
+                    place = 1
+                
+                # Handle ties: if multiple teams have the same total score, they should all have place=1
+                # Example: 1994 semifinal where ЕРМИ and Ворошиловские стрелки both have total=22.6
+                if our_total is not None and place is not None:
+                    # Find all teams with the same total
+                    teams_with_same_total = [t for t in valid_teams if t.get("total") == our_total]
+                    if len(teams_with_same_total) > 1:
+                        # All teams with same total should be considered tied for first place
+                        # Check if any of them has place=1
+                        has_first_place = any(t.get("place") == 1 for t in teams_with_same_total)
+                        if has_first_place:
+                            place = 1
+                
+                if place is None:
+                    continue
+                
+                results.append({
+                    "year": year,
+                    "league": league,
+                    "stage": stage_code,
+                    "stage_name": stage_name,
+                    "result": f"{place} из {n}",
+                    "place": place,
+                    "out_of": n,
+                    "date": game.get("date") or "",
+                    "game_name": game.get("name") or "",
+                })
+    
+    # Sort: first by year (ascending), then by stage order within year
+    # Stage order: 1/8 < 1/4 < 1/2 < Финал
+    def _stage_order(stage: str) -> int:
+        """Convert stage to numeric order for sorting"""
+        if not stage:
+            return 99
+        stage_lower = stage.lower()
+        # Check exact matches first
+        if stage == "1/8" or "1/8" in stage:
+            return 1
+        if stage == "1/4" or "1/4" in stage:
+            return 2
+        if stage == "1/2" or "полу" in stage_lower:
+            return 3
+        if "финал" in stage_lower and "полу" not in stage_lower:
+            return 4
+        return 99  # Unknown stages go last
+    
+    def sort_key(r):
+        year = r.get("year", 0)
+        stage = r.get("stage") or ""
+        return (year, _stage_order(stage))
+    
+    results.sort(key=sort_key)
+    return results
+
+
+def _build_team_games_table_html(results: List[Dict]) -> str:
+    """
+    Build HTML table for team games results.
+    Format matches the screenshot: legend at top, then table with columns: Год, Лига, Стадия, Результат
+    """
+    if not results:
+        return ""
+    
+    # Build legend (only ВЛ for now, can extend later)
+    leagues_used = sorted(set(r.get("league") for r in results if r.get("league")))
+    legend_parts = []
+    if "ВЛ" in leagues_used:
+        legend_parts.append("ВЛ – Высшая лига")
+    # Add more leagues later: ГК – Голосящий КиВиН, etc.
+    
+    legend_html = ""
+    if legend_parts:
+        legend_html = f'<div style="margin-bottom: 1rem;"><strong>Обозначения:</strong> {", ".join(legend_parts)}.</div>\n'
+    
+    # Build table
+    table_rows = []
+    for r in results:
+        year = r.get("year", "")
+        league = r.get("league", "")
+        stage = r.get("stage", "")
+        result = r.get("result", "")
+        
+        table_rows.append(f"    <tr>\n      <td>{year}</td>\n      <td>{league}</td>\n      <td>{stage}</td>\n      <td>{result}</td>\n    </tr>")
+    
+    table_html = f"""<div style="text-align: justify;">{legend_html}<table style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Год</strong></th>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Лига</strong></th>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Стадия</strong></th>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Результат</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+{chr(10).join(table_rows)}
+  </tbody>
+</table></div>"""
+    
+    return table_html
+
+
+async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> List[dict]:
+    """
+    Update or create "Список игр команды" module with auto-generated table from VL seasons.
+    Only for KVN teams (team_type='kvn').
+    Returns updated modules list.
+    """
+    if not team_slug:
+        return modules
+    
+    # Get team to check team_type
+    team = await db.teams.find_one({"slug": team_slug}, {"team_type": 1})
+    if not team or team.get("team_type") != "kvn":
+        return modules
+    
+    # Get VL results
+    results = await _get_team_vl_results(team_slug, db)
+    
+    # Find or create "Список игр команды" module
+    target_title = "Список игр команды"
+    updated_modules = []
+    found_module = False
+    
+    for m in modules:
+        if not isinstance(m, dict):
+            updated_modules.append(m)
+            continue
+        
+        m_type = m.get("type")
+        data = m.get("data") or {}
+        title = (data.get("title") or "").strip()
+        
+        if m_type == "text_block" and title == target_title:
+            # Update existing module
+            m_copy = dict(m)
+            m_copy["data"] = dict(data)
+            if results:
+                m_copy["data"]["content"] = _build_team_games_table_html(results)
+            else:
+                # Keep existing content if no results, or set empty if it was empty
+                if not m_copy["data"].get("content"):
+                    m_copy["data"]["content"] = ""
+            updated_modules.append(m_copy)
+            found_module = True
+        else:
+            updated_modules.append(m)
+    
+    # If module not found, create it
+    if not found_module:
+        import uuid
+        new_module = {
+            "id": str(uuid.uuid4()),
+            "type": "text_block",
+            "order": len(updated_modules),  # Will be normalized later
+            "title": "",
+            "visible": True,
+            "data": {
+                "title": target_title,
+                "content": _build_team_games_table_html(results) if results else ""
+            }
+        }
+        updated_modules.append(new_module)
+    
+    return updated_modules
+
+
+async def _update_team_vl_results_module(team_slug: str, modules: List[dict], db) -> List[dict]:
+    """
+    Create/update a dedicated module with VL results table.
+    We keep "Список игр команды" for manual editing; this module is auto-generated.
+    """
+    if not team_slug:
+        return modules
+
+    team = await db.teams.find_one({"slug": team_slug}, {"team_type": 1})
+    if not team or team.get("team_type") != "kvn":
+        return modules
+
+    results = await _get_team_vl_results(team_slug, db)
+
+    target_title = "Результаты в Высшей лиге"
+    updated_modules = []
+    found = False
+
+    for m in modules or []:
+        if not isinstance(m, dict):
+            updated_modules.append(m)
+            continue
+        m_type = m.get("type")
+        data = m.get("data") or {}
+        title = (data.get("title") or "").strip()
+
+        if m_type == "text_block" and title == target_title:
+            m2 = dict(m)
+            d2 = dict(data)
+            d2["auto_generated"] = True
+            d2["source"] = "vl-kvn"
+            if results:
+                d2["content"] = _build_team_games_table_html(results)
+                m2["visible"] = True
+            else:
+                d2["content"] = ""
+                m2["visible"] = False
+            m2["data"] = d2
+            updated_modules.append(m2)
+            found = True
+        else:
+            updated_modules.append(m)
+
+    if not found:
+        import uuid
+        updated_modules.append(
+            {
+                "id": str(uuid.uuid4()),
+                "type": "text_block",
+                "order": len(updated_modules),
+                "title": "",
+                "visible": bool(results),
+                "data": {
+                    "title": target_title,
+                    "content": _build_team_games_table_html(results) if results else "",
+                    "auto_generated": True,
+                    "source": "vl-kvn",
+                },
+            }
+        )
+
+    return updated_modules
+
+
 def _clone_modules_with_new_ids(modules: list) -> list:
     """
     Clone modules and assign fresh UUIDs to each module.id to avoid accidental reuse/collisions.
@@ -1219,7 +1536,27 @@ async def create_team(data: TeamCreate):
         seo=data.seo or {},
         status=data.status
     )
-    return await create_content("teams", team, data.tags)
+    result = await create_content("teams", team, data.tags)
+    
+    # Auto-update "Список игр команды" module for KVN teams
+    if data.team_type == "kvn" and data.slug:
+        try:
+            db = await get_db()
+            team_doc = await db.teams.find_one({"_id": result.get("id")}, {"modules": 1})
+            if team_doc:
+                updated_modules = await _update_team_games_module(data.slug, team_doc.get("modules") or [], db)
+                # Normalize orders
+                for i, m in enumerate(updated_modules):
+                    if isinstance(m, dict):
+                        m["order"] = i
+                await db.teams.update_one(
+                    {"_id": result.get("id")},
+                    {"$set": {"modules": updated_modules, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+        except Exception as e:
+            logger.warning(f"Failed to auto-update team games module for {data.slug}: {e}")
+    
+    return result
 
 
 @router.get("/teams", response_model=dict)
@@ -1300,6 +1637,14 @@ async def get_team(id_or_slug: str):
             name=name or (item.get("title") or ""),
             city=city
         )
+
+        # Auto-update "Список игр команды" module for KVN teams
+        team_slug = item.get("slug")
+        if item.get("team_type") == "kvn" and team_slug:
+            try:
+                new_modules = await _update_team_games_module(team_slug, new_modules, db)
+            except Exception as e:
+                logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
 
         # Remove empty placeholder blocks unless this team was intentionally created empty via bulk import
         if not item.get("allow_empty_modules"):
