@@ -216,6 +216,7 @@ export const templatesApi = {
   setDefault: (id) => api.post(`/templates/${id}/set-default`),
   delete: (id) => api.delete(`/templates/${id}`),
   getModuleTypes: () => api.get('/templates/modules/types'),
+  applyToTeams: (id, data) => api.post(`/templates/${id}/apply-to-teams`, data),
 };
 
 // Sections API

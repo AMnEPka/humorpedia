@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { contentApi } from '../utils/api';
+import { contentApi, templatesApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,6 +56,9 @@ export default function TeamEditPage() {
   const [success, setSuccess] = useState('');
   const [newFactKey, setNewFactKey] = useState('');
   const [newFactValue, setNewFactValue] = useState('');
+  const [teamTemplates, setTeamTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   // Функция для получения случайного паттерна
   const getRandomPattern = () => {
@@ -174,6 +177,57 @@ export default function TeamEditPage() {
       });
     }
   }, [id, isNew]);
+
+  // For new teams: allow selecting a template and auto-fill modules.
+  useEffect(() => {
+    if (!isNew) return;
+    let cancelled = false;
+
+    const fetchTemplates = async () => {
+      setTemplatesLoading(true);
+      try {
+        const res = await templatesApi.list({ content_type: 'team', limit: 200 });
+        const items = res.data?.items || [];
+        if (cancelled) return;
+        setTeamTemplates(items);
+
+        // Auto-select default team template (if any) and prefill modules.
+        const def = items.find(t => t.is_default);
+        if (def?._id) {
+          setSelectedTemplateId(def._id);
+          setTeam(prev => ({ ...prev, modules: Array.isArray(def.modules) ? def.modules : [] }));
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        if (!cancelled) setTemplatesLoading(false);
+      }
+    };
+
+    fetchTemplates();
+    return () => { cancelled = true; };
+  }, [isNew]);
+
+  const handleTemplateSelect = async (templateId) => {
+    setSelectedTemplateId(templateId);
+    if (!templateId) return;
+    if (templateId === 'none') {
+      setTeam(prev => ({ ...prev, modules: [] }));
+      return;
+    }
+
+    setTemplatesLoading(true);
+    try {
+      const res = await templatesApi.get(templateId);
+      const modules = res.data?.modules;
+      setTeam(prev => ({ ...prev, modules: Array.isArray(modules) ? modules : [] }));
+      setSuccess('Шаблон применён: вкладка "Модули" обновлена');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Ошибка загрузки шаблона');
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
 
   const generateSlug = (title) => {
     const translitMap = {
@@ -402,6 +456,32 @@ export default function TeamEditPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {isNew && (
+                  <div className="space-y-2">
+                    <Label>Шаблон модулей</Label>
+                    <Select
+                      value={selectedTemplateId || 'none'}
+                      onValueChange={handleTemplateSelect}
+                      disabled={templatesLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={templatesLoading ? 'Загрузка...' : 'Выберите шаблон'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Без шаблона</SelectItem>
+                        {teamTemplates.map(t => (
+                          <SelectItem key={t._id} value={t._id}>
+                            {t.name}{t.is_default ? ' (по умолчанию)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Выбор шаблона заполнит вкладку <b>Модули</b> готовым набором блоков.
+                    </p>
+                  </div>
+                )}
 
                 <MediaSelector
                   value={team.logo}

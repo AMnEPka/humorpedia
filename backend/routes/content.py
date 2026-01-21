@@ -1,5 +1,5 @@
 """Content API routes - CRUD for all content types"""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from typing import Optional, List, Dict, Literal
 from datetime import datetime, timezone
 import logging
@@ -25,6 +25,7 @@ from utils.team_matcher import normalize_team_name
 from services.tags import tag_service
 from services.linking import linking_service
 from models.modules import PageModule, ModuleType
+from routes.auth import get_current_user
 
 router = APIRouter(prefix="/content", tags=["content"])
 
@@ -180,6 +181,13 @@ class BulkTeamCreateRequest(BaseModel):
     rows: List[BulkTeamCreateRow] = Field(default_factory=list)
 
 
+class RestoreTeamLogosRequest(BaseModel):
+    """Request model for bulk logo restoration"""
+    dry_run: bool = Field(default=True, description="If true, only report what would be changed")
+    only_if_placeholder: bool = Field(default=True, description="Only restore if logo is missing or placeholder")
+    team_type: Optional[str] = Field(default=None, description="Filter by team_type (e.g. 'kvn'). If None, restore all teams")
+
+
 async def sync_primary_tag_to_tags(doc: dict) -> dict:
     """
     Автоматически добавляет primary_tag в массив tags, если его там нет (case-insensitive).
@@ -265,10 +273,112 @@ def _team_placeholder_logo() -> dict:
     return {"url": url, "alt": "", "caption": "", "thumbnail": url}
 
 
+def _is_placeholder_logo(logo: any) -> bool:
+    """
+    Check if logo is a placeholder pattern image.
+    """
+    if not logo:
+        return True
+    if isinstance(logo, dict):
+        url = logo.get("url") or logo.get("thumbnail") or ""
+        return bool(url and "/media/imported/images/pattern-" in url)
+    if isinstance(logo, str):
+        return "/media/imported/images/pattern-" in logo
+    return False
+
+
+def _normalize_to_mediafile(value: any) -> Optional[dict]:
+    """
+    Convert string or dict to MediaFile format.
+    Returns None if value is empty/invalid.
+    """
+    if not value:
+        return None
+    
+    if isinstance(value, dict):
+        # Already a dict - check if it has url/thumbnail
+        url = value.get("url") or value.get("thumbnail") or ""
+        if url and url.strip():
+            return {
+                "url": url,
+                "alt": value.get("alt", ""),
+                "caption": value.get("caption", ""),
+                "thumbnail": value.get("thumbnail") or url
+            }
+        return None
+    
+    if isinstance(value, str) and value.strip():
+        # String URL - convert to MediaFile
+        url = value.strip()
+        # Ensure absolute path starts with /
+        if not url.startswith("/") and not url.startswith("http"):
+            url = "/" + url
+        return {
+            "url": url,
+            "alt": "",
+            "caption": "",
+            "thumbnail": url
+        }
+    
+    return None
+
+
+def _pick_team_logo(doc: dict) -> dict:
+    """
+    Smart logo picker: tries logo field first, then falls back to legacy image/poster fields.
+    Returns MediaFile dict or placeholder if nothing found.
+    
+    Priority:
+    1. logo (if valid and not placeholder)
+    2. image (legacy field from import)
+    3. poster (legacy field from import)
+    4. placeholder
+    """
+    # Check existing logo first
+    logo = doc.get("logo")
+    if logo and not _is_placeholder_logo(logo):
+        # Logo exists and is not placeholder - normalize it
+        normalized = _normalize_to_mediafile(logo)
+        if normalized:
+            return normalized
+    
+    # Try legacy image field
+    image = doc.get("image")
+    if image:
+        normalized = _normalize_to_mediafile(image)
+        if normalized:
+            return normalized
+    
+    # Try legacy poster field
+    poster = doc.get("poster")
+    if poster:
+        normalized = _normalize_to_mediafile(poster)
+        if normalized:
+            return normalized
+    
+    # Fallback to placeholder
+    return _team_placeholder_logo()
+
+
 def _build_team_intro_html(name: str, city: Optional[str]) -> str:
     city_part = f" ({city})" if city else ""
     # Keep exact requested pattern: "Название команды (город) - ... "
     return f"<p>{name}{city_part} - ...</p>"
+
+
+def _clone_modules_with_new_ids(modules: list) -> list:
+    """
+    Clone modules and assign fresh UUIDs to each module.id to avoid accidental reuse/collisions.
+    """
+    import uuid
+    cloned = []
+    for m in modules or []:
+        if not isinstance(m, dict):
+            continue
+        m2 = dict(m)
+        m2["id"] = str(uuid.uuid4())
+        cloned.append(m2)
+    return cloned
 
 
 def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -> tuple[dict, list[str], list[dict]]:
@@ -318,8 +428,12 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
         add_module(PageModule(type=ModuleType.POSTER_PHOTO, order=0, visible=True, data={"size": "medium", "shape": "rounded"}))
     if ModuleType.FACTS_TABLE.value not in existing_types:
         add_module(PageModule(type=ModuleType.FACTS_TABLE, order=1, visible=True, data={"title": "Информация", "style": "table"}))
+    if ModuleType.RATING_WIDGET.value not in existing_types:
+        add_module(PageModule(type=ModuleType.RATING_WIDGET, order=2, visible=True, data={"style": "stars", "scale": 5}))
     if ModuleType.TAGS_CLOUD.value not in existing_types:
-        add_module(PageModule(type=ModuleType.TAGS_CLOUD, order=2, visible=True, data={"style": "badges", "max_tags": 0}))
+        add_module(PageModule(type=ModuleType.TAGS_CLOUD, order=3, visible=True, data={"style": "badges", "max_tags": 0}))
+    if ModuleType.SOCIAL_LINKS.value not in existing_types:
+        add_module(PageModule(type=ModuleType.SOCIAL_LINKS, order=4, visible=True, data={"title": "Ссылки"}))
 
     # Content modules
     # Intro paragraph text block (no title)
@@ -786,6 +900,87 @@ async def bulk_create_teams(data: BulkTeamCreateRequest):
     return {"created": created, "skipped": skipped}
 
 
+@router.post("/teams/restore-logos", response_model=dict)
+async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
+    """
+    Bulk restore team logos from legacy image/poster fields.
+    Only affects teams where logo is missing or is a placeholder pattern.
+    """
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Требуются права администратора")
+    
+    db = await get_db()
+    
+    # Build query: teams with missing/placeholder logos
+    query = {}
+    if data.team_type:
+        query["team_type"] = data.team_type
+    
+    # Find teams that need logo restoration
+    cursor = db.teams.find(query)
+    matched = 0
+    modified = 0
+    restored_from_image = 0
+    restored_from_poster = 0
+    skipped_no_source = 0
+    
+    async for team in cursor:
+        current_logo = team.get("logo")
+        
+        # Check if we should restore this team's logo
+        should_restore = False
+        if data.only_if_placeholder:
+            # Only restore if logo is missing or is placeholder
+            if not current_logo or _is_placeholder_logo(current_logo):
+                should_restore = True
+        else:
+            # Restore all teams (even if they have a logo, try to improve from legacy fields)
+            should_restore = True
+        
+        if not should_restore:
+            continue
+        
+        matched += 1
+        
+        # Try to restore from legacy fields
+        picked_logo = _pick_team_logo(team)
+        
+        # Check if we actually found a source (not just placeholder)
+        if _is_placeholder_logo(picked_logo):
+            skipped_no_source += 1
+            continue
+        
+        # Determine source for reporting
+        if team.get("image") and not _is_placeholder_logo(team.get("image")):
+            restored_from_image += 1
+        elif team.get("poster") and not _is_placeholder_logo(team.get("poster")):
+            restored_from_poster += 1
+        
+        if data.dry_run:
+            continue
+        
+        # Update logo
+        changes = {
+            "logo": picked_logo,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        
+        res = await db.teams.update_one({"_id": team["_id"]}, {"$set": changes})
+        if res.modified_count:
+            modified += 1
+    
+    return {
+        "matched": matched,
+        "modified": modified,
+        "restored_from_image": restored_from_image,
+        "restored_from_poster": restored_from_poster,
+        "skipped_no_source": skipped_no_source,
+        "dry_run": data.dry_run,
+        "team_type": data.team_type
+    }
+
+
 def build_query(
     status: ContentStatus = None,
     tag: str = None,
@@ -926,6 +1121,18 @@ async def create_team(data: TeamCreate):
     # Default placeholder logo when none provided
     logo = data.logo if data.logo is not None else _team_placeholder_logo()
 
+    # If modules are not provided, try to use default team template (if configured)
+    base_modules_input = [m.model_dump() if hasattr(m, "model_dump") else m for m in (data.modules or [])]
+    if not base_modules_input:
+        try:
+            db = await get_db()
+            tpl = await db.templates.find_one({"content_type": "team", "is_default": True})
+            if tpl and isinstance(tpl.get("modules"), list) and tpl.get("modules"):
+                base_modules_input = _clone_modules_with_new_ids(tpl.get("modules") or [])
+        except Exception:
+            # If templates collection is unavailable or template invalid, fall back to scaffold.
+            base_modules_input = []
+
     # Ensure baseline scaffold (facts + modules) if modules are empty or missing core blocks
     city = None
     try:
@@ -934,7 +1141,7 @@ async def create_team(data: TeamCreate):
     except Exception:
         city = None
     scaffold_facts, scaffold_order, scaffold_modules = _ensure_team_scaffold_fields(
-        {"facts": data.facts or {}, "facts_order": data.facts_order or [], "modules": [m.model_dump() if hasattr(m, "model_dump") else m for m in (data.modules or [])]},
+        {"facts": data.facts or {}, "facts_order": data.facts_order or [], "modules": base_modules_input},
         name=data.name,
         city=city
     )
@@ -1035,10 +1242,13 @@ async def get_team(id_or_slug: str):
 
         changes = {}
 
-        # Ensure placeholder logo so poster_photo can render something meaningful
-        logo = item.get("logo")
-        if not logo:
-            changes["logo"] = _team_placeholder_logo()
+        # Smart logo picker: preserve existing logo or restore from legacy image/poster fields
+        # This prevents overwriting real logos with placeholders
+        picked_logo = _pick_team_logo(item)
+        current_logo = item.get("logo")
+        # Only update if logo is missing, placeholder, or different from picked
+        if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
+            changes["logo"] = picked_logo
 
         if new_facts != facts:
             changes["facts"] = new_facts

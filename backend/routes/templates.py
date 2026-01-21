@@ -1,13 +1,93 @@
 """Page templates management routes"""
 from fastapi import APIRouter, HTTPException, Query, Request
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime, timezone
 
-from models.modules import PageTemplate, PageModule
+from models.modules import PageTemplate
+from pydantic import BaseModel, Field
 from utils.database import get_db
 from routes.auth import get_current_user
 
 router = APIRouter(prefix="/templates", tags=["templates"])
+
+
+class ApplyTemplateToTeamsRequest(BaseModel):
+    team_type: str = Field(default="kvn", description="Which team_type to target (e.g. kvn)")
+    mode: Literal["replace", "merge", "if_empty"] = Field(
+        default="merge",
+        description="replace: overwrite modules; merge: keep existing modules and add missing from template; if_empty: only when modules empty/missing"
+    )
+    dry_run: bool = False
+
+
+def _clone_modules_with_new_ids(modules: list) -> list:
+    """
+    Clone modules and assign fresh UUIDs to each module.id to avoid accidental reuse/collisions.
+    """
+    import uuid
+    cloned = []
+    for m in modules or []:
+        if not isinstance(m, dict):
+            continue
+        m2 = dict(m)
+        m2["id"] = str(uuid.uuid4())
+        cloned.append(m2)
+    return cloned
+
+
+def _module_signature(m: dict) -> tuple:
+    """
+    Build a stable-ish signature to match modules across teams/templates.
+    We intentionally DO NOT use module.id (it's per-page).
+    """
+    m_type = (m.get("type") or "").strip()
+    data = m.get("data") or {}
+
+    if m_type == "text_block":
+        title = (data.get("title") or "").strip()
+        return (m_type, title)
+
+    if m_type == "timeline":
+        title = (data.get("title") or m.get("title") or "").strip()
+        return (m_type, title)
+
+    title = (m.get("title") or data.get("title") or "").strip()
+    return (m_type, title)
+
+
+def _merge_template_into_existing_modules(template_modules: list, existing_modules: list) -> list:
+    """
+    Safe mode:
+    - preserves existing modules (and their data)
+    - ensures all template modules exist (adds missing ones)
+    - keeps any extra modules after template-defined ones
+    """
+    tpl = [m for m in (template_modules or []) if isinstance(m, dict)]
+    ex = [m for m in (existing_modules or []) if isinstance(m, dict)]
+
+    used = [False] * len(ex)
+    merged: list[dict] = []
+
+    for tm in tpl:
+        sig = _module_signature(tm)
+        found_idx = None
+        for i, em in enumerate(ex):
+            if used[i]:
+                continue
+            if _module_signature(em) == sig and sig[0]:
+                found_idx = i
+                break
+        if found_idx is not None:
+            used[found_idx] = True
+            merged.append(ex[found_idx])
+        else:
+            merged.append(_clone_modules_with_new_ids([tm])[0])
+
+    for i, em in enumerate(ex):
+        if not used[i]:
+            merged.append(em)
+
+    return merged
 
 
 @router.post("", response_model=dict)
@@ -160,12 +240,136 @@ async def delete_template(template_id: str, request: Request):
     return {"id": template_id, "deleted": True}
 
 
+# === APPLY TEMPLATE TO EXISTING CONTENT ===
+
+@router.post("/{template_id}/apply-to-teams", response_model=dict)
+async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRequest, request: Request):
+    """
+    Apply a template to teams by team_type (KVN teams use team_type='kvn').
+    """
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Требуются права администратора")
+
+    db = await get_db()
+
+    template = await db.templates.find_one({"_id": template_id})
+    if not template:
+        raise HTTPException(status_code=404, detail="Шаблон не найден")
+    if template.get("content_type") != "team":
+        raise HTTPException(status_code=400, detail="Этот шаблон можно применять только к типу 'team'")
+
+    # Target teams
+    team_type = body.team_type
+    query = {"team_type": team_type}
+
+    matched = await db.teams.count_documents(query)
+    modified = 0
+
+    if matched == 0:
+        return {"matched": 0, "modified": 0, "dry_run": body.dry_run}
+
+    # We must iterate because we also want to keep per-team intro (name/city) consistent
+    # and ensure stable order via the existing scaffold normalizer.
+    from routes.content import (
+        _ensure_team_scaffold_fields,
+        _team_placeholder_logo,
+        _pick_team_logo,
+        _is_placeholder_logo
+    )
+
+    cursor = db.teams.find(query)
+    async for team in cursor:
+        existing_modules = team.get("modules") or []
+        if body.mode == "if_empty" and existing_modules:
+            continue
+
+        facts = team.get("facts") if isinstance(team.get("facts"), dict) else {}
+        name = (team.get("name") or team.get("title") or "").strip()
+        city = facts.get("Город") or facts.get("city")
+
+        if body.mode == "replace":
+            base_modules = _clone_modules_with_new_ids(template.get("modules") or [])
+        elif body.mode == "merge":
+            base_modules = _merge_template_into_existing_modules(template.get("modules") or [], existing_modules)
+        else:  # if_empty
+            base_modules = _clone_modules_with_new_ids(template.get("modules") or [])
+        new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
+            {"facts": facts, "facts_order": team.get("facts_order") or [], "modules": base_modules},
+            name=name or (team.get("title") or ""),
+            city=city,
+        )
+
+        changes = {
+            "modules": new_modules,
+            "facts": new_facts,
+            "facts_order": new_order,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        # Logo handling: in merge mode, never touch logo. In other modes, use smart picker.
+        if body.mode == "merge":
+            # Safe mode: preserve existing logo completely
+            pass  # Don't add logo to changes
+        else:
+            # Replace/if_empty modes: use smart picker to restore from legacy fields if needed
+            picked_logo = _pick_team_logo(team)
+            current_logo = team.get("logo")
+            # Only update if logo is missing, placeholder, or different from picked
+            if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
+                changes["logo"] = picked_logo
+
+        if body.dry_run:
+            continue
+
+        res = await db.teams.update_one({"_id": team["_id"]}, {"$set": changes})
+        if res.modified_count:
+            modified += 1
+
+    return {"matched": matched, "modified": modified, "dry_run": body.dry_run, "mode": body.mode, "team_type": team_type}
+
+
 # === MODULE TYPES INFO ===
 
 @router.get("/modules/types", response_model=list)
 async def list_module_types():
     """Get all available module types with descriptions"""
     return [
+        {
+            "type": "poster_photo",
+            "name": "Фото/Постер",
+            "description": "Фото/постер в сайдбаре",
+            "icon": "image",
+            "for_types": ["person", "team", "show", "article", "news", "quiz", "wiki", "page"]
+        },
+        {
+            "type": "facts_table",
+            "name": "Информация",
+            "description": "Таблица фактов из поля facts",
+            "icon": "table",
+            "for_types": ["person", "team", "show", "wiki"]
+        },
+        {
+            "type": "rating_widget",
+            "name": "Оценка",
+            "description": "Рейтинг/оценка страницы",
+            "icon": "star",
+            "for_types": ["person", "team", "show", "article", "news", "wiki"]
+        },
+        {
+            "type": "tags_cloud",
+            "name": "Облако тегов",
+            "description": "Отображение тегов страницы (облако/бейджи)",
+            "icon": "tag",
+            "for_types": ["all"]
+        },
+        {
+            "type": "social_links",
+            "name": "Ссылки",
+            "description": "Социальные ссылки (vk/yt/tg/...)",
+            "icon": "link",
+            "for_types": ["person", "team", "show"]
+        },
         {
             "type": "hero_card",
             "name": "Карточка с фото",
