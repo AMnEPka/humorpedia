@@ -1,9 +1,10 @@
 """Content API routes - CRUD for all content types"""
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
+from typing import Optional, List, Dict, Literal
 from datetime import datetime, timezone
 import logging
 import re
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,8 @@ from models.content import (
     KVN, KVNCreate, KVNUpdate
 )
 from utils.database import get_db
+from utils.slugify import generate_slug
+from utils.team_matcher import normalize_team_name
 from services.tags import tag_service
 from services.linking import linking_service
 
@@ -121,6 +124,59 @@ async def generate_unique_slug(collection_name: str, base_slug: str, parent_path
         counter += 1
         if counter > 1000:  # Safety limit
             raise HTTPException(status_code=500, detail="Could not generate unique slug")
+
+
+async def generate_unique_team_slug(base_slug: str) -> str:
+    """
+    Generate unique slug for teams using '-2', '-3', ... suffixes (more URL-friendly).
+    """
+    db = await get_db()
+    collection = db.teams
+
+    slug = base_slug
+    existing = await collection.find_one({"slug": slug})
+    if not existing:
+        return slug
+
+    counter = 2
+    while True:
+        slug = f"{base_slug}-{counter}"
+        existing = await collection.find_one({"slug": slug})
+        if not existing:
+            return slug
+        counter += 1
+
+
+class BulkTeamCheckItem(BaseModel):
+    raw_line: str = ""
+    name: str = ""
+    city: str | None = None
+
+
+class BulkTeamCheckRequest(BaseModel):
+    items: List[BulkTeamCheckItem] = Field(default_factory=list)
+
+
+class BulkTeamCheckResult(BaseModel):
+    index: int
+    status: Literal["found", "not_found", "invalid"]
+    name: str = ""
+    city: str | None = None
+    team_id: str | None = None
+    team_slug: str | None = None
+    team_display_name: str | None = None
+
+
+class BulkTeamCreateRow(BaseModel):
+    action: Literal["create", "skip", "link_existing"]
+    name: str | None = None
+    city: str | None = None
+    existing_team_id: str | None = None
+    confirmed_skip: bool = False
+
+
+class BulkTeamCreateRequest(BaseModel):
+    rows: List[BulkTeamCreateRow] = Field(default_factory=list)
 
 
 async def sync_primary_tag_to_tags(doc: dict) -> dict:
@@ -497,6 +553,127 @@ async def list_content(
     items = await cursor.to_list(limit)
     
     return {"items": items, "total": total, "skip": skip, "limit": limit}
+
+
+@router.post("/teams/bulk-check", response_model=dict)
+async def bulk_check_teams(data: BulkTeamCheckRequest):
+    """
+    Bulk check team existence by normalized name (including aliases).
+    Intended for admin bulk import UI.
+    """
+    db = await get_db()
+
+    # Load only fields needed for matching
+    cursor = db.teams.find({}, {"_id": 1, "slug": 1, "name": 1, "title": 1, "aliases": 1})
+    existing_teams = await cursor.to_list(length=None)
+
+    # Build lookup: normalized_name -> team doc (first wins)
+    by_norm: Dict[str, Dict] = {}
+    for team in existing_teams:
+        base_name = (team.get("name") or team.get("title") or "").strip()
+        if base_name:
+            key = normalize_team_name(base_name)
+            if key and key not in by_norm:
+                by_norm[key] = team
+        for alias in team.get("aliases") or []:
+            if not isinstance(alias, str):
+                continue
+            key = normalize_team_name(alias.strip())
+            if key and key not in by_norm:
+                by_norm[key] = team
+
+    results: List[dict] = []
+    for idx, item in enumerate(data.items):
+        name = (item.name or "").strip()
+        city = (item.city or None)
+        if city is not None:
+            city = city.strip() or None
+
+        if not name:
+            results.append(BulkTeamCheckResult(index=idx, status="invalid", name="", city=city).model_dump())
+            continue
+
+        key = normalize_team_name(name)
+        matched = by_norm.get(key)
+        if matched:
+            display_name = (matched.get("name") or matched.get("title") or "").strip() or None
+            results.append(
+                BulkTeamCheckResult(
+                    index=idx,
+                    status="found",
+                    name=name,
+                    city=city,
+                    team_id=str(matched.get("_id")),
+                    team_slug=matched.get("slug"),
+                    team_display_name=display_name,
+                ).model_dump()
+            )
+        else:
+            results.append(BulkTeamCheckResult(index=idx, status="not_found", name=name, city=city).model_dump())
+
+    return {"items": results}
+
+
+@router.post("/teams/bulk-create", response_model=dict)
+async def bulk_create_teams(data: BulkTeamCreateRequest):
+    """
+    Bulk-create missing teams (and validate user decisions for found/link_existing rows).
+    """
+    db = await get_db()
+
+    created: List[dict] = []
+    skipped: List[dict] = []
+
+    for idx, row in enumerate(data.rows):
+        if row.action == "skip":
+            skipped.append({"index": idx, "reason": "skipped_by_user"})
+            continue
+
+        if row.action == "link_existing":
+            if not row.existing_team_id:
+                raise HTTPException(status_code=400, detail=f"Row {idx}: existing_team_id is required for link_existing")
+            if not row.confirmed_skip:
+                raise HTTPException(status_code=400, detail=f"Row {idx}: confirmation is required to skip existing team")
+            skipped.append({"index": idx, "reason": "linked_existing", "existing_team_id": row.existing_team_id})
+            continue
+
+        # create
+        name = (row.name or "").strip()
+        if not name:
+            raise HTTPException(status_code=400, detail=f"Row {idx}: name is required for create")
+
+        facts = {}
+        city = (row.city or "").strip()
+        if city:
+            facts["city"] = city
+
+        base_slug = generate_slug(name)
+        if not base_slug:
+            base_slug = "team"
+        slug = await generate_unique_team_slug(base_slug)
+
+        title = name
+        team = Team(
+            title=title,
+            slug=slug,
+            name=name,
+            team_type="kvn",
+            logo=None,
+            facts=facts,
+            facts_order=list(facts.keys()),
+            social_links={},
+            primary_tag=name,
+            modules=[],
+            tags=[],
+            seo={"meta_title": title, "meta_description": "", "keywords": []},
+            status=ContentStatus.DRAFT,
+        )
+
+        # Use universal create handler (syncs tags/primary_tag, timestamps, etc.)
+        result = await create_content("teams", team, [])
+        created.append({"index": idx, "id": result.get("id"), "slug": result.get("slug"), "name": name})
+
+    return {"created": created, "skipped": skipped}
 
 
 def build_query(

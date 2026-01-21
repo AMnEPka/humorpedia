@@ -77,6 +77,8 @@ export const contentApi = {
   createTeam: (data) => api.post('/content/teams', data),
   updateTeam: (id, data) => api.put(`/content/teams/${id}`, data),
   deleteTeam: (id) => api.delete(`/content/teams/${id}`),
+  teamsBulkCheck: (data) => api.post('/content/teams/bulk-check', data),
+  teamsBulkCreate: (data) => api.post('/content/teams/bulk-create', data),
 
   // Shows
   listShows: (params) => api.get('/content/shows', { params }),

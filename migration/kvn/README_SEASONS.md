@@ -258,6 +258,23 @@ python kvn/process_seasons.py --league premier-liga --apply
 python kvn/process_seasons.py --all --apply
 ```
 
+### Обработка сезонов Международной лиги
+
+Для обработки сезонов Международной лиги КВН используйте отдельный скрипт `process_ml_seasons.py`:
+
+```bash
+# Один сезон международной лиги (dry-run, без записи)
+python kvn/process_ml_seasons.py --path kvn/ml-kvn/2023
+
+# Один сезон с записью в БД
+python kvn/process_ml_seasons.py --path kvn/ml-kvn/2023 --apply
+
+# Все сезоны международной лиги
+python kvn/process_ml_seasons.py --all --apply
+```
+
+Этот скрипт работает аналогично `process_seasons.py`, но специально настроен для международной лиги и приводит сезоны к такому же виду, как сезоны высшей лиги.
+
 ### Получение обработанных сезонов
 
 После обработки используйте скрипт `get_seasons.py`:
