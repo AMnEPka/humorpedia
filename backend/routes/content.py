@@ -360,6 +360,53 @@ def _pick_team_logo(doc: dict) -> dict:
     return _team_placeholder_logo()
 
 
+def _is_empty_text_block(m: dict) -> bool:
+    if not isinstance(m, dict) or m.get("type") != "text_block":
+        return False
+    data = m.get("data") or {}
+    content = data.get("content")
+    if content is None:
+        content = ""
+    if not isinstance(content, str):
+        return False
+    return content.strip() == ""
+
+
+def _is_empty_timeline(m: dict) -> bool:
+    if not isinstance(m, dict) or m.get("type") != "timeline":
+        return False
+    data = m.get("data") or {}
+    # support both events/items naming
+    events = data.get("events")
+    items = data.get("items")
+    if isinstance(events, list) and len(events) > 0:
+        return False
+    if isinstance(items, list) and len(items) > 0:
+        return False
+    # If there are any other meaningful keys besides title, consider it non-empty
+    meaningful = {k: v for k, v in data.items() if k not in ["title"] and v not in [None, "", [], {}]}
+    return len(meaningful) == 0
+
+
+def _prune_empty_modules(modules: list[dict]) -> list[dict]:
+    """
+    Remove empty text blocks and empty timelines.
+    """
+    pruned = []
+    for m in modules or []:
+        if not isinstance(m, dict):
+            continue
+        if _is_empty_text_block(m):
+            continue
+        if _is_empty_timeline(m):
+            continue
+        pruned.append(m)
+    # Keep stable orders
+    for i, m in enumerate(pruned):
+        m["order"] = i
+    return pruned
+
+
 def _build_team_intro_html(name: str, city: Optional[str]) -> str:
     city_part = f" ({city})" if city else ""
     # Keep exact requested pattern: "Название команды (город) - ... "
@@ -907,6 +954,8 @@ async def bulk_create_teams(data: BulkTeamCreateRequest):
 
         # Use universal create handler (syncs tags/primary_tag, timestamps, etc.)
         result = await create_content("teams", team, [])
+        # Mark as intentionally empty (bulk import pages are allowed to have empty placeholder modules)
+        await db.teams.update_one({"_id": result.get("id")}, {"$set": {"allow_empty_modules": True}})
         created.append({"index": idx, "id": result.get("id"), "slug": result.get("slug"), "name": name})
 
     return {"created": created, "skipped": skipped}
@@ -1251,6 +1300,10 @@ async def get_team(id_or_slug: str):
             name=name or (item.get("title") or ""),
             city=city
         )
+
+        # Remove empty placeholder blocks unless this team was intentionally created empty via bulk import
+        if not item.get("allow_empty_modules"):
+            new_modules = _prune_empty_modules(new_modules)
 
         changes = {}
 

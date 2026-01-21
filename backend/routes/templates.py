@@ -385,7 +385,8 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
         _ensure_team_scaffold_fields,
         _team_placeholder_logo,
         _pick_team_logo,
-        _is_placeholder_logo
+        _is_placeholder_logo,
+        _prune_empty_modules
     )
 
     cursor = db.teams.find(query)
@@ -412,6 +413,9 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
 
         # Project rule: merge split sections into single blocks (avoid empty duplicates)
         new_modules = _merge_team_required_sections(new_modules)
+        # Remove empty placeholders unless team is intentionally empty (bulk import)
+        if not team.get("allow_empty_modules"):
+            new_modules = _prune_empty_modules(new_modules)
 
         changes = {
             "modules": new_modules,
