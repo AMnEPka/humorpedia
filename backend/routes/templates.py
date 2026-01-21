@@ -39,13 +39,19 @@ def _module_signature(m: dict) -> tuple:
     """
     Build a stable-ish signature to match modules across teams/templates.
     We intentionally DO NOT use module.id (it's per-page).
+    
+    For text_block: if title is same but content is different, they're NOT duplicates.
+    Use content hash (first 50 chars) as part of signature to distinguish them.
     """
     m_type = (m.get("type") or "").strip()
     data = m.get("data") or {}
 
     if m_type == "text_block":
         title = (data.get("title") or "").strip()
-        return (m_type, title)
+        content = (data.get("content") or "").strip()
+        # Include content hash to distinguish different content blocks with same title
+        content_hash = content[:50] if content else ""
+        return (m_type, title, content_hash)
 
     if m_type == "timeline":
         title = (data.get("title") or m.get("title") or "").strip()
@@ -61,13 +67,16 @@ def _merge_template_into_existing_modules(template_modules: list, existing_modul
     - preserves existing modules (and their data)
     - ensures all template modules exist (adds missing ones)
     - keeps any extra modules after template-defined ones
+    - removes duplicates: if multiple modules have same signature, keeps only first one
     """
     tpl = [m for m in (template_modules or []) if isinstance(m, dict)]
     ex = [m for m in (existing_modules or []) if isinstance(m, dict)]
 
     used = [False] * len(ex)
     merged: list[dict] = []
+    seen_signatures = set()  # Track signatures we've already added to prevent duplicates
 
+    # First pass: match template modules to existing ones
     for tm in tpl:
         sig = _module_signature(tm)
         found_idx = None
@@ -80,14 +89,115 @@ def _merge_template_into_existing_modules(template_modules: list, existing_modul
         if found_idx is not None:
             used[found_idx] = True
             merged.append(ex[found_idx])
+            seen_signatures.add(sig)
         else:
-            merged.append(_clone_modules_with_new_ids([tm])[0])
+            # Only add if we haven't seen this signature yet
+            if sig not in seen_signatures:
+                merged.append(_clone_modules_with_new_ids([tm])[0])
+                seen_signatures.add(sig)
 
+    # Second pass: add unused existing modules, but skip duplicates
     for i, em in enumerate(ex):
         if not used[i]:
-            merged.append(em)
+            sig = _module_signature(em)
+            # Only add if signature is unique (not already in merged list)
+            if sig not in seen_signatures:
+                merged.append(em)
+                seen_signatures.add(sig)
 
     return merged
+
+
+def _normalize_module_orders(modules: list) -> list:
+    """Ensure module.order is 0..n-1 in current list order."""
+    normalized = []
+    for m in modules or []:
+        if isinstance(m, dict):
+            normalized.append(m)
+    for i, m in enumerate(normalized):
+        m["order"] = i
+    return normalized
+
+
+def _matches_section_title(title: str, base_title: str) -> bool:
+    """
+    Match titles like:
+    - "История команды", "История команды 2", "История команды-2", "История команды — 2"
+    """
+    if not isinstance(title, str):
+        return False
+    t = title.strip()
+    if t == base_title:
+        return True
+    if not t.startswith(base_title):
+        return False
+    # Accept any trailing separator/number
+    suffix = t[len(base_title):].strip()
+    if not suffix:
+        return True
+    # Normalize common separators
+    suffix = suffix.lstrip("-–—:").strip()
+    return suffix.isdigit()
+
+
+def _merge_team_text_blocks(modules: list, base_title: str) -> list:
+    """
+    Merge multiple text_block modules for a given section into one:
+    - preserves order by module.order
+    - concatenates non-empty contents with <hr/> separator
+    - removes merged-away modules
+    """
+    ms = [m for m in (modules or []) if isinstance(m, dict)]
+    candidates = []
+    for idx, m in enumerate(ms):
+        if m.get("type") != "text_block":
+            continue
+        data = m.get("data") or {}
+        title = data.get("title") or ""
+        if _matches_section_title(title, base_title):
+            candidates.append((idx, m))
+
+    if len(candidates) <= 1:
+        return ms
+
+    # Sort by declared order first, then by appearance
+    def sort_key(pair):
+        idx, m = pair
+        return (m.get("order") if m.get("order") is not None else 10**9, idx)
+
+    candidates_sorted = sorted(candidates, key=sort_key)
+    keep_idx, keep_mod = candidates_sorted[0]
+
+    contents = []
+    for _, m in candidates_sorted:
+        data = m.get("data") or {}
+        c = (data.get("content") or "").strip()
+        if c:
+            contents.append(c)
+
+    merged_content = "<hr/>".join(contents).strip()
+    keep_data = dict((keep_mod.get("data") or {}))
+    keep_data["title"] = base_title
+    keep_data["content"] = merged_content
+    keep_mod["data"] = keep_data
+    keep_mod["title"] = base_title
+
+    remove_indices = {idx for idx, _ in candidates_sorted[1:]}
+    result = [m for i, m in enumerate(ms) if i not in remove_indices]
+    return result
+
+
+def _merge_team_required_sections(modules: list) -> list:
+    """
+    Project rule: merge split sections into one.
+    Currently:
+    - История команды (and История команды 2/История команды-2/…)
+    - Список игр команды (and variants)
+    """
+    ms = [m for m in (modules or []) if isinstance(m, dict)]
+    ms = _merge_team_text_blocks(ms, "История команды")
+    ms = _merge_team_text_blocks(ms, "Список игр команды")
+    return _normalize_module_orders(ms)
 
 
 @router.post("", response_model=dict)
@@ -299,6 +409,9 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
             name=name or (team.get("title") or ""),
             city=city,
         )
+
+        # Project rule: merge split sections into single blocks (avoid empty duplicates)
+        new_modules = _merge_team_required_sections(new_modules)
 
         changes = {
             "modules": new_modules,

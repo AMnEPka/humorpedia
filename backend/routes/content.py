@@ -419,6 +419,20 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
     # Modules scaffold
     modules = list(doc.get("modules") or [])
     existing_types = {m.get("type") for m in modules if isinstance(m, dict)}
+    
+    # Build signature set for duplicate detection (type + title for text_block/timeline)
+    def _module_sig(m: dict) -> tuple:
+        m_type = (m.get("type") or "").strip()
+        data = m.get("data") or {}
+        if m_type == "text_block":
+            title = (data.get("title") or "").strip()
+            return (m_type, title)
+        if m_type == "timeline":
+            title = (data.get("title") or m.get("title") or "").strip()
+            return (m_type, title)
+        return (m_type, "")
+
+    existing_signatures = {_module_sig(m) for m in modules if isinstance(m, dict)}
 
     def add_module(mod: PageModule):
         modules.append(mod.model_dump())
@@ -446,20 +460,18 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
     if not has_intro:
         add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=10, visible=True, data={"content": _build_team_intro_html(name, city)}))
 
-    if ModuleType.TIMELINE.value not in existing_types:
+    # Timeline: check by signature (type + title) not just type
+    timeline_sig = ("timeline", "Хронология")
+    if timeline_sig not in existing_signatures:
         # Frontend supports data.events or data.items; we use events for admin UX.
         add_module(PageModule(type=ModuleType.TIMELINE, order=11, visible=True, data={"title": "Хронология", "events": []}))
 
-    # Required empty text sections
+    # Required empty text sections - check by signature (type + title)
     required_sections = ["Состав команды", "История команды", "Список игр команды"]
-    existing_text_titles = {
-        (m.get("data") or {}).get("title")
-        for m in modules
-        if isinstance(m, dict) and m.get("type") == ModuleType.TEXT_BLOCK.value
-    }
     base_order = 12
     for idx, title in enumerate(required_sections):
-        if title not in existing_text_titles:
+        text_block_sig = ("text_block", title)
+        if text_block_sig not in existing_signatures:
             add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=base_order + idx, visible=True, data={"title": title, "content": ""}))
 
     # Normalize orders to be stable
