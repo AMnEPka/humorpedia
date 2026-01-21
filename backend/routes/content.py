@@ -24,6 +24,7 @@ from utils.slugify import generate_slug
 from utils.team_matcher import normalize_team_name
 from services.tags import tag_service
 from services.linking import linking_service
+from models.modules import PageModule, ModuleType
 
 router = APIRouter(prefix="/content", tags=["content"])
 
@@ -254,6 +255,108 @@ async def check_primary_tag_duplicate(
             detail=f"Базовый тег '{primary_tag}' уже используется {item_type} '{item_name}'. "
                    f"Пожалуйста, выберите уникальный тег (например, '{primary_tag} (команда X)')."
         )
+
+def _team_placeholder_logo() -> dict:
+    """
+    Default placeholder logo used when a team has no logo yet.
+    Must exist in frontend static/media.
+    """
+    url = "/media/imported/images/pattern-1.jpeg"
+    return {"url": url, "alt": "", "caption": "", "thumbnail": url}
+
+
+def _build_team_intro_html(name: str, city: Optional[str]) -> str:
+    city_part = f" ({city})" if city else ""
+    # Keep exact requested pattern: "Название команды (город) - ... "
+    return f"<p>{name}{city_part} - ...</p>"
+
+
+def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -> tuple[dict, list[str], list[dict]]:
+    """
+    Ensure KVN team has baseline facts + modules scaffold.
+    Returns: (facts, facts_order, modules_as_dicts)
+    """
+    facts = dict(doc.get("facts") or {})
+
+    # City: store as human-readable key (requested)
+    if city and not facts.get("Город"):
+        facts["Город"] = city
+    # Backward-compat: migrate old 'city' key to 'Город'
+    if facts.get("city") and not facts.get("Город"):
+        facts["Город"] = facts.get("city")
+    if "city" in facts:
+        del facts["city"]
+
+    # Required visible facts with placeholders
+    if "Год основания" not in facts or not str(facts.get("Год основания") or "").strip():
+        facts["Год основания"] = "—"
+    if "Капитан" not in facts or not str(facts.get("Капитан") or "").strip():
+        facts["Капитан"] = "—"
+
+    # Facts order: prefer explicit order if present, otherwise seed with desired keys
+    current_order = list(doc.get("facts_order") or [])
+    desired_prefix = ["Город", "Год основания", "Капитан"]
+    ordered = [k for k in desired_prefix if k in facts]
+    # Keep any existing order items that still exist and aren't already included
+    for k in current_order:
+        if k in facts and k not in ordered:
+            ordered.append(k)
+    # Append any remaining keys
+    for k in facts.keys():
+        if k not in ordered:
+            ordered.append(k)
+
+    # Modules scaffold
+    modules = list(doc.get("modules") or [])
+    existing_types = {m.get("type") for m in modules if isinstance(m, dict)}
+
+    def add_module(mod: PageModule):
+        modules.append(mod.model_dump())
+
+    # Sidebar/system modules
+    if ModuleType.POSTER_PHOTO.value not in existing_types:
+        add_module(PageModule(type=ModuleType.POSTER_PHOTO, order=0, visible=True, data={"size": "medium", "shape": "rounded"}))
+    if ModuleType.FACTS_TABLE.value not in existing_types:
+        add_module(PageModule(type=ModuleType.FACTS_TABLE, order=1, visible=True, data={"title": "Информация", "style": "table"}))
+    if ModuleType.TAGS_CLOUD.value not in existing_types:
+        add_module(PageModule(type=ModuleType.TAGS_CLOUD, order=2, visible=True, data={"style": "badges", "max_tags": 0}))
+
+    # Content modules
+    # Intro paragraph text block (no title)
+    has_intro = any(
+        isinstance(m, dict)
+        and m.get("type") == ModuleType.TEXT_BLOCK.value
+        and not (m.get("data") or {}).get("title")
+        for m in modules
+    )
+    if not has_intro:
+        add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=10, visible=True, data={"content": _build_team_intro_html(name, city)}))
+
+    if ModuleType.TIMELINE.value not in existing_types:
+        # Frontend supports data.events or data.items; we use events for admin UX.
+        add_module(PageModule(type=ModuleType.TIMELINE, order=11, visible=True, data={"title": "Хронология", "events": []}))
+
+    # Required empty text sections
+    required_sections = ["Состав команды", "История команды", "Список игр команды"]
+    existing_text_titles = {
+        (m.get("data") or {}).get("title")
+        for m in modules
+        if isinstance(m, dict) and m.get("type") == ModuleType.TEXT_BLOCK.value
+    }
+    base_order = 12
+    for idx, title in enumerate(required_sections):
+        if title not in existing_text_titles:
+            add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=base_order + idx, visible=True, data={"title": title, "content": ""}))
+
+    # Normalize orders to be stable
+    modules_sorted = sorted(
+        [m for m in modules if isinstance(m, dict)],
+        key=lambda x: (x.get("order") or 0)
+    )
+    for i, m in enumerate(modules_sorted):
+        m["order"] = i
+
+    return facts, ordered, modules_sorted
 
 
 async def create_content(collection_name: str, model_instance, tags: list = None):
@@ -645,7 +748,7 @@ async def bulk_create_teams(data: BulkTeamCreateRequest):
         facts = {}
         city = (row.city or "").strip()
         if city:
-            facts["city"] = city
+            facts["Город"] = city
 
         base_slug = generate_slug(name)
         if not base_slug:
@@ -653,17 +756,24 @@ async def bulk_create_teams(data: BulkTeamCreateRequest):
         slug = await generate_unique_team_slug(base_slug)
 
         title = name
+        # Baseline scaffold (facts + modules)
+        scaffold_facts, scaffold_order, scaffold_modules = _ensure_team_scaffold_fields(
+            {"facts": facts, "facts_order": list(facts.keys()), "modules": []},
+            name=name,
+            city=city or None
+        )
+
         team = Team(
             title=title,
             slug=slug,
             name=name,
             team_type="kvn",
-            logo=None,
-            facts=facts,
-            facts_order=list(facts.keys()),
+            logo=_team_placeholder_logo(),
+            facts=scaffold_facts,
+            facts_order=scaffold_order,
             social_links={},
             primary_tag=name,
-            modules=[],
+            modules=scaffold_modules,
             tags=[],
             seo={"meta_title": title, "meta_description": "", "keywords": []},
             status=ContentStatus.DRAFT,
@@ -812,12 +922,34 @@ async def create_team(data: TeamCreate):
     
     # Устанавливаем primary_tag по умолчанию, если не задан
     primary_tag = data.primary_tag or data.name or data.title
+
+    # Default placeholder logo when none provided
+    logo = data.logo if data.logo is not None else _team_placeholder_logo()
+
+    # Ensure baseline scaffold (facts + modules) if modules are empty or missing core blocks
+    city = None
+    try:
+        if isinstance(data.facts, dict):
+            city = (data.facts or {}).get("Город") or (data.facts or {}).get("city")
+    except Exception:
+        city = None
+    scaffold_facts, scaffold_order, scaffold_modules = _ensure_team_scaffold_fields(
+        {"facts": data.facts or {}, "facts_order": data.facts_order or [], "modules": [m.model_dump() if hasattr(m, "model_dump") else m for m in (data.modules or [])]},
+        name=data.name,
+        city=city
+    )
     
     team = Team(
         title=data.title, slug=data.slug, name=data.name, team_type=data.team_type,
-        logo=data.logo, facts=data.facts or {}, facts_order=data.facts_order or [], social_links=data.social_links or {},
+        logo=logo,
+        facts=scaffold_facts,
+        facts_order=scaffold_order,
+        social_links=data.social_links or {},
         primary_tag=primary_tag,
-        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
+        modules=scaffold_modules,
+        tags=data.tags,
+        seo=data.seo or {},
+        status=data.status
     )
     return await create_content("teams", team, data.tags)
 
@@ -886,7 +1018,62 @@ async def list_teams(
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str):
     """Get team by ID or slug"""
-    return await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+    item = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+
+    # Self-healing: ensure baseline scaffold exists for older/empty teams
+    try:
+        db = await get_db()
+        name = (item.get("name") or item.get("title") or "").strip()
+        facts = item.get("facts") if isinstance(item.get("facts"), dict) else {}
+        city = facts.get("Город") or facts.get("city")
+
+        new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
+            {"facts": facts, "facts_order": item.get("facts_order") or [], "modules": item.get("modules") or []},
+            name=name or (item.get("title") or ""),
+            city=city
+        )
+
+        changes = {}
+
+        # Ensure placeholder logo so poster_photo can render something meaningful
+        logo = item.get("logo")
+        if not logo:
+            changes["logo"] = _team_placeholder_logo()
+
+        if new_facts != facts:
+            changes["facts"] = new_facts
+        if new_order != (item.get("facts_order") or []):
+            changes["facts_order"] = new_order
+        if new_modules != (item.get("modules") or []):
+            changes["modules"] = new_modules
+
+        # Ensure tags contain primary_tag if possible (avoid breaking on duplicates)
+        primary_tag = item.get("primary_tag")
+        if not primary_tag:
+            candidate = name or item.get("title")
+            if candidate:
+                try:
+                    await check_primary_tag_duplicate("teams", candidate, exclude_id=item.get("_id"))
+                    changes["primary_tag"] = candidate
+                    primary_tag = candidate
+                except HTTPException:
+                    primary_tag = None
+
+        if primary_tag:
+            tags = list(item.get("tags") or [])
+            if not any(isinstance(t, str) and t.lower() == primary_tag.lower() for t in tags):
+                tags.append(primary_tag)
+                changes["tags"] = tags
+                await tag_service.sync_tags(tags)
+
+        if changes:
+            changes["updated_at"] = datetime.now(timezone.utc).isoformat()
+            await db.teams.update_one({"_id": item["_id"]}, {"$set": changes})
+            item.update(changes)
+    except Exception as e:
+        logger.warning(f"Team scaffold self-heal skipped: {e}")
+
+    return item
 
 
 @router.put("/teams/{id}", response_model=dict)

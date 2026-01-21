@@ -486,7 +486,7 @@ export default function TeamsListPage() {
                             {statusLabels[team.status]?.label || team.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>{team.facts?.city || '-'}</TableCell>
+                        <TableCell>{team.facts?.['Город'] || team.facts?.city || '-'}</TableCell>
                         <TableCell>
                           {team.slug && (
                             <Button
