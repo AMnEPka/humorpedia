@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import { StageSection } from '../components/StageSection';
 import { sanitizeHTML, containsHTML } from '../utils/sanitize';
+import { usePageTitle } from '@/utils/pageTitle';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -49,6 +50,8 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const [loading, setLoading] = useState(!initialSeasonData);
   const [error, setError] = useState('');
   const [teamNames, setTeamNames] = useState({}); // Кэш полных названий команд по slug
+
+  usePageTitle((season?.name || season?.title) || (loading ? 'Сезон' : (error ? 'Сезон не найден' : 'Сезон')));
 
   useEffect(() => {
     // Если данные уже переданы через props - используем их

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
+import { usePageTitle } from '@/utils/pageTitle';
 
 const contentTypeLabels = {
   person: 'Люди',
@@ -43,6 +44,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState(query);
   const [totalResults, setTotalResults] = useState(0);
+
+  usePageTitle(query ? `Поиск: ${query}` : 'Поиск');
 
   useEffect(() => {
     if (query && query.length >= 2) {

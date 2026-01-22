@@ -29,7 +29,6 @@ from routes.auth import get_current_user
 
 router = APIRouter(prefix="/content", tags=["content"])
 
-
 # === HELPER FUNCTIONS ===
 
 def get_league_slug_from_parent(parent_doc):

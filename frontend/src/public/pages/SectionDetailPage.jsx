@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
 import SeasonDetailPage from './SeasonDetailPage';
+import { usePageTitle } from '@/utils/pageTitle';
 
 export default function SectionDetailPage() {
   const location = useLocation();
@@ -15,6 +16,8 @@ export default function SectionDetailPage() {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  usePageTitle((section?.name || section?.title) || (loading ? 'Раздел' : (error ? 'Раздел не найден' : 'Раздел')));
 
   useEffect(() => {
     const fetchSection = async () => {

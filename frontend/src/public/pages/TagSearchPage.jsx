@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import publicApi from '../utils/api';
+import { usePageTitle } from '@/utils/pageTitle';
 
 const contentTypeLabels = {
   person: 'Люди',
@@ -38,6 +39,8 @@ export default function TagSearchPage() {
   const { tag } = useParams();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(tag ? `Тег: ${tag}` : 'Тег');
 
   const loadTagResults = useCallback(async () => {
     setLoading(true);

@@ -8,6 +8,7 @@ import publicApi from '../utils/api';
 import { 
   isSystemModule 
 } from '@/components/SystemModules';
+import { usePageTitle } from '@/utils/pageTitle';
 
 // Table of Contents component for teams
 function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
@@ -72,6 +73,8 @@ export default function TeamDetailPage() {
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  usePageTitle(team?.title || (loading ? 'Команда' : (error ? 'Команда не найдена' : 'Команда')));
 
   useEffect(() => {
     const fetchTeam = async () => {
