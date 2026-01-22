@@ -1,10 +1,10 @@
 """Content API routes - CRUD for all content types"""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request  # pyright: ignore[reportMissingImports]
 from typing import Optional, List, Dict, Literal
 from datetime import datetime, timezone
 import logging
 import re
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field  # pyright: ignore[reportMissingImports]
 
 logger = logging.getLogger(__name__)
 
@@ -605,6 +605,7 @@ async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> 
     """
     Update or create "Список игр команды" module with auto-generated table from VL seasons.
     Only for KVN teams (team_type='kvn').
+    REMOVES ALL existing "Список игр команды" modules (manual or auto) and creates a single auto-generated one.
     Returns updated modules list.
     """
     if not team_slug:
@@ -618,50 +619,76 @@ async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> 
     # Get VL results
     results = await _get_team_vl_results(team_slug, db)
     
-    # Find or create "Список игр команды" module
+    # Remove ALL existing "Список игр команды" modules (manual or auto) to prevent duplicates
+    # We identify them by:
+    # 1. Title matches "Список игр команды" (exact or partial)
+    # 2. OR content contains the games table structure (table with headers "Год", "Лига", "Стадия", "Результат")
     target_title = "Список игр команды"
     updated_modules = []
-    found_module = False
+    removed_count = 0
+    removed_ids = []
+    
+    def is_games_table_module(m: dict) -> bool:
+        """Check if module is a games table (by title or content structure)"""
+        if not isinstance(m, dict) or m.get("type") != "text_block":
+            return False
+        
+        data = m.get("data") or {}
+        content = (data.get("content") or "").strip()
+        title = (data.get("title") or m.get("title") or "").strip()
+        
+        # Check by title
+        if title and (title == target_title or 
+                     title.lower() == target_title.lower() or
+                     title.lower().startswith(target_title.lower())):
+            return True
+        
+        # Check by content structure - look for games table headers
+        # Manual tables have: <th>Год</th>, <th>Лига</th>, <th>Стадия</th>, <th>Результат</th>
+        if content and ("<th" in content.lower() or "<table" in content.lower()):
+            # Check if it contains all the required headers
+            content_lower = content.lower()
+            has_year = "год" in content_lower
+            has_league = "лига" in content_lower
+            has_stage = "стадия" in content_lower
+            has_result = "результат" in content_lower
+            
+            # If it has table structure with these headers, it's likely a games table
+            if has_year and has_league and has_stage and has_result:
+                return True
+        
+        return False
     
     for m in modules:
-        if not isinstance(m, dict):
-            updated_modules.append(m)
-            continue
+        if is_games_table_module(m):
+            removed_count += 1
+            removed_ids.append(m.get("id", "unknown"))
+            title = ((m.get("data") or {}).get("title") or m.get("title") or "").strip()
+            logger.debug(f"Removing games module {m.get('id')} (title: '{title}') for team {team_slug}")
+            continue  # Remove this module
         
-        m_type = m.get("type")
-        data = m.get("data") or {}
-        title = (data.get("title") or "").strip()
-        
-        if m_type == "text_block" and title == target_title:
-            # Update existing module
-            m_copy = dict(m)
-            m_copy["data"] = dict(data)
-            if results:
-                m_copy["data"]["content"] = _build_team_games_table_html(results)
-            else:
-                # Keep existing content if no results, or set empty if it was empty
-                if not m_copy["data"].get("content"):
-                    m_copy["data"]["content"] = ""
-            updated_modules.append(m_copy)
-            found_module = True
-        else:
-            updated_modules.append(m)
+        updated_modules.append(m)
     
-    # If module not found, create it
-    if not found_module:
-        import uuid
-        new_module = {
-            "id": str(uuid.uuid4()),
-            "type": "text_block",
-            "order": len(updated_modules),  # Will be normalized later
-            "title": "",
-            "visible": True,
-            "data": {
-                "title": target_title,
-                "content": _build_team_games_table_html(results) if results else ""
-            }
+    # Log if we removed multiple modules (indicates duplicate issue)
+    if removed_count > 0:
+        logger.info(f"Removed {removed_count} 'Список игр команды' module(s) for team {team_slug} (IDs: {removed_ids})")
+    
+    # Always create a fresh auto-generated module (even if empty)
+    import uuid
+    new_module = {
+        "id": str(uuid.uuid4()),
+        "type": "text_block",
+        "order": len(updated_modules),  # Will be normalized later
+        "title": "",
+        "visible": bool(results),  # Hide if no results
+        "data": {
+            "title": target_title,
+            "content": _build_team_games_table_html(results) if results else "",
+            "auto_generated": True,  # Mark as auto-generated
+            "source": "vl-kvn"
         }
-        updated_modules.append(new_module)
+    }
+    updated_modules.append(new_module)
     
     return updated_modules
 
@@ -831,7 +858,9 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
         add_module(PageModule(type=ModuleType.TIMELINE, order=11, visible=True, data={"title": "Хронология", "events": []}))
 
     # Required empty text sections - check by signature (type + title)
-    required_sections = ["Состав команды", "История команды", "Список игр команды"]
+    # NOTE: "Список игр команды" is NOT added here - it's handled by _update_team_games_module
+    # to prevent duplicates and ensure it's always auto-generated for KVN teams
+    required_sections = ["Состав команды", "История команды"]
     base_order = 12
     for idx, title in enumerate(required_sections):
         text_block_sig = ("text_block", title)
