@@ -51,12 +51,25 @@ def normalize_team_name(name: str) -> str:
         return ""
 
     name = normalize_case(name)
+    # Strip trailing city/parenthetical: "Команда (Город)" -> "Команда"
+    name = re.sub(r"\s*\([^)]*\)\s*$", "", name).strip()
+
     normalized = re.sub(r"\s+", " ", name.lower().strip())
     normalized = (
         normalized.replace("«", "")
         .replace("»", "")
         .replace('"', "")
         .replace("'", "")
+        .replace("ё", "е")
     )
+
+    # Keep only letters/digits/spaces (helps with dots/dashes/nbsp)
+    normalized = re.sub(r"[^0-9a-zа-я]+", " ", normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+
+    # Initialisms: "Т.Т.", "Т. Т." -> "тт"
+    tokens = normalized.split()
+    if tokens and all(len(t) == 1 for t in tokens):
+        normalized = "".join(tokens)
     return normalized
 

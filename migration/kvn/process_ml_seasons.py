@@ -195,6 +195,26 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
             team_slug_map = getattr(parser.stage_parser.game_parser, 'team_slug_map', {})
     
     team_matches = match_all_teams(season_teams, existing_teams, team_slug_map)
+
+    # Для отладки: показываем какие команды не сопоставились и почему это важно
+    # (обычно проблема в различиях названий/городах/алиасах или отсутствующих slug'ах).
+    if verbose:
+        def _team_match_key(team_dict: dict) -> str:
+            slug = (team_dict.get('slug') or '').strip()
+            if slug:
+                return slug
+            name_key = normalize_team_name(team_dict.get('name', ''))
+            return f"__name__:{name_key}" if name_key else ""
+
+        unmatched = []
+        for t in season_teams:
+            key = _team_match_key(t)
+            if not key or key not in team_matches:
+                unmatched.append(t)
+        if unmatched:
+            print(f"  ⚠️  Не сопоставлены команды ({len(unmatched)}):")
+            for t in unmatched:
+                print(f"    - {t.get('name', '').strip()} [{t.get('slug', '').strip()}]")
     
     # Обновляем команды в играх с учетом алиасов
     # Строим карту названий/алиасов -> (team_id, team_slug, team_name)
@@ -259,6 +279,21 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
                             team_data['is_winner'] = is_winner
                             team_data['passed'] = passed
                             team_data['is_additional'] = is_additional
+                    elif team_name:
+                        # Фоллбек: если slug пустой/не совпал, пробуем по имени через team_matches (__name__:...)
+                        name_key = normalize_team_name(team_name)
+                        key = f"__name__:{name_key}" if name_key else ""
+                        if key and key in team_matches:
+                            team_id, matched_slug = team_matches[key]
+                            matched_team = next((t for t in existing_teams if t['_id'] == team_id), None)
+                            if matched_team:
+                                team_data['team_slug'] = matched_team.get('slug', '')
+                                matched_team_name = matched_team.get('name', '').strip() or matched_team.get('title', '').strip()
+                                team_data['team_name'] = matched_team_name or team_name
+                                team_data['team_id'] = team_id
+                                team_data['is_winner'] = is_winner
+                                team_data['passed'] = passed
+                                team_data['is_additional'] = is_additional
                     else:
                         # Команда не найдена - но сохраняем флаги
                         team_data['is_winner'] = is_winner
@@ -277,6 +312,21 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
                         team_data['is_winner'] = is_winner
                         team_data['passed'] = passed
                         team_data['is_additional'] = is_additional
+                elif team_name:
+                    # Если есть только имя — пробуем через team_matches по __name__:...
+                    name_key = normalize_team_name(team_name)
+                    key = f"__name__:{name_key}" if name_key else ""
+                    if key and key in team_matches:
+                        team_id, matched_slug = team_matches[key]
+                        matched_team = next((t for t in existing_teams if t['_id'] == team_id), None)
+                        if matched_team:
+                            team_data['team_slug'] = matched_team.get('slug', '')
+                            matched_team_name = matched_team.get('name', '').strip() or matched_team.get('title', '').strip()
+                            team_data['team_name'] = matched_team_name or team_name
+                            team_data['team_id'] = team_id
+                            team_data['is_winner'] = is_winner
+                            team_data['passed'] = passed
+                            team_data['is_additional'] = is_additional
     
     # Функция для получения полного названия команды с городом
     def get_full_team_name(team_id: str = None, team_slug: str = None, team_name: str = None) -> str:
@@ -354,24 +404,31 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
             if normalized in team_name_map:
                 matched_team_id, matched_slug, _ = team_name_map[normalized]
             else:
-                # АГРЕССИВНЫЙ ПОИСК: пробуем найти команду по частичному совпадению названия
+                # Фоллбек: match_all_teams может хранить сопоставления по имени в ключе "__name__:<normalized>"
+                name_key = normalize_team_name(team_name_clean or team_name)
+                key = f"__name__:{name_key}" if name_key else ""
+                if key and key in team_matches:
+                    matched_team_id, matched_slug = team_matches[key]
+                
+                # Если всё ещё не нашли — АГРЕССИВНЫЙ ПОИСК: пробуем найти команду по совпадению нормализованного имени
                 # Это нужно для команд типа МИСИ, СПСИ, которые могут не сопоставляться точно
-                for team in existing_teams:
-                    team_db_name = team.get('name', '')
-                    team_db_slug = team.get('slug', '')
-                    
-                    # Проверяем точное совпадение (без учета регистра и скобок)
-                    team_db_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', team_db_name).strip()
-                    if normalize_team_name(team_name_clean) == normalize_team_name(team_db_name_clean):
-                        matched_team_id = team['_id']
-                        matched_slug = team_db_slug
-                        break
-                    
-                    # Проверяем совпадение по slug
-                    if team_slug and team_db_slug == team_slug:
-                        matched_team_id = team['_id']
-                        matched_slug = team_db_slug
-                        break
+                if not matched_team_id:
+                    for team in existing_teams:
+                        team_db_name = team.get('name', '')
+                        team_db_slug = team.get('slug', '')
+                        
+                        # Проверяем точное совпадение (без учета регистра и скобок)
+                        team_db_name_clean = re.sub(r'\s*\([^)]*\)\s*$', '', team_db_name).strip()
+                        if normalize_team_name(team_name_clean) == normalize_team_name(team_db_name_clean):
+                            matched_team_id = team['_id']
+                            matched_slug = team_db_slug
+                            break
+                        
+                        # Проверяем совпадение по slug
+                        if team_slug and team_db_slug == team_slug:
+                            matched_team_id = team['_id']
+                            matched_slug = team_db_slug
+                            break
         
         # Получаем полное название с городом
         # ВАЖНО: Передаем исходное team_name, чтобы если команда не найдена, использовался город из исходного названия
@@ -567,7 +624,17 @@ def process_season(db, path: str, apply: bool = False, verbose: bool = False) ->
     # Статистика
     total_games = sum(len(s['games']) for s in result_dict['stages'])
     total_teams = len(season_teams)
-    matched_count = len(team_matches)
+    # matched_count должен считаться "по командам сезона", а не "по ключам словаря",
+    # потому что часть сопоставлений может быть сохранена по ключу "__name__:<...>".
+    matched_count = 0
+    for t in season_teams:
+        slug = (t.get('slug') or '').strip()
+        if slug and slug in team_matches:
+            matched_count += 1
+            continue
+        name_key = normalize_team_name(t.get('name', ''))
+        if name_key and f"__name__:{name_key}" in team_matches:
+            matched_count += 1
     
     print(f"  📊 Стадий: {len(result_dict['stages'])}, Игр: {total_games}, Команд: {total_teams}")
     print(f"  🔗 Сопоставлено команд: {matched_count}/{total_teams}")
