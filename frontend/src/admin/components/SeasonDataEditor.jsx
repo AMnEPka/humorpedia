@@ -153,6 +153,7 @@ function SortableStage({
   onUpdateTeam,
   sensors,
   handleGameDragEnd,
+  handleTeamDragEnd,
   seasonAllTeams = []
 }) {
   const {
@@ -228,6 +229,7 @@ function SortableStage({
               onUpdateTeam={onUpdateTeam}
               sensors={sensors}
               handleGameDragEnd={handleGameDragEnd}
+              handleTeamDragEnd={handleTeamDragEnd}
               seasonAllTeams={seasonAllTeams}
             />
             <div className="px-6 pb-4 pt-2 border-t">
@@ -242,6 +244,200 @@ function SortableStage({
             </div>
           </>
         )}
+      </Card>
+    </div>
+  );
+}
+
+// Sortable Team Component
+function SortableTeam({
+  team,
+  teamIndex,
+  gameIndex,
+  stageIndex,
+  onUpdate,
+  onRemove,
+  game,
+  seasonAllTeams,
+  sensors
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `team-${stageIndex}-${gameIndex}-${teamIndex}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-white">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="h-4 w-4" />
+              </button>
+              <h5 className="font-semibold">Команда {teamIndex + 1}</h5>
+            </div>
+            <Button 
+              onClick={() => onRemove(stageIndex, gameIndex, teamIndex)} 
+              size="sm" 
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Название команды</Label>
+              <GameTeamSelector
+                value={team}
+                onChange={(selectedTeam) => {
+                  if (selectedTeam) {
+                    onUpdate(stageIndex, gameIndex, teamIndex, selectedTeam);
+                  } else {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { 
+                      team_slug: '', 
+                      team_name: '', 
+                      city: '' 
+                    });
+                  }
+                }}
+                existingTeams={game.teams?.filter((t, idx) => idx !== teamIndex) || []}
+                seasonAllTeams={seasonAllTeams}
+                placeholder="Выберите команду..."
+                allowCustom={false}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Место</Label>
+              <Input 
+                type="number"
+                value={team.place || ''} 
+                onChange={(e) => onUpdate(stageIndex, gameIndex, teamIndex, { place: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Итого (автосумма)</Label>
+              <Input 
+                type="text"
+                inputMode="decimal"
+                value={(() => {
+                  // Автоматически вычисляем сумму баллов за все конкурсы
+                  if (game.contests && game.contests.length > 0 && team.scores) {
+                    const sum = game.contests.reduce((acc, contest) => {
+                      const score = team.scores[contest];
+                      return acc + (typeof score === 'number' ? score : 0);
+                    }, 0);
+                    return formatDecimalTrim(roundTo(sum, 2), 2);
+                  }
+                  if (team.total === null || team.total === undefined) return '';
+                  return formatDecimalTrim(roundTo(team.total, 2), 2);
+                })()}
+                onChange={(e) => {
+                  // Позволяем вручную изменить, если нужно
+                  let val = e.target.value.replace(',', '.');
+                  // Разрешаем только цифры, точку и минус в начале
+                  if (val && !/^-?\d*\.?\d*$/.test(val)) {
+                    return; // Игнорируем недопустимые символы
+                  }
+                  const manualTotal = parseFloat(val);
+                  if (!isNaN(manualTotal)) {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
+                  } else if (val === '') {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { total: 0 });
+                  }
+                }}
+                onBlur={(e) => {
+                  // При потере фокуса округляем значение
+                  let val = e.target.value.replace(',', '.');
+                  const manualTotal = parseFloat(val);
+                  if (!isNaN(manualTotal)) {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
+                  }
+                }}
+                readOnly={game.contests && game.contests.length > 0}
+                className={game.contests && game.contests.length > 0 ? "bg-muted" : ""}
+              />
+            </div>
+            <div className="space-y-2 flex flex-col">
+              <Label>Флаги</Label>
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={team.passed || false}
+                    onCheckedChange={(checked) => onUpdate(stageIndex, gameIndex, teamIndex, { passed: checked })}
+                  />
+                  <Label className="text-sm">Прошёл</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={team.is_winner || false}
+                    onCheckedChange={(checked) => onUpdate(stageIndex, gameIndex, teamIndex, { is_winner: checked })}
+                  />
+                  <Label className="text-sm">Победитель</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={team.is_additional || false}
+                    onCheckedChange={(checked) => onUpdate(stageIndex, gameIndex, teamIndex, { is_additional: checked })}
+                  />
+                  <Label className="text-sm">Добор</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Баллы по конкурсам */}
+          {game.contests && game.contests.length > 0 && (
+            <div className="mt-4 space-y-2 border-t pt-4">
+              <Label className="text-sm font-semibold">Баллы по конкурсам</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {game.contests.map((contest) => (
+                  <div key={contest} className="flex items-center gap-2">
+                    <Label className="text-xs w-24 truncate">{contest}:</Label>
+                    <ScoreInput 
+                      className="h-8 text-sm"
+                      value={team.scores?.[contest]}
+                      onBlur={(numValue) => {
+                        const newScores = { ...(team.scores || {}) };
+                        newScores[contest] = numValue;
+                        
+                        // Пересчитываем total
+                        const total = game.contests.reduce((acc, c) => {
+                          const score = newScores[c];
+                          if (typeof score === 'number' && isFinite(score)) {
+                            return acc + score;
+                          }
+                          return acc;
+                        }, 0);
+                        
+                        onUpdate(stageIndex, gameIndex, teamIndex, { 
+                          scores: newScores,
+                          total: roundTo(total, 2)
+                        });
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
@@ -268,7 +464,9 @@ function SortableGame({
   onUpdateTeam, 
   seasonAllTeams = [],
   isExpanded = true,
-  onToggleExpand
+  onToggleExpand,
+  sensors,
+  handleTeamDragEnd
 }) {
   const {
     attributes,
@@ -386,6 +584,8 @@ function SortableGame({
               onRemoveTeam={onRemoveTeam}
               onUpdateTeam={onUpdateTeam}
               seasonAllTeams={seasonAllTeams}
+              sensors={sensors}
+              handleTeamDragEnd={handleTeamDragEnd}
             />
             <div className="px-6 pb-4 pt-2 border-t">
               <button
@@ -427,6 +627,7 @@ function StageContent({
   onUpdateTeam,
   sensors,
   handleGameDragEnd,
+  handleTeamDragEnd,
   seasonAllTeams = []
 }) {
   const [expandedGames, setExpandedGames] = useState(new Set());
@@ -554,6 +755,8 @@ function StageContent({
                       seasonAllTeams={seasonAllTeams}
                       isExpanded={isExpanded}
                       onToggleExpand={() => toggleGame(gameIndex)}
+                      sensors={sensors}
+                      handleTeamDragEnd={handleTeamDragEnd}
                     />
                   );
                 })}
@@ -583,7 +786,9 @@ function GameContent({
   onAddTeam, 
   onRemoveTeam, 
   onUpdateTeam, 
-  seasonAllTeams = [] 
+  seasonAllTeams = [],
+  sensors,
+  handleTeamDragEnd
 }) {
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
@@ -722,161 +927,33 @@ function GameContent({
           </Button>
         </div>
         {game.teams && game.teams.length > 0 ? (
-          <div className="space-y-2">
-            {game.teams.map((team, teamIndex) => (
-              <Card key={teamIndex} className="bg-white">
-                <CardContent className="pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h5 className="font-semibold">Команда {teamIndex + 1}</h5>
-                    <Button 
-                      onClick={() => onRemoveTeam(stageIndex, gameIndex, teamIndex)} 
-                      size="sm" 
-                      variant="ghost"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label>Название команды</Label>
-                      <GameTeamSelector
-                        value={team}
-                        onChange={(selectedTeam) => {
-                          if (selectedTeam) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, selectedTeam);
-                          } else {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
-                              team_slug: '', 
-                              team_name: '', 
-                              city: '' 
-                            });
-                          }
-                        }}
-                        existingTeams={game.teams?.filter((t, idx) => idx !== teamIndex) || []}
-                        seasonAllTeams={seasonAllTeams}
-                        placeholder="Выберите команду..."
-                        allowCustom={false}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Место</Label>
-                      <Input 
-                        type="number"
-                        value={team.place || ''} 
-                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { place: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Итого (автосумма)</Label>
-                      <Input 
-                        type="text"
-                        inputMode="decimal"
-                        value={(() => {
-                          // Автоматически вычисляем сумму баллов за все конкурсы
-                          if (game.contests && game.contests.length > 0 && team.scores) {
-                            const sum = game.contests.reduce((acc, contest) => {
-                              const score = team.scores[contest];
-                              return acc + (typeof score === 'number' ? score : 0);
-                            }, 0);
-                            return formatDecimalTrim(roundTo(sum, 2), 2);
-                          }
-                          if (team.total === null || team.total === undefined) return '';
-                          return formatDecimalTrim(roundTo(team.total, 2), 2);
-                        })()}
-                        onChange={(e) => {
-                          // Позволяем вручную изменить, если нужно
-                          let val = e.target.value.replace(',', '.');
-                          // Разрешаем только цифры, точку и минус в начале
-                          if (val && !/^-?\d*\.?\d*$/.test(val)) {
-                            return; // Игнорируем недопустимые символы
-                          }
-                          const manualTotal = parseFloat(val);
-                          if (!isNaN(manualTotal)) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
-                          } else if (val === '') {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: 0 });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          // При потере фокуса округляем значение
-                          let val = e.target.value.replace(',', '.');
-                          const manualTotal = parseFloat(val);
-                          if (!isNaN(manualTotal)) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
-                          }
-                        }}
-                        readOnly={game.contests && game.contests.length > 0}
-                        className={game.contests && game.contests.length > 0 ? "bg-muted" : ""}
-                      />
-                    </div>
-                    <div className="space-y-2 flex flex-col">
-                      <Label>Флаги</Label>
-                      <div className="flex flex-col gap-2 mt-2">
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={team.passed || false}
-                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { passed: checked })}
-                          />
-                          <Label className="text-sm">Прошёл</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={team.is_winner || false}
-                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { is_winner: checked })}
-                          />
-                          <Label className="text-sm">Победитель</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={team.is_additional || false}
-                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { is_additional: checked })}
-                          />
-                          <Label className="text-sm">Добор</Label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Баллы по конкурсам */}
-                  {game.contests && game.contests.length > 0 && (
-                    <div className="mt-4 space-y-2 border-t pt-4">
-                      <Label className="text-sm font-semibold">Баллы по конкурсам</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {game.contests.map((contest) => (
-                          <div key={contest} className="flex items-center gap-2">
-                            <Label className="text-xs w-24 truncate">{contest}:</Label>
-                            <ScoreInput 
-                              className="h-8 text-sm"
-                              value={team.scores?.[contest]}
-                              onBlur={(numValue) => {
-                                const newScores = { ...(team.scores || {}) };
-                                newScores[contest] = numValue;
-                                
-                                // Пересчитываем total
-                                const total = game.contests.reduce((acc, c) => {
-                                  const score = newScores[c];
-                                  if (typeof score === 'number' && isFinite(score)) {
-                                    return acc + score;
-                                  }
-                                  return acc;
-                                }, 0);
-                                
-                                onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
-                                  scores: newScores,
-                                  total: roundTo(total, 2)
-                                });
-                              }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(e) => handleTeamDragEnd(e, stageIndex, gameIndex)}
+          >
+            <SortableContext
+              items={(game.teams || []).map((_, idx) => `team-${stageIndex}-${gameIndex}-${idx}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {game.teams.map((team, teamIndex) => (
+                  <SortableTeam
+                    key={teamIndex}
+                    team={team}
+                    teamIndex={teamIndex}
+                    gameIndex={gameIndex}
+                    stageIndex={stageIndex}
+                    onUpdate={onUpdateTeam}
+                    onRemove={onRemoveTeam}
+                    game={game}
+                    seasonAllTeams={seasonAllTeams}
+                    sensors={sensors}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         ) : (
           <p className="text-sm text-muted-foreground">Нет команд. Добавьте команду для начала.</p>
         )}
@@ -973,6 +1050,30 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
         game.order = idx + 1;
       });
       newData.stages[stageIndex].games = newGames;
+      onChange(newData);
+    }
+  }, [data, onChange]);
+
+  // Drag and drop для команд внутри игры
+  const handleTeamDragEnd = useCallback((event, stageIndex, gameIndex) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const activeId = active.id.toString();
+    const overId = over.id.toString();
+    
+    // Извлекаем индексы из ID вида "team-stageIndex-gameIndex-teamIndex"
+    const activeMatch = activeId.match(/team-(\d+)-(\d+)-(\d+)/);
+    const overMatch = overId.match(/team-(\d+)-(\d+)-(\d+)/);
+    
+    if (!activeMatch || !overMatch) return;
+    const activeTeamIndex = parseInt(activeMatch[3]);
+    const overTeamIndex = parseInt(overMatch[3]);
+    
+    if (activeTeamIndex !== overTeamIndex && data.stages && data.stages[stageIndex]?.games?.[gameIndex]?.teams) {
+      const newData = { ...data };
+      const newTeams = arrayMove(newData.stages[stageIndex].games[gameIndex].teams, activeTeamIndex, overTeamIndex);
+      newData.stages[stageIndex].games[gameIndex].teams = newTeams;
       onChange(newData);
     }
   }, [data, onChange]);
@@ -1681,6 +1782,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
                           onUpdateTeam={updateTeam}
                           sensors={sensors}
                           handleGameDragEnd={handleGameDragEnd}
+                          handleTeamDragEnd={handleTeamDragEnd}
                           seasonAllTeams={data.all_teams || []}
                         />
                       </div>
