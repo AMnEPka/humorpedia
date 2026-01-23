@@ -2762,6 +2762,123 @@ async def update_kvn(id: str, data: KVNUpdate):
         await linking_service.update_person_links("kvn", kvn_uuid, data.person_ids)
     # Note: team_ids are already saved in the document via update_data, no additional linking needed
     
+    # Автоматически обновляем соседние сезоны, если изменился slug, year или league_slug
+    should_update_adjacent = False
+    old_slug = kvn.get("slug", "")
+    new_slug = update_data.get("slug", old_slug)
+    old_season_data = kvn.get("season_data", {})
+    new_season_data = update_data.get("season_data", old_season_data)
+    
+    # Проверяем, изменился ли slug
+    if old_slug != new_slug:
+        should_update_adjacent = True
+    
+    # Проверяем, изменился ли year или league_slug в season_data
+    if new_season_data:
+        old_year = old_season_data.get("year", 0)
+        new_year = new_season_data.get("year", 0)
+        old_league_slug = old_season_data.get("league_slug", "")
+        new_league_slug = new_season_data.get("league_slug", "")
+        
+        if old_year != new_year or old_league_slug != new_league_slug:
+            should_update_adjacent = True
+    
+    if should_update_adjacent:
+        # Сохраняем старые значения соседних сезонов
+        old_prev_season = old_season_data.get("prev_season", "")
+        old_next_season = old_season_data.get("next_season", "")
+        
+        # Получаем обновленный документ
+        updated_doc = await db.kvn.find_one({"_id": kvn_id})
+        if updated_doc:
+            # Пересчитываем соседние сезоны для обновленного сезона
+            prev_season_slug, next_season_slug = await find_adjacent_seasons(db, updated_doc)
+            
+            # Обновляем season_data с новыми соседними сезонами
+            if updated_doc.get("season_data"):
+                updated_doc["season_data"]["prev_season"] = prev_season_slug or ""
+                updated_doc["season_data"]["next_season"] = next_season_slug or ""
+            else:
+                updated_doc["season_data"] = {
+                    "prev_season": prev_season_slug or "",
+                    "next_season": next_season_slug or ""
+                }
+            
+            await db.kvn.update_one(
+                {"_id": kvn_id},
+                {"$set": {"season_data": updated_doc["season_data"]}}
+            )
+            
+            # Пересчитываем соседние сезоны для предыдущего сезона (если он был)
+            if old_prev_season:
+                prev_season_doc = await db.kvn.find_one({"slug": old_prev_season})
+                if prev_season_doc:
+                    prev_prev_slug, prev_next_slug = await find_adjacent_seasons(db, prev_season_doc)
+                    if prev_season_doc.get("season_data"):
+                        prev_season_doc["season_data"]["prev_season"] = prev_prev_slug or ""
+                        prev_season_doc["season_data"]["next_season"] = prev_next_slug or ""
+                    else:
+                        prev_season_doc["season_data"] = {
+                            "prev_season": prev_prev_slug or "",
+                            "next_season": prev_next_slug or ""
+                        }
+                    await db.kvn.update_one(
+                        {"_id": prev_season_doc["_id"]},
+                        {"$set": {"season_data": prev_season_doc["season_data"]}}
+                    )
+            
+            # Пересчитываем соседние сезоны для следующего сезона (если он был)
+            if old_next_season:
+                next_season_doc = await db.kvn.find_one({"slug": old_next_season})
+                if next_season_doc:
+                    next_prev_slug, next_next_slug = await find_adjacent_seasons(db, next_season_doc)
+                    if next_season_doc.get("season_data"):
+                        next_season_doc["season_data"]["prev_season"] = next_prev_slug or ""
+                        next_season_doc["season_data"]["next_season"] = next_next_slug or ""
+                    else:
+                        next_season_doc["season_data"] = {
+                            "prev_season": next_prev_slug or "",
+                            "next_season": next_next_slug or ""
+                        }
+                    await db.kvn.update_one(
+                        {"_id": next_season_doc["_id"]},
+                        {"$set": {"season_data": next_season_doc["season_data"]}}
+                    )
+            
+            logger.info(f"Обновлены соседние сезоны для сезона {new_slug}")
+            
+            # Если slug изменился, нужно обновить все сезоны, которые ссылаются на старый slug
+            if old_slug != new_slug and old_slug:
+                # Ищем все сезоны, которые ссылаются на старый slug в prev_season или next_season
+                seasons_to_update = await db.kvn.find({
+                    "$or": [
+                        {"season_data.prev_season": old_slug},
+                        {"season_data.next_season": old_slug}
+                    ]
+                }).to_list(1000)
+                
+                # Обновляем найденные сезоны
+                for season_to_update in seasons_to_update:
+                    # Заменяем старый slug на новый в ссылках
+                    if season_to_update.get("season_data"):
+                        if season_to_update["season_data"].get("prev_season") == old_slug:
+                            season_to_update["season_data"]["prev_season"] = new_slug
+                        if season_to_update["season_data"].get("next_season") == old_slug:
+                            season_to_update["season_data"]["next_season"] = new_slug
+                        
+                        # Пересчитываем соседние сезоны для этого сезона
+                        prev_slug, next_slug = await find_adjacent_seasons(db, season_to_update)
+                        season_to_update["season_data"]["prev_season"] = prev_slug or ""
+                        season_to_update["season_data"]["next_season"] = next_slug or ""
+                        
+                        await db.kvn.update_one(
+                            {"_id": season_to_update["_id"]},
+                            {"$set": {"season_data": season_to_update["season_data"]}}
+                        )
+                
+                if seasons_to_update:
+                    logger.info(f"Обновлены {len(seasons_to_update)} сезонов, которые ссылались на старый slug {old_slug}")
+    
     # Return updated document, converting ObjectIds to strings
     updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
     if updated:
