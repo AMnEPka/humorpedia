@@ -2139,11 +2139,21 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         year = extract_year_from_slug(slug) or extract_year_from_slug(full_path)
     
     if not league_slug:
-        # Пытаемся извлечь из full_path (формат: kvn/league-slug/season-slug)
-        full_path = current_season.get("full_path", "")
-        path_parts = full_path.split("/")
-        if len(path_parts) >= 2 and path_parts[0] == "kvn":
-            league_slug = path_parts[1]
+        # Приоритет 1: пытаемся получить из родительского ресурса (самый надежный способ)
+        parent_id = current_season.get("parent_id")
+        if parent_id:
+            parent = await db.kvn.find_one({"id": parent_id})
+            if not parent:
+                parent = await db.kvn.find_one({"_id": parent_id})
+            if parent:
+                league_slug = get_league_slug_from_parent(parent)
+        
+        # Приоритет 2: пытаемся извлечь из full_path (формат: kvn/league-slug/season-slug)
+        if not league_slug:
+            full_path = current_season.get("full_path", "")
+            path_parts = full_path.split("/")
+            if len(path_parts) >= 2 and path_parts[0] == "kvn":
+                league_slug = path_parts[1]
     
     if not year or not league_slug:
         return "", ""

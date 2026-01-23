@@ -207,10 +207,10 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const prevSeason = seasonData.prev_season;
   const nextSeason = seasonData.next_season;
   
-  // Извлекаем league_slug из текущего URL, если он не заполнен в seasonData
+  // Приоритет 1: Извлекаем league_slug из текущего URL (самый надежный способ)
   // Формат URL: /kvn/vl-kvn/vl-2010 -> league_slug = "vl-kvn"
-  let league_slug = seasonLeagueSlug;
-  if (!league_slug && location.pathname) {
+  let league_slug = '';
+  if (location.pathname) {
     const pathParts = location.pathname.split('/').filter(Boolean);
     // Ищем структуру: kvn / league-slug / season-slug
     if (pathParts.length >= 3 && pathParts[0] === 'kvn') {
@@ -221,12 +221,17 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     }
   }
   
-  // Если все еще нет league_slug, пытаемся извлечь из full_path сезона
+  // Приоритет 2: Если все еще нет league_slug, пытаемся извлечь из full_path сезона
   if (!league_slug && season?.full_path) {
     const pathParts = season.full_path.split('/').filter(Boolean);
     if (pathParts.length >= 2 && pathParts[0] === 'kvn') {
       league_slug = pathParts[1];
     }
+  }
+  
+  // Приоритет 3: Используем league_slug из seasonData только если не нашли выше
+  if (!league_slug) {
+    league_slug = seasonLeagueSlug;
   }
   
   // Функция для извлечения года из slug
