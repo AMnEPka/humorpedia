@@ -430,24 +430,26 @@ def _stage_code(stage_name: str) -> str:
 
 
 def _league_code_from_slug(league_slug: str) -> str:
-    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ')"""
+    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ', 'ml-kvn' -> 'МЛ')"""
     if league_slug == "vl-kvn":
         return "ВЛ"
+    if league_slug == "ml-kvn":
+        return "МЛ"
     # Add more leagues later
     return league_slug or ""
 
 
-async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
+async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List[Dict]:
     """
-    Collect all VL (Высшая лига) results for a team from all seasons.
+    Collect all results for a team from all seasons of a specific league.
     Returns list of result dicts with: year, league, stage, stage_name, result, place, out_of, date, game_name
     """
-    if not team_slug:
+    if not team_slug or not league_slug:
         return []
     
-    # Query all VL seasons
+    # Query all seasons of the specified league
     seasons = await db.kvn.find({
-        "season_data.league_slug": "vl-kvn"
+        "season_data.league_slug": league_slug
     }).to_list(1000)
     
     results = []
@@ -464,7 +466,6 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
             else:
                 continue
         
-        league_slug = season_data.get("league_slug", "")
         league = _league_code_from_slug(league_slug)
         
         stages = season_data.get("stages") or []
@@ -494,6 +495,7 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
                 place = our_team.get("place")
                 is_winner = our_team.get("is_winner", False)
                 our_total = our_team.get("total")
+                passed = our_team.get("passed")
                 
                 # Special handling for champions: if is_winner=True, treat as place=1
                 # This handles cases like 1992 final where both teams are champions (place=0, is_winner=True)
@@ -512,7 +514,17 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
                         if has_first_place:
                             place = 1
                 
-                if place is None:
+                # Determine result text
+                # If we have a valid place (> 0), show "X из Y"
+                # If place is 0 or None but we have passed status, show "Прошел" or "Не прошел"
+                # If neither, skip this entry
+                if place is not None and place > 0:
+                    result_text = f"{place} из {n}"
+                elif passed is not None:
+                    # passed can be True or False
+                    result_text = "Прошел" if passed else "Не прошел"
+                else:
+                    # No valid place and no passed status - skip this entry
                     continue
                 
                 results.append({
@@ -520,7 +532,7 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
                     "league": league,
                     "stage": stage_code,
                     "stage_name": stage_name,
-                    "result": f"{place} из {n}",
+                    "result": result_text,
                     "place": place,
                     "out_of": n,
                     "date": game.get("date") or "",
@@ -554,6 +566,61 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
     return results
 
 
+async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
+    """
+    Collect all VL (Высшая лига) results for a team from all seasons.
+    Returns list of result dicts with: year, league, stage, stage_name, result, place, out_of, date, game_name
+    """
+    return await _get_team_league_results(team_slug, "vl-kvn", db)
+
+
+async def _get_team_all_results(team_slug: str, db) -> List[Dict]:
+    """
+    Collect all results for a team from all supported leagues (VL, ML, etc.).
+    Returns combined list of result dicts sorted by year and stage.
+    """
+    if not team_slug:
+        return []
+    
+    # Get results from all supported leagues
+    all_results = []
+    
+    # Высшая лига
+    vl_results = await _get_team_league_results(team_slug, "vl-kvn", db)
+    all_results.extend(vl_results)
+    
+    # Международная лига
+    ml_results = await _get_team_league_results(team_slug, "ml-kvn", db)
+    all_results.extend(ml_results)
+    
+    # Add more leagues here in the future
+    
+    # Sort: first by year (ascending), then by stage order within year
+    def _stage_order(stage: str) -> int:
+        """Convert stage to numeric order for sorting"""
+        if not stage:
+            return 99
+        stage_lower = stage.lower()
+        # Check exact matches first
+        if stage == "1/8" or "1/8" in stage:
+            return 1
+        if stage == "1/4" or "1/4" in stage:
+            return 2
+        if stage == "1/2" or "полу" in stage_lower:
+            return 3
+        if "финал" in stage_lower and "полу" not in stage_lower:
+            return 4
+        return 99  # Unknown stages go last
+    
+    def sort_key(r):
+        year = r.get("year", 0)
+        stage = r.get("stage") or ""
+        return (year, _stage_order(stage))
+    
+    all_results.sort(key=sort_key)
+    return all_results
+
+
 def _build_team_games_table_html(results: List[Dict]) -> str:
     """
     Build HTML table for team games results.
@@ -562,11 +629,13 @@ def _build_team_games_table_html(results: List[Dict]) -> str:
     if not results:
         return ""
     
-    # Build legend (only ВЛ for now, can extend later)
+    # Build legend for all leagues used
     leagues_used = sorted(set(r.get("league") for r in results if r.get("league")))
     legend_parts = []
     if "ВЛ" in leagues_used:
         legend_parts.append("ВЛ – Высшая лига")
+    if "МЛ" in leagues_used:
+        legend_parts.append("МЛ – Международная лига")
     # Add more leagues later: ГК – Голосящий КиВиН, etc.
     
     legend_html = ""
@@ -602,7 +671,7 @@ def _build_team_games_table_html(results: List[Dict]) -> str:
 
 async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> List[dict]:
     """
-    Update or create "Список игр команды" module with auto-generated table from VL seasons.
+    Update or create "Список игр команды" module with auto-generated table from all supported leagues (VL, ML, etc.).
     Only for KVN teams (team_type='kvn').
     REMOVES ALL existing "Список игр команды" modules (manual or auto) and creates a single auto-generated one.
     Returns updated modules list.
@@ -615,8 +684,8 @@ async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> 
     if not team or team.get("team_type") != "kvn":
         return modules
     
-    # Get VL results
-    results = await _get_team_vl_results(team_slug, db)
+    # Get results from all supported leagues (VL, ML, etc.)
+    results = await _get_team_all_results(team_slug, db)
     
     # Remove ALL existing "Список игр команды" modules (manual or auto) to prevent duplicates
     # We identify them by:
@@ -684,7 +753,7 @@ async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> 
             "title": target_title,
             "content": _build_team_games_table_html(results) if results else "",
             "auto_generated": True,  # Mark as auto-generated
-            "source": "vl-kvn"
+            "source": "kvn-leagues"  # Updated to reflect multiple leagues
         }
     }
     updated_modules.append(new_module)
