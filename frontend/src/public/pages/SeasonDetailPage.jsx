@@ -9,6 +9,7 @@ import publicApi from '../utils/api';
 import { StageSection } from '../components/StageSection';
 import { sanitizeHTML, containsHTML } from '../utils/sanitize';
 import { usePageTitle } from '@/utils/pageTitle';
+import { teamStorage } from '../utils/teamStorage';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -99,75 +100,40 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     };
   }, [location.pathname, initialSeasonData]);
 
-  // Загружаем полные названия команд из базы данных для winners и all_teams
+  // Загружаем полные названия команд из локального хранилища и API
   useEffect(() => {
-    let cancelled = false;
-    const loadTeamNames = async () => {
-      if (!season?.season_data) return;
-      
-      const { winners = [], all_teams = [] } = season.season_data;
-      const slugsToLoad = new Set();
-      
-      // Собираем все slug из winners и all_teams
-      winners.forEach(winner => {
-        const slug = typeof winner === 'string' ? winner : (winner.slug || '');
-        if (slug && !teamNames[slug]) {
-          slugsToLoad.add(slug);
-        }
-      });
-      
-      all_teams.forEach(team => {
-        const slug = typeof team === 'string' ? team : (team.slug || '');
-        if (slug && !teamNames[slug]) {
-          slugsToLoad.add(slug);
-        }
-      });
-      
-      if (slugsToLoad.size === 0) return;
-      
-      const namesMap = { ...teamNames };
-      // Загружаем команды параллельно
-      await Promise.all(
-        Array.from(slugsToLoad).map(async (slug) => {
-          if (cancelled) return;
-          try {
-            const res = await publicApi.getTeam(slug);
-            if (cancelled) {
-              return;
-            }
-            const teamData = res.data;
-            // Используем полное название из базы данных
-            const teamName = teamData.name || teamData.title || '';
-            const cityFromFacts = getCityFromFacts(teamData.facts);
-            namesMap[slug] = {
-              name: teamName,
-              city: cityFromFacts
-            };
-          } catch (err) {
-            if (cancelled) return;
-            // Если команда не найдена, используем данные из сезона
-            const winner = winners.find(w => (typeof w === 'string' ? w : w.slug) === slug);
-            const team = all_teams.find(t => (typeof t === 'string' ? t : t.slug) === slug);
-            const teamData = winner || team;
-            if (teamData) {
-              const name = typeof teamData === 'string' ? teamData : (teamData.name || slug);
-              const city = typeof teamData === 'object' ? (teamData.city || '') : '';
-              namesMap[slug] = { name, city };
-            }
-          }
-        })
-      );
-      
-      if (!cancelled) {
-        setTeamNames(namesMap);
-      }
-    };
+    if (!season?.season_data) return;
     
-    loadTeamNames();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const { winners = [], all_teams = [] } = season.season_data;
+    const slugs = new Set();
+    
+    // Собираем все slug
+    winners.forEach(w => {
+      const slug = typeof w === 'string' ? w : w.slug;
+      if (slug) slugs.add(slug);
+    });
+    
+    all_teams.forEach(t => {
+      const slug = typeof t === 'string' ? t : t.slug;
+      if (slug) slugs.add(slug);
+    });
+    
+    const slugsArray = Array.from(slugs);
+    
+    // Сначала получаем из локального хранилища
+    const stored = teamStorage.getTeams(slugsArray);
+    
+    // Если есть данные команд в ответе API, обновляем хранилище
+    if (season.team_data && Object.keys(season.team_data).length > 0) {
+      teamStorage.updateFromSeason(season.team_data, season.team_data_version);
+      
+      // Объединяем данные из хранилища и API (API имеет приоритет)
+      const fromApi = season.team_data;
+      setTeamNames({ ...stored, ...fromApi });
+    } else {
+      // Используем только данные из хранилища
+      setTeamNames(stored);
+    }
   }, [season]);
 
   if (loading) {

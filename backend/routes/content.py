@@ -2460,6 +2460,42 @@ async def get_kvn_jury_stats(
     return result
 
 
+def _get_city_from_facts(facts: dict) -> str:
+    """Extract city from team facts, handling various formats"""
+    if not isinstance(facts, dict):
+        return ""
+    
+    # Ищем город по разным вариантам ключей
+    city_value = (
+        facts.get("Город") or 
+        facts.get("город") or 
+        facts.get("Города") or 
+        facts.get("города") or 
+        ""
+    )
+    
+    if not city_value:
+        return ""
+    
+    # Если это строка, обрабатываем HTML и разделители
+    if isinstance(city_value, str):
+        # Удаляем HTML-теги (особенно <br>)
+        cleaned = re.sub(r'<br\s*/?>', '\n', city_value, flags=re.IGNORECASE)
+        cleaned = re.sub(r'<[^>]+>', '', cleaned).strip()
+        
+        # Разделяем по новой строке, запятой или слэшу
+        cities = [
+            c.strip() 
+            for c in re.split(r'[\n,;/]', cleaned) 
+            if c.strip()
+        ]
+        
+        # Возвращаем все города через запятую
+        return ', '.join(cities) if cities else ""
+    
+    return str(city_value).strip()
+
+
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
 async def get_kvn_by_path(path: str):
     """Get KVN page by full path with children and breadcrumbs"""
@@ -2531,6 +2567,71 @@ async def get_kvn_by_path(path: str):
             "prev_season": prev_season_slug or "",
             "next_season": next_season_slug or ""
         }
+    
+    # Загружаем данные команд из сезона
+    team_data = {}
+    if kvn.get("season_data"):
+        season_data = kvn["season_data"]
+        team_slugs = set()
+        
+        # Собираем slug из winners
+        for winner in season_data.get("winners", []):
+            if isinstance(winner, str):
+                if winner:
+                    team_slugs.add(winner)
+            elif isinstance(winner, dict):
+                slug = winner.get("slug")
+                if slug:
+                    team_slugs.add(slug)
+        
+        # Собираем slug из all_teams
+        for team in season_data.get("all_teams", []):
+            if isinstance(team, str):
+                if team:
+                    team_slugs.add(team)
+            elif isinstance(team, dict):
+                slug = team.get("slug")
+                if slug:
+                    team_slugs.add(slug)
+        
+        # Собираем slug из stages -> games -> teams
+        for stage in season_data.get("stages", []):
+            for game in stage.get("games", []):
+                for team in game.get("teams", []):
+                    if isinstance(team, dict):
+                        slug = team.get("team_slug")
+                        if slug:
+                            team_slugs.add(slug)
+        
+        # Загружаем данные команд одним запросом
+        if team_slugs:
+            teams_cursor = db.teams.find(
+                {"slug": {"$in": list(team_slugs)}},
+                {
+                    "slug": 1,
+                    "name": 1,
+                    "title": 1,
+                    "facts": 1,
+                    "updated_at": 1
+                }
+            )
+            teams_list = await teams_cursor.to_list(length=len(team_slugs))
+            
+            # Формируем словарь по slug
+            for team in teams_list:
+                slug = team.get("slug")
+                if slug:
+                    team_name = team.get("name") or team.get("title") or ""
+                    city = _get_city_from_facts(team.get("facts", {}))
+                    team_data[slug] = {
+                        "name": team_name,
+                        "city": city,
+                        "updated_at": team.get("updated_at")
+                    }
+    
+    # Добавляем данные команд в ответ
+    kvn["team_data"] = team_data
+    kvn["team_data_version"] = datetime.now(timezone.utc).isoformat()
     
     # Remove MongoDB _id from response
     if "_id" in kvn:
