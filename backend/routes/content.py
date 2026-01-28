@@ -2220,7 +2220,8 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         # Приоритет 2: пытаемся извлечь из full_path (формат: kvn/league-slug/season-slug)
         if not league_slug:
             full_path = current_season.get("full_path", "")
-            path_parts = full_path.split("/")
+            # Убираем начальный слэш, если есть, и разбиваем путь
+            path_parts = full_path.lstrip("/").split("/")
             if len(path_parts) >= 2 and path_parts[0] == "kvn":
                 league_slug = path_parts[1]
     
@@ -2253,6 +2254,53 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         if next_season:
             next_season_slug = next_season.get("slug", "")
     
+    # Вариант 1.5: ищем сезоны без season_data, но с правильным full_path и годом в slug
+    # Это помогает найти сезоны, созданные вручную без полного season_data
+    if not prev_season_slug or not next_season_slug:
+        # Ищем все сезоны с правильным full_path паттерном
+        escaped_league = re.escape(league_slug)
+        for target_year in [prev_year, next_year]:
+            if target_year == prev_year and prev_season_slug:
+                continue
+            if target_year == next_year and next_season_slug:
+                continue
+            
+            # Ищем сезоны с годом в full_path или slug
+            candidates = await db.kvn.find({
+                "$or": [
+                    {"full_path": {"$regex": f"kvn/{escaped_league}/.*{target_year}"}},
+                    {"slug": {"$regex": f".*{target_year}"}}
+                ]
+            }, {"slug": 1, "season_data": 1, "full_path": 1, "parent_id": 1}).to_list(20)
+            
+            for candidate in candidates:
+                # Проверяем, что это действительно сезон нужного года
+                c_year = candidate.get("season_data", {}).get("year", 0)
+                if not c_year:
+                    c_year = extract_year_from_slug(candidate.get("slug", ""))
+                if not c_year:
+                    c_year = extract_year_from_slug(candidate.get("full_path", ""))
+                
+                # Проверяем, что это сезон той же лиги (по parent_id или full_path)
+                is_same_league = False
+                candidate_parent_id = candidate.get("parent_id")
+                current_parent_id = current_season.get("parent_id")
+                if candidate_parent_id and current_parent_id and candidate_parent_id == current_parent_id:
+                    is_same_league = True
+                else:
+                    # Проверяем по full_path
+                    candidate_full_path = candidate.get("full_path", "")
+                    if candidate_full_path.startswith(f"kvn/{league_slug}/") or f"/{league_slug}/" in candidate_full_path:
+                        is_same_league = True
+                
+                if c_year == target_year and is_same_league:
+                    found_slug = candidate.get("slug", "")
+                    if target_year == prev_year and not prev_season_slug:
+                        prev_season_slug = found_slug
+                    elif target_year == next_year and not next_season_slug:
+                        next_season_slug = found_slug
+                    break
+    
     # Вариант 2: по parent_id (если сезоны - дочерние страницы лиги)
     if not prev_season_slug or not next_season_slug:
         parent_id = current_season.get("parent_id")
@@ -2268,7 +2316,11 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
             for season in all_seasons:
                 s_year = season.get("season_data", {}).get("year", 0)
                 if not s_year:
+                    # Пытаемся извлечь год из slug
                     s_year = extract_year_from_slug(season.get("slug", ""))
+                if not s_year:
+                    # Если не нашли в slug, пытаемся извлечь из full_path
+                    s_year = extract_year_from_slug(season.get("full_path", ""))
                 if s_year:
                     seasons_by_year[s_year] = season.get("slug", "")
             
@@ -2303,7 +2355,7 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
             for pattern in patterns:
                 seasons = await db.kvn.find({
                     "full_path": {"$regex": pattern}
-                }, {"slug": 1, "season_data": 1}).to_list(10)
+                }, {"slug": 1, "season_data": 1, "full_path": 1}).to_list(10)
                 
                 # Проверяем каждый найденный сезон, чтобы убедиться, что год совпадает
                 for season in seasons:
@@ -2312,6 +2364,9 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
                     if not s_year:
                         # Если нет в season_data, извлекаем из slug
                         s_year = extract_year_from_slug(season.get("slug", ""))
+                    if not s_year:
+                        # Если не нашли в slug, пытаемся извлечь из full_path
+                        s_year = extract_year_from_slug(season.get("full_path", ""))
                     
                     # Если год совпадает - это наш сезон
                     if s_year == target_year:

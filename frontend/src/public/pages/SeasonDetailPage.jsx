@@ -173,6 +173,17 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const prevSeason = seasonData.prev_season;
   const nextSeason = seasonData.next_season;
   
+  // Отладочная информация (можно убрать после проверки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Season navigation debug:', {
+      prevSeason,
+      nextSeason,
+      seasonLeagueSlug,
+      full_path: season?.full_path,
+      pathname: location.pathname
+    });
+  }
+  
   // Приоритет 1: Извлекаем league_slug из текущего URL (самый надежный способ)
   // Формат URL: /kvn/vl-kvn/vl-2010 -> league_slug = "vl-kvn"
   let league_slug = '';
@@ -189,7 +200,9 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   
   // Приоритет 2: Если все еще нет league_slug, пытаемся извлечь из full_path сезона
   if (!league_slug && season?.full_path) {
-    const pathParts = season.full_path.split('/').filter(Boolean);
+    // Убираем начальный слэш, если есть
+    const cleanPath = season.full_path.startsWith('/') ? season.full_path.substring(1) : season.full_path;
+    const pathParts = cleanPath.split('/').filter(Boolean);
     if (pathParts.length >= 2 && pathParts[0] === 'kvn') {
       league_slug = pathParts[1];
     }
@@ -255,15 +268,16 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       {/* Header with navigation */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          {prevSeason && league_slug && (
+          {prevSeason && league_slug ? (
             <Button variant="outline" asChild>
               <Link to={`/kvn/${league_slug}/${prevSeason}`}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 {prevSeasonYear}
               </Link>
             </Button>
+          ) : (
+            <div />
           )}
-          {(!prevSeason || !league_slug) && <div />}
           
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
@@ -274,15 +288,16 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
             </p>
           </div>
           
-          {nextSeason && league_slug && (
+          {nextSeason && league_slug ? (
             <Button variant="outline" asChild>
               <Link to={`/kvn/${league_slug}/${nextSeason}`}>
                 {nextSeasonYear}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+          ) : (
+            <div />
           )}
-          {(!nextSeason || !league_slug) && <div />}
         </div>
       </div>
 
