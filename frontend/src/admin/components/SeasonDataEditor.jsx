@@ -1388,7 +1388,40 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages) return;
     newData.stages = [...newData.stages];
     if (!newData.stages[stageIndex].games) return;
+
+    // Если в удаляемой игре есть команды с флагом "добор" — чистим их из additional_teams,
+    // но только если такие команды больше не встречаются в оставшихся играх стадии.
+    const stageBefore = newData.stages[stageIndex];
+    const removedGame = stageBefore.games?.[gameIndex];
+    const removedAdditionalNames = (removedGame?.teams || [])
+      .filter(t => t?.is_additional)
+      .map(t => String(t?.team_name || '').trim())
+      .filter(Boolean);
+
     newData.stages[stageIndex].games = newData.stages[stageIndex].games.filter((_, i) => i !== gameIndex);
+
+    if (removedAdditionalNames.length > 0) {
+      // Клонируем stage, чтобы не мутировать ссылку на прежний объект
+      newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
+      const stageAfter = newData.stages[stageIndex];
+      const currentAdditional = Array.isArray(stageAfter.additional_teams) ? [...stageAfter.additional_teams] : [];
+
+      const stillHasName = (name) => {
+        const target = String(name || '').trim();
+        if (!target) return false;
+        return (stageAfter.games || []).some(g =>
+          (g.teams || []).some(t => t?.is_additional && String(t?.team_name || '').trim() === target)
+        );
+      };
+
+      stageAfter.additional_teams = currentAdditional.filter(n => {
+        const name = String(n || '').trim();
+        if (!name) return false;
+        // Удаляем только те имена, которые были "добором" в удаленной игре и больше нигде не отмечены
+        if (removedAdditionalNames.includes(name) && !stillHasName(name)) return false;
+        return true;
+      });
+    }
     onChange(newData);
   };
 
@@ -1402,6 +1435,11 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages[stageIndex].games[gameIndex].teams) {
       newData.stages[stageIndex].games[gameIndex].teams = [];
     }
+
+    const prevTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
+    const prevName = String(prevTeam.team_name || '').trim();
+    const prevIsAdditional = !!prevTeam.is_additional;
+
     newData.stages[stageIndex].games[gameIndex] = {
       ...newData.stages[stageIndex].games[gameIndex]
     };
@@ -1412,6 +1450,65 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       ...newData.stages[stageIndex].games[gameIndex].teams[teamIndex],
       ...updates
     };
+
+    // Автоматически поддерживаем "Доборы после стадии" в sync с флагом "Добор"
+    // Поведение: добавляем имя, когда ставят флаг, убираем — когда снимают.
+    // При смене названия у команды-добора обновляем имя в списке.
+    const nextTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
+    const nextName = String(nextTeam.team_name || '').trim();
+    const nextIsAdditional = !!nextTeam.is_additional;
+
+    const shouldSyncAdditional =
+      Object.prototype.hasOwnProperty.call(updates, 'is_additional') ||
+      Object.prototype.hasOwnProperty.call(updates, 'team_name');
+
+    if (shouldSyncAdditional) {
+      const stage = newData.stages[stageIndex];
+      const currentAdditional = Array.isArray(stage.additional_teams) ? [...stage.additional_teams] : [];
+
+      const stageHasAdditionalName = (name, exclude = null) => {
+        const target = String(name || '').trim();
+        if (!target) return false;
+        return (stage.games || []).some((g, gIdx) =>
+          (g.teams || []).some((t, tIdx) => {
+            if (exclude && exclude.gameIndex === gIdx && exclude.teamIndex === tIdx) return false;
+            return t?.is_additional && String(t?.team_name || '').trim() === target;
+          })
+        );
+      };
+
+      let nextAdditional = currentAdditional
+        .map(n => String(n || '').trim())
+        .filter(Boolean);
+
+      // 1) Если команда была добором и имя изменилось — удаляем старое имя (если оно больше нигде не используется)
+      if (prevIsAdditional && prevName && prevName !== nextName) {
+        const stillUsed = stageHasAdditionalName(prevName, { gameIndex, teamIndex });
+        if (!stillUsed) {
+          nextAdditional = nextAdditional.filter(n => n !== prevName);
+        }
+      }
+
+      // 2) Если флаг сняли — удаляем имя (если оно больше нигде не используется)
+      if (prevIsAdditional && !nextIsAdditional && prevName) {
+        const stillUsed = stageHasAdditionalName(prevName, { gameIndex, teamIndex });
+        if (!stillUsed) {
+          nextAdditional = nextAdditional.filter(n => n !== prevName);
+        }
+      }
+
+      // 3) Если флаг поставили — добавляем имя (если оно задано)
+      if (nextIsAdditional && nextName) {
+        if (!nextAdditional.includes(nextName)) nextAdditional.push(nextName);
+      }
+
+      // 4) Если команда остается добором, но имя появилось/обновилось — убеждаемся, что новое имя есть
+      if (prevIsAdditional && nextIsAdditional && nextName) {
+        if (!nextAdditional.includes(nextName)) nextAdditional.push(nextName);
+      }
+
+      newData.stages[stageIndex] = { ...stage, additional_teams: nextAdditional };
+    }
     onChange(newData);
   };
 
@@ -1449,8 +1546,31 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages[stageIndex].games) return;
     newData.stages[stageIndex].games = [...newData.stages[stageIndex].games];
     if (!newData.stages[stageIndex].games[gameIndex].teams) return;
+
+    const removedTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
+    const removedName = String(removedTeam.team_name || '').trim();
+    const removedIsAdditional = !!removedTeam.is_additional;
+
     newData.stages[stageIndex].games[gameIndex].teams = 
       newData.stages[stageIndex].games[gameIndex].teams.filter((_, i) => i !== teamIndex);
+
+    if (removedIsAdditional && removedName) {
+      // Клонируем stage, чтобы можно было безопасно обновить additional_teams
+      newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
+      const stage = newData.stages[stageIndex];
+      const currentAdditional = Array.isArray(stage.additional_teams) ? [...stage.additional_teams] : [];
+
+      const stillUsed = (stage.games || []).some(g =>
+        (g.teams || []).some(t => t?.is_additional && String(t?.team_name || '').trim() === removedName)
+      );
+
+      if (!stillUsed) {
+        stage.additional_teams = currentAdditional
+          .map(n => String(n || '').trim())
+          .filter(Boolean)
+          .filter(n => n !== removedName);
+      }
+    }
     onChange(newData);
   };
 
