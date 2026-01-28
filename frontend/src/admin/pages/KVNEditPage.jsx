@@ -46,6 +46,7 @@ export default function KVNEditPage() {
   const [parentOptions, setParentOptions] = useState([]);
   const [juryMembers, setJuryMembers] = useState([]);
   const [loadingJury, setLoadingJury] = useState(false);
+  const [loadingPreviousSeason, setLoadingPreviousSeason] = useState(false);
 
   // Загружаем список родителей для выбора
   useEffect(() => {
@@ -239,6 +240,118 @@ export default function KVNEditPage() {
   }, [kvn.slug]);
 
   const generateSlug = (t) => t.toLowerCase().replace(/[а-яё]/g, c => ({ 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ы':'y','э':'e','ю':'yu','я':'ya' }[c] || '')).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const handleLoadTemplate = () => {
+    const templateFacts = {
+      'Сезон': '',
+      'Количество команд': '',
+      'Количество игр': '',
+      'Ведущий': '',
+      'Редакторы': '',
+      'Чемпион': ''
+    };
+    const templateOrder = ['Сезон', 'Количество команд', 'Количество игр', 'Ведущий', 'Редакторы', 'Чемпион'];
+    
+    const currentFacts = kvn.facts || {};
+    // Добавляем шаблонные факты только если их еще нет
+    const newFacts = { ...currentFacts };
+    templateOrder.forEach(key => {
+      if (!(key in newFacts)) {
+        newFacts[key] = templateFacts[key];
+      }
+    });
+    
+    // Обновляем порядок: сначала шаблонные факты в нужном порядке, потом остальные
+    const existingOrder = kvn.facts_order || [];
+    const otherKeys = existingOrder.filter(k => !templateOrder.includes(k));
+    const newOrder = [...templateOrder.filter(k => k in newFacts), ...otherKeys];
+    
+    setKvn(p => ({
+      ...p,
+      facts: newFacts,
+      facts_order: newOrder
+    }));
+    setSuccess('Шаблон загружен');
+  };
+
+  const handleLoadFromPreviousSeason = async () => {
+    if (!kvn.season_data) {
+      setError('Нет данных сезона. Убедитесь, что сезон создан в разделе "Сезон"');
+      return;
+    }
+
+    const currentYear = kvn.season_data.year;
+    const leagueSlug = kvn.season_data.league_slug;
+
+    if (!currentYear || !leagueSlug) {
+      setError('Не удалось определить год или лигу сезона');
+      return;
+    }
+
+    const prevYear = currentYear - 1;
+    setLoadingPreviousSeason(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Ищем предыдущий сезон: ищем по season_data.year и season_data.league_slug
+      let prevSeason = null;
+      
+      // Сначала попробуем найти через parent_id (если сезоны - дочерние страницы лиги)
+      if (kvn.parent_id) {
+        // Получаем все сезоны с include_children=true, чтобы получить дочерние страницы
+        const allSeasons = await contentApi.listKvn({ include_children: true, limit: 1000 });
+        if (allSeasons.data?.items) {
+          // Фильтруем сезоны с тем же parent_id
+          const seasonsWithSameParent = allSeasons.data.items.filter(s => s.parent_id === kvn.parent_id);
+          prevSeason = seasonsWithSameParent.find(s => {
+            const sYear = s.season_data?.year;
+            const sLeagueSlug = s.season_data?.league_slug;
+            return sYear === prevYear && sLeagueSlug === leagueSlug;
+          });
+        }
+      }
+
+      // Если не нашли через parent_id, ищем по league_slug и year напрямую во всех сезонах
+      if (!prevSeason) {
+        const allSeasons = await contentApi.listKvn({ include_children: true, limit: 1000 });
+        if (allSeasons.data?.items) {
+          prevSeason = allSeasons.data.items.find(s => {
+            const sYear = s.season_data?.year;
+            const sLeagueSlug = s.season_data?.league_slug;
+            return sYear === prevYear && sLeagueSlug === leagueSlug;
+          });
+        }
+      }
+
+      if (!prevSeason) {
+        setError(`Предыдущий сезон (${leagueSlug}, ${prevYear}) не найден`);
+        return;
+      }
+
+      // Загружаем полные данные предыдущего сезона
+      const prevSeasonData = await contentApi.getKvn(prevSeason.id || prevSeason.slug);
+      const prevFacts = prevSeasonData.data.facts || {};
+      const prevFactsOrder = prevSeasonData.data.facts_order || [];
+
+      if (Object.keys(prevFacts).length === 0) {
+        setError('У предыдущего сезона нет фактов');
+        return;
+      }
+
+      // Загружаем факты из предыдущего сезона
+      setKvn(p => ({
+        ...p,
+        facts: { ...prevFacts },
+        facts_order: [...prevFactsOrder]
+      }));
+      setSuccess(`Факты загружены из сезона ${prevYear}`);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Ошибка загрузки предыдущего сезона'));
+    } finally {
+      setLoadingPreviousSeason(false);
+    }
+  };
 
   const handleSave = async () => {
     setError(''); setSuccess(''); setSaving(true);
@@ -440,7 +553,34 @@ export default function KVNEditPage() {
 
         <TabsContent value="facts" className="space-y-6">
           <Card>
-            <CardHeader><CardTitle>Факты</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Факты</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLoadTemplate}
+                    disabled={saving}
+                  >
+                    Загрузить шаблон
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLoadFromPreviousSeason}
+                    disabled={saving || loadingPreviousSeason || isNew}
+                  >
+                    {loadingPreviousSeason ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      'Загрузить с прошлого сезона'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
             <CardContent className="space-y-4">
               {Object.keys(kvn.facts || {}).length > 0 ? (
                 <FactsEditor
