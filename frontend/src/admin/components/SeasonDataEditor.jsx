@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
-  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText
+  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText, Table
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -36,6 +36,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { formatDecimalTrim, roundTo } from '@/utils/number';
 import TeamSelector from './TeamSelector';
@@ -790,8 +798,119 @@ function GameContent({
   sensors,
   handleTeamDragEnd
 }) {
+  const [showTableDialog, setShowTableDialog] = useState(false);
+  const [tableInput, setTableInput] = useState('');
+  const [tableError, setTableError] = useState('');
+
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
+  };
+
+  const parseTableData = (text) => {
+    // Разбиваем на строки
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (lines.length === 0) {
+      return null;
+    }
+
+    // Парсим каждую строку - поддерживаем табуляцию, пробелы, запятые как разделители столбцов
+    const rows = lines.map(line => {
+      // Разделяем по табуляции, затем по запятым, затем по пробелам
+      let cells = line.split(/\t/);
+      if (cells.length === 1) {
+        cells = line.split(/,/);
+      }
+      if (cells.length === 1) {
+        // Пробуем разделить по нескольким пробелам
+        cells = line.split(/\s{2,}/);
+      }
+      if (cells.length === 1) {
+        // Последняя попытка - разделить по одному пробелу
+        cells = line.split(/\s+/);
+      }
+      
+      return cells.map(cell => cell.trim()).filter(cell => cell);
+    });
+
+    return rows;
+  };
+
+  const applyTableData = () => {
+    setTableError('');
+    
+    const teams = game.teams || [];
+    const contests = game.contests || [];
+    
+    if (teams.length === 0) {
+      setTableError('В игре нет команд. Добавьте команды перед вставкой данных.');
+      return;
+    }
+    
+    if (contests.length === 0) {
+      setTableError('В игре нет конкурсов. Добавьте конкурсы перед вставкой данных.');
+      return;
+    }
+
+    const rows = parseTableData(tableInput);
+    
+    if (!rows || rows.length === 0) {
+      setTableError('Не удалось распарсить таблицу. Убедитесь, что данные разделены табуляцией, запятыми или пробелами.');
+      return;
+    }
+
+    // Проверяем размеры таблицы
+    if (rows.length !== teams.length) {
+      setTableError(`Количество строк в таблице (${rows.length}) не совпадает с количеством команд (${teams.length}).`);
+      return;
+    }
+
+    // Проверяем количество столбцов в каждой строке
+    const expectedColumns = contests.length;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].length !== expectedColumns) {
+        setTableError(`Строка ${i + 1} содержит ${rows[i].length} столбцов, ожидается ${expectedColumns} (по количеству конкурсов).`);
+        return;
+      }
+    }
+
+    // Применяем данные ко всем командам одновременно
+    const updatedTeams = teams.map((team, teamIndex) => {
+      const row = rows[teamIndex];
+      const newScores = { ...(team.scores || {}) };
+      
+      contests.forEach((contest, contestIndex) => {
+        let value = row[contestIndex];
+        value = value.replace(',', '.');
+        const numValue = parseFloat(value);
+        
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          newScores[contest] = roundTo(numValue, 2);
+        } else {
+          newScores[contest] = 0;
+        }
+      });
+      
+      const total = contests.reduce((acc, c) => {
+        const score = newScores[c];
+        if (typeof score === 'number' && isFinite(score)) {
+          return acc + score;
+        }
+        return acc;
+      }, 0);
+      
+      return {
+        ...team,
+        scores: newScores,
+        total: roundTo(total, 2)
+      };
+    });
+
+    // Обновляем всю игру сразу со всеми командами
+    updateGame({ teams: updatedTeams });
+
+    setShowTableDialog(false);
+    setTableInput('');
   };
 
   return (
@@ -917,14 +1036,30 @@ function GameContent({
       <div className="space-y-2 mt-4 border-t pt-4">
         <div className="flex items-center justify-between">
           <Label>Команды ({game.teams?.length || 0})</Label>
-          <Button 
-            onClick={() => onAddTeam(stageIndex, gameIndex)} 
-            size="sm" 
-            variant="outline"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Добавить команду
-          </Button>
+          <div className="flex items-center gap-2">
+            {game.teams && game.teams.length > 0 && game.contests && game.contests.length > 0 && (
+              <Button 
+                onClick={() => {
+                  setTableInput('');
+                  setTableError('');
+                  setShowTableDialog(true);
+                }} 
+                size="sm" 
+                variant="outline"
+              >
+                <Table className="h-4 w-4 mr-2" />
+                Вставить из таблицы
+              </Button>
+            )}
+            <Button 
+              onClick={() => onAddTeam(stageIndex, gameIndex)} 
+              size="sm" 
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить команду
+            </Button>
+          </div>
         </div>
         {game.teams && game.teams.length > 0 ? (
           <DndContext
@@ -958,6 +1093,105 @@ function GameContent({
           <p className="text-sm text-muted-foreground">Нет команд. Добавьте команду для начала.</p>
         )}
       </div>
+
+      {/* Диалог вставки таблицы */}
+      <Dialog open={showTableDialog} onOpenChange={setShowTableDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Вставить баллы из таблицы</DialogTitle>
+            <DialogDescription>
+              Вставьте таблицу с баллами. Каждая строка соответствует команде, каждый столбец — конкурсу.
+              Разделители: табуляция, запятая или пробелы. Десятичные числа можно вводить с запятой или точкой.
+              <br />
+              <br />
+              Ожидается: {game.teams?.length || 0} строк (команд) × {game.contests?.length || 0} столбцов (конкурсов)
+              <br />
+              Конкурсы: {game.contests?.join(', ') || 'нет'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Таблица данных</Label>
+              <Textarea
+                value={tableInput}
+                onChange={(e) => {
+                  setTableInput(e.target.value);
+                  setTableError('');
+                }}
+                placeholder={`Пример:\n5\t5.7\t4.9\n5\t5.6\t4.8\n4.9\t5.7\t4.7`}
+                rows={10}
+                className="font-mono text-sm"
+              />
+              {tableError && (
+                <p className="text-sm text-destructive">{tableError}</p>
+              )}
+            </div>
+            {tableInput && (() => {
+              const rows = parseTableData(tableInput);
+              if (!rows || rows.length === 0) return null;
+              
+              const expectedRows = game.teams?.length || 0;
+              const expectedCols = game.contests?.length || 0;
+              const hasError = rows.length !== expectedRows || 
+                rows.some(row => row.length !== expectedCols);
+              
+              return (
+                <div className="space-y-2">
+                  <Label className={`text-xs ${hasError ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    Предпросмотр {hasError && '(размеры не совпадают)'}:
+                  </Label>
+                  <div className="border rounded p-2 bg-muted max-h-40 overflow-auto">
+                    <table className="text-xs">
+                      <thead>
+                        <tr>
+                          <th className="text-left pr-4">Команда</th>
+                          {game.contests?.map((contest, idx) => (
+                            <th key={idx} className="text-left px-2">{contest}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row, idx) => {
+                          const teamName = game.teams?.[idx]?.team_name || `Команда ${idx + 1}`;
+                          const rowError = row.length !== expectedCols;
+                          return (
+                            <tr key={idx} className={rowError ? 'bg-destructive/10' : ''}>
+                              <td className="pr-4">{teamName}</td>
+                              {row.map((cell, cellIdx) => (
+                                <td key={cellIdx} className="px-2">{cell}</td>
+                              ))}
+                              {row.length < expectedCols && (
+                                <td colSpan={expectedCols - row.length} className="px-2 text-muted-foreground">
+                                  (не хватает столбцов)
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                        {rows.length < expectedRows && (
+                          <tr>
+                            <td colSpan={(expectedCols || 1) + 1} className="px-2 text-muted-foreground text-center">
+                              (не хватает строк: {rows.length} из {expectedRows})
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTableDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={applyTableData}>
+              Применить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CardContent>
   );
 }
