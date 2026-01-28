@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Search, Loader2 } from 'lucide-react';
+import { X, Search, Loader2, List } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Command,
   CommandEmpty,
@@ -61,6 +71,10 @@ export default function TeamSelector({
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState([]);
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkResults, setBulkResults] = useState([]);
 
   // Load selected teams details
   useEffect(() => {
@@ -289,9 +303,146 @@ export default function TeamSelector({
     }
   };
 
+  // Парсинг строки формата "Название (Город)" или просто "Название"
+  const parseTeamLine = (line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return null;
+
+    // Пытаемся найти паттерн "Название (Город)"
+    const match = trimmed.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    if (match) {
+      return {
+        name: match[1].trim(),
+        city: match[2].trim()
+      };
+    }
+
+    // Если нет скобок, возвращаем только название
+    return {
+      name: trimmed,
+      city: ''
+    };
+  };
+
+  // Поиск команды в БД по названию и городу
+  const findTeamInDB = async (teamName, city) => {
+    try {
+      // Сначала ищем по названию
+      const res = await contentApi.listTeams({ 
+        search: teamName,
+        limit: 50
+      });
+
+      const teams = (res.data.items || []).map(team => ({
+        ...team,
+        city: getCityFromFacts(team.facts)
+      }));
+
+      // Нормализуем названия для сравнения
+      const normalizedName = teamName.toLowerCase().trim();
+      const normalizedCity = city.toLowerCase().trim();
+
+      // Ищем точное совпадение по названию
+      let match = teams.find(team => {
+        const teamNameNorm = (team.name || team.title || '').toLowerCase().trim();
+        return teamNameNorm === normalizedName;
+      });
+
+      // Если есть город, проверяем его тоже
+      if (match && normalizedCity) {
+        const teamCityNorm = (match.city || '').toLowerCase().trim();
+        if (teamCityNorm && !teamCityNorm.includes(normalizedCity) && !normalizedCity.includes(teamCityNorm)) {
+          // Город не совпадает, ищем дальше
+          match = teams.find(team => {
+            const teamNameNorm = (team.name || team.title || '').toLowerCase().trim();
+            const teamCityNorm = (team.city || '').toLowerCase().trim();
+            return teamNameNorm === normalizedName && 
+                   teamCityNorm && 
+                   (teamCityNorm.includes(normalizedCity) || normalizedCity.includes(teamCityNorm));
+          });
+        }
+      }
+
+      // Если не нашли точное совпадение, ищем частичное
+      if (!match) {
+        match = teams.find(team => {
+          const teamNameNorm = (team.name || team.title || '').toLowerCase().trim();
+          return teamNameNorm.includes(normalizedName) || normalizedName.includes(teamNameNorm);
+        });
+      }
+
+      if (match) {
+        return {
+          id: match._id || match.id,
+          slug: match.slug || match.id,
+          name: match.name || match.title || '',
+          city: match.city || ''
+        };
+      }
+
+      return null;
+    } catch (err) {
+      console.error('Error finding team:', err);
+      return null;
+    }
+  };
+
+  // Обработка массовой вставки
+  const handleBulkInsert = async () => {
+    if (!bulkInput.trim()) return;
+
+    setBulkLoading(true);
+    setBulkResults([]);
+
+    const lines = bulkInput.split('\n').filter(line => line.trim());
+    const results = [];
+
+    for (const line of lines) {
+      const parsed = parseTeamLine(line);
+      if (!parsed) continue;
+
+      const found = await findTeamInDB(parsed.name, parsed.city);
+      results.push({
+        original: line,
+        parsed,
+        found,
+        alreadyAdded: found ? value.some(v => {
+          if (typeof v === 'object') {
+            return (v.slug || v.id) === found.slug;
+          }
+          return v === found.slug;
+        }) : false
+      });
+    }
+
+    setBulkResults(results);
+    setBulkLoading(false);
+  };
+
+  // Применение результатов массовой вставки
+  const applyBulkInsert = () => {
+    const newTeams = bulkResults
+      .filter(r => r.found && !r.alreadyAdded)
+      .map(r => ({
+        slug: r.found.slug,
+        name: r.found.name,
+        city: r.found.city
+      }));
+
+    if (newTeams.length > 0) {
+      onChange([...value, ...newTeams]);
+    }
+
+    setShowBulkDialog(false);
+    setBulkInput('');
+    setBulkResults([]);
+  };
+
   return (
     <div className="space-y-2">
-      <Popover open={open} onOpenChange={setOpen}>
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+        <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -365,6 +516,119 @@ export default function TeamSelector({
           </Command>
         </PopoverContent>
       </Popover>
+      </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            setBulkInput('');
+            setBulkResults([]);
+            setShowBulkDialog(true);
+          }}
+          title="Вставить список команд"
+        >
+          <List className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Диалог массовой вставки */}
+      <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Вставить список команд</DialogTitle>
+            <DialogDescription>
+              Вставьте список команд, каждая строка в формате "Название (Город)" или просто "Название".
+              Команды, найденные в базе данных, будут автоматически добавлены в сезон.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Список команд</Label>
+              <Textarea
+                value={bulkInput}
+                onChange={(e) => setBulkInput(e.target.value)}
+                placeholder={`Сега Мега Драйв 16 бит (Москва)\nСборная ДГТУ (Ростов-на-Дону)\nМалина (Красноярск)`}
+                rows={10}
+                className="font-mono text-sm"
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={handleBulkInsert}
+                disabled={!bulkInput.trim() || bulkLoading}
+              >
+                {bulkLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Поиск...
+                  </>
+                ) : (
+                  'Найти команды'
+                )}
+              </Button>
+            </div>
+            {bulkResults.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm">Результаты сопоставления:</Label>
+                <div className="border rounded p-2 bg-muted max-h-60 overflow-auto">
+                  <table className="text-xs w-full">
+                    <thead>
+                      <tr>
+                        <th className="text-left pr-4">Исходная строка</th>
+                        <th className="text-left pr-4">Статус</th>
+                        <th className="text-left">Найдено</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkResults.map((result, idx) => (
+                        <tr key={idx} className="border-t">
+                          <td className="pr-4 py-1">{result.original}</td>
+                          <td className="pr-4 py-1">
+                            {result.found ? (
+                              result.alreadyAdded ? (
+                                <span className="text-muted-foreground">Уже добавлена</span>
+                              ) : (
+                                <span className="text-green-600">✓ Найдена</span>
+                              )
+                            ) : (
+                              <span className="text-orange-600">✗ Не найдена</span>
+                            )}
+                          </td>
+                          <td className="py-1">
+                            {result.found ? (
+                              <span>
+                                {result.found.name}
+                                {result.found.city && <span className="text-muted-foreground"> ({result.found.city})</span>}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Найдено: {bulkResults.filter(r => r.found && !r.alreadyAdded).length} из {bulkResults.length}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkDialog(false)}>
+              Отмена
+            </Button>
+            <Button
+              onClick={applyBulkInsert}
+              disabled={!bulkResults.some(r => r.found && !r.alreadyAdded)}
+            >
+              Добавить найденные команды ({bulkResults.filter(r => r.found && !r.alreadyAdded).length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Selected teams */}
       {selectedTeams.length > 0 && (
