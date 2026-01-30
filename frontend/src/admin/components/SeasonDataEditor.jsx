@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
-  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText
+  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText, Table
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -36,6 +36,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { formatDecimalTrim, roundTo } from '@/utils/number';
 import TeamSelector from './TeamSelector';
@@ -153,6 +161,7 @@ function SortableStage({
   onUpdateTeam,
   sensors,
   handleGameDragEnd,
+  handleTeamDragEnd,
   seasonAllTeams = []
 }) {
   const {
@@ -228,6 +237,7 @@ function SortableStage({
               onUpdateTeam={onUpdateTeam}
               sensors={sensors}
               handleGameDragEnd={handleGameDragEnd}
+              handleTeamDragEnd={handleTeamDragEnd}
               seasonAllTeams={seasonAllTeams}
             />
             <div className="px-6 pb-4 pt-2 border-t">
@@ -242,6 +252,200 @@ function SortableStage({
             </div>
           </>
         )}
+      </Card>
+    </div>
+  );
+}
+
+// Sortable Team Component
+function SortableTeam({
+  team,
+  teamIndex,
+  gameIndex,
+  stageIndex,
+  onUpdate,
+  onRemove,
+  game,
+  seasonAllTeams,
+  sensors
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `team-${stageIndex}-${gameIndex}-${teamIndex}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-white">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab text-muted-foreground hover:text-foreground touch-none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="h-4 w-4" />
+              </button>
+              <h5 className="font-semibold">Команда {teamIndex + 1}</h5>
+            </div>
+            <Button 
+              onClick={() => onRemove(stageIndex, gameIndex, teamIndex)} 
+              size="sm" 
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Название команды</Label>
+              <GameTeamSelector
+                value={team}
+                onChange={(selectedTeam) => {
+                  if (selectedTeam) {
+                    onUpdate(stageIndex, gameIndex, teamIndex, selectedTeam);
+                  } else {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { 
+                      team_slug: '', 
+                      team_name: '', 
+                      city: '' 
+                    });
+                  }
+                }}
+                existingTeams={game.teams?.filter((t, idx) => idx !== teamIndex) || []}
+                seasonAllTeams={seasonAllTeams}
+                placeholder="Выберите команду..."
+                allowCustom={false}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Место</Label>
+              <Input 
+                type="number"
+                value={team.place || ''} 
+                onChange={(e) => onUpdate(stageIndex, gameIndex, teamIndex, { place: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Итого (автосумма)</Label>
+              <Input 
+                type="text"
+                inputMode="decimal"
+                value={(() => {
+                  // Автоматически вычисляем сумму баллов за все конкурсы
+                  if (game.contests && game.contests.length > 0 && team.scores) {
+                    const sum = game.contests.reduce((acc, contest) => {
+                      const score = team.scores[contest];
+                      return acc + (typeof score === 'number' ? score : 0);
+                    }, 0);
+                    return formatDecimalTrim(roundTo(sum, 2), 2);
+                  }
+                  if (team.total === null || team.total === undefined) return '';
+                  return formatDecimalTrim(roundTo(team.total, 2), 2);
+                })()}
+                onChange={(e) => {
+                  // Позволяем вручную изменить, если нужно
+                  let val = e.target.value.replace(',', '.');
+                  // Разрешаем только цифры, точку и минус в начале
+                  if (val && !/^-?\d*\.?\d*$/.test(val)) {
+                    return; // Игнорируем недопустимые символы
+                  }
+                  const manualTotal = parseFloat(val);
+                  if (!isNaN(manualTotal)) {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
+                  } else if (val === '') {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { total: 0 });
+                  }
+                }}
+                onBlur={(e) => {
+                  // При потере фокуса округляем значение
+                  let val = e.target.value.replace(',', '.');
+                  const manualTotal = parseFloat(val);
+                  if (!isNaN(manualTotal)) {
+                    onUpdate(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
+                  }
+                }}
+                readOnly={game.contests && game.contests.length > 0}
+                className={game.contests && game.contests.length > 0 ? "bg-muted" : ""}
+              />
+            </div>
+            <div className="space-y-2 flex flex-col">
+              <Label>Флаги</Label>
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={team.passed || false}
+                    onCheckedChange={(checked) => onUpdate(stageIndex, gameIndex, teamIndex, { passed: checked })}
+                  />
+                  <Label className="text-sm">Прошёл</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={team.is_winner || false}
+                    onCheckedChange={(checked) => onUpdate(stageIndex, gameIndex, teamIndex, { is_winner: checked })}
+                  />
+                  <Label className="text-sm">Победитель</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={team.is_additional || false}
+                    onCheckedChange={(checked) => onUpdate(stageIndex, gameIndex, teamIndex, { is_additional: checked })}
+                  />
+                  <Label className="text-sm">Добор</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Баллы по конкурсам */}
+          {game.contests && game.contests.length > 0 && (
+            <div className="mt-4 space-y-2 border-t pt-4">
+              <Label className="text-sm font-semibold">Баллы по конкурсам</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {game.contests.map((contest) => (
+                  <div key={contest} className="flex items-center gap-2">
+                    <Label className="text-xs w-24 truncate">{contest}:</Label>
+                    <ScoreInput 
+                      className="h-8 text-sm"
+                      value={team.scores?.[contest]}
+                      onBlur={(numValue) => {
+                        const newScores = { ...(team.scores || {}) };
+                        newScores[contest] = numValue;
+                        
+                        // Пересчитываем total
+                        const total = game.contests.reduce((acc, c) => {
+                          const score = newScores[c];
+                          if (typeof score === 'number' && isFinite(score)) {
+                            return acc + score;
+                          }
+                          return acc;
+                        }, 0);
+                        
+                        onUpdate(stageIndex, gameIndex, teamIndex, { 
+                          scores: newScores,
+                          total: roundTo(total, 2)
+                        });
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
@@ -268,7 +472,9 @@ function SortableGame({
   onUpdateTeam, 
   seasonAllTeams = [],
   isExpanded = true,
-  onToggleExpand
+  onToggleExpand,
+  sensors,
+  handleTeamDragEnd
 }) {
   const {
     attributes,
@@ -386,6 +592,8 @@ function SortableGame({
               onRemoveTeam={onRemoveTeam}
               onUpdateTeam={onUpdateTeam}
               seasonAllTeams={seasonAllTeams}
+              sensors={sensors}
+              handleTeamDragEnd={handleTeamDragEnd}
             />
             <div className="px-6 pb-4 pt-2 border-t">
               <button
@@ -427,6 +635,7 @@ function StageContent({
   onUpdateTeam,
   sensors,
   handleGameDragEnd,
+  handleTeamDragEnd,
   seasonAllTeams = []
 }) {
   const [expandedGames, setExpandedGames] = useState(new Set());
@@ -554,6 +763,8 @@ function StageContent({
                       seasonAllTeams={seasonAllTeams}
                       isExpanded={isExpanded}
                       onToggleExpand={() => toggleGame(gameIndex)}
+                      sensors={sensors}
+                      handleTeamDragEnd={handleTeamDragEnd}
                     />
                   );
                 })}
@@ -583,10 +794,239 @@ function GameContent({
   onAddTeam, 
   onRemoveTeam, 
   onUpdateTeam, 
-  seasonAllTeams = [] 
+  seasonAllTeams = [],
+  sensors,
+  handleTeamDragEnd
 }) {
+  const [showTableDialog, setShowTableDialog] = useState(false);
+  const [tableInput, setTableInput] = useState('');
+  const [tableError, setTableError] = useState('');
+
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
+  };
+
+  // Функция для нормализации названия (для сопоставления)
+  const normalizeName = (name) => {
+    return String(name || '').trim().toLowerCase();
+  };
+
+  // Функция для сопоставления заголовка конкурса с конкурсами из игры
+  const matchContestName = (headerName, gameContests) => {
+    const normalizedHeader = normalizeName(headerName);
+    
+    // Ищем точное совпадение
+    let match = gameContests.find(contest => 
+      normalizeName(contest) === normalizedHeader
+    );
+    
+    if (match) return match;
+    
+    // Ищем частичное совпадение
+    match = gameContests.find(contest => {
+      const normalizedContest = normalizeName(contest);
+      return normalizedContest.includes(normalizedHeader) || 
+             normalizedHeader.includes(normalizedContest);
+    });
+    
+    return match || null;
+  };
+
+  // Функция для сопоставления названия команды с командами-участниками
+  const matchTeamName = (teamNameFromTable) => {
+    if (!teamNameFromTable || !seasonAllTeams || seasonAllTeams.length === 0) {
+      return null;
+    }
+
+    const normalizedTableName = normalizeName(teamNameFromTable);
+    
+    // Ищем точное совпадение (без учета регистра)
+    let match = seasonAllTeams.find(team => {
+      const teamName = normalizeName(team.name || team.team_name);
+      return teamName === normalizedTableName;
+    });
+
+    if (match) {
+      return {
+        team_slug: match.slug || match.team_slug || '',
+        team_name: match.name || match.team_name || '',
+        city: match.city || ''
+      };
+    }
+
+    // Ищем частичное совпадение (название содержит или содержится в)
+    match = seasonAllTeams.find(team => {
+      const teamName = normalizeName(team.name || team.team_name);
+      return teamName.includes(normalizedTableName) || normalizedTableName.includes(teamName);
+    });
+
+    if (match) {
+      return {
+        team_slug: match.slug || match.team_slug || '',
+        team_name: match.name || match.team_name || '',
+        city: match.city || ''
+      };
+    }
+
+    return null;
+  };
+
+  const parseTableData = (text) => {
+    // Разбиваем на строки
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (lines.length === 0) {
+      return null;
+    }
+
+    // Парсим каждую строку - поддерживаем табуляцию, пробелы, запятые как разделители столбцов
+    const rows = lines.map(line => {
+      // Разделяем по табуляции, затем по запятым, затем по пробелам
+      let cells = line.split(/\t/);
+      if (cells.length === 1) {
+        cells = line.split(/,/);
+      }
+      if (cells.length === 1) {
+        // Пробуем разделить по нескольким пробелам
+        cells = line.split(/\s{2,}/);
+      }
+      if (cells.length === 1) {
+        // Последняя попытка - разделить по одному пробелу
+        cells = line.split(/\s+/);
+      }
+      
+      return cells.map(cell => cell.trim()).filter(cell => cell);
+    });
+
+    return rows;
+  };
+
+  const applyTableData = () => {
+    setTableError('');
+    
+    const teams = game.teams || [];
+    const contests = game.contests || [];
+    
+    if (teams.length === 0) {
+      setTableError('В игре нет команд. Добавьте команды перед вставкой данных.');
+      return;
+    }
+    
+    if (contests.length === 0) {
+      setTableError('В игре нет конкурсов. Добавьте конкурсы перед вставкой данных.');
+      return;
+    }
+
+    const allRows = parseTableData(tableInput);
+    
+    if (!allRows || allRows.length === 0) {
+      setTableError('Не удалось распарсить таблицу. Убедитесь, что данные разделены табуляцией, запятыми или пробелами.');
+      return;
+    }
+
+    if (allRows.length < 2) {
+      setTableError('Таблица должна содержать минимум 2 строки: заголовки и хотя бы одну строку данных.');
+      return;
+    }
+
+    // Первая строка - заголовки
+    const headers = allRows[0];
+    const dataRows = allRows.slice(1); // Остальные строки - данные
+
+    // Проверяем количество строк данных
+    if (dataRows.length !== teams.length) {
+      setTableError(`Количество строк данных в таблице (${dataRows.length}) не совпадает с количеством команд (${teams.length}).`);
+      return;
+    }
+
+    // Определяем индекс столбца с названием команды (обычно первый)
+    const teamColumnIndex = 0;
+    
+    // Определяем индексы столбцов конкурсов, сопоставляя заголовки
+    const contestColumnMap = new Map(); // contestName -> columnIndex
+    
+    headers.forEach((header, index) => {
+      if (index === teamColumnIndex) return; // Пропускаем столбец команды
+      
+      const normalizedHeader = normalizeName(header);
+      
+      // Пропускаем столбцы "общий" и "Итого"
+      if (normalizedHeader === 'общий' || normalizedHeader === 'итого') {
+        return;
+      }
+      
+      // Пытаемся сопоставить заголовок с конкурсом из игры
+      const matchedContest = matchContestName(header, contests);
+      if (matchedContest) {
+        contestColumnMap.set(matchedContest, index);
+      }
+    });
+
+    // Проверяем, что все конкурсы найдены
+    const missingContests = contests.filter(c => !contestColumnMap.has(c));
+    if (missingContests.length > 0) {
+      setTableError(`Не найдены столбцы для конкурсов: ${missingContests.join(', ')}. Найденные заголовки: ${headers.slice(1).join(', ')}`);
+      return;
+    }
+
+    // Применяем данные ко всем командам одновременно
+    const updatedTeams = teams.map((team, teamIndex) => {
+      const row = dataRows[teamIndex];
+      
+      if (!row || row.length === 0) {
+        return team; // Пропускаем пустые строки
+      }
+      
+      const teamNameFromTable = row[teamColumnIndex] || '';
+      
+      // Пытаемся сопоставить название команды
+      const matchedTeam = matchTeamName(teamNameFromTable);
+      
+      const newScores = { ...(team.scores || {}) };
+      
+      // Заполняем баллы для каждого конкурса по найденным индексам столбцов
+      contests.forEach((contest) => {
+        const columnIndex = contestColumnMap.get(contest);
+        if (columnIndex !== undefined && row[columnIndex] !== undefined) {
+          let value = String(row[columnIndex]).trim();
+          value = value.replace(',', '.');
+          const numValue = parseFloat(value);
+          
+          if (!isNaN(numValue) && isFinite(numValue)) {
+            newScores[contest] = roundTo(numValue, 2);
+          } else {
+            newScores[contest] = 0;
+          }
+        } else {
+          // Если столбец не найден, оставляем текущее значение или 0
+          if (!(contest in newScores)) {
+            newScores[contest] = 0;
+          }
+        }
+      });
+      
+      const total = contests.reduce((acc, c) => {
+        const score = newScores[c];
+        if (typeof score === 'number' && isFinite(score)) {
+          return acc + score;
+        }
+        return acc;
+      }, 0);
+      
+      // Если команда найдена - обновляем её данные, иначе оставляем как есть
+      return {
+        ...team,
+        ...(matchedTeam || {}), // Обновляем данные команды, если найдено совпадение
+        scores: newScores,
+        total: roundTo(total, 2)
+      };
+    });
+
+    // Обновляем всю игру сразу со всеми командами
+    updateGame({ teams: updatedTeams });
+
+    setShowTableDialog(false);
+    setTableInput('');
   };
 
   return (
@@ -712,175 +1152,201 @@ function GameContent({
       <div className="space-y-2 mt-4 border-t pt-4">
         <div className="flex items-center justify-between">
           <Label>Команды ({game.teams?.length || 0})</Label>
-          <Button 
-            onClick={() => onAddTeam(stageIndex, gameIndex)} 
-            size="sm" 
-            variant="outline"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Добавить команду
-          </Button>
+          <div className="flex items-center gap-2">
+            {game.teams && game.teams.length > 0 && game.contests && game.contests.length > 0 && (
+              <Button 
+                onClick={() => {
+                  setTableInput('');
+                  setTableError('');
+                  setShowTableDialog(true);
+                }} 
+                size="sm" 
+                variant="outline"
+              >
+                <Table className="h-4 w-4 mr-2" />
+                Вставить из таблицы
+              </Button>
+            )}
+            <Button 
+              onClick={() => onAddTeam(stageIndex, gameIndex)} 
+              size="sm" 
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Добавить команду
+            </Button>
+          </div>
         </div>
         {game.teams && game.teams.length > 0 ? (
-          <div className="space-y-2">
-            {game.teams.map((team, teamIndex) => (
-              <Card key={teamIndex} className="bg-white">
-                <CardContent className="pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h5 className="font-semibold">Команда {teamIndex + 1}</h5>
-                    <Button 
-                      onClick={() => onRemoveTeam(stageIndex, gameIndex, teamIndex)} 
-                      size="sm" 
-                      variant="ghost"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label>Название команды</Label>
-                      <GameTeamSelector
-                        value={team}
-                        onChange={(selectedTeam) => {
-                          if (selectedTeam) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, selectedTeam);
-                          } else {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
-                              team_slug: '', 
-                              team_name: '', 
-                              city: '' 
-                            });
-                          }
-                        }}
-                        existingTeams={game.teams?.filter((t, idx) => idx !== teamIndex) || []}
-                        seasonAllTeams={seasonAllTeams}
-                        placeholder="Выберите команду..."
-                        allowCustom={false}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Место</Label>
-                      <Input 
-                        type="number"
-                        value={team.place || ''} 
-                        onChange={(e) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { place: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Итого (автосумма)</Label>
-                      <Input 
-                        type="text"
-                        inputMode="decimal"
-                        value={(() => {
-                          // Автоматически вычисляем сумму баллов за все конкурсы
-                          if (game.contests && game.contests.length > 0 && team.scores) {
-                            const sum = game.contests.reduce((acc, contest) => {
-                              const score = team.scores[contest];
-                              return acc + (typeof score === 'number' ? score : 0);
-                            }, 0);
-                            return formatDecimalTrim(roundTo(sum, 2), 2);
-                          }
-                          if (team.total === null || team.total === undefined) return '';
-                          return formatDecimalTrim(roundTo(team.total, 2), 2);
-                        })()}
-                        onChange={(e) => {
-                          // Позволяем вручную изменить, если нужно
-                          let val = e.target.value.replace(',', '.');
-                          // Разрешаем только цифры, точку и минус в начале
-                          if (val && !/^-?\d*\.?\d*$/.test(val)) {
-                            return; // Игнорируем недопустимые символы
-                          }
-                          const manualTotal = parseFloat(val);
-                          if (!isNaN(manualTotal)) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
-                          } else if (val === '') {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: 0 });
-                          }
-                        }}
-                        onBlur={(e) => {
-                          // При потере фокуса округляем значение
-                          let val = e.target.value.replace(',', '.');
-                          const manualTotal = parseFloat(val);
-                          if (!isNaN(manualTotal)) {
-                            onUpdateTeam(stageIndex, gameIndex, teamIndex, { total: roundTo(manualTotal, 2) });
-                          }
-                        }}
-                        readOnly={game.contests && game.contests.length > 0}
-                        className={game.contests && game.contests.length > 0 ? "bg-muted" : ""}
-                      />
-                    </div>
-                    <div className="space-y-2 flex flex-col">
-                      <Label>Флаги</Label>
-                      <div className="flex flex-col gap-2 mt-2">
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={team.passed || false}
-                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { passed: checked })}
-                          />
-                          <Label className="text-sm">Прошёл</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={team.is_winner || false}
-                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { is_winner: checked })}
-                          />
-                          <Label className="text-sm">Победитель</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={team.is_additional || false}
-                            onCheckedChange={(checked) => onUpdateTeam(stageIndex, gameIndex, teamIndex, { is_additional: checked })}
-                          />
-                          <Label className="text-sm">Добор</Label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Баллы по конкурсам */}
-                  {game.contests && game.contests.length > 0 && (
-                    <div className="mt-4 space-y-2 border-t pt-4">
-                      <Label className="text-sm font-semibold">Баллы по конкурсам</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {game.contests.map((contest) => (
-                          <div key={contest} className="flex items-center gap-2">
-                            <Label className="text-xs w-24 truncate">{contest}:</Label>
-                            <ScoreInput 
-                              className="h-8 text-sm"
-                              value={team.scores?.[contest]}
-                              onBlur={(numValue) => {
-                                const newScores = { ...(team.scores || {}) };
-                                newScores[contest] = numValue;
-                                
-                                // Пересчитываем total
-                                const total = game.contests.reduce((acc, c) => {
-                                  const score = newScores[c];
-                                  if (typeof score === 'number' && isFinite(score)) {
-                                    return acc + score;
-                                  }
-                                  return acc;
-                                }, 0);
-                                
-                                onUpdateTeam(stageIndex, gameIndex, teamIndex, { 
-                                  scores: newScores,
-                                  total: roundTo(total, 2)
-                                });
-                              }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(e) => handleTeamDragEnd(e, stageIndex, gameIndex)}
+          >
+            <SortableContext
+              items={(game.teams || []).map((_, idx) => `team-${stageIndex}-${gameIndex}-${idx}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {game.teams.map((team, teamIndex) => (
+                  <SortableTeam
+                    key={teamIndex}
+                    team={team}
+                    teamIndex={teamIndex}
+                    gameIndex={gameIndex}
+                    stageIndex={stageIndex}
+                    onUpdate={onUpdateTeam}
+                    onRemove={onRemoveTeam}
+                    game={game}
+                    seasonAllTeams={seasonAllTeams}
+                    sensors={sensors}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         ) : (
           <p className="text-sm text-muted-foreground">Нет команд. Добавьте команду для начала.</p>
         )}
       </div>
+
+      {/* Диалог вставки таблицы */}
+      <Dialog open={showTableDialog} onOpenChange={setShowTableDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Вставить баллы из таблицы</DialogTitle>
+            <DialogDescription>
+              Вставьте таблицу с баллами. Первая строка — заголовки (название команды и конкурсы).
+              Разделители: табуляция, запятая или пробелы. Десятичные числа можно вводить с запятой или точкой.
+              <br />
+              <br />
+              Ожидается: строка заголовков + {game.teams?.length || 0} строк данных (команд)
+              <br />
+              Конкурсы в игре: {game.contests?.join(', ') || 'нет'}
+              <br />
+              <br />
+              Столбцы "общий" и "Итого" будут автоматически пропущены.
+              Названия команд и конкурсов будут автоматически сопоставлены. Если команда не найдена, поле останется пустым.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Таблица данных</Label>
+              <Textarea
+                value={tableInput}
+                onChange={(e) => {
+                  setTableInput(e.target.value);
+                  setTableError('');
+                }}
+                placeholder={`Пример:\nКоманда\tПриветствие\tРазминка\tДЗ\nМужская сборная\t5\t5.4\t4.6\nВИАсиПЕД\t5\t4.6\t4`}
+                rows={10}
+                className="font-mono text-sm"
+              />
+              {tableError && (
+                <p className="text-sm text-destructive">{tableError}</p>
+              )}
+            </div>
+            {tableInput && (() => {
+              const allRows = parseTableData(tableInput);
+              if (!allRows || allRows.length === 0) return null;
+              
+              if (allRows.length < 2) return null;
+              
+              const headers = allRows[0];
+              const dataRows = allRows.slice(1);
+              const expectedRows = game.teams?.length || 0;
+              const contests = game.contests || [];
+              
+              // Определяем индексы столбцов конкурсов
+              const teamColumnIndex = 0;
+              const contestColumnMap = new Map();
+              
+              headers.forEach((header, index) => {
+                if (index === teamColumnIndex) return;
+                const normalizedHeader = normalizeName(header);
+                if (normalizedHeader === 'общий' || normalizedHeader === 'итого') return;
+                const matchedContest = matchContestName(header, contests);
+                if (matchedContest) {
+                  contestColumnMap.set(matchedContest, index);
+                }
+              });
+              
+              const hasError = dataRows.length !== expectedRows || contestColumnMap.size !== contests.length;
+              
+              return (
+                <div className="space-y-2">
+                  <Label className={`text-xs ${hasError ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    Предпросмотр {hasError && '(размеры не совпадают)'}:
+                  </Label>
+                  <div className="border rounded p-2 bg-muted max-h-60 overflow-auto">
+                    <table className="text-xs">
+                      <thead>
+                        <tr>
+                          <th className="text-left pr-4">Команда из таблицы</th>
+                          <th className="text-left pr-4">Сопоставление</th>
+                          {contests.map((contest, idx) => {
+                            const colIndex = contestColumnMap.get(contest);
+                            const headerName = colIndex !== undefined ? headers[colIndex] : '?';
+                            const isMatched = colIndex !== undefined;
+                            return (
+                              <th key={idx} className={`text-left px-2 ${isMatched ? '' : 'text-destructive'}`}>
+                                {contest}
+                                {!isMatched && ' (не найден)'}
+                                {isMatched && headerName !== contest && ` (${headerName})`}
+                              </th>
+                            );
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dataRows.map((row, idx) => {
+                          const teamNameFromTable = row[teamColumnIndex] || '';
+                          const matchedTeam = matchTeamName(teamNameFromTable);
+                          const matchStatus = matchedTeam 
+                            ? `✓ ${matchedTeam.team_name}${matchedTeam.city ? ` (${matchedTeam.city})` : ''}`
+                            : '✗ Не найдено';
+                          return (
+                            <tr key={idx}>
+                              <td className="pr-4 font-medium">{teamNameFromTable}</td>
+                              <td className={`pr-4 text-xs ${matchedTeam ? 'text-green-600' : 'text-orange-600'}`}>
+                                {matchStatus}
+                              </td>
+                              {contests.map((contest, contestIdx) => {
+                                const colIndex = contestColumnMap.get(contest);
+                                const value = colIndex !== undefined && row[colIndex] !== undefined 
+                                  ? row[colIndex] 
+                                  : '-';
+                                return (
+                                  <td key={contestIdx} className="px-2">{value}</td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                        {dataRows.length < expectedRows && (
+                          <tr>
+                            <td colSpan={contests.length + 2} className="px-2 text-muted-foreground text-center">
+                              (не хватает строк: {dataRows.length} из {expectedRows})
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTableDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={applyTableData}>
+              Применить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CardContent>
   );
 }
@@ -973,6 +1439,30 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
         game.order = idx + 1;
       });
       newData.stages[stageIndex].games = newGames;
+      onChange(newData);
+    }
+  }, [data, onChange]);
+
+  // Drag and drop для команд внутри игры
+  const handleTeamDragEnd = useCallback((event, stageIndex, gameIndex) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const activeId = active.id.toString();
+    const overId = over.id.toString();
+    
+    // Извлекаем индексы из ID вида "team-stageIndex-gameIndex-teamIndex"
+    const activeMatch = activeId.match(/team-(\d+)-(\d+)-(\d+)/);
+    const overMatch = overId.match(/team-(\d+)-(\d+)-(\d+)/);
+    
+    if (!activeMatch || !overMatch) return;
+    const activeTeamIndex = parseInt(activeMatch[3]);
+    const overTeamIndex = parseInt(overMatch[3]);
+    
+    if (activeTeamIndex !== overTeamIndex && data.stages && data.stages[stageIndex]?.games?.[gameIndex]?.teams) {
+      const newData = { ...data };
+      const newTeams = arrayMove(newData.stages[stageIndex].games[gameIndex].teams, activeTeamIndex, overTeamIndex);
+      newData.stages[stageIndex].games[gameIndex].teams = newTeams;
       onChange(newData);
     }
   }, [data, onChange]);
@@ -1287,7 +1777,40 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages) return;
     newData.stages = [...newData.stages];
     if (!newData.stages[stageIndex].games) return;
+
+    // Если в удаляемой игре есть команды с флагом "добор" — чистим их из additional_teams,
+    // но только если такие команды больше не встречаются в оставшихся играх стадии.
+    const stageBefore = newData.stages[stageIndex];
+    const removedGame = stageBefore.games?.[gameIndex];
+    const removedAdditionalNames = (removedGame?.teams || [])
+      .filter(t => t?.is_additional)
+      .map(t => String(t?.team_name || '').trim())
+      .filter(Boolean);
+
     newData.stages[stageIndex].games = newData.stages[stageIndex].games.filter((_, i) => i !== gameIndex);
+
+    if (removedAdditionalNames.length > 0) {
+      // Клонируем stage, чтобы не мутировать ссылку на прежний объект
+      newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
+      const stageAfter = newData.stages[stageIndex];
+      const currentAdditional = Array.isArray(stageAfter.additional_teams) ? [...stageAfter.additional_teams] : [];
+
+      const stillHasName = (name) => {
+        const target = String(name || '').trim();
+        if (!target) return false;
+        return (stageAfter.games || []).some(g =>
+          (g.teams || []).some(t => t?.is_additional && String(t?.team_name || '').trim() === target)
+        );
+      };
+
+      stageAfter.additional_teams = currentAdditional.filter(n => {
+        const name = String(n || '').trim();
+        if (!name) return false;
+        // Удаляем только те имена, которые были "добором" в удаленной игре и больше нигде не отмечены
+        if (removedAdditionalNames.includes(name) && !stillHasName(name)) return false;
+        return true;
+      });
+    }
     onChange(newData);
   };
 
@@ -1301,6 +1824,11 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages[stageIndex].games[gameIndex].teams) {
       newData.stages[stageIndex].games[gameIndex].teams = [];
     }
+
+    const prevTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
+    const prevName = String(prevTeam.team_name || '').trim();
+    const prevIsAdditional = !!prevTeam.is_additional;
+
     newData.stages[stageIndex].games[gameIndex] = {
       ...newData.stages[stageIndex].games[gameIndex]
     };
@@ -1311,6 +1839,65 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       ...newData.stages[stageIndex].games[gameIndex].teams[teamIndex],
       ...updates
     };
+
+    // Автоматически поддерживаем "Доборы после стадии" в sync с флагом "Добор"
+    // Поведение: добавляем имя, когда ставят флаг, убираем — когда снимают.
+    // При смене названия у команды-добора обновляем имя в списке.
+    const nextTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
+    const nextName = String(nextTeam.team_name || '').trim();
+    const nextIsAdditional = !!nextTeam.is_additional;
+
+    const shouldSyncAdditional =
+      Object.prototype.hasOwnProperty.call(updates, 'is_additional') ||
+      Object.prototype.hasOwnProperty.call(updates, 'team_name');
+
+    if (shouldSyncAdditional) {
+      const stage = newData.stages[stageIndex];
+      const currentAdditional = Array.isArray(stage.additional_teams) ? [...stage.additional_teams] : [];
+
+      const stageHasAdditionalName = (name, exclude = null) => {
+        const target = String(name || '').trim();
+        if (!target) return false;
+        return (stage.games || []).some((g, gIdx) =>
+          (g.teams || []).some((t, tIdx) => {
+            if (exclude && exclude.gameIndex === gIdx && exclude.teamIndex === tIdx) return false;
+            return t?.is_additional && String(t?.team_name || '').trim() === target;
+          })
+        );
+      };
+
+      let nextAdditional = currentAdditional
+        .map(n => String(n || '').trim())
+        .filter(Boolean);
+
+      // 1) Если команда была добором и имя изменилось — удаляем старое имя (если оно больше нигде не используется)
+      if (prevIsAdditional && prevName && prevName !== nextName) {
+        const stillUsed = stageHasAdditionalName(prevName, { gameIndex, teamIndex });
+        if (!stillUsed) {
+          nextAdditional = nextAdditional.filter(n => n !== prevName);
+        }
+      }
+
+      // 2) Если флаг сняли — удаляем имя (если оно больше нигде не используется)
+      if (prevIsAdditional && !nextIsAdditional && prevName) {
+        const stillUsed = stageHasAdditionalName(prevName, { gameIndex, teamIndex });
+        if (!stillUsed) {
+          nextAdditional = nextAdditional.filter(n => n !== prevName);
+        }
+      }
+
+      // 3) Если флаг поставили — добавляем имя (если оно задано)
+      if (nextIsAdditional && nextName) {
+        if (!nextAdditional.includes(nextName)) nextAdditional.push(nextName);
+      }
+
+      // 4) Если команда остается добором, но имя появилось/обновилось — убеждаемся, что новое имя есть
+      if (prevIsAdditional && nextIsAdditional && nextName) {
+        if (!nextAdditional.includes(nextName)) nextAdditional.push(nextName);
+      }
+
+      newData.stages[stageIndex] = { ...stage, additional_teams: nextAdditional };
+    }
     onChange(newData);
   };
 
@@ -1348,8 +1935,31 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     if (!newData.stages[stageIndex].games) return;
     newData.stages[stageIndex].games = [...newData.stages[stageIndex].games];
     if (!newData.stages[stageIndex].games[gameIndex].teams) return;
+
+    const removedTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
+    const removedName = String(removedTeam.team_name || '').trim();
+    const removedIsAdditional = !!removedTeam.is_additional;
+
     newData.stages[stageIndex].games[gameIndex].teams = 
       newData.stages[stageIndex].games[gameIndex].teams.filter((_, i) => i !== teamIndex);
+
+    if (removedIsAdditional && removedName) {
+      // Клонируем stage, чтобы можно было безопасно обновить additional_teams
+      newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
+      const stage = newData.stages[stageIndex];
+      const currentAdditional = Array.isArray(stage.additional_teams) ? [...stage.additional_teams] : [];
+
+      const stillUsed = (stage.games || []).some(g =>
+        (g.teams || []).some(t => t?.is_additional && String(t?.team_name || '').trim() === removedName)
+      );
+
+      if (!stillUsed) {
+        stage.additional_teams = currentAdditional
+          .map(n => String(n || '').trim())
+          .filter(Boolean)
+          .filter(n => n !== removedName);
+      }
+    }
     onChange(newData);
   };
 
@@ -1681,6 +2291,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
                           onUpdateTeam={updateTeam}
                           sensors={sensors}
                           handleGameDragEnd={handleGameDragEnd}
+                          handleTeamDragEnd={handleTeamDragEnd}
                           seasonAllTeams={data.all_teams || []}
                         />
                       </div>

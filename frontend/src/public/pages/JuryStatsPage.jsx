@@ -9,12 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import MultiSelectWithSearch from '../components/MultiSelectWithSearch';
 import publicApi from '../utils/api';
+import { usePageTitle } from '@/utils/pageTitle';
 
 export default function JuryStatsPage() {
   const location = useLocation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  usePageTitle('Статистика жюри Высшей лиги КВН');
   
   // Filter states - теперь множественный выбор
   const [selectedYears, setSelectedYears] = useState([]);

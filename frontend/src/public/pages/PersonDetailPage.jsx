@@ -15,6 +15,7 @@ import {
   isSystemModule,
   addAgeToDate
 } from '@/components/SystemModules';
+import { usePageTitle } from '@/utils/pageTitle';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
@@ -89,6 +90,8 @@ export default function PersonDetailPage() {
   const [person, setPerson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  usePageTitle(person?.title || (loading ? 'Человек' : (error ? 'Человек не найден' : 'Человек')));
 
   useEffect(() => {
     const fetchPerson = async () => {

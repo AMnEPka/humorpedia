@@ -8,12 +8,15 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
+import { usePageTitle } from '@/utils/pageTitle';
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  usePageTitle(article?.title || (loading ? 'Статья' : (error ? 'Статья не найдена' : 'Статья')));
 
   useEffect(() => {
     const fetchArticle = async () => {

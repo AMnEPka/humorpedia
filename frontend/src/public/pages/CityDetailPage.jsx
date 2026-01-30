@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ModuleRenderer from '../components/ModuleRenderer';
 import publicApi from '../utils/api';
+import { usePageTitle } from '@/utils/pageTitle';
 
 export default function CityDetailPage() {
   const { slug } = useParams();
@@ -13,6 +14,8 @@ export default function CityDetailPage() {
   const [relatedTeams, setRelatedTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  usePageTitle((city?.name || city?.title) || (loading ? 'Город' : (error ? 'Город не найден' : 'Город')));
 
   useEffect(() => {
     const fetchCity = async () => {

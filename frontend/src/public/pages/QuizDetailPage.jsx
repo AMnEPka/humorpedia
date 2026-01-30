@@ -8,12 +8,15 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Share2, Trophy } from 'lucide-react';
+import { usePageTitle } from '@/utils/pageTitle';
 
 export default function QuizDetailPage() {
   const { slug } = useParams();
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  usePageTitle(quiz?.title || (loading ? 'Квиз' : (error ? 'Квиз не найден' : 'Квиз')));
   
   // Quiz state
   const [questions, setQuestions] = useState([]);

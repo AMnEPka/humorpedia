@@ -31,9 +31,9 @@ services:
       - ./backend:/app
       - ./uploads:/app/uploads
       - ./backups:/app/backups
-      # Important: allow backend to serve /media/imported/* from frontend public folder
+      # Docker volume for imported images (accessible via /media/imported/images/*)
       # Read-write access for uploading files through web interface
-      - ./frontend/public/media:/app/frontend/public/media
+      - imported_images_volume:/app/frontend/public/media/imported/images
       # Docker volume with site images (accessible via /images/*)
       # Read-write access for uploading files through web interface
       - images_volume:/app/images
@@ -106,6 +106,9 @@ volumes:
   # Empty volume for frontend public/media to prevent webpack from scanning 3000+ images
   # Media files are served by backend, so frontend doesn't need them
   frontend_media:
+  # Docker volume for imported images (migrated from frontend/public/media/imported/images)
+  # Stores all imported media files separately from source code
+  imported_images_volume:
   # Named volume for site images (kvn-team, etc.)
   # Mount this volume on production server with actual images
   images_volume:

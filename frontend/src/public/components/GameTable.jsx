@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import publicApi from '../utils/api';
 import { formatDecimalTrim } from '@/utils/number';
 import { cleanTeamName } from '@/utils/team';
+import { teamStorage } from '../utils/teamStorage';
 
 export function GameTable({ game, stageName = '' }) {
   const { name, date, date_raw, teams = [], contests = [], jury = [], host = '', notes = '', is_cancelled = false, video_links = [] } = game;
@@ -16,52 +17,36 @@ export function GameTable({ game, stageName = '' }) {
                   !stageName.toLowerCase().includes('1/4') && !stageName.toLowerCase().includes('1/2') &&
                   !stageName.toLowerCase().includes('четверть') && !stageName.toLowerCase().includes('полу');
 
-  // Загружаем названия команд из базы данных по их slug
+  // Загружаем названия команд из локального хранилища
   useEffect(() => {
-    let cancelled = false;
-    const loadTeamNames = async () => {
-      const slugsToLoad = teams
-        .filter(team => team.team_slug && !teamNames[team.team_slug])
-        .map(team => team.team_slug);
-      
-      if (slugsToLoad.length === 0) return;
-      
-      const namesMap = { ...teamNames };
-      
-      // Загружаем команды параллельно
-      await Promise.all(
-        slugsToLoad.map(async (slug) => {
-          if (cancelled) return;
-          try {
-            const res = await publicApi.getTeam(slug);
-            if (cancelled) {
-              return;
-            }
-            const teamData = res.data;
-            // Используем name или title из базы данных
-            const teamName = teamData.name || teamData.title || '';
-            namesMap[slug] = teamName;
-          } catch (err) {
-            if (cancelled) return;
-            // Если команда не найдена, используем название из данных игры
-            const team = teams.find(t => t.team_slug === slug);
-            if (team) {
-              namesMap[slug] = team.team_name || '';
-            }
-          }
-        })
-      );
-      
-      if (!cancelled) {
-        setTeamNames(namesMap);
-      }
-    };
+    if (!teams || teams.length === 0) return;
     
-    loadTeamNames();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const slugsToLoad = teams
+      .map(team => team.team_slug)
+      .filter(slug => slug && !teamNames[slug]);
+    
+    if (slugsToLoad.length === 0) return;
+    
+    // Получаем из локального хранилища
+    const stored = teamStorage.getTeams(slugsToLoad);
+    
+    // Формируем map названий (строки для совместимости с существующим кодом)
+    const namesMap = { ...teamNames };
+    slugsToLoad.forEach(slug => {
+      const teamData = stored[slug];
+      if (teamData) {
+        // Извлекаем name из объекта
+        namesMap[slug] = teamData.name || '';
+      } else {
+        // Если нет в хранилище, используем название из данных игры
+        const team = teams.find(t => t.team_slug === slug);
+        if (team) {
+          namesMap[slug] = team.team_name || '';
+        }
+      }
+    });
+    
+    setTeamNames(namesMap);
   }, [teams]);
 
   if (is_cancelled) {

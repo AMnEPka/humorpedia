@@ -7,12 +7,15 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
+import { usePageTitle } from '@/utils/pageTitle';
 
 export default function NewsDetailPage() {
   const { slug } = useParams();
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  usePageTitle(news?.title || (loading ? 'Новость' : (error ? 'Новость не найдена' : 'Новость')));
 
   useEffect(() => {
     const fetchNews = async () => {

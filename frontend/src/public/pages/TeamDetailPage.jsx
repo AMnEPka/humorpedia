@@ -8,6 +8,7 @@ import publicApi from '../utils/api';
 import { 
   isSystemModule 
 } from '@/components/SystemModules';
+import { usePageTitle } from '@/utils/pageTitle';
 
 // Table of Contents component for teams
 function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
@@ -73,6 +74,8 @@ export default function TeamDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  usePageTitle(team?.title || (loading ? 'Команда' : (error ? 'Команда не найдена' : 'Команда')));
+
   useEffect(() => {
     const fetchTeam = async () => {
       setLoading(true);
@@ -103,6 +106,36 @@ export default function TeamDetailPage() {
       .filter(m => m.visible !== false && !isSystemModule(m.type))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [team?.modules]);
+
+  const cityValue = team?.city || team?.facts?.['Город'] || team?.facts?.city || '';
+
+  const factEntries = useMemo(() => {
+    const facts = team?.facts || {};
+    if (!facts || typeof facts !== 'object') return [];
+
+    const order = Array.isArray(team?.facts_order) ? team.facts_order : [];
+    const seen = new Set();
+    const entries = [];
+
+    for (const key of order) {
+      if (Object.prototype.hasOwnProperty.call(facts, key)) {
+        const value = facts[key];
+        if (value !== null && value !== undefined && String(value) !== '') {
+          entries.push([key, value]);
+          seen.add(key);
+        }
+      }
+    }
+
+    for (const [key, value] of Object.entries(facts)) {
+      if (seen.has(key)) continue;
+      if (value !== null && value !== undefined && String(value) !== '') {
+        entries.push([key, value]);
+      }
+    }
+
+    return entries;
+  }, [team?.facts, team?.facts_order]);
 
   if (loading) {
     return (
@@ -172,10 +205,10 @@ export default function TeamDetailPage() {
           )}
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{team.title}</h1>
-            {team.city && (
+            {cityValue && (
               <div className="flex items-center justify-center md:justify-start gap-2 text-blue-100">
                 <MapPin className="h-4 w-4" />
-                <span>{team.city}</span>
+                <span>{cityValue}</span>
               </div>
             )}
             {/* Tags - рендерятся если есть модуль tags_cloud */}
@@ -194,7 +227,7 @@ export default function TeamDetailPage() {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
           {/* Facts Table - рендерится если есть модуль facts_table */}
-          {sidebarModules.find(m => m.type === 'facts_table') && team.facts && Object.keys(team.facts).length > 0 && (
+          {sidebarModules.find(m => m.type === 'facts_table') && factEntries.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -204,12 +237,14 @@ export default function TeamDetailPage() {
               <CardContent className="p-4 pt-0">
                 <table className="w-full text-sm border-collapse border border-gray-200">
                   <tbody>
-                    {Object.entries(team.facts).map(([key, value], i) => (
+                    {factEntries.map(([key, value], i) => {
+                      const displayKey = key === 'city' ? 'Город' : key;
+                      return (
                       <tr key={i} className={`border-b border-gray-200 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                        <td className="py-2 pr-4 pl-2 text-gray-600 font-medium border-r border-gray-200">{key}</td>
+                        <td className="py-2 pr-4 pl-2 text-gray-600 font-medium border-r border-gray-200">{displayKey}</td>
                         <td className="py-2 pl-2" dangerouslySetInnerHTML={{ __html: value }} />
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </CardContent>

@@ -1,9 +1,10 @@
 """Content API routes - CRUD for all content types"""
-from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Query, Request  # pyright: ignore[reportMissingImports]
+from typing import Optional, List, Dict, Literal
 from datetime import datetime, timezone
 import logging
 import re
+from pydantic import BaseModel, Field  # pyright: ignore[reportMissingImports]
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +20,14 @@ from models.content import (
     KVN, KVNCreate, KVNUpdate
 )
 from utils.database import get_db
+from utils.slugify import generate_slug
+from utils.team_matcher import normalize_team_name
 from services.tags import tag_service
 from services.linking import linking_service
+from models.modules import PageModule, ModuleType
+from routes.auth import get_current_user
 
 router = APIRouter(prefix="/content", tags=["content"])
-
 
 # === HELPER FUNCTIONS ===
 
@@ -123,6 +127,66 @@ async def generate_unique_slug(collection_name: str, base_slug: str, parent_path
             raise HTTPException(status_code=500, detail="Could not generate unique slug")
 
 
+async def generate_unique_team_slug(base_slug: str) -> str:
+    """
+    Generate unique slug for teams using '-2', '-3', ... suffixes (more URL-friendly).
+    """
+    db = await get_db()
+    collection = db.teams
+
+    slug = base_slug
+    existing = await collection.find_one({"slug": slug})
+    if not existing:
+        return slug
+
+    counter = 2
+    while True:
+        slug = f"{base_slug}-{counter}"
+        existing = await collection.find_one({"slug": slug})
+        if not existing:
+            return slug
+        counter += 1
+
+
+class BulkTeamCheckItem(BaseModel):
+    raw_line: str = ""
+    name: str = ""
+    city: str | None = None
+
+
+class BulkTeamCheckRequest(BaseModel):
+    items: List[BulkTeamCheckItem] = Field(default_factory=list)
+
+
+class BulkTeamCheckResult(BaseModel):
+    index: int
+    status: Literal["found", "not_found", "invalid"]
+    name: str = ""
+    city: str | None = None
+    team_id: str | None = None
+    team_slug: str | None = None
+    team_display_name: str | None = None
+
+
+class BulkTeamCreateRow(BaseModel):
+    action: Literal["create", "skip", "link_existing"]
+    name: str | None = None
+    city: str | None = None
+    existing_team_id: str | None = None
+    confirmed_skip: bool = False
+
+
+class BulkTeamCreateRequest(BaseModel):
+    rows: List[BulkTeamCreateRow] = Field(default_factory=list)
+
+
+class RestoreTeamLogosRequest(BaseModel):
+    """Request model for bulk logo restoration"""
+    dry_run: bool = Field(default=True, description="If true, only report what would be changed")
+    only_if_placeholder: bool = Field(default=True, description="Only restore if logo is missing or placeholder")
+    team_type: Optional[str] = Field(default=None, description="Filter by team_type (e.g. 'kvn'). If None, restore all teams")
+
+
 async def sync_primary_tag_to_tags(doc: dict) -> dict:
     """
     Автоматически добавляет primary_tag в массив tags, если его там нет (case-insensitive).
@@ -198,6 +262,688 @@ async def check_primary_tag_duplicate(
             detail=f"Базовый тег '{primary_tag}' уже используется {item_type} '{item_name}'. "
                    f"Пожалуйста, выберите уникальный тег (например, '{primary_tag} (команда X)')."
         )
+
+def _team_placeholder_logo() -> dict:
+    """
+    Default placeholder logo used when a team has no logo yet.
+    Must exist in frontend static/media.
+    """
+    url = "/media/imported/images/pattern-1.jpeg"
+    return {"url": url, "alt": "", "caption": "", "thumbnail": url}
+
+
+def _is_placeholder_logo(logo: any) -> bool:
+    """
+    Check if logo is a placeholder pattern image.
+    """
+    if not logo:
+        return True
+    if isinstance(logo, dict):
+        url = logo.get("url") or logo.get("thumbnail") or ""
+        return bool(url and "/media/imported/images/pattern-" in url)
+    if isinstance(logo, str):
+        return "/media/imported/images/pattern-" in logo
+    return False
+
+
+def _normalize_to_mediafile(value: any) -> Optional[dict]:
+    """
+    Convert string or dict to MediaFile format.
+    Returns None if value is empty/invalid.
+    """
+    if not value:
+        return None
+    
+    if isinstance(value, dict):
+        # Already a dict - check if it has url/thumbnail
+        url = value.get("url") or value.get("thumbnail") or ""
+        if url and url.strip():
+            return {
+                "url": url,
+                "alt": value.get("alt", ""),
+                "caption": value.get("caption", ""),
+                "thumbnail": value.get("thumbnail") or url
+            }
+        return None
+    
+    if isinstance(value, str) and value.strip():
+        # String URL - convert to MediaFile
+        url = value.strip()
+        # Ensure absolute path starts with /
+        if not url.startswith("/") and not url.startswith("http"):
+            url = "/" + url
+        return {
+            "url": url,
+            "alt": "",
+            "caption": "",
+            "thumbnail": url
+        }
+    
+    return None
+
+
+def _pick_team_logo(doc: dict) -> dict:
+    """
+    Smart logo picker: tries logo field first, then falls back to legacy image/poster fields.
+    Returns MediaFile dict or placeholder if nothing found.
+    
+    Priority:
+    1. logo (if valid and not placeholder)
+    2. image (legacy field from import)
+    3. poster (legacy field from import)
+    4. placeholder
+    """
+    # Check existing logo first
+    logo = doc.get("logo")
+    if logo and not _is_placeholder_logo(logo):
+        # Logo exists and is not placeholder - normalize it
+        normalized = _normalize_to_mediafile(logo)
+        if normalized:
+            return normalized
+    
+    # Try legacy image field
+    image = doc.get("image")
+    if image:
+        normalized = _normalize_to_mediafile(image)
+        if normalized:
+            return normalized
+    
+    # Try legacy poster field
+    poster = doc.get("poster")
+    if poster:
+        normalized = _normalize_to_mediafile(poster)
+        if normalized:
+            return normalized
+    
+    # Fallback to placeholder
+    return _team_placeholder_logo()
+
+
+def _is_empty_text_block(m: dict) -> bool:
+    if not isinstance(m, dict) or m.get("type") != "text_block":
+        return False
+    data = m.get("data") or {}
+    content = data.get("content")
+    if content is None:
+        content = ""
+    if not isinstance(content, str):
+        return False
+    return content.strip() == ""
+
+
+def _is_empty_timeline(m: dict) -> bool:
+    if not isinstance(m, dict) or m.get("type") != "timeline":
+        return False
+    data = m.get("data") or {}
+    # support both events/items naming
+    events = data.get("events")
+    items = data.get("items")
+    if isinstance(events, list) and len(events) > 0:
+        return False
+    if isinstance(items, list) and len(items) > 0:
+        return False
+    # If there are any other meaningful keys besides title, consider it non-empty
+    meaningful = {k: v for k, v in data.items() if k not in ["title"] and v not in [None, "", [], {}]}
+    return len(meaningful) == 0
+
+
+def _prune_empty_modules(modules: list[dict]) -> list[dict]:
+    """
+    Remove empty text blocks and empty timelines.
+    """
+    pruned = []
+    for m in modules or []:
+        if not isinstance(m, dict):
+            continue
+        if _is_empty_text_block(m):
+            continue
+        if _is_empty_timeline(m):
+            continue
+        pruned.append(m)
+    # Keep stable orders
+    for i, m in enumerate(pruned):
+        m["order"] = i
+    return pruned
+
+
+def _build_team_intro_html(name: str, city: Optional[str]) -> str:
+    city_part = f" ({city})" if city else ""
+    # Keep exact requested pattern: "Название команды (город) - ... "
+    return f"<p>{name}{city_part} - ...</p>"
+
+
+def _stage_code(stage_name: str) -> str:
+    """
+    Convert stage name like '1/8 финала' -> '1/8', '1/4 финала' -> '1/4', '1/2 финала' -> '1/2', 'финал' -> 'Финал'.
+    """
+    if not stage_name:
+        return ""
+    s = stage_name.strip().lower()
+    m = re.search(r"(\d+)\s*/\s*(\d+)", s)
+    if m:
+        return f"{m.group(1)}/{m.group(2)}"
+    if "финал" in s:
+        if "полу" in s:
+            return "1/2"
+        return "Финал"
+    return stage_name.strip()
+
+
+def _league_code_from_slug(league_slug: str) -> str:
+    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ', 'ml-kvn' -> 'МЛ')"""
+    if league_slug == "vl-kvn":
+        return "ВЛ"
+    if league_slug == "ml-kvn":
+        return "МЛ"
+    # Add more leagues later
+    return league_slug or ""
+
+
+async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List[Dict]:
+    """
+    Collect all results for a team from all seasons of a specific league.
+    Returns list of result dicts with: year, league, stage, stage_name, result, place, out_of, date, game_name
+    """
+    if not team_slug or not league_slug:
+        return []
+    
+    # Query all seasons of the specified league
+    seasons = await db.kvn.find({
+        "season_data.league_slug": league_slug
+    }).to_list(1000)
+    
+    results = []
+    
+    for season in seasons:
+        season_data = season.get("season_data") or {}
+        year = season_data.get("year")
+        if not year:
+            # Try to extract from slug
+            slug = season.get("slug", "")
+            m = re.search(r"(19|20)\d{2}", slug)
+            if m:
+                year = int(m.group(0))
+            else:
+                continue
+        
+        league = _league_code_from_slug(league_slug)
+        
+        stages = season_data.get("stages") or []
+        for stage in stages:
+            stage_name = stage.get("name") or ""
+            stage_code = _stage_code(stage_name)
+            games = stage.get("games") or []
+            
+            for game in games:
+                teams = game.get("teams") or []
+                # Filter valid teams
+                valid_teams = [t for t in teams if isinstance(t, dict) and t.get("team_slug")]
+                n = len(valid_teams)
+                if n <= 0:
+                    continue
+                
+                # Find our team in this game
+                our_team = None
+                for t in valid_teams:
+                    if t.get("team_slug") == team_slug:
+                        our_team = t
+                        break
+                
+                if not our_team:
+                    continue
+                
+                place = our_team.get("place")
+                is_winner = our_team.get("is_winner", False)
+                our_total = our_team.get("total")
+                passed = our_team.get("passed")
+                
+                # Special handling for champions: if is_winner=True, treat as place=1
+                # This handles cases like 1992 final where both teams are champions (place=0, is_winner=True)
+                if is_winner and (place is None or place == 0):
+                    place = 1
+                
+                # Handle ties: if multiple teams have the same total score, they should all have place=1
+                # Example: 1994 semifinal where ЕРМИ and Ворошиловские стрелки both have total=22.6
+                if our_total is not None and place is not None:
+                    # Find all teams with the same total
+                    teams_with_same_total = [t for t in valid_teams if t.get("total") == our_total]
+                    if len(teams_with_same_total) > 1:
+                        # All teams with same total should be considered tied for first place
+                        # Check if any of them has place=1
+                        has_first_place = any(t.get("place") == 1 for t in teams_with_same_total)
+                        if has_first_place:
+                            place = 1
+                
+                # Determine result text
+                # If we have a valid place (> 0), show "X из Y"
+                # If place is 0 or None but we have passed status, show "Прошел" or "Не прошел"
+                # If neither, skip this entry
+                if place is not None and place > 0:
+                    result_text = f"{place} из {n}"
+                elif passed is not None:
+                    # passed can be True or False
+                    result_text = "Прошел" if passed else "Не прошел"
+                else:
+                    # No valid place and no passed status - skip this entry
+                    continue
+                
+                results.append({
+                    "year": year,
+                    "league": league,
+                    "stage": stage_code,
+                    "stage_name": stage_name,
+                    "result": result_text,
+                    "place": place,
+                    "out_of": n,
+                    "date": game.get("date") or "",
+                    "game_name": game.get("name") or "",
+                })
+    
+    # Sort: first by year (ascending), then by stage order within year
+    # Stage order: 1/8 < 1/4 < 1/2 < Финал
+    def _stage_order(stage: str) -> int:
+        """Convert stage to numeric order for sorting"""
+        if not stage:
+            return 99
+        stage_lower = stage.lower()
+        # Check exact matches first
+        if stage == "1/8" or "1/8" in stage:
+            return 1
+        if stage == "1/4" or "1/4" in stage:
+            return 2
+        if stage == "1/2" or "полу" in stage_lower:
+            return 3
+        if "финал" in stage_lower and "полу" not in stage_lower:
+            return 4
+        return 99  # Unknown stages go last
+    
+    def sort_key(r):
+        year = r.get("year", 0)
+        stage = r.get("stage") or ""
+        return (year, _stage_order(stage))
+    
+    results.sort(key=sort_key)
+    return results
+
+
+async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
+    """
+    Collect all VL (Высшая лига) results for a team from all seasons.
+    Returns list of result dicts with: year, league, stage, stage_name, result, place, out_of, date, game_name
+    """
+    return await _get_team_league_results(team_slug, "vl-kvn", db)
+
+
+async def _get_team_all_results(team_slug: str, db) -> List[Dict]:
+    """
+    Collect all results for a team from all supported leagues (VL, ML, etc.).
+    Returns combined list of result dicts sorted by year and stage.
+    """
+    if not team_slug:
+        return []
+    
+    # Get results from all supported leagues
+    all_results = []
+    
+    # Высшая лига
+    vl_results = await _get_team_league_results(team_slug, "vl-kvn", db)
+    all_results.extend(vl_results)
+    
+    # Международная лига
+    ml_results = await _get_team_league_results(team_slug, "ml-kvn", db)
+    all_results.extend(ml_results)
+    
+    # Add more leagues here in the future
+    
+    # Sort: first by year (ascending), then by stage order within year
+    def _stage_order(stage: str) -> int:
+        """Convert stage to numeric order for sorting"""
+        if not stage:
+            return 99
+        stage_lower = stage.lower()
+        # Check exact matches first
+        if stage == "1/8" or "1/8" in stage:
+            return 1
+        if stage == "1/4" or "1/4" in stage:
+            return 2
+        if stage == "1/2" or "полу" in stage_lower:
+            return 3
+        if "финал" in stage_lower and "полу" not in stage_lower:
+            return 4
+        return 99  # Unknown stages go last
+    
+    def sort_key(r):
+        year = r.get("year", 0)
+        stage = r.get("stage") or ""
+        return (year, _stage_order(stage))
+    
+    all_results.sort(key=sort_key)
+    return all_results
+
+
+def _build_team_games_table_html(results: List[Dict]) -> str:
+    """
+    Build HTML table for team games results.
+    Format matches the screenshot: legend at top, then table with columns: Год, Лига, Стадия, Результат
+    """
+    if not results:
+        return ""
+    
+    # Build legend for all leagues used
+    leagues_used = sorted(set(r.get("league") for r in results if r.get("league")))
+    legend_parts = []
+    if "ВЛ" in leagues_used:
+        legend_parts.append("ВЛ – Высшая лига")
+    if "МЛ" in leagues_used:
+        legend_parts.append("МЛ – Международная лига")
+    # Add more leagues later: ГК – Голосящий КиВиН, etc.
+    
+    legend_html = ""
+    if legend_parts:
+        legend_html = f'<div style="margin-bottom: 1rem;"><strong>Обозначения:</strong> {", ".join(legend_parts)}.</div>\n'
+    
+    # Build table
+    table_rows = []
+    for r in results:
+        year = r.get("year", "")
+        league = r.get("league", "")
+        stage = r.get("stage", "")
+        result = r.get("result", "")
+        
+        table_rows.append(f"    <tr>\n      <td>{year}</td>\n      <td>{league}</td>\n      <td>{stage}</td>\n      <td>{result}</td>\n    </tr>")
+    
+    table_html = f"""<div style="text-align: justify;">{legend_html}<table style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Год</strong></th>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Лига</strong></th>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Стадия</strong></th>
+      <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd;"><strong>Результат</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+{chr(10).join(table_rows)}
+  </tbody>
+</table></div>"""
+    
+    return table_html
+
+
+async def _update_team_games_module(team_slug: str, modules: List[dict], db) -> List[dict]:
+    """
+    Update or create "Список игр команды" module with auto-generated table from all supported leagues (VL, ML, etc.).
+    Only for KVN teams (team_type='kvn').
+    REMOVES ALL existing "Список игр команды" modules (manual or auto) and creates a single auto-generated one.
+    Returns updated modules list.
+    """
+    if not team_slug:
+        return modules
+    
+    # Get team to check team_type
+    team = await db.teams.find_one({"slug": team_slug}, {"team_type": 1})
+    if not team or team.get("team_type") != "kvn":
+        return modules
+    
+    # Get results from all supported leagues (VL, ML, etc.)
+    results = await _get_team_all_results(team_slug, db)
+    
+    # Remove ALL existing "Список игр команды" modules (manual or auto) to prevent duplicates
+    # We identify them by:
+    # 1. Title matches "Список игр команды" (exact or partial)
+    # 2. OR content contains the games table structure (table with headers "Год", "Лига", "Стадия", "Результат")
+    target_title = "Список игр команды"
+    updated_modules = []
+    removed_count = 0
+    removed_ids = []
+    
+    def is_games_table_module(m: dict) -> bool:
+        """Check if module is a games table (by title or content structure)"""
+        if not isinstance(m, dict) or m.get("type") != "text_block":
+            return False
+        
+        data = m.get("data") or {}
+        content = (data.get("content") or "").strip()
+        title = (data.get("title") or m.get("title") or "").strip()
+        
+        # Check by title
+        if title and (title == target_title or 
+                     title.lower() == target_title.lower() or
+                     title.lower().startswith(target_title.lower())):
+            return True
+        
+        # Check by content structure - look for games table headers
+        # Manual tables have: <th>Год</th>, <th>Лига</th>, <th>Стадия</th>, <th>Результат</th>
+        if content and ("<th" in content.lower() or "<table" in content.lower()):
+            # Check if it contains all the required headers
+            content_lower = content.lower()
+            has_year = "год" in content_lower
+            has_league = "лига" in content_lower
+            has_stage = "стадия" in content_lower
+            has_result = "результат" in content_lower
+            
+            # If it has table structure with these headers, it's likely a games table
+            if has_year and has_league and has_stage and has_result:
+                return True
+        
+        return False
+    
+    for m in modules:
+        if is_games_table_module(m):
+            removed_count += 1
+            removed_ids.append(m.get("id", "unknown"))
+            title = ((m.get("data") or {}).get("title") or m.get("title") or "").strip()
+            logger.debug(f"Removing games module {m.get('id')} (title: '{title}') for team {team_slug}")
+            continue  # Remove this module
+        
+        updated_modules.append(m)
+    
+    # Log if we removed multiple modules (indicates duplicate issue)
+    if removed_count > 0:
+        logger.info(f"Removed {removed_count} 'Список игр команды' module(s) for team {team_slug} (IDs: {removed_ids})")
+    
+    # Always create a fresh auto-generated module (even if empty)
+    import uuid
+    new_module = {
+        "id": str(uuid.uuid4()),
+        "type": "text_block",
+        "order": len(updated_modules),  # Will be normalized later
+        "title": "",
+        "visible": bool(results),  # Hide if no results
+        "data": {
+            "title": target_title,
+            "content": _build_team_games_table_html(results) if results else "",
+            "auto_generated": True,  # Mark as auto-generated
+            "source": "kvn-leagues"  # Updated to reflect multiple leagues
+        }
+    }
+    updated_modules.append(new_module)
+    
+    return updated_modules
+
+
+async def _update_team_vl_results_module(team_slug: str, modules: List[dict], db) -> List[dict]:
+    """
+    Create/update a dedicated module with VL results table.
+    We keep "Список игр команды" for manual editing; this module is auto-generated.
+    """
+    if not team_slug:
+        return modules
+
+    team = await db.teams.find_one({"slug": team_slug}, {"team_type": 1})
+    if not team or team.get("team_type") != "kvn":
+        return modules
+
+    results = await _get_team_vl_results(team_slug, db)
+
+    target_title = "Результаты в Высшей лиге"
+    updated_modules = []
+    found = False
+
+    for m in modules or []:
+        if not isinstance(m, dict):
+            updated_modules.append(m)
+            continue
+        m_type = m.get("type")
+        data = m.get("data") or {}
+        title = (data.get("title") or "").strip()
+
+        if m_type == "text_block" and title == target_title:
+            m2 = dict(m)
+            d2 = dict(data)
+            d2["auto_generated"] = True
+            d2["source"] = "vl-kvn"
+            if results:
+                d2["content"] = _build_team_games_table_html(results)
+                m2["visible"] = True
+            else:
+                d2["content"] = ""
+                m2["visible"] = False
+            m2["data"] = d2
+            updated_modules.append(m2)
+            found = True
+        else:
+            updated_modules.append(m)
+
+    if not found:
+        import uuid
+        updated_modules.append(
+            {
+                "id": str(uuid.uuid4()),
+                "type": "text_block",
+                "order": len(updated_modules),
+                "title": "",
+                "visible": bool(results),
+                "data": {
+                    "title": target_title,
+                    "content": _build_team_games_table_html(results) if results else "",
+                    "auto_generated": True,
+                    "source": "vl-kvn",
+                },
+            }
+        )
+
+    return updated_modules
+
+
+def _clone_modules_with_new_ids(modules: list) -> list:
+    """
+    Clone modules and assign fresh UUIDs to each module.id to avoid accidental reuse/collisions.
+    """
+    import uuid
+    cloned = []
+    for m in modules or []:
+        if not isinstance(m, dict):
+            continue
+        m2 = dict(m)
+        m2["id"] = str(uuid.uuid4())
+        cloned.append(m2)
+    return cloned
+
+
+def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -> tuple[dict, list[str], list[dict]]:
+    """
+    Ensure KVN team has baseline facts + modules scaffold.
+    Returns: (facts, facts_order, modules_as_dicts)
+    """
+    facts = dict(doc.get("facts") or {})
+
+    # City: store as human-readable key (requested)
+    if city and not facts.get("Город"):
+        facts["Город"] = city
+    # Backward-compat: migrate old 'city' key to 'Город'
+    if facts.get("city") and not facts.get("Город"):
+        facts["Город"] = facts.get("city")
+    if "city" in facts:
+        del facts["city"]
+
+    # Required visible facts with placeholders
+    if "Год основания" not in facts or not str(facts.get("Год основания") or "").strip():
+        facts["Год основания"] = "—"
+    if "Капитан" not in facts or not str(facts.get("Капитан") or "").strip():
+        facts["Капитан"] = "—"
+
+    # Facts order: prefer explicit order if present, otherwise seed with desired keys
+    current_order = list(doc.get("facts_order") or [])
+    desired_prefix = ["Город", "Год основания", "Капитан"]
+    ordered = [k for k in desired_prefix if k in facts]
+    # Keep any existing order items that still exist and aren't already included
+    for k in current_order:
+        if k in facts and k not in ordered:
+            ordered.append(k)
+    # Append any remaining keys
+    for k in facts.keys():
+        if k not in ordered:
+            ordered.append(k)
+
+    # Modules scaffold
+    modules = list(doc.get("modules") or [])
+    existing_types = {m.get("type") for m in modules if isinstance(m, dict)}
+    
+    # Build signature set for duplicate detection (type + title for text_block/timeline)
+    def _module_sig(m: dict) -> tuple:
+        m_type = (m.get("type") or "").strip()
+        data = m.get("data") or {}
+        if m_type == "text_block":
+            title = (data.get("title") or "").strip()
+            return (m_type, title)
+        if m_type == "timeline":
+            title = (data.get("title") or m.get("title") or "").strip()
+            return (m_type, title)
+        return (m_type, "")
+
+    existing_signatures = {_module_sig(m) for m in modules if isinstance(m, dict)}
+
+    def add_module(mod: PageModule):
+        modules.append(mod.model_dump())
+
+    # Sidebar/system modules
+    if ModuleType.POSTER_PHOTO.value not in existing_types:
+        add_module(PageModule(type=ModuleType.POSTER_PHOTO, order=0, visible=True, data={"size": "medium", "shape": "rounded"}))
+    if ModuleType.FACTS_TABLE.value not in existing_types:
+        add_module(PageModule(type=ModuleType.FACTS_TABLE, order=1, visible=True, data={"title": "Информация", "style": "table"}))
+    if ModuleType.RATING_WIDGET.value not in existing_types:
+        add_module(PageModule(type=ModuleType.RATING_WIDGET, order=2, visible=True, data={"style": "stars", "scale": 5}))
+    if ModuleType.TAGS_CLOUD.value not in existing_types:
+        add_module(PageModule(type=ModuleType.TAGS_CLOUD, order=3, visible=True, data={"style": "badges", "max_tags": 0}))
+    if ModuleType.SOCIAL_LINKS.value not in existing_types:
+        add_module(PageModule(type=ModuleType.SOCIAL_LINKS, order=4, visible=True, data={"title": "Ссылки"}))
+
+    # Content modules
+    # Intro paragraph text block (no title)
+    has_intro = any(
+        isinstance(m, dict)
+        and m.get("type") == ModuleType.TEXT_BLOCK.value
+        and not (m.get("data") or {}).get("title")
+        for m in modules
+    )
+    if not has_intro:
+        add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=10, visible=True, data={"content": _build_team_intro_html(name, city)}))
+
+    # Timeline: check by signature (type + title) not just type
+    timeline_sig = ("timeline", "Хронология")
+    if timeline_sig not in existing_signatures:
+        # Frontend supports data.events or data.items; we use events for admin UX.
+        add_module(PageModule(type=ModuleType.TIMELINE, order=11, visible=True, data={"title": "Хронология", "events": []}))
+
+    # Required empty text sections - check by signature (type + title)
+    # NOTE: "Список игр команды" is NOT added here - it's handled by _update_team_games_module
+    # to prevent duplicates and ensure it's always auto-generated for KVN teams
+    required_sections = ["Состав команды", "История команды"]
+    base_order = 12
+    for idx, title in enumerate(required_sections):
+        text_block_sig = ("text_block", title)
+        if text_block_sig not in existing_signatures:
+            add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=base_order + idx, visible=True, data={"title": title, "content": ""}))
+
+    # Normalize orders to be stable
+    modules_sorted = sorted(
+        [m for m in modules if isinstance(m, dict)],
+        key=lambda x: (x.get("order") or 0)
+    )
+    for i, m in enumerate(modules_sorted):
+        m["order"] = i
+
+    return facts, ordered, modules_sorted
 
 
 async def create_content(collection_name: str, model_instance, tags: list = None):
@@ -499,6 +1245,217 @@ async def list_content(
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 
+@router.post("/teams/bulk-check", response_model=dict)
+async def bulk_check_teams(data: BulkTeamCheckRequest):
+    """
+    Bulk check team existence by normalized name (including aliases).
+    Intended for admin bulk import UI.
+    """
+    db = await get_db()
+
+    # Load only fields needed for matching
+    cursor = db.teams.find({}, {"_id": 1, "slug": 1, "name": 1, "title": 1, "aliases": 1})
+    existing_teams = await cursor.to_list(length=None)
+
+    # Build lookup: normalized_name -> team doc (first wins)
+    by_norm: Dict[str, Dict] = {}
+    for team in existing_teams:
+        base_name = (team.get("name") or team.get("title") or "").strip()
+        if base_name:
+            key = normalize_team_name(base_name)
+            if key and key not in by_norm:
+                by_norm[key] = team
+        for alias in team.get("aliases") or []:
+            if not isinstance(alias, str):
+                continue
+            key = normalize_team_name(alias.strip())
+            if key and key not in by_norm:
+                by_norm[key] = team
+
+    results: List[dict] = []
+    for idx, item in enumerate(data.items):
+        name = (item.name or "").strip()
+        city = (item.city or None)
+        if city is not None:
+            city = city.strip() or None
+
+        if not name:
+            results.append(BulkTeamCheckResult(index=idx, status="invalid", name="", city=city).model_dump())
+            continue
+
+        key = normalize_team_name(name)
+        matched = by_norm.get(key)
+        if matched:
+            display_name = (matched.get("name") or matched.get("title") or "").strip() or None
+            results.append(
+                BulkTeamCheckResult(
+                    index=idx,
+                    status="found",
+                    name=name,
+                    city=city,
+                    team_id=str(matched.get("_id")),
+                    team_slug=matched.get("slug"),
+                    team_display_name=display_name,
+                ).model_dump()
+            )
+        else:
+            results.append(BulkTeamCheckResult(index=idx, status="not_found", name=name, city=city).model_dump())
+
+    return {"items": results}
+
+
+@router.post("/teams/bulk-create", response_model=dict)
+async def bulk_create_teams(data: BulkTeamCreateRequest):
+    """
+    Bulk-create missing teams (and validate user decisions for found/link_existing rows).
+    """
+    db = await get_db()
+
+    created: List[dict] = []
+    skipped: List[dict] = []
+
+    for idx, row in enumerate(data.rows):
+        if row.action == "skip":
+            skipped.append({"index": idx, "reason": "skipped_by_user"})
+            continue
+
+        if row.action == "link_existing":
+            if not row.existing_team_id:
+                raise HTTPException(status_code=400, detail=f"Row {idx}: existing_team_id is required for link_existing")
+            if not row.confirmed_skip:
+                raise HTTPException(status_code=400, detail=f"Row {idx}: confirmation is required to skip existing team")
+            skipped.append({"index": idx, "reason": "linked_existing", "existing_team_id": row.existing_team_id})
+            continue
+
+        # create
+        name = (row.name or "").strip()
+        if not name:
+            raise HTTPException(status_code=400, detail=f"Row {idx}: name is required for create")
+
+        facts = {}
+        city = (row.city or "").strip()
+        if city:
+            facts["Город"] = city
+
+        base_slug = generate_slug(name)
+        if not base_slug:
+            base_slug = "team"
+        slug = await generate_unique_team_slug(base_slug)
+
+        title = name
+        # Baseline scaffold (facts + modules)
+        scaffold_facts, scaffold_order, scaffold_modules = _ensure_team_scaffold_fields(
+            {"facts": facts, "facts_order": list(facts.keys()), "modules": []},
+            name=name,
+            city=city or None
+        )
+
+        team = Team(
+            title=title,
+            slug=slug,
+            name=name,
+            team_type="kvn",
+            logo=_team_placeholder_logo(),
+            facts=scaffold_facts,
+            facts_order=scaffold_order,
+            social_links={},
+            primary_tag=name,
+            modules=scaffold_modules,
+            tags=[],
+            seo={"meta_title": title, "meta_description": "", "keywords": []},
+            status=ContentStatus.DRAFT,
+        )
+
+        # Use universal create handler (syncs tags/primary_tag, timestamps, etc.)
+        result = await create_content("teams", team, [])
+        # Mark as intentionally empty (bulk import pages are allowed to have empty placeholder modules)
+        await db.teams.update_one({"_id": result.get("id")}, {"$set": {"allow_empty_modules": True}})
+        created.append({"index": idx, "id": result.get("id"), "slug": result.get("slug"), "name": name})
+
+    return {"created": created, "skipped": skipped}
+
+
+@router.post("/teams/restore-logos", response_model=dict)
+async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
+    """
+    Bulk restore team logos from legacy image/poster fields.
+    Only affects teams where logo is missing or is a placeholder pattern.
+    """
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Требуются права администратора")
+    
+    db = await get_db()
+    
+    # Build query: teams with missing/placeholder logos
+    query = {}
+    if data.team_type:
+        query["team_type"] = data.team_type
+    
+    # Find teams that need logo restoration
+    cursor = db.teams.find(query)
+    matched = 0
+    modified = 0
+    restored_from_image = 0
+    restored_from_poster = 0
+    skipped_no_source = 0
+    
+    async for team in cursor:
+        current_logo = team.get("logo")
+        
+        # Check if we should restore this team's logo
+        should_restore = False
+        if data.only_if_placeholder:
+            # Only restore if logo is missing or is placeholder
+            if not current_logo or _is_placeholder_logo(current_logo):
+                should_restore = True
+        else:
+            # Restore all teams (even if they have a logo, try to improve from legacy fields)
+            should_restore = True
+        
+        if not should_restore:
+            continue
+        
+        matched += 1
+        
+        # Try to restore from legacy fields
+        picked_logo = _pick_team_logo(team)
+        
+        # Check if we actually found a source (not just placeholder)
+        if _is_placeholder_logo(picked_logo):
+            skipped_no_source += 1
+            continue
+        
+        # Determine source for reporting
+        if team.get("image") and not _is_placeholder_logo(team.get("image")):
+            restored_from_image += 1
+        elif team.get("poster") and not _is_placeholder_logo(team.get("poster")):
+            restored_from_poster += 1
+        
+        if data.dry_run:
+            continue
+        
+        # Update logo
+        changes = {
+            "logo": picked_logo,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        
+        res = await db.teams.update_one({"_id": team["_id"]}, {"$set": changes})
+        if res.modified_count:
+            modified += 1
+    
+    return {
+        "matched": matched,
+        "modified": modified,
+        "restored_from_image": restored_from_image,
+        "restored_from_poster": restored_from_poster,
+        "skipped_no_source": skipped_no_source,
+        "dry_run": data.dry_run,
+        "team_type": data.team_type
+    }
+
+
 def build_query(
     status: ContentStatus = None,
     tag: str = None,
@@ -635,14 +1592,68 @@ async def create_team(data: TeamCreate):
     
     # Устанавливаем primary_tag по умолчанию, если не задан
     primary_tag = data.primary_tag or data.name or data.title
+
+    # Default placeholder logo when none provided
+    logo = data.logo if data.logo is not None else _team_placeholder_logo()
+
+    # If modules are not provided, try to use default team template (if configured)
+    base_modules_input = [m.model_dump() if hasattr(m, "model_dump") else m for m in (data.modules or [])]
+    if not base_modules_input:
+        try:
+            db = await get_db()
+            tpl = await db.templates.find_one({"content_type": "team", "is_default": True})
+            if tpl and isinstance(tpl.get("modules"), list) and tpl.get("modules"):
+                base_modules_input = _clone_modules_with_new_ids(tpl.get("modules") or [])
+        except Exception:
+            # If templates collection is unavailable or template invalid, fall back to scaffold.
+            base_modules_input = []
+
+    # Ensure baseline scaffold (facts + modules) if modules are empty or missing core blocks
+    city = None
+    try:
+        if isinstance(data.facts, dict):
+            city = (data.facts or {}).get("Город") or (data.facts or {}).get("city")
+    except Exception:
+        city = None
+    scaffold_facts, scaffold_order, scaffold_modules = _ensure_team_scaffold_fields(
+        {"facts": data.facts or {}, "facts_order": data.facts_order or [], "modules": base_modules_input},
+        name=data.name,
+        city=city
+    )
     
     team = Team(
         title=data.title, slug=data.slug, name=data.name, team_type=data.team_type,
-        logo=data.logo, facts=data.facts or {}, facts_order=data.facts_order or [], social_links=data.social_links or {},
+        logo=logo,
+        facts=scaffold_facts,
+        facts_order=scaffold_order,
+        social_links=data.social_links or {},
         primary_tag=primary_tag,
-        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
+        modules=scaffold_modules,
+        tags=data.tags,
+        seo=data.seo or {},
+        status=data.status
     )
-    return await create_content("teams", team, data.tags)
+    result = await create_content("teams", team, data.tags)
+    
+    # Auto-update "Список игр команды" module for KVN teams
+    if data.team_type == "kvn" and data.slug:
+        try:
+            db = await get_db()
+            team_doc = await db.teams.find_one({"_id": result.get("id")}, {"modules": 1})
+            if team_doc:
+                updated_modules = await _update_team_games_module(data.slug, team_doc.get("modules") or [], db)
+                # Normalize orders
+                for i, m in enumerate(updated_modules):
+                    if isinstance(m, dict):
+                        m["order"] = i
+                await db.teams.update_one(
+                    {"_id": result.get("id")},
+                    {"$set": {"modules": updated_modules, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+        except Exception as e:
+            logger.warning(f"Failed to auto-update team games module for {data.slug}: {e}")
+    
+    return result
 
 
 @router.get("/teams", response_model=dict)
@@ -709,7 +1720,77 @@ async def list_teams(
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str):
     """Get team by ID or slug"""
-    return await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+    item = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+
+    # Self-healing: ensure baseline scaffold exists for older/empty teams
+    try:
+        db = await get_db()
+        name = (item.get("name") or item.get("title") or "").strip()
+        facts = item.get("facts") if isinstance(item.get("facts"), dict) else {}
+        city = facts.get("Город") or facts.get("city")
+
+        new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
+            {"facts": facts, "facts_order": item.get("facts_order") or [], "modules": item.get("modules") or []},
+            name=name or (item.get("title") or ""),
+            city=city
+        )
+
+        # Auto-update "Список игр команды" module for KVN teams
+        team_slug = item.get("slug")
+        if item.get("team_type") == "kvn" and team_slug:
+            try:
+                new_modules = await _update_team_games_module(team_slug, new_modules, db)
+            except Exception as e:
+                logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
+
+        # Remove empty placeholder blocks unless this team was intentionally created empty via bulk import
+        if not item.get("allow_empty_modules"):
+            new_modules = _prune_empty_modules(new_modules)
+
+        changes = {}
+
+        # Smart logo picker: preserve existing logo or restore from legacy image/poster fields
+        # This prevents overwriting real logos with placeholders
+        picked_logo = _pick_team_logo(item)
+        current_logo = item.get("logo")
+        # Only update if logo is missing, placeholder, or different from picked
+        if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
+            changes["logo"] = picked_logo
+
+        if new_facts != facts:
+            changes["facts"] = new_facts
+        if new_order != (item.get("facts_order") or []):
+            changes["facts_order"] = new_order
+        if new_modules != (item.get("modules") or []):
+            changes["modules"] = new_modules
+
+        # Ensure tags contain primary_tag if possible (avoid breaking on duplicates)
+        primary_tag = item.get("primary_tag")
+        if not primary_tag:
+            candidate = name or item.get("title")
+            if candidate:
+                try:
+                    await check_primary_tag_duplicate("teams", candidate, exclude_id=item.get("_id"))
+                    changes["primary_tag"] = candidate
+                    primary_tag = candidate
+                except HTTPException:
+                    primary_tag = None
+
+        if primary_tag:
+            tags = list(item.get("tags") or [])
+            if not any(isinstance(t, str) and t.lower() == primary_tag.lower() for t in tags):
+                tags.append(primary_tag)
+                changes["tags"] = tags
+                await tag_service.sync_tags(tags)
+
+        if changes:
+            changes["updated_at"] = datetime.now(timezone.utc).isoformat()
+            await db.teams.update_one({"_id": item["_id"]}, {"$set": changes})
+            item.update(changes)
+    except Exception as e:
+        logger.warning(f"Team scaffold self-heal skipped: {e}")
+
+    return item
 
 
 @router.put("/teams/{id}", response_model=dict)
@@ -1127,11 +2208,22 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         year = extract_year_from_slug(slug) or extract_year_from_slug(full_path)
     
     if not league_slug:
-        # Пытаемся извлечь из full_path (формат: kvn/league-slug/season-slug)
-        full_path = current_season.get("full_path", "")
-        path_parts = full_path.split("/")
-        if len(path_parts) >= 2 and path_parts[0] == "kvn":
-            league_slug = path_parts[1]
+        # Приоритет 1: пытаемся получить из родительского ресурса (самый надежный способ)
+        parent_id = current_season.get("parent_id")
+        if parent_id:
+            parent = await db.kvn.find_one({"id": parent_id})
+            if not parent:
+                parent = await db.kvn.find_one({"_id": parent_id})
+            if parent:
+                league_slug = get_league_slug_from_parent(parent)
+        
+        # Приоритет 2: пытаемся извлечь из full_path (формат: kvn/league-slug/season-slug)
+        if not league_slug:
+            full_path = current_season.get("full_path", "")
+            # Убираем начальный слэш, если есть, и разбиваем путь
+            path_parts = full_path.lstrip("/").split("/")
+            if len(path_parts) >= 2 and path_parts[0] == "kvn":
+                league_slug = path_parts[1]
     
     if not year or not league_slug:
         return "", ""
@@ -1162,6 +2254,53 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         if next_season:
             next_season_slug = next_season.get("slug", "")
     
+    # Вариант 1.5: ищем сезоны без season_data, но с правильным full_path и годом в slug
+    # Это помогает найти сезоны, созданные вручную без полного season_data
+    if not prev_season_slug or not next_season_slug:
+        # Ищем все сезоны с правильным full_path паттерном
+        escaped_league = re.escape(league_slug)
+        for target_year in [prev_year, next_year]:
+            if target_year == prev_year and prev_season_slug:
+                continue
+            if target_year == next_year and next_season_slug:
+                continue
+            
+            # Ищем сезоны с годом в full_path или slug
+            candidates = await db.kvn.find({
+                "$or": [
+                    {"full_path": {"$regex": f"kvn/{escaped_league}/.*{target_year}"}},
+                    {"slug": {"$regex": f".*{target_year}"}}
+                ]
+            }, {"slug": 1, "season_data": 1, "full_path": 1, "parent_id": 1}).to_list(20)
+            
+            for candidate in candidates:
+                # Проверяем, что это действительно сезон нужного года
+                c_year = candidate.get("season_data", {}).get("year", 0)
+                if not c_year:
+                    c_year = extract_year_from_slug(candidate.get("slug", ""))
+                if not c_year:
+                    c_year = extract_year_from_slug(candidate.get("full_path", ""))
+                
+                # Проверяем, что это сезон той же лиги (по parent_id или full_path)
+                is_same_league = False
+                candidate_parent_id = candidate.get("parent_id")
+                current_parent_id = current_season.get("parent_id")
+                if candidate_parent_id and current_parent_id and candidate_parent_id == current_parent_id:
+                    is_same_league = True
+                else:
+                    # Проверяем по full_path
+                    candidate_full_path = candidate.get("full_path", "")
+                    if candidate_full_path.startswith(f"kvn/{league_slug}/") or f"/{league_slug}/" in candidate_full_path:
+                        is_same_league = True
+                
+                if c_year == target_year and is_same_league:
+                    found_slug = candidate.get("slug", "")
+                    if target_year == prev_year and not prev_season_slug:
+                        prev_season_slug = found_slug
+                    elif target_year == next_year and not next_season_slug:
+                        next_season_slug = found_slug
+                    break
+    
     # Вариант 2: по parent_id (если сезоны - дочерние страницы лиги)
     if not prev_season_slug or not next_season_slug:
         parent_id = current_season.get("parent_id")
@@ -1177,7 +2316,11 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
             for season in all_seasons:
                 s_year = season.get("season_data", {}).get("year", 0)
                 if not s_year:
+                    # Пытаемся извлечь год из slug
                     s_year = extract_year_from_slug(season.get("slug", ""))
+                if not s_year:
+                    # Если не нашли в slug, пытаемся извлечь из full_path
+                    s_year = extract_year_from_slug(season.get("full_path", ""))
                 if s_year:
                     seasons_by_year[s_year] = season.get("slug", "")
             
@@ -1212,7 +2355,7 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
             for pattern in patterns:
                 seasons = await db.kvn.find({
                     "full_path": {"$regex": pattern}
-                }, {"slug": 1, "season_data": 1}).to_list(10)
+                }, {"slug": 1, "season_data": 1, "full_path": 1}).to_list(10)
                 
                 # Проверяем каждый найденный сезон, чтобы убедиться, что год совпадает
                 for season in seasons:
@@ -1221,6 +2364,9 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
                     if not s_year:
                         # Если нет в season_data, извлекаем из slug
                         s_year = extract_year_from_slug(season.get("slug", ""))
+                    if not s_year:
+                        # Если не нашли в slug, пытаемся извлечь из full_path
+                        s_year = extract_year_from_slug(season.get("full_path", ""))
                     
                     # Если год совпадает - это наш сезон
                     if s_year == target_year:
@@ -1369,6 +2515,42 @@ async def get_kvn_jury_stats(
     return result
 
 
+def _get_city_from_facts(facts: dict) -> str:
+    """Extract city from team facts, handling various formats"""
+    if not isinstance(facts, dict):
+        return ""
+    
+    # Ищем город по разным вариантам ключей
+    city_value = (
+        facts.get("Город") or 
+        facts.get("город") or 
+        facts.get("Города") or 
+        facts.get("города") or 
+        ""
+    )
+    
+    if not city_value:
+        return ""
+    
+    # Если это строка, обрабатываем HTML и разделители
+    if isinstance(city_value, str):
+        # Удаляем HTML-теги (особенно <br>)
+        cleaned = re.sub(r'<br\s*/?>', '\n', city_value, flags=re.IGNORECASE)
+        cleaned = re.sub(r'<[^>]+>', '', cleaned).strip()
+        
+        # Разделяем по новой строке, запятой или слэшу
+        cities = [
+            c.strip() 
+            for c in re.split(r'[\n,;/]', cleaned) 
+            if c.strip()
+        ]
+        
+        # Возвращаем все города через запятую
+        return ', '.join(cities) if cities else ""
+    
+    return str(city_value).strip()
+
+
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
 async def get_kvn_by_path(path: str):
     """Get KVN page by full path with children and breadcrumbs"""
@@ -1440,6 +2622,71 @@ async def get_kvn_by_path(path: str):
             "prev_season": prev_season_slug or "",
             "next_season": next_season_slug or ""
         }
+    
+    # Загружаем данные команд из сезона
+    team_data = {}
+    if kvn.get("season_data"):
+        season_data = kvn["season_data"]
+        team_slugs = set()
+        
+        # Собираем slug из winners
+        for winner in season_data.get("winners", []):
+            if isinstance(winner, str):
+                if winner:
+                    team_slugs.add(winner)
+            elif isinstance(winner, dict):
+                slug = winner.get("slug")
+                if slug:
+                    team_slugs.add(slug)
+        
+        # Собираем slug из all_teams
+        for team in season_data.get("all_teams", []):
+            if isinstance(team, str):
+                if team:
+                    team_slugs.add(team)
+            elif isinstance(team, dict):
+                slug = team.get("slug")
+                if slug:
+                    team_slugs.add(slug)
+        
+        # Собираем slug из stages -> games -> teams
+        for stage in season_data.get("stages", []):
+            for game in stage.get("games", []):
+                for team in game.get("teams", []):
+                    if isinstance(team, dict):
+                        slug = team.get("team_slug")
+                        if slug:
+                            team_slugs.add(slug)
+        
+        # Загружаем данные команд одним запросом
+        if team_slugs:
+            teams_cursor = db.teams.find(
+                {"slug": {"$in": list(team_slugs)}},
+                {
+                    "slug": 1,
+                    "name": 1,
+                    "title": 1,
+                    "facts": 1,
+                    "updated_at": 1
+                }
+            )
+            teams_list = await teams_cursor.to_list(length=len(team_slugs))
+            
+            # Формируем словарь по slug
+            for team in teams_list:
+                slug = team.get("slug")
+                if slug:
+                    team_name = team.get("name") or team.get("title") or ""
+                    city = _get_city_from_facts(team.get("facts", {}))
+                    team_data[slug] = {
+                        "name": team_name,
+                        "city": city,
+                        "updated_at": team.get("updated_at")
+                    }
+    
+    # Добавляем данные команд в ответ
+    kvn["team_data"] = team_data
+    kvn["team_data_version"] = datetime.now(timezone.utc).isoformat()
     
     # Remove MongoDB _id from response
     if "_id" in kvn:
@@ -1749,6 +2996,123 @@ async def update_kvn(id: str, data: KVNUpdate):
         kvn_uuid = kvn.get("id") or str(kvn_id)
         await linking_service.update_person_links("kvn", kvn_uuid, data.person_ids)
     # Note: team_ids are already saved in the document via update_data, no additional linking needed
+    
+    # Автоматически обновляем соседние сезоны, если изменился slug, year или league_slug
+    should_update_adjacent = False
+    old_slug = kvn.get("slug", "")
+    new_slug = update_data.get("slug", old_slug)
+    old_season_data = kvn.get("season_data", {})
+    new_season_data = update_data.get("season_data", old_season_data)
+    
+    # Проверяем, изменился ли slug
+    if old_slug != new_slug:
+        should_update_adjacent = True
+    
+    # Проверяем, изменился ли year или league_slug в season_data
+    if new_season_data:
+        old_year = old_season_data.get("year", 0)
+        new_year = new_season_data.get("year", 0)
+        old_league_slug = old_season_data.get("league_slug", "")
+        new_league_slug = new_season_data.get("league_slug", "")
+        
+        if old_year != new_year or old_league_slug != new_league_slug:
+            should_update_adjacent = True
+    
+    if should_update_adjacent:
+        # Сохраняем старые значения соседних сезонов
+        old_prev_season = old_season_data.get("prev_season", "")
+        old_next_season = old_season_data.get("next_season", "")
+        
+        # Получаем обновленный документ
+        updated_doc = await db.kvn.find_one({"_id": kvn_id})
+        if updated_doc:
+            # Пересчитываем соседние сезоны для обновленного сезона
+            prev_season_slug, next_season_slug = await find_adjacent_seasons(db, updated_doc)
+            
+            # Обновляем season_data с новыми соседними сезонами
+            if updated_doc.get("season_data"):
+                updated_doc["season_data"]["prev_season"] = prev_season_slug or ""
+                updated_doc["season_data"]["next_season"] = next_season_slug or ""
+            else:
+                updated_doc["season_data"] = {
+                    "prev_season": prev_season_slug or "",
+                    "next_season": next_season_slug or ""
+                }
+            
+            await db.kvn.update_one(
+                {"_id": kvn_id},
+                {"$set": {"season_data": updated_doc["season_data"]}}
+            )
+            
+            # Пересчитываем соседние сезоны для предыдущего сезона (если он был)
+            if old_prev_season:
+                prev_season_doc = await db.kvn.find_one({"slug": old_prev_season})
+                if prev_season_doc:
+                    prev_prev_slug, prev_next_slug = await find_adjacent_seasons(db, prev_season_doc)
+                    if prev_season_doc.get("season_data"):
+                        prev_season_doc["season_data"]["prev_season"] = prev_prev_slug or ""
+                        prev_season_doc["season_data"]["next_season"] = prev_next_slug or ""
+                    else:
+                        prev_season_doc["season_data"] = {
+                            "prev_season": prev_prev_slug or "",
+                            "next_season": prev_next_slug or ""
+                        }
+                    await db.kvn.update_one(
+                        {"_id": prev_season_doc["_id"]},
+                        {"$set": {"season_data": prev_season_doc["season_data"]}}
+                    )
+            
+            # Пересчитываем соседние сезоны для следующего сезона (если он был)
+            if old_next_season:
+                next_season_doc = await db.kvn.find_one({"slug": old_next_season})
+                if next_season_doc:
+                    next_prev_slug, next_next_slug = await find_adjacent_seasons(db, next_season_doc)
+                    if next_season_doc.get("season_data"):
+                        next_season_doc["season_data"]["prev_season"] = next_prev_slug or ""
+                        next_season_doc["season_data"]["next_season"] = next_next_slug or ""
+                    else:
+                        next_season_doc["season_data"] = {
+                            "prev_season": next_prev_slug or "",
+                            "next_season": next_next_slug or ""
+                        }
+                    await db.kvn.update_one(
+                        {"_id": next_season_doc["_id"]},
+                        {"$set": {"season_data": next_season_doc["season_data"]}}
+                    )
+            
+            logger.info(f"Обновлены соседние сезоны для сезона {new_slug}")
+            
+            # Если slug изменился, нужно обновить все сезоны, которые ссылаются на старый slug
+            if old_slug != new_slug and old_slug:
+                # Ищем все сезоны, которые ссылаются на старый slug в prev_season или next_season
+                seasons_to_update = await db.kvn.find({
+                    "$or": [
+                        {"season_data.prev_season": old_slug},
+                        {"season_data.next_season": old_slug}
+                    ]
+                }).to_list(1000)
+                
+                # Обновляем найденные сезоны
+                for season_to_update in seasons_to_update:
+                    # Заменяем старый slug на новый в ссылках
+                    if season_to_update.get("season_data"):
+                        if season_to_update["season_data"].get("prev_season") == old_slug:
+                            season_to_update["season_data"]["prev_season"] = new_slug
+                        if season_to_update["season_data"].get("next_season") == old_slug:
+                            season_to_update["season_data"]["next_season"] = new_slug
+                        
+                        # Пересчитываем соседние сезоны для этого сезона
+                        prev_slug, next_slug = await find_adjacent_seasons(db, season_to_update)
+                        season_to_update["season_data"]["prev_season"] = prev_slug or ""
+                        season_to_update["season_data"]["next_season"] = next_slug or ""
+                        
+                        await db.kvn.update_one(
+                            {"_id": season_to_update["_id"]},
+                            {"$set": {"season_data": season_to_update["season_data"]}}
+                        )
+                
+                if seasons_to_update:
+                    logger.info(f"Обновлены {len(seasons_to_update)} сезонов, которые ссылались на старый slug {old_slug}")
     
     # Return updated document, converting ObjectIds to strings
     updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})

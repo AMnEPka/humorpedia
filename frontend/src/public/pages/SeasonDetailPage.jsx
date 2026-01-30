@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import { StageSection } from '../components/StageSection';
 import { sanitizeHTML, containsHTML } from '../utils/sanitize';
+import { usePageTitle } from '@/utils/pageTitle';
+import { teamStorage } from '../utils/teamStorage';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -49,6 +51,8 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const [loading, setLoading] = useState(!initialSeasonData);
   const [error, setError] = useState('');
   const [teamNames, setTeamNames] = useState({}); // Кэш полных названий команд по slug
+
+  usePageTitle((season?.name || season?.title) || (loading ? 'Сезон' : (error ? 'Сезон не найден' : 'Сезон')));
 
   useEffect(() => {
     // Если данные уже переданы через props - используем их
@@ -96,75 +100,40 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     };
   }, [location.pathname, initialSeasonData]);
 
-  // Загружаем полные названия команд из базы данных для winners и all_teams
+  // Загружаем полные названия команд из локального хранилища и API
   useEffect(() => {
-    let cancelled = false;
-    const loadTeamNames = async () => {
-      if (!season?.season_data) return;
-      
-      const { winners = [], all_teams = [] } = season.season_data;
-      const slugsToLoad = new Set();
-      
-      // Собираем все slug из winners и all_teams
-      winners.forEach(winner => {
-        const slug = typeof winner === 'string' ? winner : (winner.slug || '');
-        if (slug && !teamNames[slug]) {
-          slugsToLoad.add(slug);
-        }
-      });
-      
-      all_teams.forEach(team => {
-        const slug = typeof team === 'string' ? team : (team.slug || '');
-        if (slug && !teamNames[slug]) {
-          slugsToLoad.add(slug);
-        }
-      });
-      
-      if (slugsToLoad.size === 0) return;
-      
-      const namesMap = { ...teamNames };
-      // Загружаем команды параллельно
-      await Promise.all(
-        Array.from(slugsToLoad).map(async (slug) => {
-          if (cancelled) return;
-          try {
-            const res = await publicApi.getTeam(slug);
-            if (cancelled) {
-              return;
-            }
-            const teamData = res.data;
-            // Используем полное название из базы данных
-            const teamName = teamData.name || teamData.title || '';
-            const cityFromFacts = getCityFromFacts(teamData.facts);
-            namesMap[slug] = {
-              name: teamName,
-              city: cityFromFacts
-            };
-          } catch (err) {
-            if (cancelled) return;
-            // Если команда не найдена, используем данные из сезона
-            const winner = winners.find(w => (typeof w === 'string' ? w : w.slug) === slug);
-            const team = all_teams.find(t => (typeof t === 'string' ? t : t.slug) === slug);
-            const teamData = winner || team;
-            if (teamData) {
-              const name = typeof teamData === 'string' ? teamData : (teamData.name || slug);
-              const city = typeof teamData === 'object' ? (teamData.city || '') : '';
-              namesMap[slug] = { name, city };
-            }
-          }
-        })
-      );
-      
-      if (!cancelled) {
-        setTeamNames(namesMap);
-      }
-    };
+    if (!season?.season_data) return;
     
-    loadTeamNames();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const { winners = [], all_teams = [] } = season.season_data;
+    const slugs = new Set();
+    
+    // Собираем все slug
+    winners.forEach(w => {
+      const slug = typeof w === 'string' ? w : w.slug;
+      if (slug) slugs.add(slug);
+    });
+    
+    all_teams.forEach(t => {
+      const slug = typeof t === 'string' ? t : t.slug;
+      if (slug) slugs.add(slug);
+    });
+    
+    const slugsArray = Array.from(slugs);
+    
+    // Сначала получаем из локального хранилища
+    const stored = teamStorage.getTeams(slugsArray);
+    
+    // Если есть данные команд в ответе API, обновляем хранилище
+    if (season.team_data && Object.keys(season.team_data).length > 0) {
+      teamStorage.updateFromSeason(season.team_data, season.team_data_version);
+      
+      // Объединяем данные из хранилища и API (API имеет приоритет)
+      const fromApi = season.team_data;
+      setTeamNames({ ...stored, ...fromApi });
+    } else {
+      // Используем только данные из хранилища
+      setTeamNames(stored);
+    }
   }, [season]);
 
   if (loading) {
@@ -204,10 +173,21 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const prevSeason = seasonData.prev_season;
   const nextSeason = seasonData.next_season;
   
-  // Извлекаем league_slug из текущего URL, если он не заполнен в seasonData
+  // Отладочная информация (можно убрать после проверки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Season navigation debug:', {
+      prevSeason,
+      nextSeason,
+      seasonLeagueSlug,
+      full_path: season?.full_path,
+      pathname: location.pathname
+    });
+  }
+  
+  // Приоритет 1: Извлекаем league_slug из текущего URL (самый надежный способ)
   // Формат URL: /kvn/vl-kvn/vl-2010 -> league_slug = "vl-kvn"
-  let league_slug = seasonLeagueSlug;
-  if (!league_slug && location.pathname) {
+  let league_slug = '';
+  if (location.pathname) {
     const pathParts = location.pathname.split('/').filter(Boolean);
     // Ищем структуру: kvn / league-slug / season-slug
     if (pathParts.length >= 3 && pathParts[0] === 'kvn') {
@@ -218,12 +198,19 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     }
   }
   
-  // Если все еще нет league_slug, пытаемся извлечь из full_path сезона
+  // Приоритет 2: Если все еще нет league_slug, пытаемся извлечь из full_path сезона
   if (!league_slug && season?.full_path) {
-    const pathParts = season.full_path.split('/').filter(Boolean);
+    // Убираем начальный слэш, если есть
+    const cleanPath = season.full_path.startsWith('/') ? season.full_path.substring(1) : season.full_path;
+    const pathParts = cleanPath.split('/').filter(Boolean);
     if (pathParts.length >= 2 && pathParts[0] === 'kvn') {
       league_slug = pathParts[1];
     }
+  }
+  
+  // Приоритет 3: Используем league_slug из seasonData только если не нашли выше
+  if (!league_slug) {
+    league_slug = seasonLeagueSlug;
   }
   
   // Функция для извлечения года из slug
@@ -281,15 +268,16 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       {/* Header with navigation */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          {prevSeason && league_slug && (
+          {prevSeason && league_slug ? (
             <Button variant="outline" asChild>
               <Link to={`/kvn/${league_slug}/${prevSeason}`}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 {prevSeasonYear}
               </Link>
             </Button>
+          ) : (
+            <div />
           )}
-          {(!prevSeason || !league_slug) && <div />}
           
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
@@ -300,15 +288,16 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
             </p>
           </div>
           
-          {nextSeason && league_slug && (
+          {nextSeason && league_slug ? (
             <Button variant="outline" asChild>
               <Link to={`/kvn/${league_slug}/${nextSeason}`}>
                 {nextSeasonYear}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+          ) : (
+            <div />
           )}
-          {(!nextSeason || !league_slug) && <div />}
         </div>
       </div>
 
