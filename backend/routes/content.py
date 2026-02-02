@@ -432,11 +432,15 @@ def _stage_code(stage_name: str) -> str:
 
 
 def _league_code_from_slug(league_slug: str) -> str:
-    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ', 'ml-kvn' -> 'МЛ')"""
+    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ', 'ml-kvn' -> 'МЛ', 'premier-liga' -> 'ПЛ')"""
     if league_slug == "vl-kvn":
         return "ВЛ"
     if league_slug == "ml-kvn":
         return "МЛ"
+    if league_slug == "premier-liga":
+        return "ПЛ"
+    if league_slug == "1l-kvn":
+        return "1Л"
     # Add more leagues later
     return league_slug or ""
 
@@ -450,9 +454,21 @@ async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List
         return []
     
     # Query all seasons of the specified league
-    seasons = await db.kvn.find({
-        "season_data.league_slug": league_slug
-    }).to_list(1000)
+    # Ищем по league_slug в season_data ИЛИ по full_path (на случай неправильного league_slug)
+    # full_path имеет формат: kvn/premier-liga/pl-2006, kvn/ml-kvn/ml-2006 и т.д.
+    path_pattern = f"kvn/{league_slug}/"
+    
+    # Ищем сезоны двумя способами:
+    # 1. По season_data.league_slug
+    # 2. По full_path (на случай если league_slug неправильный)
+    seasons_query = {
+        "$or": [
+            {"season_data.league_slug": league_slug},
+            {"full_path": {"$regex": f"^{re.escape(path_pattern)}"}}
+        ]
+    }
+    
+    seasons = await db.kvn.find(seasons_query).to_list(1000)
     
     results = []
     
@@ -468,7 +484,30 @@ async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List
             else:
                 continue
         
-        league = _league_code_from_slug(league_slug)
+        # Определяем фактическую лигу из full_path (источник истины)
+        # full_path имеет формат: kvn/premier-liga/pl-2006, kvn/ml-kvn/ml-2006 и т.д.
+        actual_league_slug = league_slug  # По умолчанию используем запрошенную лигу
+        full_path = season.get("full_path", "")
+        if full_path:
+            clean_path = full_path.lstrip("/")
+            path_parts = clean_path.split("/")
+            if len(path_parts) >= 2 and path_parts[0] == "kvn":
+                path_league = path_parts[1]
+                valid_leagues = ["vl-kvn", "premier-liga", "1l-kvn", "ml-kvn", "vul"]
+                if path_league in valid_leagues:
+                    actual_league_slug = path_league
+        
+        # Если фактическая лига не совпадает с запрошенной, пропускаем сезон
+        if actual_league_slug != league_slug:
+            continue
+        
+        # Validate league_slug against year to prevent historical inaccuracies
+        # Международная лига (ml-kvn) была создана в 2014 году
+        if actual_league_slug == "ml-kvn" and year < 2014:
+            # Skip seasons before 2014 that incorrectly have ml-kvn
+            continue
+        
+        league = _league_code_from_slug(actual_league_slug)
         
         stages = season_data.get("stages") or []
         for stage in stages:
@@ -578,7 +617,7 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
 
 async def _get_team_all_results(team_slug: str, db) -> List[Dict]:
     """
-    Collect all results for a team from all supported leagues (VL, ML, etc.).
+    Collect all results for a team from all supported leagues (VL, ПЛ, МЛ, etc.).
     Returns combined list of result dicts sorted by year and stage.
     """
     if not team_slug:
@@ -590,6 +629,10 @@ async def _get_team_all_results(team_slug: str, db) -> List[Dict]:
     # Высшая лига
     vl_results = await _get_team_league_results(team_slug, "vl-kvn", db)
     all_results.extend(vl_results)
+    
+    # Премьер-лига
+    pl_results = await _get_team_league_results(team_slug, "premier-liga", db)
+    all_results.extend(pl_results)
     
     # Международная лига
     ml_results = await _get_team_league_results(team_slug, "ml-kvn", db)
