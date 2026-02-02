@@ -1818,10 +1818,111 @@ async def get_team(id_or_slug: str):
     return item
 
 
+async def update_team_name_in_seasons(team_slug: str, new_name: str, db):
+    """
+    Обновляет название команды во всех сезонах КВН, где она упоминается.
+    Обновляет:
+    - season_data.all_teams[].name (сохраняет город, если он был: "Новое название (Город)")
+    - season_data.stages[].games[].teams[].team_name (сохраняет город, если он был)
+    """
+    if not team_slug or not new_name:
+        return
+    
+    updated_seasons = 0
+    
+    # Находим все сезоны, где упоминается эта команда
+    async for season in db.kvn.find({"season_data": {"$exists": True}}):
+        season_data = season.get("season_data", {})
+        if not season_data:
+            continue
+        
+        needs_update = False
+        
+        # Обновляем в all_teams
+        all_teams = season_data.get("all_teams", [])
+        for team_entry in all_teams:
+            if isinstance(team_entry, dict) and team_entry.get("slug") == team_slug:
+                old_name = team_entry.get("name", "")
+                # Если старое название содержит город в скобках, сохраняем его
+                city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_name)
+                if city_match:
+                    city = city_match.group(1)
+                    updated_name = f"{new_name} ({city})"
+                else:
+                    updated_name = new_name
+                
+                if old_name != updated_name:
+                    team_entry["name"] = updated_name
+                    needs_update = True
+            elif isinstance(team_entry, str) and team_entry == team_slug:
+                # Если all_teams содержит только slug'и, пропускаем (не обновляем)
+                pass
+        
+        # Обновляем в играх (stages -> games -> teams)
+        stages = season_data.get("stages", [])
+        for stage in stages:
+            games = stage.get("games", [])
+            for game in games:
+                teams = game.get("teams", [])
+                for team in teams:
+                    if isinstance(team, dict) and team.get("team_slug") == team_slug:
+                        old_team_name = team.get("team_name", "")
+                        # Если старое название содержит город в скобках, сохраняем его
+                        city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_team_name)
+                        if city_match:
+                            city = city_match.group(1)
+                            updated_team_name = f"{new_name} ({city})"
+                        else:
+                            updated_team_name = new_name
+                        
+                        if old_team_name != updated_team_name:
+                            team["team_name"] = updated_team_name
+                            needs_update = True
+        
+        # Сохраняем обновления, если были изменения
+        if needs_update:
+            try:
+                await db.kvn.update_one(
+                    {"_id": season["_id"]},
+                    {"$set": {"season_data": season_data, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                updated_seasons += 1
+            except Exception as e:
+                logger.error(f"Failed to update season {season.get('full_path', season.get('_id'))}: {e}")
+    
+    if updated_seasons > 0:
+        logger.info(f"Updated team name '{new_name}' in {updated_seasons} seasons for team slug '{team_slug}'")
+
+
 @router.put("/teams/{id}", response_model=dict)
 async def update_team(id: str, data: TeamUpdate):
     """Update team"""
-    return await update_content("teams", id, data, "Team not found")
+    db = await get_db()
+    
+    # Получаем текущую команду для сравнения
+    current_team = await db.teams.find_one({"_id": id})
+    if not current_team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    old_name = current_team.get("name") or current_team.get("title")
+    team_slug = current_team.get("slug")
+    
+    # Выполняем обновление
+    result = await update_content("teams", id, data, "Team not found")
+    
+    # Если изменилось название команды, обновляем его в сезонах
+    if team_slug:
+        # Получаем обновленную команду, чтобы узнать финальное значение name
+        updated_team = await db.teams.find_one({"_id": id})
+        if updated_team:
+            new_name = updated_team.get("name") or updated_team.get("title")
+            
+            # Проверяем, изменилось ли название
+            if new_name and new_name != old_name:
+                # Обновляем название в сезонах
+                await update_team_name_in_seasons(team_slug, new_name, db)
+    
+    return result
 
 
 @router.delete("/teams/{id}")
