@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
-  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText, Table
+  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText, Table, List
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -801,6 +801,9 @@ function GameContent({
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [tableInput, setTableInput] = useState('');
   const [tableError, setTableError] = useState('');
+  const [showListDialog, setShowListDialog] = useState(false);
+  const [listInput, setListInput] = useState('');
+  const [listError, setListError] = useState('');
 
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
@@ -899,6 +902,137 @@ function GameContent({
     });
 
     return rows;
+  };
+
+  // Парсинг нумерованного списка команд
+  const parseListData = (text) => {
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (lines.length === 0) {
+      return null;
+    }
+
+    const parsed = [];
+    
+    for (const line of lines) {
+      // Паттерн: "1. Название (Город) – баллы" или "1. Название"
+      // Поддерживаем тире (–) и дефис (-)
+      // Сначала пробуем полный формат с городом и баллами
+      let match = line.match(/^\d+\.\s*(.+?)\s*\(([^)]+)\)\s*[–-]\s*(.+)$/);
+      
+      if (match) {
+        // Формат: "1. Название (Город) – баллы"
+        const [, name, city, totalStr] = match;
+        let total = null;
+        
+        if (totalStr) {
+          // Извлекаем число из строки (может быть "10,7 балла" или "10.5" или "10")
+          const numMatch = totalStr.match(/([\d,\.]+)/);
+          if (numMatch) {
+            const numStr = numMatch[1].replace(',', '.');
+            total = parseFloat(numStr);
+            if (isNaN(total)) total = null;
+          }
+        }
+        
+        parsed.push({
+          name: name.trim(),
+          city: city ? city.trim() : null,
+          total: total
+        });
+      } else {
+        // Пробуем формат без города: "1. Название – баллы"
+        match = line.match(/^\d+\.\s*(.+?)\s*[–-]\s*(.+)$/);
+        if (match) {
+          const [, name, totalStr] = match;
+          let total = null;
+          
+          if (totalStr) {
+            const numMatch = totalStr.match(/([\d,\.]+)/);
+            if (numMatch) {
+              const numStr = numMatch[1].replace(',', '.');
+              total = parseFloat(numStr);
+              if (isNaN(total)) total = null;
+            }
+          }
+          
+          parsed.push({
+            name: name.trim(),
+            city: null,
+            total: total
+          });
+        } else {
+          // Просто название: "1. Название"
+          const simpleMatch = line.match(/^\d+\.\s*(.+)$/);
+          if (simpleMatch) {
+            parsed.push({
+              name: simpleMatch[1].trim(),
+              city: null,
+              total: null
+            });
+          }
+        }
+      }
+    }
+    
+    return parsed.length > 0 ? parsed : null;
+  };
+
+  const applyListData = () => {
+    setListError('');
+    
+    const parsed = parseListData(listInput);
+    
+    if (!parsed || parsed.length === 0) {
+      setListError('Не удалось распарсить список. Убедитесь, что каждая строка начинается с номера и точки (например: "1. Название команды").');
+      return;
+    }
+    
+    // Создаем команды из списка
+    const newTeams = parsed.map((item, index) => {
+      // Пытаемся найти команду в списке участников сезона
+      const matchedTeam = matchTeamName(item.name);
+      
+      let teamName = item.name;
+      let teamSlug = '';
+      let city = item.city || '';
+      
+      if (matchedTeam) {
+        teamName = matchedTeam.team_name;
+        teamSlug = matchedTeam.team_slug || '';
+        // Если город не указан в списке, но есть у найденной команды, используем его
+        if (!city && matchedTeam.city) {
+          city = matchedTeam.city;
+        }
+      }
+      
+      // Формируем полное название с городом, если нужно
+      if (city && !teamName.includes(`(${city})`)) {
+        teamName = `${teamName} (${city})`;
+      }
+      
+      // Создаем объект команды
+      const team = {
+        team_slug: teamSlug,
+        team_name: teamName,
+        place: index + 1,
+        total: item.total !== null ? item.total : 0,
+        scores: {},
+        passed: false,
+        is_winner: false,
+        is_additional: false,
+        city: city
+      };
+      
+      return team;
+    });
+    
+    // Обновляем игру с новыми командами
+    updateGame({ teams: newTeams });
+    
+    // Закрываем диалог
+    setShowListDialog(false);
+    setListInput('');
   };
 
   const applyTableData = () => {
@@ -1167,6 +1301,20 @@ function GameContent({
                 Вставить из таблицы
               </Button>
             )}
+            {(!game.contests || game.contests.length === 0) && (
+              <Button 
+                onClick={() => {
+                  setListInput('');
+                  setListError('');
+                  setShowListDialog(true);
+                }} 
+                size="sm" 
+                variant="outline"
+              >
+                <List className="h-4 w-4 mr-2" />
+                Вставить из списка
+              </Button>
+            )}
             <Button 
               onClick={() => onAddTeam(stageIndex, gameIndex)} 
               size="sm" 
@@ -1342,6 +1490,85 @@ function GameContent({
               Отмена
             </Button>
             <Button onClick={applyTableData}>
+              Применить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог вставки из списка */}
+      <Dialog open={showListDialog} onOpenChange={setShowListDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Вставить команды из списка</DialogTitle>
+            <DialogDescription>
+              Вставьте нумерованный список команд. Формат:
+              <br />
+              <code className="text-xs">1. Название команды (Город) – баллы</code>
+              <br />
+              или просто:
+              <br />
+              <code className="text-xs">1. Название команды</code>
+              <br />
+              <br />
+              Город и баллы опциональны. Поддерживаются тире (–) и дефис (-).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Список команд</Label>
+              <Textarea
+                value={listInput}
+                onChange={(e) => {
+                  setListInput(e.target.value);
+                  setListError('');
+                }}
+                placeholder={`Пример:\n1. НЗ (Нижний Новгород) – 10,7 балла\n2. Гураны (Чита) – 10,5\n3. Альтернатива (Астрахань) – 10,4\n4. ВИАсиПЕД (Красноярск) – 10,0\n\nИли просто:\n1. ПриМа\n2. Сургугазпром\n3. Сборная Екатеринбурга`}
+                rows={10}
+                className="font-mono text-sm"
+              />
+              {listError && (
+                <p className="text-sm text-destructive">{listError}</p>
+              )}
+            </div>
+            {listInput && (() => {
+              const parsed = parseListData(listInput);
+              if (!parsed || parsed.length === 0) return null;
+              
+              return (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Предпросмотр ({parsed.length} команд):
+                  </Label>
+                  <div className="border rounded p-2 bg-muted max-h-60 overflow-auto">
+                    <div className="space-y-1 text-xs">
+                      {parsed.map((item, idx) => {
+                        const matchedTeam = matchTeamName(item.name);
+                        const matchStatus = matchedTeam 
+                          ? `✓ ${matchedTeam.team_name}${matchedTeam.city ? ` (${matchedTeam.city})` : ''}`
+                          : '✗ Не найдено';
+                        return (
+                          <div key={idx} className="flex items-center gap-2 py-1 border-b last:border-0">
+                            <span className="font-medium w-48">{item.name}</span>
+                            {item.city && <span className="text-muted-foreground w-32">({item.city})</span>}
+                            {item.total !== null && <span className="text-muted-foreground w-20">{item.total}</span>}
+                            <span className={`text-xs flex-1 ${matchedTeam ? 'text-green-600' : 'text-orange-600'}`}>
+                              {matchStatus}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowListDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={applyListData}>
               Применить
             </Button>
           </DialogFooter>

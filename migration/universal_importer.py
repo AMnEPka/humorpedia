@@ -226,18 +226,37 @@ class UniversalImporter:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         
         import import_people_from_sql
+        import importlib
         
-        # Временно устанавливаем правильный путь к SQL файлу
+        # ПРИНУДИТЕЛЬНО перезагружаем модуль, чтобы сбросить любые кэшированные значения
+        # Это гарантирует, что используется актуальный SQL файл
+        importlib.reload(import_people_from_sql)
+        
+        # ВСЕГДА устанавливаем актуальный путь к SQL файлу перед каждым вызовом
+        # Это гарантирует, что используется правильный файл, даже если он был обновлен
         original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
         import_people_from_sql.SQL_FILE = self.sql_file
+        
+        # Проверяем, что файл существует и доступен
+        if not os.path.exists(self.sql_file):
+            print(f"⚠️  SQL файл не найден: {self.sql_file}")
+            return None
+        
+        # Проверяем время модификации файла для отладки
+        file_mtime = os.path.getmtime(self.sql_file)
+        file_size = os.path.getsize(self.sql_file)
         
         try:
             from import_people_from_sql import _extract_for_ids
             
             # Функция возвращает (site_content_dict, tv_values_dict)
+            # Она каждый раз открывает файл заново, так что обновления будут подхвачены
             site_content, tv_values = _extract_for_ids({resource_id})
             
             if resource_id not in site_content:
+                print(f"⚠️  Ресурс с ID {resource_id} не найден в SQL файле")
+                print(f"   SQL файл: {self.sql_file}")
+                print(f"   Размер: {file_size} байт, изменен: {datetime.fromtimestamp(file_mtime)}")
                 return None
             
             return {
@@ -245,7 +264,7 @@ class UniversalImporter:
                 'tv': tv_values.get(resource_id, {})
             }
         finally:
-            # Восстанавливаем оригинальный путь
+            # Восстанавливаем оригинальный путь (если нужно)
             if original_sql_file is not None:
                 import_people_from_sql.SQL_FILE = original_sql_file
     
@@ -263,6 +282,10 @@ class UniversalImporter:
         # Используем функции из import_people_from_sql
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import import_people_from_sql
+        import importlib
+        
+        # ПРИНУДИТЕЛЬНО перезагружаем модуль, чтобы сбросить любые кэшированные значения
+        importlib.reload(import_people_from_sql)
         
         # Временно устанавливаем правильный путь к SQL файлу
         original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
@@ -312,6 +335,78 @@ class UniversalImporter:
                         except:
                             continue
             
+            return sorted(resource_ids)
+        finally:
+            # Восстанавливаем оригинальный путь
+            if original_sql_file is not None:
+                import_people_from_sql.SQL_FILE = original_sql_file
+    
+    def get_all_resource_ids(self) -> List[int]:
+        """Получает список ВСЕХ ID ресурсов из SQL файла.
+        
+        Это полезно для полного обновления индексов после обновления SQL файла.
+        Модуль import_people_from_sql работает для ВСЕХ типов контента, не только для людей.
+        Он читает таблицу modx_site_content, которая содержит все ресурсы MODX.
+        
+        Returns:
+            Список всех ID ресурсов в SQL файле
+        """
+        resource_ids = []
+        
+        # Используем функции из import_people_from_sql
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import import_people_from_sql
+        import importlib
+        
+        # ПРИНУДИТЕЛЬНО перезагружаем модуль
+        importlib.reload(import_people_from_sql)
+        
+        # Устанавливаем правильный путь к SQL файлу
+        original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
+        import_people_from_sql.SQL_FILE = self.sql_file
+        
+        try:
+            from import_people_from_sql import _split_rows, _split_fields
+            
+            in_sc = False
+            buf = []
+            
+            print(f"📖 Сканирование SQL файла для получения всех ID: {self.sql_file}")
+            
+            with open(self.sql_file, 'r', encoding='utf-8', errors='replace') as f:
+                for line in f:
+                    if not in_sc:
+                        if line.startswith('INSERT INTO `modx_site_content`'):
+                            in_sc = True
+                            buf = [line]
+                        continue
+                    
+                    buf.append(line)
+                    if not line.strip().endswith(';'):
+                        continue
+                    
+                    blob = ''.join(buf)
+                    in_sc = False
+                    buf = []
+                    
+                    m = re.search(r'VALUES\s*(.*);\s*$', blob, flags=re.DOTALL)
+                    if not m:
+                        continue
+                    
+                    rows = _split_rows(m.group(1))
+                    for r in rows:
+                        parts = _split_fields(r)
+                        if not parts or parts[0] is None:
+                            continue
+                        
+                        try:
+                            rid = int(str(parts[0]).strip())
+                            if rid not in resource_ids:
+                                resource_ids.append(rid)
+                        except Exception:
+                            continue
+            
+            print(f"✅ Найдено {len(resource_ids)} ID ресурсов в SQL файле")
             return sorted(resource_ids)
         finally:
             # Восстанавливаем оригинальный путь
@@ -982,6 +1077,12 @@ if __name__ == '__main__':
   # Импорт человека
   python universal_importer.py --type person --ids 350 --apply
 
+  # Импорт с принудительной перезагрузкой кэша (если обновили SQL файл)
+  python universal_importer.py --type person --ids 350 --reload-cache --apply
+
+  # Импорт с указанием другого SQL файла
+  python universal_importer.py --type person --ids 350 --sql-file /path/to/new/humorbd.sql --apply
+
   # Импорт шоу
   python universal_importer.py --type show --ids 1656 --apply
 
@@ -1031,6 +1132,10 @@ if __name__ == '__main__':
                         help='Записать в MongoDB (без этого флага - dry-run)')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Подробный вывод')
+    parser.add_argument('--sql-file', type=str, default=None,
+                        help='Путь к SQL файлу (по умолчанию: humorbd.sql в директории скрипта)')
+    parser.add_argument('--reload-cache', action='store_true',
+                        help='Принудительно перезагрузить кэш (перечитать SQL файл)')
     
     args = parser.parse_args()
     
@@ -1063,6 +1168,27 @@ if __name__ == '__main__':
     if args.collection:
         importer.collection = args.collection
         print(f"📁 Используется коллекция: {args.collection}")
+    
+    # Переопределяем SQL файл если указан
+    if args.sql_file:
+        importer.sql_file = args.sql_file
+        print(f"📄 Используется SQL файл: {args.sql_file}")
+    
+    # Если указан --reload-cache, принудительно перезагружаем модуль
+    # ВАЖНО: Это нужно только если модуль был импортирован ранее в том же сеансе Python
+    # В обычном случае путь к SQL файлу обновляется автоматически при каждом вызове extract_resource
+    if args.reload_cache:
+        print("🔄 Принудительная перезагрузка кэша модуля...")
+        import importlib
+        import import_people_from_sql
+        importlib.reload(import_people_from_sql)
+        # Обновляем SQL_FILE в модуле
+        import_people_from_sql.SQL_FILE = importer.sql_file
+        print(f"   ✅ SQL файл установлен: {importer.sql_file}")
+    
+    # ВАЖНО: Путь к SQL файлу обновляется автоматически при каждом вызове extract_resource
+    # Функция _extract_for_ids каждый раз открывает файл заново, так что обновления подхватываются автоматически
+    # Флаг --reload-cache нужен только если модуль был импортирован ранее в том же сеансе Python
     
     # Определяем родителя если указан (для иерархии в MongoDB)
     parent_id = None
