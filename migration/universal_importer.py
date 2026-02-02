@@ -230,7 +230,7 @@ class UniversalImporter:
         
         # ПРИНУДИТЕЛЬНО перезагружаем модуль, чтобы сбросить любые кэшированные значения
         # Это гарантирует, что используется актуальный SQL файл
-        importlib.reload(import_people_from_sql)
+        import_people_from_sql = importlib.reload(import_people_from_sql)
         
         # ВСЕГДА устанавливаем актуальный путь к SQL файлу перед каждым вызовом
         # Это гарантирует, что используется правильный файл, даже если он был обновлен
@@ -285,7 +285,7 @@ class UniversalImporter:
         import importlib
         
         # ПРИНУДИТЕЛЬНО перезагружаем модуль, чтобы сбросить любые кэшированные значения
-        importlib.reload(import_people_from_sql)
+        import_people_from_sql = importlib.reload(import_people_from_sql)
         
         # Временно устанавливаем правильный путь к SQL файлу
         original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
@@ -359,7 +359,7 @@ class UniversalImporter:
         import importlib
         
         # ПРИНУДИТЕЛЬНО перезагружаем модуль
-        importlib.reload(import_people_from_sql)
+        import_people_from_sql = importlib.reload(import_people_from_sql)
         
         # Устанавливаем правильный путь к SQL файлу
         original_sql_file = getattr(import_people_from_sql, 'SQL_FILE', None)
@@ -1181,7 +1181,7 @@ if __name__ == '__main__':
         print("🔄 Принудительная перезагрузка кэша модуля...")
         import importlib
         import import_people_from_sql
-        importlib.reload(import_people_from_sql)
+        import_people_from_sql = importlib.reload(import_people_from_sql)
         # Обновляем SQL_FILE в модуле
         import_people_from_sql.SQL_FILE = importer.sql_file
         print(f"   ✅ SQL файл установлен: {importer.sql_file}")
