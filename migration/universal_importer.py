@@ -707,13 +707,31 @@ class UniversalImporter:
             client = pymongo.MongoClient(self.mongo_url)
             db = client[self.db_name]
             
-            # Проверяем существует ли (по old_id или slug)
-            existing = db[self.collection].find_one({
-                '$or': [
-                    {'old_id': int(sc.id)},
-                    {'slug': doc['slug']}
-                ]
-            })
+            # ВАЖНО: Для KVN сезонов проверяем по old_id или full_path (не по slug!)
+            # Это предотвращает перезапись разных сезонов с одинаковым slug (например, "2023")
+            if self.content_type == 'kvn':
+                # Сначала проверяем по old_id (самый надежный способ)
+                existing = db[self.collection].find_one({'old_id': int(sc.id)})
+                
+                # Если не нашли по old_id, проверяем по full_path
+                if not existing and doc.get('full_path'):
+                    existing = db[self.collection].find_one({'full_path': doc['full_path']})
+                
+                # Только если не нашли ни по old_id, ни по full_path, проверяем по slug
+                # Но только если parent_id совпадает (чтобы не перезаписать сезон из другой лиги)
+                if not existing and doc.get('parent_id'):
+                    existing = db[self.collection].find_one({
+                        'slug': doc['slug'],
+                        'parent_id': doc['parent_id']
+                    })
+            else:
+                # Для остальных типов контента используем старую логику
+                existing = db[self.collection].find_one({
+                    '$or': [
+                        {'old_id': int(sc.id)},
+                        {'slug': doc['slug']}
+                    ]
+                })
             
             if existing:
                 # Обновляем
@@ -722,11 +740,11 @@ class UniversalImporter:
                     {'_id': existing['_id']},
                     {'$set': doc}
                 )
-                print(f"  ✅ Обновлён: {doc['slug']}")
+                print(f"  ✅ Обновлён: {doc.get('full_path', doc['slug'])}")
             else:
                 # Создаём
                 db[self.collection].insert_one({'_id': doc['id'], **doc})
-                print(f"  ✅ Создан: {doc['slug']}")
+                print(f"  ✅ Создан: {doc.get('full_path', doc['slug'])}")
             
             # Синхронизируем теги
             self._sync_tags(db, doc['tags'])

@@ -1,4 +1,5 @@
 """Tag service - centralized tag management"""
+import re
 from typing import List, Optional
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -41,9 +42,12 @@ class TagService:
             if not tag_name:
                 continue
             
+            # Escape special regex characters in tag name to prevent regex errors
+            escaped_tag_name = re.escape(tag_name)
+            
             # Check if tag already exists (case-insensitive)
             existing = await db.tags.find_one({
-                "name": {"$regex": f"^{tag_name}$", "$options": "i"}
+                "name": {"$regex": f"^{escaped_tag_name}$", "$options": "i"}
             })
             
             if not existing:
@@ -79,8 +83,10 @@ class TagService:
     async def search_tags(query: str, limit: int = 20) -> List[str]:
         """Search tags by name"""
         db = await get_db()
+        # Escape special regex characters in query to prevent regex errors
+        escaped_query = re.escape(query)
         cursor = db.tags.find(
-            {"name": {"$regex": query, "$options": "i"}},
+            {"name": {"$regex": escaped_query, "$options": "i"}},
             {"name": 1, "_id": 0}
         ).limit(limit)
         tags = await cursor.to_list(limit)

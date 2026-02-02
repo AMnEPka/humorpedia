@@ -146,6 +146,8 @@ async def generate_unique_team_slug(base_slug: str) -> str:
         if not existing:
             return slug
         counter += 1
+        if counter > 1000:  # Safety limit
+            raise HTTPException(status_code=500, detail="Could not generate unique team slug")
 
 
 class BulkTeamCheckItem(BaseModel):
@@ -1426,11 +1428,34 @@ async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
             skipped_no_source += 1
             continue
         
-        # Determine source for reporting
-        if team.get("image") and not _is_placeholder_logo(team.get("image")):
-            restored_from_image += 1
-        elif team.get("poster") and not _is_placeholder_logo(team.get("poster")):
-            restored_from_poster += 1
+        # Determine source for reporting by tracing through _pick_team_logo's priority logic
+        # This ensures we count the actual source used, not just what fields exist
+        source_determined = False
+        
+        # Check if picked_logo came from existing logo (priority 1)
+        if current_logo and not _is_placeholder_logo(current_logo):
+            normalized_current = _normalize_to_mediafile(current_logo)
+            if normalized_current and normalized_current.get("url") == picked_logo.get("url"):
+                # Logo came from existing logo, not from image/poster - don't count as restored
+                source_determined = True
+        
+        # If not from existing logo, check if it came from image (priority 2)
+        if not source_determined:
+            image = team.get("image")
+            if image:
+                normalized_image = _normalize_to_mediafile(image)
+                if normalized_image and normalized_image.get("url") == picked_logo.get("url"):
+                    restored_from_image += 1
+                    source_determined = True
+        
+        # If not from image, check if it came from poster (priority 3)
+        if not source_determined:
+            poster = team.get("poster")
+            if poster:
+                normalized_poster = _normalize_to_mediafile(poster)
+                if normalized_poster and normalized_poster.get("url") == picked_logo.get("url"):
+                    restored_from_poster += 1
+                    source_determined = True
         
         if data.dry_run:
             continue
@@ -2781,7 +2806,11 @@ async def get_kvn_hierarchy(
 @router.put("/kvn/{id}", response_model=dict)
 async def update_kvn(id: str, data: KVNUpdate):
     """Update KVN page"""
-    db = await get_db()
+    try:
+        db = await get_db()
+    except Exception as e:
+        logger.error(f"Error getting database connection: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
     
     # For KVN, try to find by 'id' field (UUID) first, then by _id
     kvn = await db.kvn.find_one({"id": id})
@@ -2870,6 +2899,14 @@ async def update_kvn(id: str, data: KVNUpdate):
             elif hasattr(season_data_dict, 'dict'):
                 season_data_dict = season_data_dict.dict()
             
+            # Логируем наличие специальных символов в данных для диагностики
+            try:
+                season_data_str = json.dumps(season_data_dict, ensure_ascii=False)
+                if '+' in season_data_str or '%2B' in season_data_str:
+                    logger.info(f"Found '+' character in season_data, will handle properly")
+            except:
+                pass
+            
             # Рекурсивно очищаем данные от несериализуемых объектов
             def clean_data(obj, depth=0, max_depth=15):
                 if depth > max_depth:
@@ -2886,6 +2923,11 @@ async def update_kvn(id: str, data: KVNUpdate):
                 elif isinstance(obj, list):
                     return [clean_data(item, depth+1, max_depth) for item in obj]
                 elif isinstance(obj, (str, int, float, bool, type(None))):
+                    # Убеждаемся, что строки правильно обрабатываются
+                    if isinstance(obj, str):
+                        # Проверяем на наличие проблемных символов
+                        if obj and ('+' in obj or '%' in obj):
+                            logger.debug(f"Processing string with special characters: {obj[:50]}...")
                     return obj
                 elif hasattr(obj, 'model_dump'):
                     # Pydantic модель
@@ -2917,12 +2959,35 @@ async def update_kvn(id: str, data: KVNUpdate):
                             logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data при обновлении")
             
             # Пробуем сериализовать для проверки
-            json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
-            logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
-            # Если данные слишком большие - логируем предупреждение, но сохраняем
-            if len(json_str) > 1000000:  # 1MB
-                logger.warning(f"Season data is large: {len(json_str)} bytes")
-            update_data["season_data"] = cleaned_data
+            try:
+                json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
+                logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
+                # Если данные слишком большие - логируем предупреждение, но сохраняем
+                if len(json_str) > 1000000:  # 1MB
+                    logger.warning(f"Season data is large: {len(json_str)} bytes")
+                update_data["season_data"] = cleaned_data
+            except (TypeError, ValueError) as json_err:
+                logger.error(f"JSON serialization error: {json_err}")
+                logger.error(f"Problematic data type: {type(cleaned_data)}")
+                # Пробуем более агрессивную очистку
+                try:
+                    # Конвертируем все в базовые типы
+                    def force_serializable(obj):
+                        if isinstance(obj, (str, int, float, bool, type(None))):
+                            return obj
+                        elif isinstance(obj, dict):
+                            return {str(k): force_serializable(v) for k, v in obj.items()}
+                        elif isinstance(obj, list):
+                            return [force_serializable(item) for item in obj]
+                        else:
+                            return str(obj)
+                    cleaned_data = force_serializable(cleaned_data)
+                    json_str = json.dumps(cleaned_data, ensure_ascii=False)
+                    update_data["season_data"] = cleaned_data
+                    logger.warning("Used force_serializable to fix JSON serialization")
+                except Exception as e3:
+                    logger.error(f"Even force_serializable failed: {e3}")
+                    raise
         except Exception as e:
             logger.error(f"Error processing season_data: {e}", exc_info=True)
             import traceback
@@ -3115,10 +3180,14 @@ async def update_kvn(id: str, data: KVNUpdate):
                     logger.info(f"Обновлены {len(seasons_to_update)} сезонов, которые ссылались на старый slug {old_slug}")
     
     # Return updated document, converting ObjectIds to strings
-    updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
-    if updated:
-        updated = convert_objectids_to_strings(updated)
-    return updated
+    try:
+        updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
+        if updated:
+            updated = convert_objectids_to_strings(updated)
+        return updated
+    except Exception as e:
+        logger.error(f"Error returning updated document for KVN {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error retrieving updated document: {str(e)}")
 
 
 @router.delete("/kvn/{id}")

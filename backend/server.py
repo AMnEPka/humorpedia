@@ -390,9 +390,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     
     logger.error(f"Request body: {body}")
     
+    # Ensure CORS headers are included in validation error responses
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": errors, "body": body}
+        content={"detail": errors, "body": body},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
     )
 
 # Global exception handler
@@ -401,9 +407,17 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     import traceback
     logger.error(f"Traceback: {traceback.format_exc()}")
+    logger.error(f"Request path: {request.url.path}")
+    logger.error(f"Request method: {request.method}")
+    # Ensure CORS headers are included in error responses
     return JSONResponse(
         status_code=500,
-        content={"detail": f"Internal server error: {str(exc)}"}
+        content={"detail": f"Internal server error: {str(exc)}"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
     )
 
 
