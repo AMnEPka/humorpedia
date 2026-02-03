@@ -55,6 +55,8 @@ def restore_from_backup(backup_path, force=False):
                 dump_dirs = all_dirs
             else:
                 logger.error("Не найдена директория с дампом в архиве")
+                if extract_dir.exists():
+                    shutil.rmtree(extract_dir)
                 return False
         
         dump_dir = dump_dirs[0] / DB_NAME
@@ -73,6 +75,8 @@ def restore_from_backup(backup_path, force=False):
             else:
                 logger.error(f"Директория дампа не найдена: {dump_dir}")
                 logger.info(f"Содержимое архива: {list(extract_dir.rglob('*'))}")
+                if extract_dir.exists():
+                    shutil.rmtree(extract_dir)
                 return False
         
         # Извлекаем хост и порт из MONGO_URL
