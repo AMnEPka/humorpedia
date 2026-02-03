@@ -483,6 +483,9 @@ async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List
                 year = int(m.group(0))
             else:
                 continue
+        else:
+            # Convert to int in case year is stored as string in MongoDB
+            year = int(year)
         
         # Определяем фактическую лигу из full_path (источник истины)
         # full_path имеет формат: kvn/premier-liga/pl-2006, kvn/ml-kvn/ml-2006 и т.д.

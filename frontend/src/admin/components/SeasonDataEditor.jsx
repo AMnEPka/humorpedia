@@ -1591,6 +1591,12 @@ function GameContent({
   );
 }
 
+// Utility function to remove city name from team name (e.g., "Team Name (City)" -> "Team Name")
+function removeCityFromName(name) {
+  if (!name) return name;
+  return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
+}
+
 export default function SeasonDataEditor({ seasonData, onChange }) {
   const [expandedStages, setExpandedStages] = useState(new Set());
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
@@ -2035,12 +2041,6 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       const stageAfter = newData.stages[stageIndex];
       const currentAdditional = Array.isArray(stageAfter.additional_teams) ? [...stageAfter.additional_teams] : [];
 
-      // Функция для удаления города из скобок
-      const removeCityFromName = (name) => {
-        if (!name) return name;
-        return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
-      };
-
       const stillHasName = (name) => {
         const target = String(name || '').trim();
         if (!target) return false;
@@ -2107,14 +2107,6 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     let nextName = String(nextTeam.team_name || '').trim();
     const nextIsAdditional = !!nextTeam.is_additional;
     
-    // Функция для удаления города из скобок из названия команды
-    // Используется для additional_teams, где город не должен отображаться
-    const removeCityFromName = (name) => {
-      if (!name) return name;
-      // Убираем город в скобках в конце: "Название (Город)" -> "Название"
-      return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
-    };
-
     const shouldSyncAdditional =
       Object.prototype.hasOwnProperty.call(updates, 'is_additional') ||
       Object.prototype.hasOwnProperty.call(updates, 'team_name');
@@ -2236,12 +2228,6 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       newData.stages[stageIndex] = { ...newData.stages[stageIndex] };
       const stage = newData.stages[stageIndex];
       const currentAdditional = Array.isArray(stage.additional_teams) ? [...stage.additional_teams] : [];
-
-      // Функция для удаления города из скобок
-      const removeCityFromName = (name) => {
-        if (!name) return name;
-        return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
-      };
 
       const removedNameWithoutCity = removeCityFromName(removedName);
 
