@@ -24,6 +24,7 @@ from utils.slugify import generate_slug
 from utils.team_matcher import normalize_team_name
 from services.tags import tag_service
 from services.linking import linking_service
+from services.link_resolver import LinkResolver
 from models.modules import PageModule, ModuleType
 from routes.auth import get_current_user
 
@@ -1612,6 +1613,126 @@ async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10
     return [{"id": p["_id"], "name": p.get("full_name") or p.get("title", ""), "slug": p.get("slug")} for p in people]
 
 
+@router.get("/content/search")
+async def search_content(
+    query: str = Query(..., description="Поисковый запрос"),
+    types: Optional[str] = Query(None, description="Типы контента через запятую: person,team,show,kvn"),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Поиск контента для вставки ссылок"""
+    db = await get_db()
+    
+    types_list = [t.strip() for t in types.split(',')] if types else ['person', 'team', 'show', 'kvn']
+    
+    results = []
+    
+    if 'person' in types_list:
+        async for doc in db.people.find({
+            "$or": [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"full_name": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"title": 1, "full_name": 1, "slug": 1}).limit(limit):
+            results.append({
+                "type": "person",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("full_name") or doc.get("title"),
+                "url": f"/people/{doc.get('slug')}"
+            })
+    
+    if 'team' in types_list:
+        async for doc in db.teams.find({
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"title": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"name": 1, "title": 1, "slug": 1}).limit(limit):
+            results.append({
+                "type": "team",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("name") or doc.get("title"),
+                "url": f"/kvn/teams/{doc.get('slug')}"
+            })
+    
+    if 'show' in types_list:
+        async for doc in db.shows.find({
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"title": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"name": 1, "title": 1, "slug": 1}).limit(limit):
+            results.append({
+                "type": "show",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("name") or doc.get("title"),
+                "url": f"/shows/{doc.get('slug')}"
+            })
+    
+    if 'kvn' in types_list:
+        async for doc in db.kvn.find({
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"title": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}},
+                {"full_path": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"name": 1, "title": 1, "slug": 1, "full_path": 1}).limit(limit):
+            full_path = doc.get("full_path") or doc.get("slug")
+            results.append({
+                "type": "kvn",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("name") or doc.get("title"),
+                "url": f"/{full_path.lstrip('/')}" if full_path else f"/kvn/{doc.get('slug')}"
+            })
+    
+    return {"results": results[:limit]}
+
+
+@router.get("/content/{content_type}/{id_or_slug}/resolve-link")
+async def resolve_content_link(content_type: str, id_or_slug: str):
+    """Получить актуальный URL для контента"""
+    db = await get_db()
+    
+    collection_map = {
+        'person': (db.people, '/people/'),
+        'team': (db.teams, '/kvn/teams/'),
+        'show': (db.shows, '/shows/'),
+        'kvn': (db.kvn, '/kvn/'),
+    }
+    
+    if content_type not in collection_map:
+        raise HTTPException(status_code=404, detail="Unknown content type")
+    
+    collection, url_prefix = collection_map[content_type]
+    
+    # Ищем по ID или slug
+    query = {"$or": [{"_id": id_or_slug}, {"id": id_or_slug}, {"slug": id_or_slug}]}
+    doc = await collection.find_one(query)
+    
+    if not doc:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    if content_type == 'kvn':
+        full_path = doc.get('full_path') or doc.get('slug')
+        url = f"/{full_path.lstrip('/')}" if full_path else f"{url_prefix}{doc.get('slug')}"
+    else:
+        url = f"{url_prefix}{doc.get('slug')}"
+    
+    return {
+        "id": str(doc["_id"]),
+        "slug": doc.get("slug"),
+        "title": doc.get("title") or doc.get("name") or doc.get("full_name"),
+        "url": url
+    }
+
+
 @router.get("/people/{id_or_slug}/linked-content", response_model=dict)
 async def get_person_linked_content(
     id_or_slug: str,
@@ -1639,7 +1760,13 @@ async def get_person_linked_content(
 @router.get("/people/{id_or_slug}", response_model=dict)
 async def get_person(id_or_slug: str):
     """Get person by ID or slug"""
-    return await get_by_id_or_slug("people", id_or_slug, "Person not found")
+    person = await get_by_id_or_slug("people", id_or_slug, "Person not found")
+    
+    # Разрешаем ссылки в модулях
+    if person.get('modules'):
+        person['modules'] = await LinkResolver.resolve_links_in_modules(person['modules'])
+    
+    return person
 
 
 @router.put("/people/{id}", response_model=dict)
@@ -1791,7 +1918,13 @@ async def list_teams(
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str):
     """Get team by ID or slug"""
-    item = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+    team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+    
+    # Разрешаем ссылки в модулях
+    if team.get('modules'):
+        team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
+    
+    return team
 
     # Self-healing: ensure baseline scaffold exists for older/empty teams
     try:
@@ -2254,7 +2387,13 @@ async def get_show_children(parent_slug: str):
 @router.get("/shows/{id_or_slug}", response_model=dict)
 async def get_show(id_or_slug: str):
     """Get show by ID or slug"""
-    return await get_by_id_or_slug("shows", id_or_slug, "Show not found")
+    show = await get_by_id_or_slug("shows", id_or_slug, "Show not found")
+    
+    # Разрешаем ссылки в модулях
+    if show.get('modules'):
+        show['modules'] = await LinkResolver.resolve_links_in_modules(show['modules'])
+    
+    return show
 
 
 @router.get("/shows-hierarchy", response_model=dict)
@@ -3076,7 +3215,13 @@ async def get_kvn_children(parent_slug: str):
 @router.get("/kvn/{id_or_slug}", response_model=dict)
 async def get_kvn(id_or_slug: str):
     """Get KVN page by ID or slug"""
-    return await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
+    kvn = await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
+    
+    # Разрешаем ссылки в модулях
+    if kvn.get('modules'):
+        kvn['modules'] = await LinkResolver.resolve_links_in_modules(kvn['modules'])
+    
+    return kvn
 
 
 @router.get("/kvn-hierarchy", response_model=dict)

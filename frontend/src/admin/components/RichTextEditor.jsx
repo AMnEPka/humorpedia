@@ -12,6 +12,7 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import { useEffect, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import LinkInserter from './LinkInserter';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify,
@@ -308,6 +309,11 @@ function MenuBar({ editor, showHtmlMode, onToggleHtmlMode }) {
       >
         <RemoveFormatting className="h-4 w-4" />
       </ToolButton>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Link inserter */}
+      <LinkInserter editor={editor} />
 
       <div className="w-px h-6 bg-border mx-1" />
 
