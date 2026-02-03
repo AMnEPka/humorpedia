@@ -98,6 +98,7 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
+    entrypoint: []
     command: python scripts/backup_service.py
     restart: unless-stopped
 

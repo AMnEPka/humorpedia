@@ -146,6 +146,8 @@ async def generate_unique_team_slug(base_slug: str) -> str:
         if not existing:
             return slug
         counter += 1
+        if counter > 1000:  # Safety limit
+            raise HTTPException(status_code=500, detail="Could not generate unique team slug")
 
 
 class BulkTeamCheckItem(BaseModel):
@@ -430,11 +432,15 @@ def _stage_code(stage_name: str) -> str:
 
 
 def _league_code_from_slug(league_slug: str) -> str:
-    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ', 'ml-kvn' -> 'МЛ')"""
+    """Convert league_slug to short code (e.g., 'vl-kvn' -> 'ВЛ', 'ml-kvn' -> 'МЛ', 'premier-liga' -> 'ПЛ')"""
     if league_slug == "vl-kvn":
         return "ВЛ"
     if league_slug == "ml-kvn":
         return "МЛ"
+    if league_slug == "premier-liga":
+        return "ПЛ"
+    if league_slug == "1l-kvn":
+        return "1Л"
     # Add more leagues later
     return league_slug or ""
 
@@ -448,9 +454,21 @@ async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List
         return []
     
     # Query all seasons of the specified league
-    seasons = await db.kvn.find({
-        "season_data.league_slug": league_slug
-    }).to_list(1000)
+    # Ищем по league_slug в season_data ИЛИ по full_path (на случай неправильного league_slug)
+    # full_path имеет формат: kvn/premier-liga/pl-2006, kvn/ml-kvn/ml-2006 и т.д.
+    path_pattern = f"kvn/{league_slug}/"
+    
+    # Ищем сезоны двумя способами:
+    # 1. По season_data.league_slug
+    # 2. По full_path (на случай если league_slug неправильный)
+    seasons_query = {
+        "$or": [
+            {"season_data.league_slug": league_slug},
+            {"full_path": {"$regex": f"^{re.escape(path_pattern)}"}}
+        ]
+    }
+    
+    seasons = await db.kvn.find(seasons_query).to_list(1000)
     
     results = []
     
@@ -466,7 +484,30 @@ async def _get_team_league_results(team_slug: str, league_slug: str, db) -> List
             else:
                 continue
         
-        league = _league_code_from_slug(league_slug)
+        # Определяем фактическую лигу из full_path (источник истины)
+        # full_path имеет формат: kvn/premier-liga/pl-2006, kvn/ml-kvn/ml-2006 и т.д.
+        actual_league_slug = league_slug  # По умолчанию используем запрошенную лигу
+        full_path = season.get("full_path", "")
+        if full_path:
+            clean_path = full_path.lstrip("/")
+            path_parts = clean_path.split("/")
+            if len(path_parts) >= 2 and path_parts[0] == "kvn":
+                path_league = path_parts[1]
+                valid_leagues = ["vl-kvn", "premier-liga", "1l-kvn", "ml-kvn", "vul"]
+                if path_league in valid_leagues:
+                    actual_league_slug = path_league
+        
+        # Если фактическая лига не совпадает с запрошенной, пропускаем сезон
+        if actual_league_slug != league_slug:
+            continue
+        
+        # Validate league_slug against year to prevent historical inaccuracies
+        # Международная лига (ml-kvn) была создана в 2014 году
+        if actual_league_slug == "ml-kvn" and year < 2014:
+            # Skip seasons before 2014 that incorrectly have ml-kvn
+            continue
+        
+        league = _league_code_from_slug(actual_league_slug)
         
         stages = season_data.get("stages") or []
         for stage in stages:
@@ -576,7 +617,7 @@ async def _get_team_vl_results(team_slug: str, db) -> List[Dict]:
 
 async def _get_team_all_results(team_slug: str, db) -> List[Dict]:
     """
-    Collect all results for a team from all supported leagues (VL, ML, etc.).
+    Collect all results for a team from all supported leagues (VL, ПЛ, МЛ, etc.).
     Returns combined list of result dicts sorted by year and stage.
     """
     if not team_slug:
@@ -588,6 +629,10 @@ async def _get_team_all_results(team_slug: str, db) -> List[Dict]:
     # Высшая лига
     vl_results = await _get_team_league_results(team_slug, "vl-kvn", db)
     all_results.extend(vl_results)
+    
+    # Премьер-лига
+    pl_results = await _get_team_league_results(team_slug, "premier-liga", db)
+    all_results.extend(pl_results)
     
     # Международная лига
     ml_results = await _get_team_league_results(team_slug, "ml-kvn", db)
@@ -1426,11 +1471,34 @@ async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
             skipped_no_source += 1
             continue
         
-        # Determine source for reporting
-        if team.get("image") and not _is_placeholder_logo(team.get("image")):
-            restored_from_image += 1
-        elif team.get("poster") and not _is_placeholder_logo(team.get("poster")):
-            restored_from_poster += 1
+        # Determine source for reporting by tracing through _pick_team_logo's priority logic
+        # This ensures we count the actual source used, not just what fields exist
+        source_determined = False
+        
+        # Check if picked_logo came from existing logo (priority 1)
+        if current_logo and not _is_placeholder_logo(current_logo):
+            normalized_current = _normalize_to_mediafile(current_logo)
+            if normalized_current and normalized_current.get("url") == picked_logo.get("url"):
+                # Logo came from existing logo, not from image/poster - don't count as restored
+                source_determined = True
+        
+        # If not from existing logo, check if it came from image (priority 2)
+        if not source_determined:
+            image = team.get("image")
+            if image:
+                normalized_image = _normalize_to_mediafile(image)
+                if normalized_image and normalized_image.get("url") == picked_logo.get("url"):
+                    restored_from_image += 1
+                    source_determined = True
+        
+        # If not from image, check if it came from poster (priority 3)
+        if not source_determined:
+            poster = team.get("poster")
+            if poster:
+                normalized_poster = _normalize_to_mediafile(poster)
+                if normalized_poster and normalized_poster.get("url") == picked_logo.get("url"):
+                    restored_from_poster += 1
+                    source_determined = True
         
         if data.dry_run:
             continue
@@ -1793,10 +1861,111 @@ async def get_team(id_or_slug: str):
     return item
 
 
+async def update_team_name_in_seasons(team_slug: str, new_name: str, db):
+    """
+    Обновляет название команды во всех сезонах КВН, где она упоминается.
+    Обновляет:
+    - season_data.all_teams[].name (сохраняет город, если он был: "Новое название (Город)")
+    - season_data.stages[].games[].teams[].team_name (сохраняет город, если он был)
+    """
+    if not team_slug or not new_name:
+        return
+    
+    updated_seasons = 0
+    
+    # Находим все сезоны, где упоминается эта команда
+    async for season in db.kvn.find({"season_data": {"$exists": True}}):
+        season_data = season.get("season_data", {})
+        if not season_data:
+            continue
+        
+        needs_update = False
+        
+        # Обновляем в all_teams
+        all_teams = season_data.get("all_teams", [])
+        for team_entry in all_teams:
+            if isinstance(team_entry, dict) and team_entry.get("slug") == team_slug:
+                old_name = team_entry.get("name", "")
+                # Если старое название содержит город в скобках, сохраняем его
+                city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_name)
+                if city_match:
+                    city = city_match.group(1)
+                    updated_name = f"{new_name} ({city})"
+                else:
+                    updated_name = new_name
+                
+                if old_name != updated_name:
+                    team_entry["name"] = updated_name
+                    needs_update = True
+            elif isinstance(team_entry, str) and team_entry == team_slug:
+                # Если all_teams содержит только slug'и, пропускаем (не обновляем)
+                pass
+        
+        # Обновляем в играх (stages -> games -> teams)
+        stages = season_data.get("stages", [])
+        for stage in stages:
+            games = stage.get("games", [])
+            for game in games:
+                teams = game.get("teams", [])
+                for team in teams:
+                    if isinstance(team, dict) and team.get("team_slug") == team_slug:
+                        old_team_name = team.get("team_name", "")
+                        # Если старое название содержит город в скобках, сохраняем его
+                        city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_team_name)
+                        if city_match:
+                            city = city_match.group(1)
+                            updated_team_name = f"{new_name} ({city})"
+                        else:
+                            updated_team_name = new_name
+                        
+                        if old_team_name != updated_team_name:
+                            team["team_name"] = updated_team_name
+                            needs_update = True
+        
+        # Сохраняем обновления, если были изменения
+        if needs_update:
+            try:
+                await db.kvn.update_one(
+                    {"_id": season["_id"]},
+                    {"$set": {"season_data": season_data, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                updated_seasons += 1
+            except Exception as e:
+                logger.error(f"Failed to update season {season.get('full_path', season.get('_id'))}: {e}")
+    
+    if updated_seasons > 0:
+        logger.info(f"Updated team name '{new_name}' in {updated_seasons} seasons for team slug '{team_slug}'")
+
+
 @router.put("/teams/{id}", response_model=dict)
 async def update_team(id: str, data: TeamUpdate):
     """Update team"""
-    return await update_content("teams", id, data, "Team not found")
+    db = await get_db()
+    
+    # Получаем текущую команду для сравнения
+    current_team = await db.teams.find_one({"_id": id})
+    if not current_team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    old_name = current_team.get("name") or current_team.get("title")
+    team_slug = current_team.get("slug")
+    
+    # Выполняем обновление
+    result = await update_content("teams", id, data, "Team not found")
+    
+    # Если изменилось название команды, обновляем его в сезонах
+    if team_slug:
+        # Получаем обновленную команду, чтобы узнать финальное значение name
+        updated_team = await db.teams.find_one({"_id": id})
+        if updated_team:
+            new_name = updated_team.get("name") or updated_team.get("title")
+            
+            # Проверяем, изменилось ли название
+            if new_name and new_name != old_name:
+                # Обновляем название в сезонах
+                await update_team_name_in_seasons(team_slug, new_name, db)
+    
+    return result
 
 
 @router.delete("/teams/{id}")
@@ -2781,7 +2950,11 @@ async def get_kvn_hierarchy(
 @router.put("/kvn/{id}", response_model=dict)
 async def update_kvn(id: str, data: KVNUpdate):
     """Update KVN page"""
-    db = await get_db()
+    try:
+        db = await get_db()
+    except Exception as e:
+        logger.error(f"Error getting database connection: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
     
     # For KVN, try to find by 'id' field (UUID) first, then by _id
     kvn = await db.kvn.find_one({"id": id})
@@ -2870,6 +3043,14 @@ async def update_kvn(id: str, data: KVNUpdate):
             elif hasattr(season_data_dict, 'dict'):
                 season_data_dict = season_data_dict.dict()
             
+            # Логируем наличие специальных символов в данных для диагностики
+            try:
+                season_data_str = json.dumps(season_data_dict, ensure_ascii=False)
+                if '+' in season_data_str or '%2B' in season_data_str:
+                    logger.info(f"Found '+' character in season_data, will handle properly")
+            except:
+                pass
+            
             # Рекурсивно очищаем данные от несериализуемых объектов
             def clean_data(obj, depth=0, max_depth=15):
                 if depth > max_depth:
@@ -2886,6 +3067,11 @@ async def update_kvn(id: str, data: KVNUpdate):
                 elif isinstance(obj, list):
                     return [clean_data(item, depth+1, max_depth) for item in obj]
                 elif isinstance(obj, (str, int, float, bool, type(None))):
+                    # Убеждаемся, что строки правильно обрабатываются
+                    if isinstance(obj, str):
+                        # Проверяем на наличие проблемных символов
+                        if obj and ('+' in obj or '%' in obj):
+                            logger.debug(f"Processing string with special characters: {obj[:50]}...")
                     return obj
                 elif hasattr(obj, 'model_dump'):
                     # Pydantic модель
@@ -2917,12 +3103,35 @@ async def update_kvn(id: str, data: KVNUpdate):
                             logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data при обновлении")
             
             # Пробуем сериализовать для проверки
-            json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
-            logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
-            # Если данные слишком большие - логируем предупреждение, но сохраняем
-            if len(json_str) > 1000000:  # 1MB
-                logger.warning(f"Season data is large: {len(json_str)} bytes")
-            update_data["season_data"] = cleaned_data
+            try:
+                json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
+                logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
+                # Если данные слишком большие - логируем предупреждение, но сохраняем
+                if len(json_str) > 1000000:  # 1MB
+                    logger.warning(f"Season data is large: {len(json_str)} bytes")
+                update_data["season_data"] = cleaned_data
+            except (TypeError, ValueError) as json_err:
+                logger.error(f"JSON serialization error: {json_err}")
+                logger.error(f"Problematic data type: {type(cleaned_data)}")
+                # Пробуем более агрессивную очистку
+                try:
+                    # Конвертируем все в базовые типы
+                    def force_serializable(obj):
+                        if isinstance(obj, (str, int, float, bool, type(None))):
+                            return obj
+                        elif isinstance(obj, dict):
+                            return {str(k): force_serializable(v) for k, v in obj.items()}
+                        elif isinstance(obj, list):
+                            return [force_serializable(item) for item in obj]
+                        else:
+                            return str(obj)
+                    cleaned_data = force_serializable(cleaned_data)
+                    json_str = json.dumps(cleaned_data, ensure_ascii=False)
+                    update_data["season_data"] = cleaned_data
+                    logger.warning("Used force_serializable to fix JSON serialization")
+                except Exception as e3:
+                    logger.error(f"Even force_serializable failed: {e3}")
+                    raise
         except Exception as e:
             logger.error(f"Error processing season_data: {e}", exc_info=True)
             import traceback
@@ -3115,10 +3324,14 @@ async def update_kvn(id: str, data: KVNUpdate):
                     logger.info(f"Обновлены {len(seasons_to_update)} сезонов, которые ссылались на старый slug {old_slug}")
     
     # Return updated document, converting ObjectIds to strings
-    updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
-    if updated:
-        updated = convert_objectids_to_strings(updated)
-    return updated
+    try:
+        updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
+        if updated:
+            updated = convert_objectids_to_strings(updated)
+        return updated
+    except Exception as e:
+        logger.error(f"Error returning updated document for KVN {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error retrieving updated document: {str(e)}")
 
 
 @router.delete("/kvn/{id}")

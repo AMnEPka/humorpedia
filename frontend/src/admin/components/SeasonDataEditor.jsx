@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, X, Trash2, GripVertical, ChevronUp, ChevronDown, 
-  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText, Table
+  Copy, ArrowRight, MoreHorizontal, ChevronRight, FileText, Table, List
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -801,6 +801,9 @@ function GameContent({
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [tableInput, setTableInput] = useState('');
   const [tableError, setTableError] = useState('');
+  const [showListDialog, setShowListDialog] = useState(false);
+  const [listInput, setListInput] = useState('');
+  const [listError, setListError] = useState('');
 
   const updateGame = (updates) => {
     onUpdate(stageIndex, gameIndex, updates);
@@ -899,6 +902,152 @@ function GameContent({
     });
 
     return rows;
+  };
+
+  // Парсинг списка команд (с нумерацией или без)
+  const parseListData = (text) => {
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (lines.length === 0) {
+      return null;
+    }
+
+    const parsed = [];
+    
+    for (const line of lines) {
+      // Поддерживаем два формата:
+      // 1. С нумерацией: "1. Название (Город) – баллы" или "1. Название"
+      // 2. Без нумерации: "Название (Город)" или "Название"
+      
+      // Убираем нумерацию в начале строки, если она есть
+      const lineWithoutNumber = line.replace(/^\d+\.\s*/, '');
+      
+      // Пробуем полный формат с городом и баллами: "Название (Город) – баллы"
+      let match = lineWithoutNumber.match(/^(.+?)\s*\(([^)]+)\)\s*[–-]\s*(.+)$/);
+      
+      if (match) {
+        // Формат: "Название (Город) – баллы"
+        const [, name, city, totalStr] = match;
+        let total = null;
+        
+        if (totalStr) {
+          // Извлекаем число из строки (может быть "10,7 балла" или "10.5" или "10")
+          const numMatch = totalStr.match(/([\d,\.]+)/);
+          if (numMatch) {
+            const numStr = numMatch[1].replace(',', '.');
+            total = parseFloat(numStr);
+            if (isNaN(total)) total = null;
+          }
+        }
+        
+        parsed.push({
+          name: name.trim(),
+          city: city ? city.trim() : null,
+          total: total
+        });
+      } else {
+        // Пробуем формат с городом без баллов: "Название (Город)"
+        match = lineWithoutNumber.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+        if (match) {
+          const [, name, city] = match;
+          parsed.push({
+            name: name.trim(),
+            city: city ? city.trim() : null,
+            total: null
+          });
+        } else {
+          // Пробуем формат без города с баллами: "Название – баллы"
+          match = lineWithoutNumber.match(/^(.+?)\s*[–-]\s*(.+)$/);
+          if (match) {
+            const [, name, totalStr] = match;
+            let total = null;
+            
+            if (totalStr) {
+              const numMatch = totalStr.match(/([\d,\.]+)/);
+              if (numMatch) {
+                const numStr = numMatch[1].replace(',', '.');
+                total = parseFloat(numStr);
+                if (isNaN(total)) total = null;
+              }
+            }
+            
+            parsed.push({
+              name: name.trim(),
+              city: null,
+              total: total
+            });
+          } else {
+            // Просто название: "Название"
+            if (lineWithoutNumber.trim()) {
+              parsed.push({
+                name: lineWithoutNumber.trim(),
+                city: null,
+                total: null
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    return parsed.length > 0 ? parsed : null;
+  };
+
+  const applyListData = () => {
+    setListError('');
+    
+    const parsed = parseListData(listInput);
+    
+    if (!parsed || parsed.length === 0) {
+      setListError('Не удалось распарсить список. Убедитесь, что каждая строка начинается с номера и точки (например: "1. Название команды").');
+      return;
+    }
+    
+    // Создаем команды из списка
+    const newTeams = parsed.map((item, index) => {
+      // Пытаемся найти команду в списке участников сезона
+      const matchedTeam = matchTeamName(item.name);
+      
+      let teamName = item.name;
+      let teamSlug = '';
+      let city = item.city || '';
+      
+      if (matchedTeam) {
+        teamName = matchedTeam.team_name;
+        teamSlug = matchedTeam.team_slug || '';
+        // Если город не указан в списке, но есть у найденной команды, используем его
+        if (!city && matchedTeam.city) {
+          city = matchedTeam.city;
+        }
+      }
+      
+      // Формируем полное название с городом, если нужно
+      if (city && !teamName.includes(`(${city})`)) {
+        teamName = `${teamName} (${city})`;
+      }
+      
+      // Создаем объект команды
+      const team = {
+        team_slug: teamSlug,
+        team_name: teamName,
+        place: index + 1,
+        total: item.total !== null ? item.total : 0,
+        scores: {},
+        passed: false,
+        is_winner: false,
+        is_additional: false,
+        city: city
+      };
+      
+      return team;
+    });
+    
+    // Обновляем игру с новыми командами
+    updateGame({ teams: newTeams });
+    
+    // Закрываем диалог
+    setShowListDialog(false);
+    setListInput('');
   };
 
   const applyTableData = () => {
@@ -1153,7 +1302,7 @@ function GameContent({
         <div className="flex items-center justify-between">
           <Label>Команды ({game.teams?.length || 0})</Label>
           <div className="flex items-center gap-2">
-            {game.teams && game.teams.length > 0 && game.contests && game.contests.length > 0 && (
+            {game.contests && game.contests.length > 0 && (
               <Button 
                 onClick={() => {
                   setTableInput('');
@@ -1167,6 +1316,18 @@ function GameContent({
                 Вставить из таблицы
               </Button>
             )}
+            <Button 
+              onClick={() => {
+                setListInput('');
+                setListError('');
+                setShowListDialog(true);
+              }} 
+              size="sm" 
+              variant="outline"
+            >
+              <List className="h-4 w-4 mr-2" />
+              Вставить из списка
+            </Button>
             <Button 
               onClick={() => onAddTeam(stageIndex, gameIndex)} 
               size="sm" 
@@ -1342,6 +1503,85 @@ function GameContent({
               Отмена
             </Button>
             <Button onClick={applyTableData}>
+              Применить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог вставки из списка */}
+      <Dialog open={showListDialog} onOpenChange={setShowListDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Вставить команды из списка</DialogTitle>
+            <DialogDescription>
+              Вставьте список команд. Формат:
+              <br />
+              <code className="text-xs">Название команды (Город)</code>
+              <br />
+              или с нумерацией:
+              <br />
+              <code className="text-xs">1. Название команды (Город) – баллы</code>
+              <br />
+              <br />
+              Нумерация, город и баллы опциональны. Поддерживаются тире (–) и дефис (-).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Список команд</Label>
+              <Textarea
+                value={listInput}
+                onChange={(e) => {
+                  setListInput(e.target.value);
+                  setListError('');
+                }}
+                placeholder={`Пример с нумерацией:\n1. НЗ (Нижний Новгород) – 10,7 балла\n2. Гураны (Чита) – 10,5\n3. Альтернатива (Астрахань) – 10,4\n\nИли без нумерации:\nТерритория игры (Красноярск)\nНайди (Ижевск)\nУГТУ (Ухта)\nПравильное решение (Оренбург)\nАндреичи (Новосибирск)`}
+                rows={10}
+                className="font-mono text-sm"
+              />
+              {listError && (
+                <p className="text-sm text-destructive">{listError}</p>
+              )}
+            </div>
+            {listInput && (() => {
+              const parsed = parseListData(listInput);
+              if (!parsed || parsed.length === 0) return null;
+              
+              return (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Предпросмотр ({parsed.length} команд):
+                  </Label>
+                  <div className="border rounded p-2 bg-muted max-h-60 overflow-auto">
+                    <div className="space-y-1 text-xs">
+                      {parsed.map((item, idx) => {
+                        const matchedTeam = matchTeamName(item.name);
+                        const matchStatus = matchedTeam 
+                          ? `✓ ${matchedTeam.team_name}${matchedTeam.city ? ` (${matchedTeam.city})` : ''}`
+                          : '✗ Не найдено';
+                        return (
+                          <div key={idx} className="flex items-center gap-2 py-1 border-b last:border-0">
+                            <span className="font-medium w-48">{item.name}</span>
+                            {item.city && <span className="text-muted-foreground w-32">({item.city})</span>}
+                            {item.total !== null && <span className="text-muted-foreground w-20">{item.total}</span>}
+                            <span className={`text-xs flex-1 ${matchedTeam ? 'text-green-600' : 'text-orange-600'}`}>
+                              {matchStatus}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowListDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={applyListData}>
               Применить
             </Button>
           </DialogFooter>
@@ -1795,19 +2035,39 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       const stageAfter = newData.stages[stageIndex];
       const currentAdditional = Array.isArray(stageAfter.additional_teams) ? [...stageAfter.additional_teams] : [];
 
+      // Функция для удаления города из скобок
+      const removeCityFromName = (name) => {
+        if (!name) return name;
+        return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      };
+
       const stillHasName = (name) => {
         const target = String(name || '').trim();
         if (!target) return false;
+        const targetWithoutCity = removeCityFromName(target);
         return (stageAfter.games || []).some(g =>
-          (g.teams || []).some(t => t?.is_additional && String(t?.team_name || '').trim() === target)
+          (g.teams || []).some(t => {
+            const teamName = String(t?.team_name || '').trim();
+            const teamNameWithoutCity = removeCityFromName(teamName);
+            return t?.is_additional && (
+              teamName === target || 
+              teamNameWithoutCity === targetWithoutCity
+            );
+          })
         );
       };
 
       stageAfter.additional_teams = currentAdditional.filter(n => {
         const name = String(n || '').trim();
         if (!name) return false;
+        const nameWithoutCity = removeCityFromName(name);
+        // Проверяем как точное совпадение, так и совпадение без города
+        const shouldRemove = removedAdditionalNames.some(removed => {
+          const removedWithoutCity = removeCityFromName(removed);
+          return name === removed || nameWithoutCity === removedWithoutCity;
+        });
         // Удаляем только те имена, которые были "добором" в удаленной игре и больше нигде не отмечены
-        if (removedAdditionalNames.includes(name) && !stillHasName(name)) return false;
+        if (shouldRemove && !stillHasName(name)) return false;
         return true;
       });
     }
@@ -1844,8 +2104,16 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     // Поведение: добавляем имя, когда ставят флаг, убираем — когда снимают.
     // При смене названия у команды-добора обновляем имя в списке.
     const nextTeam = newData.stages[stageIndex].games[gameIndex].teams[teamIndex] || {};
-    const nextName = String(nextTeam.team_name || '').trim();
+    let nextName = String(nextTeam.team_name || '').trim();
     const nextIsAdditional = !!nextTeam.is_additional;
+    
+    // Функция для удаления города из скобок из названия команды
+    // Используется для additional_teams, где город не должен отображаться
+    const removeCityFromName = (name) => {
+      if (!name) return name;
+      // Убираем город в скобках в конце: "Название (Город)" -> "Название"
+      return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
+    };
 
     const shouldSyncAdditional =
       Object.prototype.hasOwnProperty.call(updates, 'is_additional') ||
@@ -1870,30 +2138,50 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
         .map(n => String(n || '').trim())
         .filter(Boolean);
 
+      // Убираем город из скобок для additional_teams
+      const prevNameWithoutCity = removeCityFromName(prevName);
+      const nextNameWithoutCity = removeCityFromName(nextName);
+      
       // 1) Если команда была добором и имя изменилось — удаляем старое имя (если оно больше нигде не используется)
-      if (prevIsAdditional && prevName && prevName !== nextName) {
+      if (prevIsAdditional && prevNameWithoutCity && prevNameWithoutCity !== nextNameWithoutCity) {
         const stillUsed = stageHasAdditionalName(prevName, { gameIndex, teamIndex });
         if (!stillUsed) {
-          nextAdditional = nextAdditional.filter(n => n !== prevName);
+          // Удаляем как с городом, так и без (на случай, если было сохранено в разных форматах)
+          nextAdditional = nextAdditional.filter(n => {
+            const nWithoutCity = removeCityFromName(n);
+            return nWithoutCity !== prevNameWithoutCity;
+          });
         }
       }
 
       // 2) Если флаг сняли — удаляем имя (если оно больше нигде не используется)
-      if (prevIsAdditional && !nextIsAdditional && prevName) {
+      if (prevIsAdditional && !nextIsAdditional && prevNameWithoutCity) {
         const stillUsed = stageHasAdditionalName(prevName, { gameIndex, teamIndex });
         if (!stillUsed) {
-          nextAdditional = nextAdditional.filter(n => n !== prevName);
+          // Удаляем как с городом, так и без
+          nextAdditional = nextAdditional.filter(n => {
+            const nWithoutCity = removeCityFromName(n);
+            return nWithoutCity !== prevNameWithoutCity;
+          });
         }
       }
 
-      // 3) Если флаг поставили — добавляем имя (если оно задано)
-      if (nextIsAdditional && nextName) {
-        if (!nextAdditional.includes(nextName)) nextAdditional.push(nextName);
+      // 3) Если флаг поставили — добавляем имя БЕЗ города (если оно задано)
+      if (nextIsAdditional && nextNameWithoutCity) {
+        // Проверяем, нет ли уже такого имени (без города) в списке
+        const alreadyExists = nextAdditional.some(n => removeCityFromName(n) === nextNameWithoutCity);
+        if (!alreadyExists) {
+          nextAdditional.push(nextNameWithoutCity);
+        }
       }
 
-      // 4) Если команда остается добором, но имя появилось/обновилось — убеждаемся, что новое имя есть
-      if (prevIsAdditional && nextIsAdditional && nextName) {
-        if (!nextAdditional.includes(nextName)) nextAdditional.push(nextName);
+      // 4) Если команда остается добором, но имя появилось/обновилось — убеждаемся, что новое имя есть (БЕЗ города)
+      if (prevIsAdditional && nextIsAdditional && nextNameWithoutCity) {
+        // Проверяем, нет ли уже такого имени (без города) в списке
+        const alreadyExists = nextAdditional.some(n => removeCityFromName(n) === nextNameWithoutCity);
+        if (!alreadyExists) {
+          nextAdditional.push(nextNameWithoutCity);
+        }
       }
 
       newData.stages[stageIndex] = { ...stage, additional_teams: nextAdditional };
@@ -1949,15 +2237,34 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       const stage = newData.stages[stageIndex];
       const currentAdditional = Array.isArray(stage.additional_teams) ? [...stage.additional_teams] : [];
 
+      // Функция для удаления города из скобок
+      const removeCityFromName = (name) => {
+        if (!name) return name;
+        return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      };
+
+      const removedNameWithoutCity = removeCityFromName(removedName);
+
       const stillUsed = (stage.games || []).some(g =>
-        (g.teams || []).some(t => t?.is_additional && String(t?.team_name || '').trim() === removedName)
+        (g.teams || []).some(t => {
+          const teamName = String(t?.team_name || '').trim();
+          const teamNameWithoutCity = removeCityFromName(teamName);
+          return t?.is_additional && (
+            teamName === removedName || 
+            teamNameWithoutCity === removedNameWithoutCity
+          );
+        })
       );
 
       if (!stillUsed) {
         stage.additional_teams = currentAdditional
           .map(n => String(n || '').trim())
           .filter(Boolean)
-          .filter(n => n !== removedName);
+          .filter(n => {
+            const nWithoutCity = removeCityFromName(n);
+            // Удаляем как точное совпадение, так и совпадение без города
+            return n !== removedName && nWithoutCity !== removedNameWithoutCity;
+          });
       }
     }
     onChange(newData);

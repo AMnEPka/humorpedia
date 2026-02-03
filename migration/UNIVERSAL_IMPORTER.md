@@ -356,7 +356,12 @@ python universal_importer.py --type kvn --ids 1234 --parent-slug vysshaya-liga -
 
 # Импорт дочерней страницы с указанием родителя по old_id из MODX
 python universal_importer.py --type kvn --ids 1234 --parent-old-id 5678 --apply
+
+python universal_importer.py --type kvn --ids 3695,3696 --parent-old-id 1489 --apply --sql-file C:\Users\rdp6126443.gmail.com\humorpedia\humorbd.sql
+
 ```
+
+
 
 #### Порядок импорта
 
