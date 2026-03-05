@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// Runtime backend URL: use explicit override, or derive from current origin (host:8001)
+const getBackendUrl = () => {
+  const env = process.env.REACT_APP_BACKEND_URL;
+  if (env && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(env)) return env;
+  return `${window.location.protocol}//${window.location.hostname}:8001`;
+};
+const BACKEND_URL = getBackendUrl();
 console.log('[Public API] BACKEND_URL:', BACKEND_URL);
 
 const api = axios.create({
