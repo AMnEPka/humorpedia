@@ -1919,69 +1919,63 @@ async def list_teams(
 async def get_team(id_or_slug: str):
     """Get team by ID or slug"""
     team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
-    
-    # Разрешаем ссылки в модулях
-    if team.get('modules'):
-        team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
-    
-    return team
 
     # Self-healing: ensure baseline scaffold exists for older/empty teams
     try:
         db = await get_db()
-        name = (item.get("name") or item.get("title") or "").strip()
-        facts = item.get("facts") if isinstance(item.get("facts"), dict) else {}
+        name = (team.get("name") or team.get("title") or "").strip()
+        facts = team.get("facts") if isinstance(team.get("facts"), dict) else {}
         city = facts.get("Город") or facts.get("city")
 
         new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
-            {"facts": facts, "facts_order": item.get("facts_order") or [], "modules": item.get("modules") or []},
-            name=name or (item.get("title") or ""),
+            {"facts": facts, "facts_order": team.get("facts_order") or [], "modules": team.get("modules") or []},
+            name=name or (team.get("title") or ""),
             city=city
         )
 
         # Auto-update "Список игр команды" module for KVN teams
-        team_slug = item.get("slug")
-        if item.get("team_type") == "kvn" and team_slug:
+        team_slug = team.get("slug")
+        if team.get("team_type") == "kvn" and team_slug:
             try:
                 new_modules = await _update_team_games_module(team_slug, new_modules, db)
             except Exception as e:
                 logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
 
         # Remove empty placeholder blocks unless this team was intentionally created empty via bulk import
-        if not item.get("allow_empty_modules"):
+        if not team.get("allow_empty_modules"):
             new_modules = _prune_empty_modules(new_modules)
 
         changes = {}
 
         # Smart logo picker: preserve existing logo or restore from legacy image/poster fields
         # This prevents overwriting real logos with placeholders
-        picked_logo = _pick_team_logo(item)
-        current_logo = item.get("logo")
+        picked_logo = _pick_team_logo(team)
+        current_logo = team.get("logo")
         # Only update if logo is missing, placeholder, or different from picked
         if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
             changes["logo"] = picked_logo
 
         if new_facts != facts:
             changes["facts"] = new_facts
-        if new_order != (item.get("facts_order") or []):
+        if new_order != (team.get("facts_order") or []):
             changes["facts_order"] = new_order
-        if new_modules != (item.get("modules") or []):
+        if new_modules != (team.get("modules") or []):
             changes["modules"] = new_modules
 
         # Ensure tags contain primary_tag if possible (avoid breaking on duplicates)
-        primary_tag = item.get("primary_tag")
+        primary_tag = team.get("primary_tag")
         if not primary_tag:
-            candidate = name or item.get("title")
+            candidate = name or team.get("title")
             if candidate:
                 try:
-                    await check_primary_tag_duplicate("teams", candidate, exclude_id=item.get("_id"))
+                    await check_primary_tag_duplicate("teams", candidate, exclude_id=team.get("_id"))
                     changes["primary_tag"] = candidate
                     primary_tag = candidate
                 except HTTPException:
                     primary_tag = None
 
         if primary_tag:
-            tags = list(item.get("tags") or [])
+            tags = list(team.get("tags") or [])
             if not any(isinstance(t, str) and t.lower() == primary_tag.lower() for t in tags):
                 tags.append(primary_tag)
                 changes["tags"] = tags
@@ -1989,12 +1983,16 @@ async def get_team(id_or_slug: str):
 
         if changes:
             changes["updated_at"] = datetime.now(timezone.utc).isoformat()
-            await db.teams.update_one({"_id": item["_id"]}, {"$set": changes})
-            item.update(changes)
+            await db.teams.update_one({"_id": team["_id"]}, {"$set": changes})
+            team.update(changes)
     except Exception as e:
         logger.warning(f"Team scaffold self-heal skipped: {e}")
 
-    return item
+    # Разрешаем ссылки в модулях для ответа
+    if team.get('modules'):
+        team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
+
+    return team
 
 
 async def update_team_slug_in_seasons(old_slug: str, new_slug: str, new_name: str, team_id: str, db):
