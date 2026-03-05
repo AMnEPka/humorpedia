@@ -24,6 +24,7 @@ from utils.slugify import generate_slug
 from utils.team_matcher import normalize_team_name
 from services.tags import tag_service
 from services.linking import linking_service
+from services.link_resolver import LinkResolver
 from models.modules import PageModule, ModuleType
 from routes.auth import get_current_user
 
@@ -1612,6 +1613,126 @@ async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10
     return [{"id": p["_id"], "name": p.get("full_name") or p.get("title", ""), "slug": p.get("slug")} for p in people]
 
 
+@router.get("/content/search")
+async def search_content(
+    query: str = Query(..., description="Поисковый запрос"),
+    types: Optional[str] = Query(None, description="Типы контента через запятую: person,team,show,kvn"),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Поиск контента для вставки ссылок"""
+    db = await get_db()
+    
+    types_list = [t.strip() for t in types.split(',')] if types else ['person', 'team', 'show', 'kvn']
+    
+    results = []
+    
+    if 'person' in types_list:
+        async for doc in db.people.find({
+            "$or": [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"full_name": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"title": 1, "full_name": 1, "slug": 1}).limit(limit):
+            results.append({
+                "type": "person",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("full_name") or doc.get("title"),
+                "url": f"/people/{doc.get('slug')}"
+            })
+    
+    if 'team' in types_list:
+        async for doc in db.teams.find({
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"title": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"name": 1, "title": 1, "slug": 1}).limit(limit):
+            results.append({
+                "type": "team",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("name") or doc.get("title"),
+                "url": f"/kvn/teams/{doc.get('slug')}"
+            })
+    
+    if 'show' in types_list:
+        async for doc in db.shows.find({
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"title": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"name": 1, "title": 1, "slug": 1}).limit(limit):
+            results.append({
+                "type": "show",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("name") or doc.get("title"),
+                "url": f"/shows/{doc.get('slug')}"
+            })
+    
+    if 'kvn' in types_list:
+        async for doc in db.kvn.find({
+            "$or": [
+                {"name": {"$regex": query, "$options": "i"}},
+                {"title": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}},
+                {"full_path": {"$regex": query, "$options": "i"}}
+            ]
+        }, {"name": 1, "title": 1, "slug": 1, "full_path": 1}).limit(limit):
+            full_path = doc.get("full_path") or doc.get("slug")
+            results.append({
+                "type": "kvn",
+                "id": str(doc["_id"]),
+                "slug": doc.get("slug"),
+                "title": doc.get("name") or doc.get("title"),
+                "url": f"/{full_path.lstrip('/')}" if full_path else f"/kvn/{doc.get('slug')}"
+            })
+    
+    return {"results": results[:limit]}
+
+
+@router.get("/content/{content_type}/{id_or_slug}/resolve-link")
+async def resolve_content_link(content_type: str, id_or_slug: str):
+    """Получить актуальный URL для контента"""
+    db = await get_db()
+    
+    collection_map = {
+        'person': (db.people, '/people/'),
+        'team': (db.teams, '/kvn/teams/'),
+        'show': (db.shows, '/shows/'),
+        'kvn': (db.kvn, '/kvn/'),
+    }
+    
+    if content_type not in collection_map:
+        raise HTTPException(status_code=404, detail="Unknown content type")
+    
+    collection, url_prefix = collection_map[content_type]
+    
+    # Ищем по ID или slug
+    query = {"$or": [{"_id": id_or_slug}, {"id": id_or_slug}, {"slug": id_or_slug}]}
+    doc = await collection.find_one(query)
+    
+    if not doc:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    if content_type == 'kvn':
+        full_path = doc.get('full_path') or doc.get('slug')
+        url = f"/{full_path.lstrip('/')}" if full_path else f"{url_prefix}{doc.get('slug')}"
+    else:
+        url = f"{url_prefix}{doc.get('slug')}"
+    
+    return {
+        "id": str(doc["_id"]),
+        "slug": doc.get("slug"),
+        "title": doc.get("title") or doc.get("name") or doc.get("full_name"),
+        "url": url
+    }
+
+
 @router.get("/people/{id_or_slug}/linked-content", response_model=dict)
 async def get_person_linked_content(
     id_or_slug: str,
@@ -1639,7 +1760,13 @@ async def get_person_linked_content(
 @router.get("/people/{id_or_slug}", response_model=dict)
 async def get_person(id_or_slug: str):
     """Get person by ID or slug"""
-    return await get_by_id_or_slug("people", id_or_slug, "Person not found")
+    person = await get_by_id_or_slug("people", id_or_slug, "Person not found")
+    
+    # Разрешаем ссылки в модулях
+    if person.get('modules'):
+        person['modules'] = await LinkResolver.resolve_links_in_modules(person['modules'])
+    
+    return person
 
 
 @router.put("/people/{id}", response_model=dict)
@@ -1791,64 +1918,64 @@ async def list_teams(
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str):
     """Get team by ID or slug"""
-    item = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+    team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
 
     # Self-healing: ensure baseline scaffold exists for older/empty teams
     try:
         db = await get_db()
-        name = (item.get("name") or item.get("title") or "").strip()
-        facts = item.get("facts") if isinstance(item.get("facts"), dict) else {}
+        name = (team.get("name") or team.get("title") or "").strip()
+        facts = team.get("facts") if isinstance(team.get("facts"), dict) else {}
         city = facts.get("Город") or facts.get("city")
 
         new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
-            {"facts": facts, "facts_order": item.get("facts_order") or [], "modules": item.get("modules") or []},
-            name=name or (item.get("title") or ""),
+            {"facts": facts, "facts_order": team.get("facts_order") or [], "modules": team.get("modules") or []},
+            name=name or (team.get("title") or ""),
             city=city
         )
 
         # Auto-update "Список игр команды" module for KVN teams
-        team_slug = item.get("slug")
-        if item.get("team_type") == "kvn" and team_slug:
+        team_slug = team.get("slug")
+        if team.get("team_type") == "kvn" and team_slug:
             try:
                 new_modules = await _update_team_games_module(team_slug, new_modules, db)
             except Exception as e:
                 logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
 
         # Remove empty placeholder blocks unless this team was intentionally created empty via bulk import
-        if not item.get("allow_empty_modules"):
+        if not team.get("allow_empty_modules"):
             new_modules = _prune_empty_modules(new_modules)
 
         changes = {}
 
         # Smart logo picker: preserve existing logo or restore from legacy image/poster fields
         # This prevents overwriting real logos with placeholders
-        picked_logo = _pick_team_logo(item)
-        current_logo = item.get("logo")
+        picked_logo = _pick_team_logo(team)
+        current_logo = team.get("logo")
         # Only update if logo is missing, placeholder, or different from picked
         if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
             changes["logo"] = picked_logo
 
         if new_facts != facts:
             changes["facts"] = new_facts
-        if new_order != (item.get("facts_order") or []):
+        if new_order != (team.get("facts_order") or []):
             changes["facts_order"] = new_order
-        if new_modules != (item.get("modules") or []):
+        if new_modules != (team.get("modules") or []):
             changes["modules"] = new_modules
 
         # Ensure tags contain primary_tag if possible (avoid breaking on duplicates)
-        primary_tag = item.get("primary_tag")
+        primary_tag = team.get("primary_tag")
         if not primary_tag:
-            candidate = name or item.get("title")
+            candidate = name or team.get("title")
             if candidate:
                 try:
-                    await check_primary_tag_duplicate("teams", candidate, exclude_id=item.get("_id"))
+                    await check_primary_tag_duplicate("teams", candidate, exclude_id=team.get("_id"))
                     changes["primary_tag"] = candidate
                     primary_tag = candidate
                 except HTTPException:
                     primary_tag = None
 
         if primary_tag:
-            tags = list(item.get("tags") or [])
+            tags = list(team.get("tags") or [])
             if not any(isinstance(t, str) and t.lower() == primary_tag.lower() for t in tags):
                 tags.append(primary_tag)
                 changes["tags"] = tags
@@ -1856,12 +1983,190 @@ async def get_team(id_or_slug: str):
 
         if changes:
             changes["updated_at"] = datetime.now(timezone.utc).isoformat()
-            await db.teams.update_one({"_id": item["_id"]}, {"$set": changes})
-            item.update(changes)
+            await db.teams.update_one({"_id": team["_id"]}, {"$set": changes})
+            team.update(changes)
     except Exception as e:
         logger.warning(f"Team scaffold self-heal skipped: {e}")
 
-    return item
+    # Разрешаем ссылки в модулях для ответа
+    if team.get('modules'):
+        team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
+
+    return team
+
+
+async def update_team_slug_in_seasons(old_slug: str, new_slug: str, new_name: str, team_id: str, db):
+    """
+    Обновляет slug команды во всех сезонах КВН, где она упоминается.
+    Также обновляет team_name в играх, используя актуальное название команды.
+    Обновляет:
+    - season_data.all_teams[].slug (если это dict) или заменяет строку
+    - season_data.winners[].slug (если это dict) или заменяет строку
+    - season_data.stages[].games[].teams[].team_slug
+    - season_data.stages[].games[].teams[].team_name (используя new_name)
+    
+    Ищет команду по team_id (если есть) или по любому из возможных slug'ов команды.
+    """
+    if not old_slug or not new_slug or old_slug == new_slug:
+        return
+    
+    updated_seasons = 0
+    
+    # Получаем команду, чтобы узнать все возможные slug'ы (включая старые)
+    team = await db.teams.find_one({"slug": new_slug})
+    if not team:
+        team = await db.teams.find_one({"_id": team_id}) if team_id else None
+    
+    # Собираем все возможные slug'ы команды для поиска
+    possible_slugs = {old_slug, new_slug}
+    if team:
+        # Добавляем текущий slug команды
+        if team.get("slug"):
+            possible_slugs.add(team.get("slug"))
+        # Можем также проверить исторические slug'ы, если они хранятся
+    
+    logger.info(f"Searching for team in seasons by possible slugs: {possible_slugs}, team_id: {team_id}")
+    
+    # Находим все сезоны, где упоминается эта команда
+    # Ищем по team_id (если есть) или по любому из возможных slug'ов
+    query = {"season_data": {"$exists": True}}
+    
+    # Если есть team_id, ищем также по team_id в играх
+    # Но сначала просто ищем все сезоны и проверяем вручную
+    async for season in db.kvn.find(query):
+        season_data = season.get("season_data", {})
+        if not season_data:
+            continue
+        
+        needs_update = False
+        
+        # Обновляем в all_teams
+        all_teams = season_data.get("all_teams", [])
+        for i, team_entry in enumerate(all_teams):
+            # Проверяем по slug (любому из возможных) или по team_id
+            should_update = False
+            if isinstance(team_entry, dict):
+                entry_slug = team_entry.get("slug")
+                entry_team_id = team_entry.get("team_id") or team_entry.get("id")
+                # Обновляем, если slug совпадает с любым из возможных или team_id совпадает
+                if entry_slug in possible_slugs or (team_id and entry_team_id == team_id):
+                    should_update = True
+            elif isinstance(team_entry, str) and team_entry in possible_slugs:
+                should_update = True
+            
+            if should_update:
+                if isinstance(team_entry, dict):
+                    team_entry["slug"] = new_slug
+                    # Обновляем название, если оно есть и отличается
+                    if new_name and team_entry.get("name"):
+                        old_name = team_entry.get("name", "")
+                        # Сохраняем город, если он был в скобках
+                        city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_name)
+                        if city_match:
+                            city = city_match.group(1)
+                            updated_name = f"{new_name} ({city})"
+                        else:
+                            updated_name = new_name
+                        team_entry["name"] = updated_name
+                    # Обновляем team_id, если его нет
+                    if team_id and not team_entry.get("team_id"):
+                        team_entry["team_id"] = team_id
+                else:
+                    all_teams[i] = new_slug
+                needs_update = True
+        
+        # Обновляем в winners
+        winners = season_data.get("winners", [])
+        for i, winner in enumerate(winners):
+            # Проверяем по slug (любому из возможных) или по team_id
+            should_update = False
+            if isinstance(winner, dict):
+                winner_slug = winner.get("slug")
+                winner_team_id = winner.get("team_id") or winner.get("id")
+                if winner_slug in possible_slugs or (team_id and winner_team_id == team_id):
+                    should_update = True
+            elif isinstance(winner, str) and winner in possible_slugs:
+                should_update = True
+            
+            if should_update:
+                if isinstance(winner, dict):
+                    winner["slug"] = new_slug
+                    # Обновляем название, если оно есть и отличается
+                    if new_name and winner.get("name"):
+                        old_name = winner.get("name", "")
+                        city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_name)
+                        if city_match:
+                            city = city_match.group(1)
+                            updated_name = f"{new_name} ({city})"
+                        else:
+                            updated_name = new_name
+                        winner["name"] = updated_name
+                    # Обновляем team_id, если его нет
+                    if team_id and not winner.get("team_id"):
+                        winner["team_id"] = team_id
+                else:
+                    winners[i] = new_slug
+                needs_update = True
+        
+        # Обновляем в играх (stages -> games -> teams)
+        stages = season_data.get("stages", [])
+        games_updated = 0
+        for stage in stages:
+            games = stage.get("games", [])
+            for game in games:
+                teams = game.get("teams", [])
+                for team in teams:
+                    if isinstance(team, dict):
+                        team_slug = team.get("team_slug")
+                        team_team_id = team.get("team_id")
+                        # Обновляем, если slug совпадает с любым из возможных или team_id совпадает
+                        if team_slug in possible_slugs or (team_id and team_team_id == team_id):
+                            old_team_slug = team.get("team_slug")
+                            team["team_slug"] = new_slug
+                            games_updated += 1
+                            logger.info(f"  Updating team_slug in game '{game.get('name', 'N/A')}': '{old_team_slug}' -> '{new_slug}'")
+                            # ВАЖНО: Обновляем team_name, используя актуальное название команды
+                            if new_name:
+                                old_team_name = team.get("team_name", "")
+                                # Сохраняем город, если он был в скобках
+                                city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_team_name)
+                                if city_match:
+                                    city = city_match.group(1)
+                                    updated_team_name = f"{new_name} ({city})"
+                                else:
+                                    updated_team_name = new_name
+                                team["team_name"] = updated_team_name
+                                logger.info(f"  Updating team_name in game: '{old_team_name}' -> '{updated_team_name}'")
+                            # Обновляем team_id, если его нет
+                            if team_id and not team.get("team_id"):
+                                team["team_id"] = team_id
+                            needs_update = True
+        
+        # Сохраняем обновления, если были изменения
+        if needs_update:
+            try:
+                season_path = season.get('full_path', season.get('_id', 'unknown'))
+                # Обновляем team_data_version, чтобы фронтенд знал, что данные изменились
+                result = await db.kvn.update_one(
+                    {"_id": season["_id"]},
+                    {"$set": {
+                        "season_data": season_data, 
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "team_data_version": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                if result.modified_count > 0:
+                    updated_seasons += 1
+                    logger.info(f"  ✅ Updated season: {season_path}")
+                else:
+                    logger.warning(f"  ⚠️  Season {season_path} marked for update but no changes were saved (modified_count=0)")
+            except Exception as e:
+                logger.error(f"Failed to update season {season.get('full_path', season.get('_id'))}: {e}", exc_info=True)
+    
+    if updated_seasons > 0:
+        logger.info(f"✅ Updated team slug '{old_slug}' -> '{new_slug}' and name '{new_name}' in {updated_seasons} seasons")
+    else:
+        logger.warning(f"⚠️  No seasons found with team slug '{old_slug}' to update. Team may not be in any seasons yet.")
 
 
 async def update_team_name_in_seasons(team_slug: str, new_name: str, db):
@@ -1951,22 +2256,37 @@ async def update_team(id: str, data: TeamUpdate):
         raise HTTPException(status_code=404, detail="Team not found")
     
     old_name = current_team.get("name") or current_team.get("title")
-    team_slug = current_team.get("slug")
+    old_slug = current_team.get("slug")
     
     # Выполняем обновление
     result = await update_content("teams", id, data, "Team not found")
     
-    # Если изменилось название команды, обновляем его в сезонах
-    if team_slug:
-        # Получаем обновленную команду, чтобы узнать финальное значение name
-        updated_team = await db.teams.find_one({"_id": id})
-        if updated_team:
-            new_name = updated_team.get("name") or updated_team.get("title")
-            
-            # Проверяем, изменилось ли название
-            if new_name and new_name != old_name:
-                # Обновляем название в сезонах
-                await update_team_name_in_seasons(team_slug, new_name, db)
+    # Получаем обновленную команду, чтобы узнать финальные значения
+    updated_team = await db.teams.find_one({"_id": id})
+    if not updated_team:
+        return result
+    
+    new_name = updated_team.get("name") or updated_team.get("title")
+    new_slug = updated_team.get("slug")
+    
+    # Если изменился slug команды, обновляем его во всех сезонах
+    # При этом также обновляем team_name, используя актуальное название
+    if old_slug and new_slug and old_slug != new_slug:
+        logger.info(f"Team slug changed: '{old_slug}' -> '{new_slug}', updating in all seasons...")
+        team_id = updated_team.get("_id") or updated_team.get("id")
+        await update_team_slug_in_seasons(old_slug, new_slug, new_name, team_id, db)
+        # Используем новый slug для обновления названия (если оно тоже изменилось)
+        team_slug = new_slug
+        # Если название тоже изменилось, обновляем его отдельно (для случаев, когда slug не менялся)
+        if new_name and new_name != old_name:
+            logger.info(f"Team name also changed: '{old_name}' -> '{new_name}', updating in all seasons...")
+            await update_team_name_in_seasons(team_slug, new_name, db)
+    else:
+        team_slug = old_slug or new_slug
+        # Если изменилось только название (без изменения slug), обновляем его в сезонах
+        if team_slug and new_name and new_name != old_name:
+            logger.info(f"Team name changed: '{old_name}' -> '{new_name}', updating in all seasons...")
+            await update_team_name_in_seasons(team_slug, new_name, db)
     
     return result
 
@@ -2065,7 +2385,13 @@ async def get_show_children(parent_slug: str):
 @router.get("/shows/{id_or_slug}", response_model=dict)
 async def get_show(id_or_slug: str):
     """Get show by ID or slug"""
-    return await get_by_id_or_slug("shows", id_or_slug, "Show not found")
+    show = await get_by_id_or_slug("shows", id_or_slug, "Show not found")
+    
+    # Разрешаем ссылки в модулях
+    if show.get('modules'):
+        show['modules'] = await LinkResolver.resolve_links_in_modules(show['modules'])
+    
+    return show
 
 
 @router.get("/shows-hierarchy", response_model=dict)
@@ -2887,7 +3213,13 @@ async def get_kvn_children(parent_slug: str):
 @router.get("/kvn/{id_or_slug}", response_model=dict)
 async def get_kvn(id_or_slug: str):
     """Get KVN page by ID or slug"""
-    return await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
+    kvn = await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
+    
+    # Разрешаем ссылки в модулях
+    if kvn.get('modules'):
+        kvn['modules'] = await LinkResolver.resolve_links_in_modules(kvn['modules'])
+    
+    return kvn
 
 
 @router.get("/kvn-hierarchy", response_model=dict)
