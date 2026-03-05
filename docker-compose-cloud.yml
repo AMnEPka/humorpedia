@@ -52,7 +52,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev  # используем отдельный Dockerfile
+      dockerfile: Dockerfile-cloud  # используем отдельный Dockerfile
     container_name: humorpedia-frontend
     environment:
       - CHOKIDAR_USEPOLLING=true
