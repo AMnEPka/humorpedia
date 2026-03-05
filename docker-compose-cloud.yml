@@ -49,32 +49,32 @@ services:
         max-size: "10m"
         max-file: "3"
 
-frontend:
-  build:
-    context: ./frontend
-    dockerfile: Dockerfile.dev  # используем отдельный Dockerfile
-  container_name: humorpedia-frontend
-  environment:
-    - CHOKIDAR_USEPOLLING=true
-    - WDS_SOCKET_PORT=0
-    - REACT_APP_BACKEND_URL=http://localhost:8001
-    - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096
-    - WATCHPACK_POLLING=true
-  volumes:
-    - ./frontend:/app
-    - /app/node_modules
-    - frontend_media:/app/public/media
-  depends_on:
-    - backend
-  ports:
-    - "3000:3000"
-  command: yarn start
-  restart: unless-stopped
-  logging:
-    driver: "json-file"
-    options:
-      max-size: "10m"
-      max-file: "3"
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev  # используем отдельный Dockerfile
+    container_name: humorpedia-frontend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+      - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - frontend_media:/app/public/media
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    command: yarn start
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   mongo_data:
