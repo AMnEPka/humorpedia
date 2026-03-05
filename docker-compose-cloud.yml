@@ -1,0 +1,97 @@
+services:
+  mongodb:
+    image: mongo:6
+    container_name: humorpedia-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile-cloud
+    container_name: humorpedia-backend
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=humorpedia
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - BACKUP_DIR=/app/backups
+      - ENVIRONMENT=production
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - uploads_data:/app/uploads
+      - backups_data:/app/backups
+      - imported_images_volume:/app/frontend/public/media/imported/images
+      - images_volume:/app/images
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    command: gunicorn server:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile-cloud
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    container_name: humorpedia-frontend
+    environment:
+      - NODE_ENV=production
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    volumes:
+      - frontend_media:/app/public/media
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    command: yarn start
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongo_data:
+    driver: local
+
+  frontend_media:
+    driver: local
+
+  frontend_node_modules:
+    driver: local
+
+  imported_images_volume:
+    driver: local
+
+  images_volume:
+    driver: local
+
+  uploads_data:
+    driver: local
+
+  backups_data:
+    driver: local
