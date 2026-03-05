@@ -161,8 +161,8 @@ export function GameTable({ game, stageName = '' }) {
                             className={`font-medium hover:underline ${textColor}`}
                           >
                             {/* ВАЖНО: Сначала используем team_name из данных игры (он обновляется при изменении команды),
-                                затем название из кэша, затем slug. Это гарантирует актуальность данных. */}
-                            {cleanTeamName(team.team_name) || teamNames[team.team_slug]?.name || team.team_slug}
+                                затем строковое название из кэша, затем slug. Это гарантирует актуальность данных. */}
+                            {cleanTeamName(team.team_name) || cleanTeamName(teamNames[team.team_slug]) || team.team_slug}
                           </Link>
                         ) : (
                           <span className={`font-medium ${textColor}`}>
