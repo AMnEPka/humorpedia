@@ -3,6 +3,10 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
+# Cache bust: change this date to force full rebuild when needed
+ARG CACHEBUST=20260305
+RUN echo "Build $CACHEBUST"
+
 # Копируем файлы зависимостей
 COPY package.json yarn.lock* ./
 

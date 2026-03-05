@@ -55,6 +55,7 @@ services:
       dockerfile: Dockerfile-cloud
       args:
         - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+        - CACHEBUST=${CACHEBUST:-20260305}
     container_name: humorpedia-frontend
     environment:
       - NODE_ENV=production
