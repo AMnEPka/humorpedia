@@ -8,6 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Save, ArrowLeft, Loader2, Star } from 'lucide-react';
 import ModuleEditor from '../components/ModuleEditor';
 
@@ -56,6 +61,8 @@ export default function TemplateEditPage() {
   const [template, setTemplate] = useState(emptyTemplate);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -106,6 +113,23 @@ export default function TemplateEditPage() {
     }
   };
 
+  const handleApplyToKvnTeams = async (mode = 'merge') => {
+    if (isNew) return;
+    setError('');
+    setSuccess('');
+    setApplying(true);
+    try {
+      const res = await templatesApi.applyToTeams(id, { team_type: 'kvn', mode, dry_run: false });
+      const { matched, modified } = res.data || {};
+      setSuccess(`Шаблон применён к командам КВН: обновлено ${modified} из ${matched} (${mode})`);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Ошибка применения шаблона');
+    } finally {
+      setApplying(false);
+      setApplyDialogOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -139,6 +163,17 @@ export default function TemplateEditPage() {
               <Star className="mr-2 h-4 w-4" /> По умолчанию
             </Button>
           )}
+          {!isNew && template.content_type === 'team' && (
+            <Button
+              variant="outline"
+              onClick={() => setApplyDialogOpen(true)}
+              disabled={applying}
+              title="Применить этот шаблон ко всем командам КВН (team_type=kvn)"
+            >
+              {applying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Применить к КВН-командам
+            </Button>
+          )}
           {template.is_default && (
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-1">
               <Star className="h-3 w-3" /> По умолчанию
@@ -153,6 +188,28 @@ export default function TemplateEditPage() {
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
       {success && <Alert><AlertDescription>{success}</AlertDescription></Alert>}
+
+      <AlertDialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Применить шаблон ко всем командам КВН?</AlertDialogTitle>
+            <AlertDialogDescription>
+              По умолчанию применяется <b>безопасный режим</b>: шаблон добавит недостающие блоки и упорядочит,
+              но <b>не удалит</b> лишние блоки и <b>не затрёт</b> уже заполненные (они будут переиспользованы).
+              Если нужно жёстко привести всё к шаблону — выбери "Перезаписать полностью".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={applying}>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleApplyToKvnTeams('merge')} disabled={applying}>
+              Применить (безопасно)
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => handleApplyToKvnTeams('replace')} disabled={applying}>
+              Перезаписать полностью
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Main info */}
       <div className="grid md:grid-cols-3 gap-6">

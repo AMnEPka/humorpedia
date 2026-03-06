@@ -16,6 +16,7 @@ import PersonSelector from '../components/PersonSelector';
 // import TeamSelector from '../components/TeamSelector'; // TODO: создать компонент
 import MediaSelector from '../components/MediaSelector';
 import SeasonDataEditor from '../components/SeasonDataEditor';
+import FactsEditor from '../components/FactsEditor';
 import { cleanTeamName } from '@/utils/team';
 
 const emptyKvn = {
@@ -23,6 +24,7 @@ const emptyKvn = {
   poster: null, description: '',
   parent_id: null,  // Для корневой страницы - null
   facts: {},
+  facts_order: [],
   social_links: {},
   modules: [], tags: [], person_ids: [], team_ids: [],
   seo: { meta_title: '', meta_description: '' },
@@ -44,6 +46,7 @@ export default function KVNEditPage() {
   const [parentOptions, setParentOptions] = useState([]);
   const [juryMembers, setJuryMembers] = useState([]);
   const [loadingJury, setLoadingJury] = useState(false);
+  const [loadingPreviousSeason, setLoadingPreviousSeason] = useState(false);
 
   // Загружаем список родителей для выбора
   useEffect(() => {
@@ -101,6 +104,7 @@ export default function KVNEditPage() {
             poster: poster,
             parent_id: res.data.parent_id || null,  // null для корневой страницы
             facts: res.data.facts || {},
+            facts_order: res.data.facts_order || [],
             social_links: res.data.social_links || {},
             seo: { ...emptyKvn.seo, ...res.data.seo },
             season_data: res.data.season_data || null,  // Сохраняем season_data для редактирования
@@ -237,6 +241,118 @@ export default function KVNEditPage() {
 
   const generateSlug = (t) => t.toLowerCase().replace(/[а-яё]/g, c => ({ 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ы':'y','э':'e','ю':'yu','я':'ya' }[c] || '')).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+  const handleLoadTemplate = () => {
+    const templateFacts = {
+      'Сезон': '',
+      'Количество команд': '',
+      'Количество игр': '',
+      'Ведущий': '',
+      'Редакторы': '',
+      'Чемпион': ''
+    };
+    const templateOrder = ['Сезон', 'Количество команд', 'Количество игр', 'Ведущий', 'Редакторы', 'Чемпион'];
+    
+    const currentFacts = kvn.facts || {};
+    // Добавляем шаблонные факты только если их еще нет
+    const newFacts = { ...currentFacts };
+    templateOrder.forEach(key => {
+      if (!(key in newFacts)) {
+        newFacts[key] = templateFacts[key];
+      }
+    });
+    
+    // Обновляем порядок: сначала шаблонные факты в нужном порядке, потом остальные
+    const existingOrder = kvn.facts_order || [];
+    const otherKeys = existingOrder.filter(k => !templateOrder.includes(k));
+    const newOrder = [...templateOrder.filter(k => k in newFacts), ...otherKeys];
+    
+    setKvn(p => ({
+      ...p,
+      facts: newFacts,
+      facts_order: newOrder
+    }));
+    setSuccess('Шаблон загружен');
+  };
+
+  const handleLoadFromPreviousSeason = async () => {
+    if (!kvn.season_data) {
+      setError('Нет данных сезона. Убедитесь, что сезон создан в разделе "Сезон"');
+      return;
+    }
+
+    const currentYear = kvn.season_data.year;
+    const leagueSlug = kvn.season_data.league_slug;
+
+    if (!currentYear || !leagueSlug) {
+      setError('Не удалось определить год или лигу сезона');
+      return;
+    }
+
+    const prevYear = currentYear - 1;
+    setLoadingPreviousSeason(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Ищем предыдущий сезон: ищем по season_data.year и season_data.league_slug
+      let prevSeason = null;
+      
+      // Сначала попробуем найти через parent_id (если сезоны - дочерние страницы лиги)
+      if (kvn.parent_id) {
+        // Получаем все сезоны с include_children=true, чтобы получить дочерние страницы
+        const allSeasons = await contentApi.listKvn({ include_children: true, limit: 1000 });
+        if (allSeasons.data?.items) {
+          // Фильтруем сезоны с тем же parent_id
+          const seasonsWithSameParent = allSeasons.data.items.filter(s => s.parent_id === kvn.parent_id);
+          prevSeason = seasonsWithSameParent.find(s => {
+            const sYear = s.season_data?.year;
+            const sLeagueSlug = s.season_data?.league_slug;
+            return sYear === prevYear && sLeagueSlug === leagueSlug;
+          });
+        }
+      }
+
+      // Если не нашли через parent_id, ищем по league_slug и year напрямую во всех сезонах
+      if (!prevSeason) {
+        const allSeasons = await contentApi.listKvn({ include_children: true, limit: 1000 });
+        if (allSeasons.data?.items) {
+          prevSeason = allSeasons.data.items.find(s => {
+            const sYear = s.season_data?.year;
+            const sLeagueSlug = s.season_data?.league_slug;
+            return sYear === prevYear && sLeagueSlug === leagueSlug;
+          });
+        }
+      }
+
+      if (!prevSeason) {
+        setError(`Предыдущий сезон (${leagueSlug}, ${prevYear}) не найден`);
+        return;
+      }
+
+      // Загружаем полные данные предыдущего сезона
+      const prevSeasonData = await contentApi.getKvn(prevSeason.id || prevSeason.slug);
+      const prevFacts = prevSeasonData.data.facts || {};
+      const prevFactsOrder = prevSeasonData.data.facts_order || [];
+
+      if (Object.keys(prevFacts).length === 0) {
+        setError('У предыдущего сезона нет фактов');
+        return;
+      }
+
+      // Загружаем факты из предыдущего сезона
+      setKvn(p => ({
+        ...p,
+        facts: { ...prevFacts },
+        facts_order: [...prevFactsOrder]
+      }));
+      setSuccess(`Факты загружены из сезона ${prevYear}`);
+    } catch (err) {
+      setError(getErrorMessage(err, 'Ошибка загрузки предыдущего сезона'));
+    } finally {
+      setLoadingPreviousSeason(false);
+    }
+  };
+
   const handleSave = async () => {
     setError(''); setSuccess(''); setSaving(true);
     try {
@@ -255,6 +371,9 @@ export default function KVNEditPage() {
         dataToSend.poster = null;
       }
       if (kvn.facts && Object.keys(kvn.facts).length > 0) dataToSend.facts = kvn.facts;
+      if (kvn.facts_order && Array.isArray(kvn.facts_order) && kvn.facts_order.length > 0) {
+        dataToSend.facts_order = kvn.facts_order;
+      }
       if (kvn.description) dataToSend.description = kvn.description;
       // parent_id может быть null для корневой страницы
       if (kvn.parent_id !== undefined) {
@@ -294,6 +413,7 @@ export default function KVNEditPage() {
             poster: poster,
             parent_id: res.data.parent_id || null,
             facts: res.data.facts || {},
+            facts_order: res.data.facts_order || [],
             social_links: res.data.social_links || {},
             seo: { ...emptyKvn.seo, ...res.data.seo },
             season_data: res.data.season_data || null,
@@ -433,45 +553,63 @@ export default function KVNEditPage() {
 
         <TabsContent value="facts" className="space-y-6">
           <Card>
-            <CardHeader><CardTitle>Факты</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(kvn.facts || {}).length > 0 ? (
-                <div className="space-y-2">
-                  {Object.entries(kvn.facts).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      <Input value={key} className="w-1/3 bg-background" onChange={(e) => {
-                        const newFacts = { ...kvn.facts };
-                        delete newFacts[key];
-                        newFacts[e.target.value] = value;
-                        setKvn(p => ({ ...p, facts: newFacts }));
-                      }} />
-                      <Input value={value} className="flex-1 bg-background" onChange={(e) => setKvn(p => ({ ...p, facts: { ...p.facts, [key]: e.target.value } }))} />
-                      <Button variant="ghost" size="icon" onClick={() => {
-                        const newFacts = { ...kvn.facts };
-                        delete newFacts[key];
-                        setKvn(p => ({ ...p, facts: newFacts }));
-                      }}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Факты</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLoadTemplate}
+                    disabled={saving}
+                  >
+                    Загрузить шаблон
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLoadFromPreviousSeason}
+                    disabled={saving || loadingPreviousSeason || isNew}
+                  >
+                    {loadingPreviousSeason ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      'Загрузить с прошлого сезона'
+                    )}
+                  </Button>
                 </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Нет фактов</p>
-              )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Object.keys(kvn.facts || {}).length > 0 ? (
+                <FactsEditor
+                  facts={kvn.facts || {}}
+                  factsOrder={kvn.facts_order || []}
+                  onChange={({ facts, facts_order }) => setKvn(p => ({ ...p, facts, facts_order }))}
+                />
+              ) : <p className="text-muted-foreground text-sm">Нет фактов</p>}
               
               <div className="flex items-center gap-2 pt-4 border-t">
                 <Input value={newFactKey} onChange={(e) => setNewFactKey(e.target.value)} placeholder="Название" className="w-1/3" />
                 <Input value={newFactValue} onChange={(e) => setNewFactValue(e.target.value)} placeholder="Значение" className="flex-1" onKeyDown={(e) => {
                   if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
-                    setKvn(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                    setKvn(p => ({
+                      ...p,
+                      facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() },
+                      facts_order: [...(p.facts_order || []), newFactKey.trim()]
+                    }));
                     setNewFactKey('');
                     setNewFactValue('');
                   }
                 }} />
                 <Button variant="outline" onClick={() => {
                   if (newFactKey.trim() && newFactValue.trim()) {
-                    setKvn(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                    setKvn(p => ({
+                      ...p,
+                      facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() },
+                      facts_order: [...(p.facts_order || []), newFactKey.trim()]
+                    }));
                     setNewFactKey('');
                     setNewFactValue('');
                   }

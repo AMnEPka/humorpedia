@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
 import EmojiRating from '@/components/EmojiRating';
 import { isSystemModule } from '@/components/SystemModules';
+import { usePageTitle } from '@/utils/pageTitle';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
@@ -150,6 +151,8 @@ export default function ShowDetailPage() {
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  usePageTitle(show?.title || (loading ? 'Шоу' : (error ? 'Шоу не найдено' : 'Шоу')));
 
   // Собираем полный путь из всех параметров
   // Если есть parentSlug, значит это вложенный путь

@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// Backend URL: window.__BACKEND_URL__ (from config.js) or fallback
+const BACKEND_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
+  ? window.__BACKEND_URL__
+  : (process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8001`);
 console.log('[Public API] BACKEND_URL:', BACKEND_URL);
 
 const api = axios.create({

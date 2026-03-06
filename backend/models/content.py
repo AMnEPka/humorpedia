@@ -28,6 +28,7 @@ class Person(BaseContent):
     bio: PersonBio = Field(default_factory=PersonBio)
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     facts: Dict[str, str] = Field(default_factory=dict)  # Facts for facts_table module
+    facts_order: List[str] = Field(default_factory=list)  # Stable order of facts keys
     
     # Primary tag - основной тег человека, используется при добавлении в сезоны
     primary_tag: Optional[str] = None
@@ -50,6 +51,7 @@ class PersonCreate(BaseModel):
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     primary_tag: Optional[str] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -66,6 +68,7 @@ class PersonUpdate(BaseModel):
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     primary_tag: Optional[str] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
@@ -88,6 +91,7 @@ class Team(BaseContent):
     name: str
     logo: Optional[MediaFile] = None
     facts: Dict[str, str] = Field(default_factory=dict)  # Flexible key-value pairs for team info
+    facts_order: List[str] = Field(default_factory=list)  # Stable order of facts keys
     social_links: SocialLinks = Field(default_factory=SocialLinks)
     
     # Primary tag - основной тег команды, используется при добавлении в сезоны
@@ -114,6 +118,7 @@ class TeamCreate(BaseModel):
     team_type: TeamType = TeamType.KVN
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     social_links: Optional[SocialLinks] = None
     primary_tag: Optional[str] = None
     aliases: List[str] = Field(default_factory=list)
@@ -131,6 +136,7 @@ class TeamUpdate(BaseModel):
     team_type: Optional[TeamType] = None
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     social_links: Optional[SocialLinks] = None
     primary_tag: Optional[str] = None
     aliases: Optional[List[str]] = None
@@ -434,6 +440,7 @@ class KVN(BaseContent):
     
     # Facts (key-value pairs)
     facts: Dict[str, str] = Field(default_factory=dict)
+    facts_order: List[str] = Field(default_factory=list)  # Stable order of facts keys
     
     # Social links
     social_links: SocialLinks = Field(default_factory=SocialLinks)
@@ -457,6 +464,7 @@ class KVNCreate(BaseModel):
     description: Optional[str] = None
     parent_id: Optional[str] = None  # For child KVN pages
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     social_links: Optional[SocialLinks] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -475,6 +483,7 @@ class KVNUpdate(BaseModel):
     description: Optional[str] = None
     parent_id: Optional[str] = None  # For child KVN pages
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     social_links: Optional[SocialLinks] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None

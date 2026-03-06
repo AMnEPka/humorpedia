@@ -261,40 +261,122 @@ code {
     text-align: left;
     margin-top: 2em;
     margin-bottom: 2em;
-    font-size: 0.875em;
-    line-height: 1.7142857;
+    font-size: 0.875rem;
+    line-height: 1.5;
     border-collapse: collapse;
+    display: table;
+    max-width: 100%;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    overflow: hidden;
 }
 
 .prose thead {
     border-bottom-width: 1px;
-    border-bottom-color: #e5e7eb;
+    border-bottom-color: hsl(var(--border));
 }
 
 .prose thead th {
-    color: inherit;
-    font-weight: 600;
-    vertical-align: bottom;
-    padding-right: 0.5714286em;
-    padding-bottom: 0.5714286em;
-    padding-left: 0.5714286em;
+    height: 2.5rem;
+    padding: 0 0.5rem;
+    text-align: left;
+    vertical-align: middle;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
 }
 
 .prose tbody tr {
     border-bottom-width: 1px;
-    border-bottom-color: #f3f4f6;
+    border-bottom-color: hsl(var(--border));
+    transition: background-color 0.2s;
+}
+
+.prose tbody tr:hover {
+    background-color: hsl(var(--muted) / 0.5);
+}
+
+.prose tbody tr:nth-child(even) {
+    background-color: hsl(var(--muted) / 0.3);
+}
+
+.prose tbody tr:nth-child(even):hover {
+    background-color: hsl(var(--muted) / 0.5);
 }
 
 .prose tbody tr:last-child {
     border-bottom-width: 0;
 }
 
-.prose tbody td {
-    vertical-align: baseline;
-    padding-top: 0.5714286em;
-    padding-right: 0.5714286em;
-    padding-bottom: 0.5714286em;
-    padding-left: 0.5714286em;
+/* Сброс всех стилей внутри tr, чтобы игнорировать мусорные стили при копировании */
+.prose table tr {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.5 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+}
+
+/* Сброс стилей для всех элементов внутри tr, кроме td и th */
+.prose table tr > *:not(td):not(th) {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.5 !important;
+}
+
+.prose table td,
+.prose table th {
+    padding: 0.5rem !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    line-height: 1.5 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+}
+
+.prose table thead th {
+    height: 2.5rem !important;
+    padding: 0 0.5rem !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    line-height: 1.5 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+}
+
+/* Убираем отступы у параграфов и других элементов внутри ячеек */
+.prose table td p,
+.prose table th p,
+.prose table td div,
+.prose table th div,
+.prose table td span,
+.prose table th span,
+.prose table td *,
+.prose table th * {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.5 !important;
+}
+
+/* Переопределяем стили prose для элементов внутри таблиц */
+.prose table p {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .prose code {

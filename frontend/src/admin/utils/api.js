@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// Backend URL: window.__BACKEND_URL__ (from config.js) or fallback
+const BACKEND_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
+  ? window.__BACKEND_URL__
+  : (process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8001`);
 export const API_BASE = `${BACKEND_URL}/api`;
 
 console.log('[API] BACKEND_URL:', BACKEND_URL);
@@ -67,6 +70,8 @@ export const contentApi = {
   getPerson: (id) => api.get(`/content/people/${id}`),
   searchPeople: (q, limit = 10) => api.get('/content/people/search', { params: { q, limit } }),
   getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
+  searchContent: (query, types, limit = 10) => api.get('/content/content/search', { params: { query, types, limit } }),
+  resolveContentLink: (contentType, idOrSlug) => api.get(`/content/content/${contentType}/${idOrSlug}/resolve-link`),
   createPerson: (data) => api.post('/content/people', data),
   updatePerson: (id, data) => api.put(`/content/people/${id}`, data),
   deletePerson: (id) => api.delete(`/content/people/${id}`),
@@ -77,6 +82,8 @@ export const contentApi = {
   createTeam: (data) => api.post('/content/teams', data),
   updateTeam: (id, data) => api.put(`/content/teams/${id}`, data),
   deleteTeam: (id) => api.delete(`/content/teams/${id}`),
+  teamsBulkCheck: (data) => api.post('/content/teams/bulk-check', data),
+  teamsBulkCreate: (data) => api.post('/content/teams/bulk-create', data),
 
   // Shows
   listShows: (params) => api.get('/content/shows', { params }),
@@ -214,6 +221,7 @@ export const templatesApi = {
   setDefault: (id) => api.post(`/templates/${id}/set-default`),
   delete: (id) => api.delete(`/templates/${id}`),
   getModuleTypes: () => api.get('/templates/modules/types'),
+  applyToTeams: (id, data) => api.post(`/templates/${id}/apply-to-teams`, data),
 };
 
 // Sections API

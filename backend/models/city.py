@@ -15,6 +15,7 @@ class City(BaseContent):
     poster: Optional[MediaFile] = None
     description: Optional[str] = None  # Short description/intro
     facts: Dict[str, str] = Field(default_factory=dict)  # Key-value facts
+    facts_order: List[str] = Field(default_factory=list)  # Stable order of facts keys
     
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
@@ -35,6 +36,7 @@ class CityCreate(BaseModel):
     poster: Optional[MediaFile] = None
     description: Optional[str] = None
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
@@ -51,6 +53,7 @@ class CityUpdate(BaseModel):
     poster: Optional[MediaFile] = None
     description: Optional[str] = None
     facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None

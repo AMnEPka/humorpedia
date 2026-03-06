@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { usePageTitle } from '@/utils/pageTitle';
 import { AuthProvider, useAuth } from './admin/hooks/useAuth';
 import AdminLayout from './admin/components/AdminLayout';
 import LoginPage from './admin/pages/LoginPage';
@@ -69,6 +70,11 @@ import JuryStatsPage from './public/pages/JuryStatsPage';
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
 
+function WithTitle({ title, children }) {
+  usePageTitle(title);
+  return children;
+}
+
 // Protected route wrapper for admin
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -93,120 +99,120 @@ function AppRoutes() {
     <Routes>
       {/* Public routes with Layout */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<WithTitle title="Главная"><HomePage /></WithTitle>} />
         
         {/* News */}
-        <Route path="/news" element={<NewsListPage />} />
-        <Route path="/news/:slug" element={<NewsDetailPage />} />
+        <Route path="/news" element={<WithTitle title="Новости"><NewsListPage /></WithTitle>} />
+        <Route path="/news/:slug" element={<WithTitle title="Новость"><NewsDetailPage /></WithTitle>} />
         
         {/* Articles */}
-        <Route path="/articles" element={<ArticlesListPage />} />
-        <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+        <Route path="/articles" element={<WithTitle title="Статьи"><ArticlesListPage /></WithTitle>} />
+        <Route path="/articles/:slug" element={<WithTitle title="Статья"><ArticleDetailPage /></WithTitle>} />
         
         {/* People */}
-        <Route path="/people" element={<PeopleListPage />} />
-        <Route path="/people/:slug" element={<PersonDetailPage />} />
+        <Route path="/people" element={<WithTitle title="Люди"><PeopleListPage /></WithTitle>} />
+        <Route path="/people/:slug" element={<WithTitle title="Человек"><PersonDetailPage /></WithTitle>} />
         
         {/* Teams with categories */}
-        <Route path="/teams" element={<Navigate to="/kvn/teams" replace />} />
-        <Route path="/teams/:category" element={<Navigate to="/kvn/teams" replace />} />
-        <Route path="/kvn/teams" element={<TeamsListPage />} />
-        <Route path="/kvn/teams/:slug" element={<TeamDetailPage />} />
+        <Route path="/teams" element={<WithTitle title="Команды"><Navigate to="/kvn/teams" replace /></WithTitle>} />
+        <Route path="/teams/:category" element={<WithTitle title="Команды"><Navigate to="/kvn/teams" replace /></WithTitle>} />
+        <Route path="/kvn/teams" element={<WithTitle title="Команды КВН"><TeamsListPage /></WithTitle>} />
+        <Route path="/kvn/teams/:slug" element={<WithTitle title="Команда"><TeamDetailPage /></WithTitle>} />
         
         {/* Shows */}
-        <Route path="/shows" element={<ShowsListPage />} />
-        <Route path="/shows/:slug" element={<ShowDetailPage />} />
-        <Route path="/shows/:parentSlug/:childSlug" element={<ShowDetailPage />} />
-        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug" element={<ShowDetailPage />} />
-        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug/:greatGrandchildSlug" element={<ShowDetailPage />} />
+        <Route path="/shows" element={<WithTitle title="Шоу"><ShowsListPage /></WithTitle>} />
+        <Route path="/shows/:slug" element={<WithTitle title="Шоу"><ShowDetailPage /></WithTitle>} />
+        <Route path="/shows/:parentSlug/:childSlug" element={<WithTitle title="Шоу"><ShowDetailPage /></WithTitle>} />
+        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug" element={<WithTitle title="Шоу"><ShowDetailPage /></WithTitle>} />
+        <Route path="/shows/:parentSlug/:childSlug/:grandchildSlug/:greatGrandchildSlug" element={<WithTitle title="Шоу"><ShowDetailPage /></WithTitle>} />
         
         {/* Quizzes */}
-        <Route path="/quizzes" element={<QuizzesListPage />} />
-        <Route path="/quizzes/:slug" element={<QuizDetailPage />} />
+        <Route path="/quizzes" element={<WithTitle title="Квизы"><QuizzesListPage /></WithTitle>} />
+        <Route path="/quizzes/:slug" element={<WithTitle title="Квиз"><QuizDetailPage /></WithTitle>} />
         
         {/* Cities (Geography) */}
-        <Route path="/city" element={<CitiesListPagePublic />} />
-        <Route path="/city/:slug" element={<CityDetailPage />} />
+        <Route path="/city" element={<WithTitle title="География"><CitiesListPagePublic /></WithTitle>} />
+        <Route path="/city/:slug" element={<WithTitle title="Город"><CityDetailPage /></WithTitle>} />
         
         {/* Static pages */}
-        <Route path="/contacts" element={<ContactsPage />} />
-        <Route path="/policy" element={<PolicyPage />} />
+        <Route path="/contacts" element={<WithTitle title="Контакты"><ContactsPage /></WithTitle>} />
+        <Route path="/policy" element={<WithTitle title="Политика конфиденциальности"><PolicyPage /></WithTitle>} />
         
         {/* Search */}
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/tags/:tag" element={<TagSearchPage />} />
+        <Route path="/search" element={<WithTitle title="Поиск"><SearchPage /></WithTitle>} />
+        <Route path="/tags/:tag" element={<WithTitle title="Тег"><TagSearchPage /></WithTitle>} />
         
         {/* KVN Jury Stats */}
-        <Route path="/kvn/vl-kvn/vl-jury" element={<JuryStatsPage />} />
+        <Route path="/kvn/vl-kvn/vl-jury" element={<WithTitle title="Статистика жюри"><JuryStatsPage /></WithTitle>} />
         
         {/* Dynamic sections - catch-all for hierarchical URLs */}
         {/* SectionDetailPage автоматически определяет формат (старый/новый) по наличию season_data */}
-        <Route path="/*" element={<SectionDetailPage />} />
+        <Route path="/*" element={<WithTitle title="Раздел"><SectionDetailPage /></WithTitle>} />
       </Route>
       
       {/* Admin routes */}
-      <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/admin/login" element={<WithTitle title="Вход в админку"><LoginPage /></WithTitle>} />
       
-      <Route path="/admin" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/admin" element={<WithTitle title="Админка"><ProtectedRoute><DashboardPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - People */}
-      <Route path="/admin/people" element={<ProtectedRoute><AdminPeopleListPage /></ProtectedRoute>} />
-      <Route path="/admin/people/:id" element={<ProtectedRoute><PersonEditPage /></ProtectedRoute>} />
+      <Route path="/admin/people" element={<WithTitle title="Админка: Люди"><ProtectedRoute><AdminPeopleListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/people/:id" element={<WithTitle title="Админка: Редактирование человека"><ProtectedRoute><PersonEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Teams */}
-      <Route path="/admin/teams" element={<ProtectedRoute><AdminTeamsListPage /></ProtectedRoute>} />
-      <Route path="/admin/teams/:id" element={<ProtectedRoute><TeamEditPage /></ProtectedRoute>} />
+      <Route path="/admin/teams" element={<WithTitle title="Админка: Команды"><ProtectedRoute><AdminTeamsListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/teams/:id" element={<WithTitle title="Админка: Редактирование команды"><ProtectedRoute><TeamEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Shows */}
-      <Route path="/admin/shows" element={<ProtectedRoute><AdminShowsListPage /></ProtectedRoute>} />
-      <Route path="/admin/shows/:id" element={<ProtectedRoute><ShowEditPage /></ProtectedRoute>} />
+      <Route path="/admin/shows" element={<WithTitle title="Админка: Шоу"><ProtectedRoute><AdminShowsListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/shows/:id" element={<WithTitle title="Админка: Редактирование шоу"><ProtectedRoute><ShowEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - KVN */}
-      <Route path="/admin/kvn" element={<ProtectedRoute><KVNListPage /></ProtectedRoute>} />
-        <Route path="/admin/kvn/:id" element={<ProtectedRoute><KVNEditPage /></ProtectedRoute>} />
+      <Route path="/admin/kvn" element={<WithTitle title="Админка: КВН"><ProtectedRoute><KVNListPage /></ProtectedRoute></WithTitle>} />
+        <Route path="/admin/kvn/:id" element={<WithTitle title="Админка: Редактирование КВН"><ProtectedRoute><KVNEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Articles */}
-      <Route path="/admin/articles" element={<ProtectedRoute><AdminArticlesListPage /></ProtectedRoute>} />
-      <Route path="/admin/articles/:id" element={<ProtectedRoute><ArticleEditPage /></ProtectedRoute>} />
+      <Route path="/admin/articles" element={<WithTitle title="Админка: Статьи"><ProtectedRoute><AdminArticlesListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/articles/:id" element={<WithTitle title="Админка: Редактирование статьи"><ProtectedRoute><ArticleEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - News */}
-      <Route path="/admin/news" element={<ProtectedRoute><AdminNewsListPage /></ProtectedRoute>} />
-      <Route path="/admin/news/:id" element={<ProtectedRoute><NewsEditPage /></ProtectedRoute>} />
+      <Route path="/admin/news" element={<WithTitle title="Админка: Новости"><ProtectedRoute><AdminNewsListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/news/:id" element={<WithTitle title="Админка: Редактирование новости"><ProtectedRoute><NewsEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Quizzes */}
-      <Route path="/admin/quizzes" element={<ProtectedRoute><AdminQuizzesListPage /></ProtectedRoute>} />
-      <Route path="/admin/quizzes/:id" element={<ProtectedRoute><QuizEditPage /></ProtectedRoute>} />
+      <Route path="/admin/quizzes" element={<WithTitle title="Админка: Квизы"><ProtectedRoute><AdminQuizzesListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/quizzes/:id" element={<WithTitle title="Админка: Редактирование квиза"><ProtectedRoute><QuizEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Wiki */}
-      <Route path="/admin/wiki" element={<ProtectedRoute><WikiListPage /></ProtectedRoute>} />
-      <Route path="/admin/wiki/:id" element={<ProtectedRoute><WikiEditPage /></ProtectedRoute>} />
+      <Route path="/admin/wiki" element={<WithTitle title="Админка: Вики"><ProtectedRoute><WikiListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/wiki/:id" element={<WithTitle title="Админка: Редактирование вики"><ProtectedRoute><WikiEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Cities (Geography) */}
-      <Route path="/admin/cities" element={<ProtectedRoute><CitiesListPage /></ProtectedRoute>} />
-      <Route path="/admin/cities/:id" element={<ProtectedRoute><CityEditPage /></ProtectedRoute>} />
+      <Route path="/admin/cities" element={<WithTitle title="Админка: Города"><ProtectedRoute><CitiesListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/cities/:id" element={<WithTitle title="Админка: Редактирование города"><ProtectedRoute><CityEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Sections */}
-      <Route path="/admin/sections" element={<ProtectedRoute><SectionsListPage /></ProtectedRoute>} />
-      <Route path="/admin/sections/:id" element={<ProtectedRoute><SectionEditPage /></ProtectedRoute>} />
+      <Route path="/admin/sections" element={<WithTitle title="Админка: Разделы"><ProtectedRoute><SectionsListPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/sections/:id" element={<WithTitle title="Админка: Редактирование раздела"><ProtectedRoute><SectionEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Media */}
-      <Route path="/admin/media" element={<ProtectedRoute><MediaPage /></ProtectedRoute>} />
+      <Route path="/admin/media" element={<WithTitle title="Админка: Медиа"><ProtectedRoute><MediaPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Tags */}
-      <Route path="/admin/tags" element={<ProtectedRoute><TagsPage /></ProtectedRoute>} />
+      <Route path="/admin/tags" element={<WithTitle title="Админка: Теги"><ProtectedRoute><TagsPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Comments */}
-      <Route path="/admin/comments" element={<ProtectedRoute><CommentsPage /></ProtectedRoute>} />
+      <Route path="/admin/comments" element={<WithTitle title="Админка: Комментарии"><ProtectedRoute><CommentsPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Users */}
-      <Route path="/admin/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<WithTitle title="Админка: Пользователи"><ProtectedRoute><UsersPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - Templates */}
-      <Route path="/admin/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
-      <Route path="/admin/templates/:id" element={<ProtectedRoute><TemplateEditPage /></ProtectedRoute>} />
+      <Route path="/admin/templates" element={<WithTitle title="Админка: Шаблоны"><ProtectedRoute><TemplatesPage /></ProtectedRoute></WithTitle>} />
+      <Route path="/admin/templates/:id" element={<WithTitle title="Админка: Редактирование шаблона"><ProtectedRoute><TemplateEditPage /></ProtectedRoute></WithTitle>} />
       
       {/* Admin - MongoDB */}
-      <Route path="/admin/database" element={<ProtectedRoute><MongoAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/database" element={<WithTitle title="Админка: База данных"><ProtectedRoute><MongoAdminPage /></ProtectedRoute></WithTitle>} />
     </Routes>
   );
 }
