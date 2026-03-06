@@ -212,3 +212,4 @@ humorbd.sql
 # Environment files
 *.env
 *.env.*
+humorbd_old.sql
