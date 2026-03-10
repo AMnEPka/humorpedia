@@ -56,6 +56,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WDS_SOCKET_PORT=0
       - REACT_APP_BACKEND_URL=http://localhost:8001
+      # Запросы к API идут на тот же origin (127.0.0.1:3000/api), dev-сервер проксирует на backend — устраняет таймауты и ERR_CONNECTION_RESET
+      - REACT_APP_USE_API_PROXY=true
       - DOCKER_ENV=true
       # Suppress deprecation warnings and increase memory limit to prevent ENOMEM errors
       - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096

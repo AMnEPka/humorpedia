@@ -148,6 +148,7 @@ async def create_section(data: SectionCreate, request: Request):
 
 
 @router.get("/", response_model=dict)
+@router.get("", response_model=dict)
 async def list_sections(
     request: Request,
     skip: int = Query(0, ge=0),

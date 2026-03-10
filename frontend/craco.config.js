@@ -134,6 +134,16 @@ webpackConfig.devServer = (devServerConfig) => {
     devServerConfig.proxy = [devServerConfig.proxy];
   }
   
+  // Proxy /api to backend — браузер ходит на тот же origin (127.0.0.1:3000/api/...),
+  // dev-сервер перенаправляет на backend. Устраняет ERR_CONNECTION_RESET при прямом обращении к localhost:8001.
+  devServerConfig.proxy.push({
+    context: ['/api'],
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    logLevel: 'debug',
+  });
+
   // Add proxy for media files to backend
   devServerConfig.proxy.push({
     context: ['/media'],

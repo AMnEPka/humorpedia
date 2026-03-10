@@ -1,13 +1,15 @@
 import axios from 'axios';
 
-// Backend URL: window.__BACKEND_URL__ (from config.js) or fallback
+// В dev при USE_API_PROXY запросы идут на тот же origin (/api), проксируются на бэкенд — без таймаутов и CORS.
 const BACKEND_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
   ? window.__BACKEND_URL__
   : (process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8001`);
-console.log('[Public API] BACKEND_URL:', BACKEND_URL);
+const USE_API_PROXY = process.env.REACT_APP_USE_API_PROXY === 'true';
+const API_BASE_URL = USE_API_PROXY ? '/api' : BACKEND_URL + '/api';
+if (typeof window !== 'undefined') console.log('[Public API] API_BASE_URL:', API_BASE_URL);
 
 const api = axios.create({
-  baseURL: BACKEND_URL + '/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
