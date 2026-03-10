@@ -50,8 +50,11 @@ export const publicApi = {
   getSectionsTree: (params) => api.get('/sections/tree', { params }),
   getSection: (idOrSlug) => api.get(`/sections/${idOrSlug}`),
   getSectionByPath: (path) => {
-    // Remove leading slash if present
-    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    // Удаляем ведущие и замыкающие слеши:
+    // /kvn/vl-kvn и /kvn/vl-kvn/ обрабатываются одинаково
+    const cleanPath = path
+      .replace(/^\/+/, '')   // leading slashes
+      .replace(/\/+$/, '');  // trailing slashes
     return api.get(`/sections/path/${cleanPath}`);
   },
   getSectionChildren: (sectionId, params) => api.get(`/sections/${sectionId}/children`, { params }),
@@ -59,7 +62,9 @@ export const publicApi = {
   // KVN
   getKvn: (slugOrId) => api.get(`/content/kvn/${slugOrId}`),
   getKvnByPath: (path) => {
-    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    const cleanPath = path
+      .replace(/^\/+/, '')   // leading slashes
+      .replace(/\/+$/, '');  // trailing slashes
     return api.get(`/content/kvn/by-path/${cleanPath}`);
   },
   getKvnChildren: (parentSlug) => api.get(`/content/kvn/${parentSlug}/children`),

@@ -277,7 +277,9 @@ function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[90px]">Сезон</TableHead>
-                  <TableHead className="w-[220px]">Город проведения лиги</TableHead>
+                  {leagueSlug === '1l-kvn' && (
+                    <TableHead className="w-[220px]">Город проведения лиги</TableHead>
+                  )}
                   <TableHead>Чемпион(ы)</TableHead>
                 </TableRow>
               </TableHeader>
@@ -296,13 +298,15 @@ function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
                         {season.year}
                       </Link>
                     </TableCell>
-                    <TableCell>
-                      {season.venueCity ? (
-                        season.venueCity
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </TableCell>
+                    {leagueSlug === '1l-kvn' && (
+                      <TableCell>
+                        {season.venueCity ? (
+                          season.venueCity
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       {season.winners.length === 0 && (
                         <span className="text-gray-400">нет данных</span>
