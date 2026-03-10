@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
-import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
+import ModuleRenderer from '../components/ModuleRenderer';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
 
@@ -273,7 +273,7 @@ function FirstLeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
                 <TableRow>
                   <TableHead className="w-[90px]">Сезон</TableHead>
                   <TableHead className="w-[220px]">Город проведения лиги</TableHead>
-                  <TableHead>Команда</TableHead>
+                  <TableHead>Чемпион(ы)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -395,28 +395,6 @@ function FirstLeagueSeasonsPage({ section, seasons }) {
 
   return (
     <div className="space-y-10">
-      {/* Краткое описание лиги */}
-      {(section.description || (section.cover_image || section.poster)) && (
-        <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] items-start mb-4">
-          <div>
-            {section.description && (
-              <p className="text-lg text-gray-700 leading-relaxed">
-                {section.description}
-              </p>
-            )}
-          </div>
-          {(section.cover_image || section.poster) && (
-            <div className="w-full">
-              <img
-                src={(section.cover_image || section.poster)?.url}
-                alt={(section.cover_image || section.poster)?.alt || section.name || section.title}
-                className="w-full h-auto rounded-xl shadow-lg object-cover max-h-[360px]"
-              />
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Модули страницы (в т.ч. «Чемпионы Первой лиги КВН» — порядок задаётся в админке) */}
       {(() => {
         const sortedModules = (section.modules || [])
@@ -442,25 +420,6 @@ function FirstLeagueSeasonsPage({ section, seasons }) {
           </div>
         );
       })()}
-
-      {/* Города проведения */}
-      {uniqueCities.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Города проведения Первой лиги
-          </h2>
-          <p className="text-gray-600">
-            На основе сезонов, уже занесённых в базу.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {uniqueCities.map((city) => (
-              <Badge key={city} variant="outline" className="text-base py-1.5 px-3">
-                {city}
-              </Badge>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Все сезоны */}
       {normalizeSeasons.length > 0 && (
