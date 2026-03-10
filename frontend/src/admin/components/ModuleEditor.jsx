@@ -26,7 +26,7 @@ import {
 import { 
   Plus, GripVertical, Trash2, Edit, ChevronDown, ChevronUp,
   FileText, Clock, Users, Tv, Table, Image, Play, Quote,
-  HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag, X
+  HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag, X, Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RichTextEditor from './RichTextEditor';
@@ -56,7 +56,8 @@ const moduleIcons = {
   facts_table: Table,
   rating_widget: Star,
   tags_cloud: Tag,
-  social_links: Users
+  social_links: Users,
+  first_league_champions: Trophy
 };
 
 const moduleNames = {
@@ -84,7 +85,8 @@ const moduleNames = {
   facts_table: 'Таблица фактов',
   rating_widget: 'Рейтинг',
   tags_cloud: 'Облако тегов',
-  social_links: 'Социальные ссылки'
+  social_links: 'Социальные ссылки',
+  first_league_champions: 'Чемпионы Первой лиги КВН'
 };
 
 const modulesByType = {
@@ -95,7 +97,8 @@ const modulesByType = {
   news: ['poster_photo', 'text_block', 'gallery', 'video', 'tags'],
   quiz: ['poster_photo', 'quiz_questions', 'quiz_results', 'text_block'],
   wiki: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
-  page: ['poster_photo', 'text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery']
+  page: ['poster_photo', 'text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery'],
+  kvn: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'first_league_champions', 'text_block', 'table', 'gallery', 'video', 'quote', 'table_of_contents']
 };
 
 function SortableModule({ module, onEdit, onDelete }) {
@@ -877,6 +880,18 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        );
+
+      case 'first_league_champions':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Таблица чемпионов строится автоматически по данным дочерних сезонов Первой лиги.
+                Порядок блока можно менять перетаскиванием в списке модулей. Заголовок блока можно задать ниже.
+              </AlertDescription>
+            </Alert>
           </div>
         );
       
