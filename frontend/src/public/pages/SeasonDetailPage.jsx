@@ -138,17 +138,17 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
     }
   }, [season]);
 
-  // Для сезонов Первой лиги — загружаем список всех сезонов лиги для блока «Все сезоны»
+  // Для сезонов Первой и Высшей лиги — загружаем список сезонов лиги для блока «Все сезоны»
   useEffect(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
     const leagueSlug = pathParts[0] === 'kvn' && pathParts[1] ? pathParts[1] : '';
-    if (leagueSlug !== '1l-kvn') {
+    if (leagueSlug !== '1l-kvn' && leagueSlug !== 'vl-kvn') {
       setLeagueSeasons([]);
       return;
     }
     let cancelled = false;
     publicApi
-      .getKvnChildren('1l-kvn')
+      .getKvnChildren(leagueSlug)
       .then((res) => {
         if (cancelled) return;
         setLeagueSeasons(normalizeLeagueSeasons(res.data.items || []));
@@ -604,16 +604,16 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         )
       ))}
 
-      {/* Навигация по сезонам лиги (для Первой лиги — полный блок по десятилетиям) */}
-      {league_slug === '1l-kvn' && leagueSeasons.length > 0 ? (
+      {/* Навигация по сезонам лиги (Первая / Высшая лига — блок по десятилетиям) */}
+      {(league_slug === '1l-kvn' || league_slug === 'vl-kvn') && leagueSeasons.length > 0 ? (
         <LeagueSeasonsNav
           seasons={leagueSeasons}
-          leagueSlug="1l-kvn"
-          title={`${leagueName}. Все сезоны`}
+          leagueSlug={league_slug}
+          title={league_slug === 'vl-kvn' ? 'Все сезоны Высшей лиги КВН' : 'Все сезоны Первой лиги КВН'}
         />
       ) : (
         <div className="mt-12 pt-8 border-t">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">{leagueName}. Все сезоны</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Все сезоны {leagueName}</h3>
           <p className="text-gray-600 mb-4">
             Навигация по сезонам будет добавлена позже
           </p>
