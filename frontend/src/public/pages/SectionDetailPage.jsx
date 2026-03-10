@@ -408,10 +408,11 @@ function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
           .slice()
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-        const isChampionsModule =
-          (module) =>
-            (module.type === 'first_league_champions' && leagueSlug === '1l-kvn') ||
-            (module.type === 'vl_league_champions' && leagueSlug === 'vl-kvn');
+        // Оба типа чемпионов рендерим блоком LeagueChampionsBlock по данным текущей страницы лиги.
+        // Если в админке ошибочно добавлен «чужой» тип (например vl_league_champions на 1l-kvn),
+        // всё равно показываем таблицу чемпионов этой лиги, а не скрываем модуль (ModuleRenderer для них вернёт null).
+        const isChampionsModule = (module) =>
+          module.type === 'first_league_champions' || module.type === 'vl_league_champions';
 
         return (
           <div className="space-y-10">
