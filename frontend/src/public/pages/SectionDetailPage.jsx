@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import ModuleRenderer from '../components/ModuleRenderer';
+import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
 
@@ -421,35 +422,12 @@ function FirstLeagueSeasonsPage({ section, seasons }) {
         );
       })()}
 
-      {/* Все сезоны */}
-      {normalizeSeasons.length > 0 && (
-        <section className="space-y-4 pt-4 border-t mt-4">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Все сезоны в базе
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {normalizeSeasons.map((season) => (
-              <Button
-                key={season.id}
-                asChild
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-              >
-                <Link
-                  to={
-                    season.full_path
-                      ? `/${season.full_path}`
-                      : `/kvn/${leagueSlug}/${season.slug}`
-                  }
-                >
-                  {season.year}
-                </Link>
-              </Button>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Все сезоны лиги */}
+      <LeagueSeasonsNav
+        seasons={normalizeSeasons}
+        leagueSlug={leagueSlug}
+        title="Все сезоны лиги"
+      />
     </div>
   );
 }

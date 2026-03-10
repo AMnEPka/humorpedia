@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import { StageSection } from '../components/StageSection';
+import { LeagueSeasonsNav, normalizeLeagueSeasons } from '../components/LeagueSeasonsNav';
 import { sanitizeHTML, containsHTML } from '../utils/sanitize';
 import { usePageTitle } from '@/utils/pageTitle';
 import { teamStorage } from '../utils/teamStorage';
@@ -51,6 +52,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const [loading, setLoading] = useState(!initialSeasonData);
   const [error, setError] = useState('');
   const [teamNames, setTeamNames] = useState({}); // Кэш полных названий команд по slug
+  const [leagueSeasons, setLeagueSeasons] = useState([]); // Список сезонов лиги для блока «Все сезоны»
 
   usePageTitle((season?.name || season?.title) || (loading ? 'Сезон' : (error ? 'Сезон не найден' : 'Сезон')));
 
@@ -135,6 +137,27 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       setTeamNames(stored);
     }
   }, [season]);
+
+  // Для сезонов Первой лиги — загружаем список всех сезонов лиги для блока «Все сезоны»
+  useEffect(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const leagueSlug = pathParts[0] === 'kvn' && pathParts[1] ? pathParts[1] : '';
+    if (leagueSlug !== '1l-kvn') {
+      setLeagueSeasons([]);
+      return;
+    }
+    let cancelled = false;
+    publicApi
+      .getKvnChildren('1l-kvn')
+      .then((res) => {
+        if (cancelled) return;
+        setLeagueSeasons(normalizeLeagueSeasons(res.data.items || []));
+      })
+      .catch(() => setLeagueSeasons([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -581,13 +604,21 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         )
       ))}
 
-      {/* Season navigation (оглавление) */}
-      <div className="mt-12 pt-8 border-t">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Все сезоны {leagueName}</h3>
-        <p className="text-gray-600 mb-4">
-          Навигация по сезонам будет добавлена позже
-        </p>
-      </div>
+      {/* Навигация по сезонам лиги (для Первой лиги — полный блок по десятилетиям) */}
+      {league_slug === '1l-kvn' && leagueSeasons.length > 0 ? (
+        <LeagueSeasonsNav
+          seasons={leagueSeasons}
+          leagueSlug="1l-kvn"
+          title={`${leagueName}. Все сезоны`}
+        />
+      ) : (
+        <div className="mt-12 pt-8 border-t">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{leagueName}. Все сезоны</h3>
+          <p className="text-gray-600 mb-4">
+            Навигация по сезонам будет добавлена позже
+          </p>
+        </div>
+      )}
     </div>
   );
 }
