@@ -71,7 +71,7 @@ services:
         hard: 131072
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
       # Exclude public/media from frontend volume to prevent webpack from scanning 3000+ images
       # The empty directory from Dockerfile will be used instead of real files from host
       # Media files are served by backend (see backend volumes), so frontend doesn't need them
@@ -106,6 +106,8 @@ services:
 
 volumes:
   mongo_data:
+  # Isolate node_modules from host mount so deps stay inside container; named for clear docker volume ls
+  frontend_node_modules:
   # Empty volume for frontend public/media to prevent webpack from scanning 3000+ images
   # Media files are served by backend, so frontend doesn't need them
   frontend_media:

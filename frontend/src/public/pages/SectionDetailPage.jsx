@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
-import ModuleRenderer from '../components/ModuleRenderer';
+import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
 import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
