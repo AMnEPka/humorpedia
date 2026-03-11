@@ -100,7 +100,7 @@ export default function GameTeamSelector({
       });
     }
     return String(value);
-  }, [teamSlug, teamName, value]);
+  }, [teamSlug, teamName]);
 
   // Загружаем информацию о выбранной команде
   useEffect(() => {
@@ -160,7 +160,7 @@ export default function GameTeamSelector({
     };
 
     loadTeam();
-  }, [teamKey, value]);
+  }, [teamKey]);
 
   // Поиск команд только среди команд сезона
   useEffect(() => {

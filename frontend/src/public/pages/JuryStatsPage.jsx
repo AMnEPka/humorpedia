@@ -232,7 +232,7 @@ export default function JuryStatsPage() {
         setSelectedJury(validJury);
       }
     }
-  }, [selectedYears, stats, availableTeams, availableJury, selectedTeams, selectedJury]);
+  }, [selectedYears, stats, availableTeams, availableJury]);
 
   if (loading) {
     return (
