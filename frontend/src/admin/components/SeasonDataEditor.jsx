@@ -1608,8 +1608,8 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     })
   );
 
-  // Инициализируем seasonData если его нет
-  const data = seasonData || {
+  // Инициализируем seasonData если его нет (useMemo для стабильной ссылки в useCallback)
+  const data = useMemo(() => seasonData || {
     league_name: '',
     year: 0,
     season_number: 0,
@@ -1618,7 +1618,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     intro_html: '',
     description: '',
     stages: []
-  };
+  }, [seasonData]);
 
   // ID для drag-and-drop
   const stageIds = useMemo(() => 

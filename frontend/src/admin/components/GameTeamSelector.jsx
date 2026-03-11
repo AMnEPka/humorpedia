@@ -91,17 +91,17 @@ export default function GameTeamSelector({
   const teamSlug = typeof value === 'object' && value !== null ? (value.team_slug || value.slug || value.id || '') : (typeof value === 'string' ? value : '');
   const teamName = typeof value === 'object' && value !== null ? (value.team_name || value.name || '') : '';
   
+  const valueDep = typeof value === 'string' ? value : (value != null && typeof value === 'object' ? JSON.stringify({ slug: teamSlug, name: teamName }) : value);
   const teamKey = useMemo(() => {
     if (!value) return null;
     if (typeof value === 'object' && value !== null) {
-      // Используем только поля, которые влияют на выбор команды
       return JSON.stringify({
         slug: teamSlug,
         name: teamName
       });
     }
     return String(value);
-  }, [teamSlug, teamName, typeof value === 'string' ? value : null]);
+  }, [teamSlug, teamName, valueDep, value]);
 
   // Загружаем информацию о выбранной команде
   useEffect(() => {
@@ -161,7 +161,7 @@ export default function GameTeamSelector({
     };
 
     loadTeam();
-  }, [teamKey]);
+  }, [teamKey, value]);
 
   // Поиск команд только среди команд сезона
   useEffect(() => {
