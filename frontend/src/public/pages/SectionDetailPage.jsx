@@ -21,6 +21,15 @@ export default function SectionDetailPage() {
 
   usePageTitle((section?.name || section?.title) || (loading ? 'Раздел' : (error ? 'Раздел не найден' : 'Раздел')));
 
+  // Авторитетный slug лиги берём из URL: /kvn/<leagueSlug>/...
+  const leagueSlugFromPath = (() => {
+    const parts = (location.pathname || '').split('/').filter(Boolean);
+    if (parts[0] !== 'kvn') return null;
+    const slug = parts[1] || null;
+    if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
+    return null;
+  })();
+
   useEffect(() => {
     const fetchSection = async () => {
       setLoading(true);
@@ -82,12 +91,12 @@ export default function SectionDetailPage() {
 
   // Страницы лиг с сезонами (Первая лига, Высшая лига)
   const isLeaguePage = section && (
+    leagueSlugFromPath === '1l-kvn' ||
+    leagueSlugFromPath === 'vl-kvn' ||
     section.slug === '1l-kvn' ||
     section.slug === 'vl-kvn' ||
     section.full_path === 'kvn/1l-kvn' ||
-    section.full_path === 'kvn/vl-kvn' ||
-    location.pathname === '/kvn/1l-kvn' ||
-    location.pathname === '/kvn/vl-kvn'
+    section.full_path === 'kvn/vl-kvn'
   );
 
   if (loading) {
@@ -166,7 +175,7 @@ export default function SectionDetailPage() {
         )}
       </header>
       {isLeaguePage ? (
-        <LeagueSeasonsPage section={section} seasons={children} leagueSlug={section.slug} />
+        <LeagueSeasonsPage section={section} seasons={children} leagueSlug={leagueSlugFromPath || section.slug} />
       ) : (
         <>
           {/* Cover Image / Poster */}
