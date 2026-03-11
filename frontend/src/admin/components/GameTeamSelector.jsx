@@ -91,6 +91,8 @@ export default function GameTeamSelector({
   const teamSlug = typeof value === 'object' && value !== null ? (value.team_slug || value.slug || value.id || '') : (typeof value === 'string' ? value : '');
   const teamName = typeof value === 'object' && value !== null ? (value.team_name || value.name || '') : '';
   
+  // valueTypeKey меняется при смене типа (object -> string) или при смене строки, чтобы teamKey пересчитывался
+  const valueTypeKey = typeof value === 'string' ? value : (typeof value === 'object' && value !== null ? 'object' : '');
   const teamKey = useMemo(() => {
     if (!value) return null;
     if (typeof value === 'object' && value !== null) {
@@ -100,7 +102,7 @@ export default function GameTeamSelector({
       });
     }
     return String(value);
-  }, [teamSlug, teamName]);
+  }, [teamSlug, teamName, valueTypeKey]);
 
   // Загружаем информацию о выбранной команде
   useEffect(() => {

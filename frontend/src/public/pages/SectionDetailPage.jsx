@@ -21,9 +21,17 @@ export default function SectionDetailPage() {
 
   usePageTitle((section?.name || section?.title) || (loading ? 'Раздел' : (error ? 'Раздел не найден' : 'Раздел')));
 
-  // Авторитетный slug лиги берём из URL: /kvn/<leagueSlug>/...
+  // Авторитетный slug лиги: сначала из URL, при отсутствии — из section.full_path
   const leagueSlugFromPath = (() => {
     const parts = (location.pathname || '').split('/').filter(Boolean);
+    if (parts[0] !== 'kvn') return null;
+    const slug = parts[1] || null;
+    if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
+    return null;
+  })();
+  const leagueSlugFromSectionFullPath = (() => {
+    if (!section?.full_path) return null;
+    const parts = String(section.full_path).split('/').filter(Boolean);
     if (parts[0] !== 'kvn') return null;
     const slug = parts[1] || null;
     if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
@@ -175,7 +183,7 @@ export default function SectionDetailPage() {
         )}
       </header>
       {isLeaguePage ? (
-        <LeagueSeasonsPage section={section} seasons={children} leagueSlug={leagueSlugFromPath || section.slug} />
+        <LeagueSeasonsPage section={section} seasons={children} leagueSlug={leagueSlugFromPath || leagueSlugFromSectionFullPath || section.slug} />
       ) : (
         <>
           {/* Cover Image / Poster */}
