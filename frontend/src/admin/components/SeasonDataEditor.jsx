@@ -1530,13 +1530,6 @@ function GameContent({
                             </tr>
                           );
                         })}
-                        {dataRows.length < expectedRows && (
-                          <tr>
-                            <td colSpan={contests.length + 2} className="px-2 text-muted-foreground text-center">
-                              (не хватает строк: {dataRows.length} из {expectedRows})
-                            </td>
-                          </tr>
-                        )}
                       </tbody>
                     </table>
                   </div>
