@@ -1,9 +1,26 @@
 """Database utilities"""
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+from urllib.parse import quote_plus
 
 _client = None
 _db = None
+
+
+def _build_mongo_url_from_parts() -> str:
+    host = os.environ.get("MONGO_HOST", "localhost")
+    port = os.environ.get("MONGO_PORT", "27017")
+    user = os.environ.get("MONGO_USER")
+    password = os.environ.get("MONGO_PASSWORD")
+    auth_source = os.environ.get("MONGO_AUTH_SOURCE", "admin")
+
+    if user and password is not None:
+        user_q = quote_plus(user)
+        pass_q = quote_plus(password)
+        # authSource is required when authenticating against admin but using a different DB
+        return f"mongodb://{user_q}:{pass_q}@{host}:{port}/?authSource={auth_source}"
+
+    return f"mongodb://{host}:{port}"
 
 
 async def get_db():
@@ -11,8 +28,8 @@ async def get_db():
     global _client, _db
     
     if _db is None:
-        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-        db_name = os.environ.get('DB_NAME', 'humorpedia')
+        mongo_url = os.environ.get("MONGO_URL") or _build_mongo_url_from_parts()
+        db_name = os.environ.get("DB_NAME", "humorpedia")
         _client = AsyncIOMotorClient(mongo_url)
         _db = _client[db_name]
     

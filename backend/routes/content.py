@@ -190,6 +190,25 @@ class RestoreTeamLogosRequest(BaseModel):
     team_type: Optional[str] = Field(default=None, description="Filter by team_type (e.g. 'kvn'). If None, restore all teams")
 
 
+@router.get("/articles/random", response_model=dict)
+async def get_random_article(request: Request):
+    """
+    Возвращает случайную опубликованную статью.
+
+    Нужен для совместимости с публичным API (`/api/content/articles/random`),
+    который использует фронтенд (`publicApi.getRandomArticle`).
+    """
+    db = await get_db()
+    pipeline = [
+        {"$match": {"status": "published"}},
+        {"$sample": {"size": 1}},
+    ]
+    result = await db.articles.aggregate(pipeline).to_list(1)
+    if not result:
+        raise HTTPException(status_code=404, detail="No published articles found")
+    return result[0]
+
+
 async def sync_primary_tag_to_tags(doc: dict) -> dict:
     """
     Автоматически добавляет primary_tag в массив tags, если его там нет (case-insensitive).

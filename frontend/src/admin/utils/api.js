@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-// Backend URL: window.__BACKEND_URL__ (from config.js) or fallback
+// В dev при USE_API_PROXY запросы идут на тот же origin (/api), проксируются на бэкенд.
 const BACKEND_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
   ? window.__BACKEND_URL__
   : (process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8001`);
-export const API_BASE = `${BACKEND_URL}/api`;
+const USE_API_PROXY = process.env.REACT_APP_USE_API_PROXY === 'true';
+export const API_BASE = USE_API_PROXY ? '/api' : `${BACKEND_URL}/api`;
 
-console.log('[API] BACKEND_URL:', BACKEND_URL);
 console.log('[API] API_BASE:', API_BASE);
 
 // Create axios instance
@@ -34,7 +34,18 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
-      window.location.href = '/admin/login';
+      // IMPORTANT:
+      // This axios instance is also used by AuthProvider on app boot.
+      // If token expires while user is on a public page, we must NOT force-redirect them to /admin/login.
+      // Only redirect when the user is currently inside the admin area.
+      if (typeof window !== 'undefined') {
+        const path = window.location?.pathname || '';
+        const isAdminArea = path === '/admin' || path.startsWith('/admin/');
+        const isLoginPage = path === '/admin/login';
+        if (isAdminArea && !isLoginPage) {
+          window.location.assign('/admin/login');
+        }
+      }
     }
     return Promise.reject(error);
   }

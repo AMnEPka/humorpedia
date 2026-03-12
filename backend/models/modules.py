@@ -44,6 +44,10 @@ class ModuleType(str, Enum):
     # Person-specific modules
     HUMOR_CHRONICLES = "humor_chronicles"  # Related content (news, articles, shows)
 
+    # KVN league page modules
+    FIRST_LEAGUE_CHAMPIONS = "first_league_champions"  # Champions table for 1l-kvn (data from children)
+    VL_LEAGUE_CHAMPIONS = "vl_league_champions"  # Champions table for vl-kvn (data from children)
+
 
 # --- Module Data Schemas ---
 

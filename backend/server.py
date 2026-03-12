@@ -29,7 +29,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+def _build_mongo_url_from_parts() -> str:
+    """
+    Keep server startup consistent with utils.database:
+    allow connecting via docker service name (mongodb) and support auth without
+    embedding special characters directly in the URI.
+    """
+    from urllib.parse import quote_plus
+
+    host = os.environ.get("MONGO_HOST", "localhost")
+    port = os.environ.get("MONGO_PORT", "27017")
+    user = os.environ.get("MONGO_USER")
+    password = os.environ.get("MONGO_PASSWORD")
+    auth_source = os.environ.get("MONGO_AUTH_SOURCE", "admin")
+
+    if user and password is not None:
+        return f"mongodb://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/?authSource={auth_source}"
+
+    return f"mongodb://{host}:{port}"
+
+
+mongo_url = os.environ.get("MONGO_URL") or _build_mongo_url_from_parts()
 db_name = os.environ.get('DB_NAME', 'humorpedia')
 
 # Default admin credentials

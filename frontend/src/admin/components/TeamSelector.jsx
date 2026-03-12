@@ -534,7 +534,7 @@ export default function TeamSelector({
 
       {/* Диалог массовой вставки */}
       <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Вставить список команд</DialogTitle>
             <DialogDescription>
@@ -542,7 +542,7 @@ export default function TeamSelector({
               Команды, найденные в базе данных, будут автоматически добавлены в сезон.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 flex-1 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label>Список команд</Label>
               <Textarea

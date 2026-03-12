@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Loader2, ChevronRight, ExternalLink } from 'lucide-react';
+import { Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
-import { ModuleList } from '../components/ModuleRenderer';
+import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
+import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
 
@@ -18,6 +20,23 @@ export default function SectionDetailPage() {
   const [error, setError] = useState('');
 
   usePageTitle((section?.name || section?.title) || (loading ? 'Раздел' : (error ? 'Раздел не найден' : 'Раздел')));
+
+  // Авторитетный slug лиги: сначала из URL, при отсутствии — из section.full_path
+  const leagueSlugFromPath = (() => {
+    const parts = (location.pathname || '').split('/').filter(Boolean);
+    if (parts[0] !== 'kvn') return null;
+    const slug = parts[1] || null;
+    if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
+    return null;
+  })();
+  const leagueSlugFromSectionFullPath = (() => {
+    if (!section?.full_path) return null;
+    const parts = String(section.full_path).split('/').filter(Boolean);
+    if (parts[0] !== 'kvn') return null;
+    const slug = parts[1] || null;
+    if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
+    return null;
+  })();
 
   useEffect(() => {
     const fetchSection = async () => {
@@ -77,6 +96,16 @@ export default function SectionDetailPage() {
     };
     fetchSection();
   }, [location.pathname]);
+
+  // Страницы лиг с сезонами (Первая лига, Высшая лига)
+  const isLeaguePage = section && (
+    leagueSlugFromPath === '1l-kvn' ||
+    leagueSlugFromPath === 'vl-kvn' ||
+    section.slug === '1l-kvn' ||
+    section.slug === 'vl-kvn' ||
+    section.full_path === 'kvn/1l-kvn' ||
+    section.full_path === 'kvn/vl-kvn'
+  );
 
   if (loading) {
     return (
@@ -153,62 +182,282 @@ export default function SectionDetailPage() {
           </div>
         )}
       </header>
+      {isLeaguePage ? (
+        <LeagueSeasonsPage section={section} seasons={children} leagueSlug={leagueSlugFromPath || leagueSlugFromSectionFullPath || section.slug} />
+      ) : (
+        <>
+          {/* Cover Image / Poster */}
+          {(section.cover_image || section.poster) && (
+            <div className="mb-8">
+              <img
+                src={(section.cover_image || section.poster)?.url}
+                alt={(section.cover_image || section.poster)?.alt || section.name || section.title}
+                className="w-full h-auto rounded-lg shadow-lg object-cover max-h-[500px]"
+              />
+            </div>
+          )}
 
-      {/* Cover Image / Poster */}
-      {(section.cover_image || section.poster) && (
-        <div className="mb-8">
-          <img
-            src={(section.cover_image || section.poster)?.url}
-            alt={(section.cover_image || section.poster)?.alt || section.name || section.title}
-            className="w-full h-auto rounded-lg shadow-lg object-cover max-h-[500px]"
-          />
-        </div>
-      )}
+          {/* Modular Content */}
+          {section.modules && section.modules.length > 0 && (
+            <div className="mb-8">
+              <ModuleList modules={section.modules} />
+            </div>
+          )}
 
-      {/* Modular Content */}
-      {section.modules && section.modules.length > 0 && (
-        <div className="mb-8">
-          <ModuleList modules={section.modules} />
-        </div>
-      )}
+          {/* Children Sections */}
+          {children.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Подразделы
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {children.map((child) => (
+                  <Card
+                    key={child.id || child._id}
+                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => navigate(child.full_path || `/${child.slug}`)}
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-lg">{child.name || child.title}</CardTitle>
+                    </CardHeader>
+                    {child.description && (
+                      <CardContent>
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {child.description}
+                        </p>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Children Sections */}
-      {children.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Подразделы
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {children.map((child) => (
-              <Card
-                key={child.id || child._id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => navigate(child.full_path || `/${child.slug}`)}
-              >
-                <CardHeader>
-                  <CardTitle className="text-lg">{child.name || child.title}</CardTitle>
-                </CardHeader>
-                {child.description && (
-                  <CardContent>
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {child.description}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Related Content */}
-      {section.child_types && section.child_types.length > 0 && (
-        <div className="mt-12 p-6 bg-blue-50 rounded-lg">
-          <p className="text-sm text-gray-600">
-            Этот раздел может содержать: {section.child_types.join(', ')}
-          </p>
-        </div>
+          {/* Related Content */}
+          {section.child_types && section.child_types.length > 0 && (
+            <div className="mt-12 p-6 bg-blue-50 rounded-lg">
+              <p className="text-sm text-gray-600">
+                Этот раздел может содержать: {section.child_types.join(', ')}
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
+
+// Вспомогательная функция для извлечения города из facts сезона
+function getCityFromFactsForSeason(facts) {
+  if (!facts || typeof facts !== 'object') return '';
+
+  const cityValue =
+    facts['Город'] ||
+    facts['город'] ||
+    facts['Города'] ||
+    facts['города'] ||
+    '';
+
+  if (!cityValue) return '';
+
+  if (typeof cityValue === 'string') {
+    let cleaned = cityValue
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .trim();
+
+    const cities = cleaned
+      .split(/[\n,;/]/)
+      .map((c) => c.trim())
+      .filter((c) => c.length > 0);
+
+    return cities.length > 0 ? cities.join(', ') : '';
+  }
+
+  return String(cityValue).trim();
+}
+
+// Блок таблицы чемпионов лиги (модуль first_league_champions или vl_league_champions)
+function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
+  if (!normalizeSeasons || normalizeSeasons.length === 0) return null;
+
+  const defaultTitle = leagueSlug === 'vl-kvn' ? 'Чемпионы Высшей лиги КВН' : 'Чемпионы Первой лиги КВН';
+  const heading = title || defaultTitle;
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{heading}</h2>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[90px]">Сезон</TableHead>
+                  {leagueSlug === '1l-kvn' && (
+                    <TableHead className="w-[220px]">Город проведения лиги</TableHead>
+                  )}
+                  <TableHead>Чемпион(ы)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {normalizeSeasons.map((season) => (
+                  <TableRow key={season.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        to={
+                          season.full_path
+                            ? `/${season.full_path}`
+                            : `/kvn/${leagueSlug}/${season.slug}`
+                        }
+                        className="text-blue-600 hover:underline"
+                      >
+                        {season.year}
+                      </Link>
+                    </TableCell>
+                    {leagueSlug === '1l-kvn' && (
+                      <TableCell>
+                        {season.venueCity ? (
+                          season.venueCity
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      {season.winners.length === 0 && (
+                        <span className="text-gray-400">нет данных</span>
+                      )}
+                      {season.winners.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {season.winners.map((winner, idx) => {
+                            const isString = typeof winner === 'string';
+                            const winnerSlug = isString ? null : (winner.slug || '');
+                            const teamInfo = winnerSlug ? season.teamData?.[winnerSlug] || {} : {};
+                            let winnerName =
+                              (teamInfo.name ||
+                                (isString ? winner : (winner.name || winner.slug || '')));
+                            let winnerCity =
+                              teamInfo.city ||
+                              (!isString && winner && typeof winner === 'object' ? (winner.city || '') : '');
+
+                            if (!winnerName) return null;
+
+                            if (winnerCity && !winnerName.includes(`(${winnerCity})`)) {
+                              winnerName = `${winnerName} (${winnerCity})`;
+                            }
+
+                            const content = winnerSlug ? (
+                              <Link
+                                to={`/kvn/teams/${winnerSlug}`}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {winnerName}
+                              </Link>
+                            ) : (
+                              <span>{winnerName}</span>
+                            );
+
+                            return (
+                              <span key={idx} className="inline-flex items-center">
+                                {idx > 0 && <span className="mx-1 text-gray-400">/</span>}
+                                {content}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
+// Страница лиги с сезонами (Первая лига 1l-kvn, Высшая лига vl-kvn)
+function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
+  const normalizeSeasons = (seasons || [])
+    .filter((s) => s && s.season_data)
+    .map((s) => {
+      const sd = s.season_data || {};
+      const year =
+        sd.year ||
+        (() => {
+          const m = String(s.slug || '').match(/\d{4}/);
+          return m ? parseInt(m[0], 10) : null;
+        })();
+
+      const venueCity = getCityFromFactsForSeason(s.facts);
+
+      return {
+        id: s.id || s._id || s.slug,
+        title: s.name || s.title || `${year || ''} сезон`,
+        slug: s.slug,
+        full_path: s.full_path,
+        year,
+        winners: Array.isArray(sd.winners) ? sd.winners : [],
+        venueCity,
+        teamData: s.team_data || {},
+        description: sd.description || s.description || '',
+      };
+    })
+    .filter((s) => s.year)
+    .sort((a, b) => a.year - b.year);
+
+  const uniqueCities = Array.from(
+    new Set(
+      normalizeSeasons
+        .map((s) => s.venueCity)
+        .filter((c) => c && c.length > 0)
+    )
+  );
+
+  return (
+    <div className="space-y-10">
+      {/* Модули страницы (чемпионы лиги, текстовые блоки и т.д. — порядок в админке) */}
+      {(() => {
+        const sortedModules = (section.modules || [])
+          .slice()
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+        // Оба типа чемпионов рендерим блоком LeagueChampionsBlock по данным текущей страницы лиги.
+        // Если в админке ошибочно добавлен «чужой» тип (например vl_league_champions на 1l-kvn),
+        // всё равно показываем таблицу чемпионов этой лиги, а не скрываем модуль (ModuleRenderer для них вернёт null).
+        const isChampionsModule = (module) =>
+          module.type === 'first_league_champions' || module.type === 'vl_league_champions';
+
+        return (
+          <div className="space-y-10">
+            {sortedModules.map((module) =>
+              isChampionsModule(module) ? (
+                <LeagueChampionsBlock
+                  key={module.id}
+                  normalizeSeasons={normalizeSeasons}
+                  leagueSlug={leagueSlug}
+                  title={module.title || module.data?.title}
+                />
+              ) : (
+                <div key={module.id}>
+                  <ModuleRenderer module={module} />
+                </div>
+              )
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Все сезоны лиги */}
+      <LeagueSeasonsNav
+        seasons={normalizeSeasons}
+        leagueSlug={leagueSlug}
+        title={leagueSlug === 'vl-kvn' ? 'Все сезоны Высшей лиги КВН' : 'Все сезоны лиги'}
+      />
+    </div>
+  );
+}
+

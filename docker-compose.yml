@@ -2,13 +2,26 @@ services:
   mongodb:
     image: mongo:6
     container_name: humorpedia-mongodb
-    ports:
-      - "27017:27017"
+    # SECURITY:
+    # - Do NOT publish 27017 to the internet.
+    # - If you need local access from the host for debugging, bind to localhost only:
+    #   ports: ["127.0.0.1:27017:27017"]
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-humorpedia}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-change_me_in_prod}
+      # Optional: default DB created on first init (does not create users)
+      - MONGO_INITDB_DATABASE=${DB_NAME:-humorpedia}
+    command: ["mongod", "--auth", "--bind_ip_all"]
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      # NOTE: use CMD-SHELL so container env vars expand (CMD array doesn't expand $VARS)
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --host localhost --port 27017 --username \"$${MONGO_INITDB_ROOT_USERNAME}\" --password \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --quiet --eval \"db.adminCommand('ping')\""
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,8 +36,13 @@ services:
     #   - ./backend/.env
     environment:
       # Override for docker network
-      - MONGO_URL=mongodb://mongodb:27017
-      - DB_NAME=humorpedia
+      - DB_NAME=${DB_NAME:-humorpedia}
+      # Provide credentials separately so special characters don't break MongoDB URI parsing
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_USER=${MONGO_INITDB_ROOT_USERNAME:-humorpedia}
+      - MONGO_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-change_me_in_prod}
+      - MONGO_AUTH_SOURCE=admin
       - CORS_ORIGINS=*
       - BACKUP_DIR=/app/backups
     volumes:
@@ -33,7 +51,7 @@ services:
       - ./backups:/app/backups
       # Docker volume for imported images (accessible via /media/imported/images/*)
       # Read-write access for uploading files through web interface
-      - imported_images_volume:/app/frontend/public/media/imported/images
+      - imported_images_volume:/app/media/imported/images
       # Docker volume with site images (accessible via /images/*)
       # Read-write access for uploading files through web interface
       - images_volume:/app/images
@@ -56,6 +74,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WDS_SOCKET_PORT=0
       - REACT_APP_BACKEND_URL=http://localhost:8001
+      # Запросы к API идут на тот же origin (127.0.0.1:3000/api), dev-сервер проксирует на backend — устраняет таймауты и ERR_CONNECTION_RESET
+      - REACT_APP_USE_API_PROXY=true
       - DOCKER_ENV=true
       # Suppress deprecation warnings and increase memory limit to prevent ENOMEM errors
       - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096
@@ -69,7 +89,7 @@ services:
         hard: 131072
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
       # Exclude public/media from frontend volume to prevent webpack from scanning 3000+ images
       # The empty directory from Dockerfile will be used instead of real files from host
       # Media files are served by backend (see backend volumes), so frontend doesn't need them
@@ -87,8 +107,12 @@ services:
       dockerfile: Dockerfile
     container_name: humorpedia-backup
     environment:
-      - MONGO_URL=mongodb://mongodb:27017
-      - DB_NAME=humorpedia
+      - DB_NAME=${DB_NAME:-humorpedia}
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_USER=${MONGO_INITDB_ROOT_USERNAME:-humorpedia}
+      - MONGO_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-change_me_in_prod}
+      - MONGO_AUTH_SOURCE=admin
       - BACKUP_DIR=/app/backups
       - BACKUP_CHECK_INTERVAL=3600
     volumes:
@@ -104,6 +128,8 @@ services:
 
 volumes:
   mongo_data:
+  # Isolate node_modules from host mount so deps stay inside container; named for clear docker volume ls
+  frontend_node_modules:
   # Empty volume for frontend public/media to prevent webpack from scanning 3000+ images
   # Media files are served by backend, so frontend doesn't need them
   frontend_media:
