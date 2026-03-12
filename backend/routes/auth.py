@@ -55,6 +55,33 @@ def verify_token(token: str) -> Optional[dict]:
         return None
 
 
+# Grace period: allow refresh for tokens expired within this window
+REFRESH_GRACE_HOURS = 24 * 30  # 30 days
+
+
+def verify_token_with_grace(token: str) -> Optional[dict]:
+    """Verify JWT token, allowing recently expired tokens within grace period."""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        # Decode without verifying expiration to check grace period
+        try:
+            payload = jwt.decode(
+                token, JWT_SECRET, algorithms=[JWT_ALGORITHM],
+                options={"verify_exp": False}
+            )
+            exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+            now = datetime.now(timezone.utc)
+            if (now - exp) < timedelta(hours=REFRESH_GRACE_HOURS):
+                return payload  # Within grace period
+        except Exception:
+            pass
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+
 def hash_password(password: str) -> str:
     """Hash password with bcrypt"""
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -187,6 +214,48 @@ async def get_me(request: Request):
         "profile": user.get("profile", {}),
         "stats": user.get("stats", {})
     }
+
+
+@router.post("/refresh")
+async def refresh_token(request: Request):
+    """Refresh JWT token. Accepts valid or recently expired tokens (within 30-day grace period)."""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Токен не предоставлен")
+
+    old_token = auth_header.split(" ")[1]
+    payload = verify_token_with_grace(old_token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Токен невалиден или истёк слишком давно")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Невалидный токен")
+
+    db = await get_db()
+    user = await db.users.find_one({"_id": user_id})
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+
+    if user.get("banned"):
+        raise HTTPException(status_code=403, detail="Аккаунт заблокирован")
+
+    # Issue a fresh token
+    token, expires_in = create_token(user["_id"], user.get("role", "user"))
+
+    return TokenResponse(
+        access_token=token,
+        expires_in=expires_in,
+        user={
+            "id": user["_id"],
+            "username": user["username"],
+            "email": user.get("email"),
+            "role": user.get("role", "user"),
+            "profile": user.get("profile", {})
+        }
+    )
 
 
 # === VK OAUTH ===

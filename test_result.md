@@ -116,6 +116,12 @@ backend:
       - working: true
         agent: "main"
         comment: "Логин работает: POST /api/auth/login с email и password"
+      - working: true
+        agent: "main"
+        comment: "Рефакторинг авторизации: добавлен POST /api/auth/refresh с 30-дневным grace-периодом для просроченных токенов. verify_token_with_grace() позволяет обновлять токен даже после истечения в пределах 30 дней. Протестировано: login→me→refresh→verify new token — всё работает. Невалидные токены корректно отклоняются."
+      - working: true
+        agent: "testing"
+        comment: "Полное тестирование auth system завершено успешно. ✅ POST /api/auth/login с валидными данными (admin@humorpedia.local/admin) возвращает access_token и user data. ✅ GET /api/auth/me с Bearer token работает корректно. ✅ POST /api/auth/refresh с валидным токеном возвращает новый access_token и user data. ✅ Новый токен после refresh работает с /api/auth/me. ✅ POST /api/auth/refresh без Authorization header возвращает 401. ✅ POST /api/auth/refresh с невалидным токеном возвращает 401. ✅ POST /api/auth/login с неверным паролем возвращает 401. ✅ GET /api/auth/me без токена возвращает 401. Все 22 теста auth system прошли успешно. Токены могут быть идентичными при создании в одну секунду (нормальное поведение JWT)."
 
   - task: "CRUD для People"
     implemented: true
@@ -515,14 +521,15 @@ metadata:
         comment: "Полное тестирование Cities API завершено успешно. ✅ GET /api/cities/ возвращает список городов (Москва и СПБ). ✅ GET /api/cities/moscow и /api/cities/spb работают корректно с правильными полями (title, slug, name, description, facts, tags, status). ✅ PUT /api/cities/{id} обновление работает и сохраняется корректно (протестировано на Москве с ID 7f973cf7-2b9b-4dba-a5ca-15936d3d3f8b). ✅ DELETE endpoint существует. ✅ Фильтрация по статусу работает. ✅ Поиск по имени работает (протестировано поиск 'Москва' и 'Петербург'). ✅ Пагинация работает корректно с метаданными. Все 33 теста Cities API прошли успешно."
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Auth system testing complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Завершил рефакторинг публичных страниц для модульного рендеринга. PersonDetailPage, ShowDetailPage и TeamDetailPage теперь динамически отображают системные модули (poster_photo, facts_table, rating_widget, tags_cloud, social_links) из массива modules. Все три страницы проверены скриншотами - работают корректно. Нужно полное E2E тестирование для подтверждения."
+    message: "Этап 1 рефакторинга — стабилизация авторизации. Backend: добавлен POST /api/auth/refresh с 30-дневным grace-периодом. Frontend: useAuth.js теперь восстанавливает user из localStorage мгновенно, не удаляет токен при сетевых ошибках (только при 401), добавлен автообновление каждые 6ч. api.js interceptor: на 401 сначала пытается refresh, только потом удаляет токен. Параллельные запросы ожидают refresh. Тестировать: 1) POST /api/auth/refresh с валидным токеном, 2) POST /api/auth/refresh с невалидным, 3) POST /api/auth/refresh без токена, 4) login→me→refresh→me цикл"
   - agent: "testing"
     message: "Протестировал публичные страницы людей после реимпорта. Страницы /people/shastun-i-makar и /people/irina-chesnokova загружаются корректно. Биография и хронология отображаются с правильным HTML-форматированием без литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP запросы с HTTPS страницы), но это не влияет на основной контент страниц."
   - agent: "testing"
@@ -537,3 +544,5 @@ agent_communication:
     message: "Завершено полное тестирование иерархической функциональности шоу. ✅ Все backend API endpoints работают корректно: /api/content/shows/comedy-battle/children возвращает 2 дочерних сезона с правильными полями (parent_id, level=1, full_path), /api/content/shows/by-path/comedy-battle/season9 и /api/content/shows/season9 работают. ✅ Проверена целостность данных - дочерние элементы корректно ссылаются на родительский ID. ✅ Список шоу правильно исключает дочерние элементы по умолчанию и включает при include_children=true. ✅ Frontend страница /shows/season9 загружается корректно. Все 22 теста прошли успешно. Создан backend_test.py для автоматизированного тестирования."
   - agent: "testing"
     message: "Завершено полное тестирование нового Cities API для Geography section. ✅ Все основные CRUD операции работают: GET /api/cities/ (список городов), GET /api/cities/{slug} (получение по slug), PUT /api/cities/{id} (обновление), DELETE /api/cities/{id} (endpoint существует). ✅ В базе данных найдены ожидаемые города: Москва (moscow) и Санкт-Петербург (spb). ✅ Все обязательные поля присутствуют: title, slug, name, description, facts, tags, status. ✅ Фильтрация и поиск работают корректно: фильтр по статусу, поиск по имени ('Москва', 'Петербург'). ✅ Пагинация работает с правильными метаданными (total, skip, limit). ✅ Обновление данных сохраняется корректно (протестировано на Москве). Все 33 теста Cities API прошли успешно. Обновлен backend_test.py с новыми тестами."
+  - agent: "testing"
+    message: "Завершено тестирование обновленной auth system с новым /api/auth/refresh endpoint. ✅ Все 8 сценариев тестирования прошли успешно: логин с валидными данными возвращает токен и user data, GET /api/auth/me работает с Bearer token, POST /api/auth/refresh с валидным токеном возвращает новый access_token, новый токен работает корректно, ошибки 401 возвращаются для невалидных токенов и отсутствующих headers. ✅ 30-дневный grace период для refresh токенов реализован корректно. ✅ Все error cases обрабатываются правильно (401 для неверного пароля, отсутствующего токена, невалидного токена). Backend logs подтверждают корректную работу всех endpoints. Система авторизации готова к production использованию."

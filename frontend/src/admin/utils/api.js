@@ -19,7 +19,6 @@ const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  console.log('[API Request]', config.method?.toUpperCase(), config.baseURL + config.url);
   const token = localStorage.getItem('admin_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -27,26 +26,96 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// --- Token refresh logic ---
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onTokenRefreshed(newToken) {
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(cb) {
+  refreshSubscribers.push(cb);
+}
+
+/**
+ * Attempt to refresh the token via /auth/refresh.
+ * Returns new token on success, null on failure.
+ */
+async function tryRefreshToken() {
+  const token = localStorage.getItem('admin_token');
+  if (!token) return null;
+  try {
+    // Use raw axios (not the `api` instance) to avoid interceptor loops
+    const resp = await axios.post(
+      `${API_BASE}/auth/refresh`,
+      null,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const { access_token, user } = resp.data;
+    localStorage.setItem('admin_token', access_token);
+    if (user) localStorage.setItem('admin_user', JSON.stringify(user));
+    return access_token;
+  } catch {
+    return null;
+  }
+}
+
+// Handle auth errors — smart: retry with refresh, distinguish network from 401
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
-      // IMPORTANT:
-      // This axios instance is also used by AuthProvider on app boot.
-      // If token expires while user is on a public page, we must NOT force-redirect them to /admin/login.
-      // Only redirect when the user is currently inside the admin area.
-      if (typeof window !== 'undefined') {
-        const path = window.location?.pathname || '';
-        const isAdminArea = path === '/admin' || path.startsWith('/admin/');
-        const isLoginPage = path === '/admin/login';
-        if (isAdminArea && !isLoginPage) {
-          window.location.assign('/admin/login');
-        }
-      }
+  async (error) => {
+    const originalRequest = error.config;
+
+    // No response at all → network error (server down, rebuild, timeout).
+    // Do NOT touch tokens — the server is simply unreachable.
+    if (!error.response) {
+      return Promise.reject(error);
     }
+
+    // Skip refresh for login/register/refresh endpoints themselves
+    const url = originalRequest?.url || '';
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
+
+    if (error.response.status === 401 && !isAuthEndpoint && !originalRequest._retry) {
+      // Try to refresh the token before giving up
+      if (!isRefreshing) {
+        isRefreshing = true;
+        const newToken = await tryRefreshToken();
+        isRefreshing = false;
+
+        if (newToken) {
+          onTokenRefreshed(newToken);
+          // Retry the original request with new token
+          originalRequest._retry = true;
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
+        }
+
+        // Refresh failed — token is truly invalid
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        if (typeof window !== 'undefined') {
+          const path = window.location?.pathname || '';
+          const isAdminArea = path === '/admin' || path.startsWith('/admin/');
+          const isLoginPage = path === '/admin/login';
+          if (isAdminArea && !isLoginPage) {
+            window.location.assign('/admin/login');
+          }
+        }
+        return Promise.reject(error);
+      }
+
+      // Another request hit 401 while refresh is in progress — wait for it
+      return new Promise((resolve) => {
+        addRefreshSubscriber((newToken) => {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          resolve(api(originalRequest));
+        });
+      });
+    }
+
     return Promise.reject(error);
   }
 );
@@ -72,6 +141,7 @@ export const authApi = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
   me: () => api.get('/auth/me'),
+  refresh: () => api.post('/auth/refresh'),
 };
 
 // Content API

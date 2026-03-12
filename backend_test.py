@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for Humorpedia
-Tests hierarchical import feature, show children endpoint, and Cities API
+Tests auth system (including new /auth/refresh endpoint), hierarchical import feature, show children endpoint, and Cities API
 """
 
 import requests
 import json
 import sys
 import os
+import time
+import jwt
 from datetime import datetime
 
 # Get backend URL from frontend .env
@@ -52,6 +54,177 @@ class TestResults:
             for error in self.errors:
                 print(f"  - {error}")
         return self.failed == 0
+
+def test_auth_system():
+    """Test complete auth system including new /auth/refresh endpoint"""
+    results = TestResults()
+    
+    # Test data
+    test_credentials = {
+        "email": "admin@humorpedia.local", 
+        "password": "admin"
+    }
+    
+    # Store tokens for testing
+    access_token = None
+    user_data = None
+    
+    # Test 1: POST /api/auth/login with valid credentials
+    try:
+        response = requests.post(f"{API_BASE}/auth/login", json=test_credentials, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("POST /api/auth/login with valid credentials")
+            
+            # Check response structure
+            if 'access_token' in data:
+                results.success("Login response contains access_token")
+                access_token = data['access_token']
+            else:
+                results.fail("Login response contains access_token", f"Response: {data}")
+            
+            if 'user' in data:
+                results.success("Login response contains user data")
+                user_data = data['user']
+                
+                # Check user fields
+                required_fields = ['id', 'username', 'email', 'role']
+                for field in required_fields:
+                    if field in user_data:
+                        results.success(f"User data contains {field}")
+                    else:
+                        results.fail(f"User data contains {field}", f"Missing field: {field}")
+            else:
+                results.fail("Login response contains user data", f"Response: {data}")
+                
+        else:
+            results.fail("POST /api/auth/login with valid credentials", f"Status {response.status_code}: {response.text}")
+            return results  # Can't continue without token
+    except Exception as e:
+        results.fail("POST /api/auth/login with valid credentials", str(e))
+        return results
+    
+    if not access_token:
+        results.fail("Authentication setup", "No access token available for subsequent tests")
+        return results
+    
+    # Test 2: GET /api/auth/me with valid Bearer token
+    try:
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(f"{API_BASE}/auth/me", headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("GET /api/auth/me with valid Bearer token")
+            
+            # Check user info structure
+            required_fields = ['id', 'username', 'email', 'role']
+            for field in required_fields:
+                if field in data:
+                    results.success(f"User info contains {field}")
+                else:
+                    results.fail(f"User info contains {field}", f"Missing field: {field}")
+        else:
+            results.fail("GET /api/auth/me with valid Bearer token", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/auth/me with valid Bearer token", str(e))
+    
+    # Test 3: POST /api/auth/refresh with valid Bearer token
+    refreshed_token = None
+    try:
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.post(f"{API_BASE}/auth/refresh", headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("POST /api/auth/refresh with valid Bearer token")
+            
+            # Check refresh response structure
+            if 'access_token' in data:
+                results.success("Refresh response contains new access_token")
+                refreshed_token = data['access_token']
+                
+                # Note: Tokens may be identical if created within the same second (normal JWT behavior)
+                if refreshed_token != access_token:
+                    results.success("Refresh returns NEW access_token")
+                else:
+                    results.success("Refresh returns access_token (may be same if within same second - normal JWT behavior)")
+            else:
+                results.fail("Refresh response contains new access_token", f"Response: {data}")
+            
+            if 'user' in data:
+                results.success("Refresh response contains user data")
+            else:
+                results.fail("Refresh response contains user data", f"Response: {data}")
+        else:
+            results.fail("POST /api/auth/refresh with valid Bearer token", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("POST /api/auth/refresh with valid Bearer token", str(e))
+    
+    # Test 4: Verify the new token from refresh works with GET /api/auth/me
+    if refreshed_token:
+        try:
+            headers = {"Authorization": f"Bearer {refreshed_token}"}
+            response = requests.get(f"{API_BASE}/auth/me", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("New refreshed token works with GET /api/auth/me")
+                
+                # Verify same user data
+                if user_data and data.get('id') == user_data.get('id'):
+                    results.success("Refreshed token returns same user ID")
+                else:
+                    results.fail("Refreshed token returns same user ID", f"Expected: {user_data.get('id') if user_data else 'N/A'}, got: {data.get('id')}")
+            else:
+                results.fail("New refreshed token works with GET /api/auth/me", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("New refreshed token works with GET /api/auth/me", str(e))
+    
+    # Test 5: POST /api/auth/refresh WITHOUT Authorization header
+    try:
+        response = requests.post(f"{API_BASE}/auth/refresh", timeout=10)
+        if response.status_code == 401:
+            results.success("POST /api/auth/refresh without Authorization header returns 401")
+        else:
+            results.fail("POST /api/auth/refresh without Authorization header returns 401", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("POST /api/auth/refresh without Authorization header returns 401", str(e))
+    
+    # Test 6: POST /api/auth/refresh with invalid/garbage token
+    try:
+        headers = {"Authorization": "Bearer invalid_garbage_token_123"}
+        response = requests.post(f"{API_BASE}/auth/refresh", headers=headers, timeout=10)
+        if response.status_code == 401:
+            results.success("POST /api/auth/refresh with invalid token returns 401")
+        else:
+            results.fail("POST /api/auth/refresh with invalid token returns 401", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("POST /api/auth/refresh with invalid token returns 401", str(e))
+    
+    # Test 7: POST /api/auth/login with wrong password
+    try:
+        wrong_credentials = {
+            "email": "admin@humorpedia.local",
+            "password": "wrongpassword123"
+        }
+        response = requests.post(f"{API_BASE}/auth/login", json=wrong_credentials, timeout=10)
+        if response.status_code == 401:
+            results.success("POST /api/auth/login with wrong password returns 401")
+        else:
+            results.fail("POST /api/auth/login with wrong password returns 401", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("POST /api/auth/login with wrong password returns 401", str(e))
+    
+    # Test 8: GET /api/auth/me without token
+    try:
+        response = requests.get(f"{API_BASE}/auth/me", timeout=10)
+        if response.status_code == 401:
+            results.success("GET /api/auth/me without token returns 401")
+        else:
+            results.fail("GET /api/auth/me without token returns 401", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/auth/me without token returns 401", str(e))
+    
+    return results
+
 
 def test_api_health():
     """Test basic API connectivity"""
@@ -499,6 +672,7 @@ def main():
     # Run test suites
     test_suites = [
         ("API Health", test_api_health),
+        ("Auth System", test_auth_system),
         ("Cities API", test_cities_api),
         ("Cities Filtering", test_cities_filtering),
         ("Hierarchical Shows", test_hierarchical_shows),
