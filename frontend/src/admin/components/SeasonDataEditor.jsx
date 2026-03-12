@@ -1053,19 +1053,6 @@ function GameContent({
   const applyTableData = () => {
     setTableError('');
     
-    const teams = game.teams || [];
-    const contests = game.contests || [];
-    
-    if (teams.length === 0) {
-      setTableError('В игре нет команд. Добавьте команды перед вставкой данных.');
-      return;
-    }
-    
-    if (contests.length === 0) {
-      setTableError('В игре нет конкурсов. Добавьте конкурсы перед вставкой данных.');
-      return;
-    }
-
     const allRows = parseTableData(tableInput);
     
     if (!allRows || allRows.length === 0) {
@@ -1081,98 +1068,135 @@ function GameContent({
     // Первая строка - заголовки
     const headers = allRows[0];
     const dataRows = allRows.slice(1); // Остальные строки - данные
-
-    // Проверяем количество строк данных
-    if (dataRows.length !== teams.length) {
-      setTableError(`Количество строк данных в таблице (${dataRows.length}) не совпадает с количеством команд (${teams.length}).`);
+    
+    if (headers.length < 2) {
+      setTableError('В таблице должен быть хотя бы один столбец с конкурсом помимо названия команды.');
       return;
     }
-
+    
     // Определяем индекс столбца с названием команды (обычно первый)
     const teamColumnIndex = 0;
     
-    // Определяем индексы столбцов конкурсов, сопоставляя заголовки
+    // Определяем индексы столбцов конкурсов и сами конкурсы.
+    // Если конкурсы уже заданы в игре, стараемся сопоставить заголовки с ними.
+    // Если конкурсов ещё нет, создаём их автоматически по заголовкам таблицы.
+    const existingContests = game.contests || [];
     const contestColumnMap = new Map(); // contestName -> columnIndex
+    let contestsToUse = [];
     
-    headers.forEach((header, index) => {
-      if (index === teamColumnIndex) return; // Пропускаем столбец команды
-      
-      const normalizedHeader = normalizeName(header);
-      
-      // Пропускаем столбцы "общий" и "Итого"
-      if (normalizedHeader === 'общий' || normalizedHeader === 'итого') {
-        return;
-      }
-      
-      // Пытаемся сопоставить заголовок с конкурсом из игры
-      const matchedContest = matchContestName(header, contests);
-      if (matchedContest) {
-        contestColumnMap.set(matchedContest, index);
-      }
-    });
-
-    // Проверяем, что все конкурсы найдены
-    const missingContests = contests.filter(c => !contestColumnMap.has(c));
-    if (missingContests.length > 0) {
-      setTableError(`Не найдены столбцы для конкурсов: ${missingContests.join(', ')}. Найденные заголовки: ${headers.slice(1).join(', ')}`);
-      return;
-    }
-
-    // Применяем данные ко всем командам одновременно
-    const updatedTeams = teams.map((team, teamIndex) => {
-      const row = dataRows[teamIndex];
-      
-      if (!row || row.length === 0) {
-        return team; // Пропускаем пустые строки
-      }
-      
-      const teamNameFromTable = row[teamColumnIndex] || '';
-      
-      // Пытаемся сопоставить название команды
-      const matchedTeam = matchTeamName(teamNameFromTable);
-      
-      const newScores = { ...(team.scores || {}) };
-      
-      // Заполняем баллы для каждого конкурса по найденным индексам столбцов
-      contests.forEach((contest) => {
-        const columnIndex = contestColumnMap.get(contest);
-        if (columnIndex !== undefined && row[columnIndex] !== undefined) {
-          let value = String(row[columnIndex]).trim();
-          value = value.replace(',', '.');
-          const numValue = parseFloat(value);
-          
-          if (!isNaN(numValue) && isFinite(numValue)) {
-            newScores[contest] = roundTo(numValue, 2);
-          } else {
-            newScores[contest] = 0;
-          }
-        } else {
-          // Если столбец не найден, оставляем текущее значение или 0
-          if (!(contest in newScores)) {
-            newScores[contest] = 0;
-          }
+    if (existingContests.length > 0) {
+      // Режим "обновления" — сопоставляем заголовки с уже существующими конкурсами
+      existingContests.forEach((contest) => {
+        const matchedHeaderIndex = headers.findIndex((header, index) => {
+          if (index === teamColumnIndex) return false;
+          const normalizedHeader = normalizeName(header);
+          if (normalizedHeader === 'общий' || normalizedHeader === 'итого') return false;
+          const matchedContest = matchContestName(header, [contest]);
+          return Boolean(matchedContest);
+        });
+        if (matchedHeaderIndex !== -1) {
+          contestColumnMap.set(contest, matchedHeaderIndex);
         }
       });
       
-      const total = contests.reduce((acc, c) => {
-        const score = newScores[c];
-        if (typeof score === 'number' && isFinite(score)) {
-          return acc + score;
+      const missingContests = existingContests.filter(c => !contestColumnMap.has(c));
+      if (missingContests.length > 0) {
+        setTableError(`Не найдены столбцы для конкурсов: ${missingContests.join(', ')}. Найденные заголовки: ${headers.slice(1).join(', ')}`);
+        return;
+      }
+      
+      contestsToUse = existingContests;
+    } else {
+      // Режим "создания" — конкурсы берём из заголовков таблицы
+      const inferredContests = [];
+      headers.forEach((header, index) => {
+        if (index === teamColumnIndex) return;
+        const normalizedHeader = normalizeName(header);
+        if (normalizedHeader === 'общий' || normalizedHeader === 'итого') return;
+        const contestName = String(header || '').trim();
+        if (!contestName) return;
+        inferredContests.push(contestName);
+        contestColumnMap.set(contestName, index);
+      });
+      
+      if (inferredContests.length === 0) {
+        setTableError('Не удалось определить конкурсы по заголовкам таблицы. Убедитесь, что после столбца с названием команды есть столбцы с названиями конкурсов.');
+        return;
+      }
+      
+      contestsToUse = inferredContests;
+    }
+    
+    // Формируем список команд на основе строк таблицы
+    const newTeams = dataRows.map((row, idx) => {
+      if (!row || row.length === 0) {
+        return null;
+      }
+      
+      const teamNameFromTable = row[teamColumnIndex] || '';
+      const matchedTeam = matchTeamName(teamNameFromTable);
+      
+      let teamName = teamNameFromTable;
+      let teamSlug = '';
+      let city = '';
+      
+      if (matchedTeam) {
+        teamName = matchedTeam.team_name;
+        teamSlug = matchedTeam.team_slug || '';
+        if (!city && matchedTeam.city) {
+          city = matchedTeam.city;
         }
-        return acc;
+      }
+      
+      if (city && !teamName.includes(`(${city})`)) {
+        teamName = `${teamName} (${city})`;
+      }
+      
+      const scores = {};
+      contestsToUse.forEach((contest) => {
+        const columnIndex = contestColumnMap.get(contest);
+        if (columnIndex !== undefined && row[columnIndex] !== undefined) {
+          let value = String(row[columnIndex]).trim().replace(',', '.');
+          const numValue = parseFloat(value);
+          scores[contest] = !isNaN(numValue) && isFinite(numValue)
+            ? roundTo(numValue, 2)
+            : 0;
+        } else {
+          scores[contest] = 0;
+        }
+      });
+      
+      const total = contestsToUse.reduce((acc, c) => {
+        const score = scores[c];
+        return acc + (typeof score === 'number' && isFinite(score) ? score : 0);
       }, 0);
       
-      // Если команда найдена - обновляем её данные, иначе оставляем как есть
       return {
-        ...team,
-        ...(matchedTeam || {}), // Обновляем данные команды, если найдено совпадение
-        scores: newScores,
-        total: roundTo(total, 2)
+        team_slug: teamSlug,
+        team_name: teamName,
+        place: idx + 1,
+        total: roundTo(total, 2),
+        scores,
+        passed: false,
+        is_winner: false,
+        is_additional: false,
+        city
       };
-    });
-
-    // Обновляем всю игру сразу со всеми командами
-    updateGame({ teams: updatedTeams });
+    }).filter(Boolean);
+    
+    if (newTeams.length === 0) {
+      setTableError('Не удалось распознать ни одной команды в таблице.');
+      return;
+    }
+    
+    // Обновляем игру: конкурсы (если нужно) и команды заполняются автоматически
+    const updates = {
+      teams: newTeams,
+    };
+    if (!existingContests.length) {
+      updates.contests = contestsToUse;
+    }
+    updateGame(updates);
 
     setShowTableDialog(false);
     setTableInput('');
@@ -1381,13 +1405,12 @@ function GameContent({
               Разделители: табуляция, запятая или пробелы. Десятичные числа можно вводить с запятой или точкой.
               <br />
               <br />
-              Ожидается: строка заголовков + {game.teams?.length || 0} строк данных (команд)
-              <br />
-              Конкурсы в игре: {game.contests?.join(', ') || 'нет'}
+              Если в игре ещё нет конкурсов и команд, они будут автоматически созданы на основе заголовков и строк таблицы.
+              Если конкурсы уже заданы, данные будут сопоставлены с ними по названиям.
               <br />
               <br />
               Столбцы "общий" и "Итого" будут автоматически пропущены.
-              Названия команд и конкурсов будут автоматически сопоставлены. Если команда не найдена, поле останется пустым.
+              Названия команд будут попытаны сопоставиться с командами сезона; при совпадении привяжутся slug и город.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1415,24 +1438,47 @@ function GameContent({
               
               const headers = allRows[0];
               const dataRows = allRows.slice(1);
-              const expectedRows = game.teams?.length || 0;
-              const contests = game.contests || [];
+              const teamColumnIndex = 0;
+              
+              const existingContests = game.contests || [];
+              const inferredContests =
+                existingContests.length > 0
+                  ? existingContests
+                  : headers
+                      .map((header, index) => ({ header, index }))
+                      .filter(({ index }) => index !== teamColumnIndex)
+                      .filter(({ header }) => {
+                        const normalizedHeader = normalizeName(header);
+                        return normalizedHeader !== 'общий' && normalizedHeader !== 'итого';
+                      })
+                      .map(({ header }) => String(header || '').trim())
+                      .filter(Boolean);
+              
+              const contests = inferredContests;
               
               // Определяем индексы столбцов конкурсов
-              const teamColumnIndex = 0;
               const contestColumnMap = new Map();
               
-              headers.forEach((header, index) => {
-                if (index === teamColumnIndex) return;
-                const normalizedHeader = normalizeName(header);
-                if (normalizedHeader === 'общий' || normalizedHeader === 'итого') return;
-                const matchedContest = matchContestName(header, contests);
-                if (matchedContest) {
-                  contestColumnMap.set(matchedContest, index);
+              contests.forEach((contest) => {
+                const headerIndex = headers.findIndex((header, index) => {
+                  if (index === teamColumnIndex) return false;
+                  const normalizedHeader = normalizeName(header);
+                  if (normalizedHeader === 'общий' || normalizedHeader === 'итого') return false;
+                  if (!existingContests.length) {
+                    return normalizeName(header) === normalizeName(contest);
+                  }
+                  const matched = matchContestName(header, [contest]);
+                  return Boolean(matched);
+                });
+                if (headerIndex !== -1) {
+                  contestColumnMap.set(contest, headerIndex);
                 }
               });
               
-              const hasError = dataRows.length !== expectedRows || contestColumnMap.size !== contests.length;
+              const expectedRows = game.teams && game.teams.length > 0 ? game.teams.length : dataRows.length;
+              const hasError =
+                (game.teams && game.teams.length > 0 && dataRows.length !== expectedRows) ||
+                contests.length === 0;
               
               return (
                 <div className="space-y-2">
