@@ -1128,7 +1128,7 @@ function GameContent({
     }
     
     // Формируем список команд на основе строк таблицы
-    const newTeams = dataRows.map((row, idx) => {
+    const newTeams = dataRows.map((row) => {
       if (!row || row.length === 0) {
         return null;
       }
@@ -1174,7 +1174,6 @@ function GameContent({
       return {
         team_slug: teamSlug,
         team_name: teamName,
-        place: idx + 1,
         total: roundTo(total, 2),
         scores,
         passed: false,
@@ -1184,6 +1183,12 @@ function GameContent({
       };
     }).filter(Boolean);
     
+    // После фильтрации пересчитываем места, чтобы они были последовательными
+    const teamsWithPlaces = newTeams.map((team, index) => ({
+      ...team,
+      place: index + 1,
+    }));
+    
     if (newTeams.length === 0) {
       setTableError('Не удалось распознать ни одной команды в таблице.');
       return;
@@ -1191,7 +1196,7 @@ function GameContent({
     
     // Обновляем игру: конкурсы (если нужно) и команды заполняются автоматически
     const updates = {
-      teams: newTeams,
+      teams: teamsWithPlaces,
     };
     if (!existingContests.length) {
       updates.contests = contestsToUse;
