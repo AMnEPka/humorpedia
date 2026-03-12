@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Loader2, ChevronLeft, ChevronRight, Trophy, Calendar, Users, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,8 +53,16 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   const [error, setError] = useState('');
   const [teamNames, setTeamNames] = useState({}); // Кэш полных названий команд по slug
   const [leagueSeasons, setLeagueSeasons] = useState([]); // Список сезонов лиги для блока «Все сезоны»
+  const [computedPrevNext, setComputedPrevNext] = useState({ prev: null, next: null }); // Реальные соседи по списку сезонов лиги
 
   usePageTitle((season?.name || season?.title) || (loading ? 'Сезон' : (error ? 'Сезон не найден' : 'Сезон')));
+
+  const currentSeasonSlugFromUrl = useMemo(() => {
+    const parts = (location.pathname || '').split('/').filter(Boolean);
+    // /kvn/<league>/<season>
+    if (parts.length >= 3 && parts[0] === 'kvn') return parts[2];
+    return '';
+  }, [location.pathname]);
 
   useEffect(() => {
     // Если данные уже переданы через props - используем их
@@ -140,10 +148,14 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
 
   // Для сезонов Первой и Высшей лиги — загружаем список сезонов лиги для блока «Все сезоны»
   useEffect(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean);
+    // Для корректных "пред/след" стрелок в лигах с пропусками (например vul)
+    // подгружаем реальный список сезонов текущей лиги и вычисляем соседей по нему.
+    const pathParts = (location.pathname || '').split('/').filter(Boolean);
     const leagueSlug = pathParts[0] === 'kvn' && pathParts[1] ? pathParts[1] : '';
-    if (leagueSlug !== '1l-kvn' && leagueSlug !== 'vl-kvn') {
+    const isSeasonPage = pathParts.length >= 3 && pathParts[0] === 'kvn' && Boolean(pathParts[2]);
+    if (!leagueSlug || !isSeasonPage) {
       setLeagueSeasons([]);
+      setComputedPrevNext({ prev: null, next: null });
       return;
     }
     let cancelled = false;
@@ -151,13 +163,46 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       .getKvnChildren(leagueSlug)
       .then((res) => {
         if (cancelled) return;
-        setLeagueSeasons(normalizeLeagueSeasons(res.data.items || []));
+        const normalized = normalizeLeagueSeasons(res.data.items || []);
+        setLeagueSeasons(normalized);
+
+        const currentSlug = season?.slug || currentSeasonSlugFromUrl;
+        if (!currentSlug) {
+          setComputedPrevNext({ prev: null, next: null });
+          return;
+        }
+
+        const idx = normalized.findIndex((s) => s.slug === currentSlug);
+        if (idx < 0) {
+          // Если вдруг slug не совпал (например, открыли по full_path без slug) — пытаемся сопоставить по full_path.
+          const currentFullPath = season?.full_path ? String(season.full_path).replace(/^\/+/, '') : '';
+          const idxByPath = currentFullPath
+            ? normalized.findIndex((s) => s.full_path && String(s.full_path).replace(/^\/+/, '') === currentFullPath)
+            : -1;
+          if (idxByPath < 0) {
+            setComputedPrevNext({ prev: null, next: null });
+            return;
+          }
+          setComputedPrevNext({
+            prev: idxByPath > 0 ? normalized[idxByPath - 1] : null,
+            next: idxByPath < normalized.length - 1 ? normalized[idxByPath + 1] : null
+          });
+          return;
+        }
+
+        setComputedPrevNext({
+          prev: idx > 0 ? normalized[idx - 1] : null,
+          next: idx < normalized.length - 1 ? normalized[idx + 1] : null
+        });
       })
-      .catch(() => setLeagueSeasons([]));
+      .catch(() => {
+        setLeagueSeasons([]);
+        setComputedPrevNext({ prev: null, next: null });
+      });
     return () => {
       cancelled = true;
     };
-  }, [location.pathname]);
+  }, [location.pathname, season?.slug, season?.full_path, currentSeasonSlugFromUrl]);
 
   if (loading) {
     return (
@@ -245,8 +290,27 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
   };
   
   // Извлекаем годы для отображения
-  const prevSeasonYear = prevSeason ? extractYearFromSlug(prevSeason) : '';
-  const nextSeasonYear = nextSeason ? extractYearFromSlug(nextSeason) : '';
+  const effectivePrev = computedPrevNext.prev
+    ? {
+        year: String(computedPrevNext.prev.year || ''),
+        to: computedPrevNext.prev.full_path
+          ? `/${computedPrevNext.prev.full_path}`
+          : `/kvn/${league_slug}/${computedPrevNext.prev.slug}`
+      }
+    : prevSeason
+      ? { year: extractYearFromSlug(prevSeason), to: `/kvn/${league_slug}/${prevSeason}` }
+      : null;
+
+  const effectiveNext = computedPrevNext.next
+    ? {
+        year: String(computedPrevNext.next.year || ''),
+        to: computedPrevNext.next.full_path
+          ? `/${computedPrevNext.next.full_path}`
+          : `/kvn/${league_slug}/${computedPrevNext.next.slug}`
+      }
+    : nextSeason
+      ? { year: extractYearFromSlug(nextSeason), to: `/kvn/${league_slug}/${nextSeason}` }
+      : null;
   
   // Ведущие - используем список hosts или одиночный host
   const hostsList = hosts.length > 0 ? hosts : (host ? [host] : []);
@@ -291,11 +355,11 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
       {/* Header with navigation */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          {prevSeason && league_slug ? (
+          {effectivePrev && league_slug ? (
             <Button variant="outline" asChild>
-              <Link to={`/kvn/${league_slug}/${prevSeason}`}>
+              <Link to={effectivePrev.to}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                {prevSeasonYear}
+                {effectivePrev.year}
               </Link>
             </Button>
           ) : (
@@ -311,10 +375,10 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
             </p>
           </div>
           
-          {nextSeason && league_slug ? (
+          {effectiveNext && league_slug ? (
             <Button variant="outline" asChild>
-              <Link to={`/kvn/${league_slug}/${nextSeason}`}>
-                {nextSeasonYear}
+              <Link to={effectiveNext.to}>
+                {effectiveNext.year}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
