@@ -1326,20 +1326,18 @@ function GameContent({
         <div className="flex items-center justify-between">
           <Label>Команды ({game.teams?.length || 0})</Label>
           <div className="flex items-center gap-2">
-            {game.contests && game.contests.length > 0 && (
-              <Button 
-                onClick={() => {
-                  setTableInput('');
-                  setTableError('');
-                  setShowTableDialog(true);
-                }} 
-                size="sm" 
-                variant="outline"
-              >
-                <Table className="h-4 w-4 mr-2" />
-                Вставить из таблицы
-              </Button>
-            )}
+            <Button 
+              onClick={() => {
+                setTableInput('');
+                setTableError('');
+                setShowTableDialog(true);
+              }} 
+              size="sm" 
+              variant="outline"
+            >
+              <Table className="h-4 w-4 mr-2" />
+              Вставить из таблицы
+            </Button>
             <Button 
               onClick={() => {
                 setListInput('');
