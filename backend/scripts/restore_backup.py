@@ -8,6 +8,7 @@ import tarfile
 import shutil
 from pathlib import Path
 import logging
+from urllib.parse import quote_plus
 
 # Настройка логирования
 logging.basicConfig(
@@ -17,9 +18,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://mongodb:27017')
-DB_NAME = os.environ.get('DB_NAME', 'humorpedia')
-BACKUP_DIR = Path(os.environ.get('BACKUP_DIR', '/app/backups'))
+MONGO_URL = os.environ.get("MONGO_URL")
+MONGO_HOST = os.environ.get("MONGO_HOST", "mongodb")
+MONGO_PORT = os.environ.get("MONGO_PORT", "27017")
+MONGO_USER = os.environ.get("MONGO_USER")
+MONGO_PASSWORD = os.environ.get("MONGO_PASSWORD")
+MONGO_AUTH_SOURCE = os.environ.get("MONGO_AUTH_SOURCE", "admin")
+DB_NAME = os.environ.get("DB_NAME", "humorpedia")
+BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", "/app/backups"))
+
+
+def build_mongo_url() -> str:
+  """
+  Build a MongoDB connection URL using either MONGO_URL (if explicitly set)
+  or separate host/port/credentials components. This keeps behaviour consistent
+  with the main application and backup service.
+  """
+  if MONGO_URL:
+      return MONGO_URL
+
+  if MONGO_USER and MONGO_PASSWORD is not None:
+      user_q = quote_plus(MONGO_USER)
+      pass_q = quote_plus(MONGO_PASSWORD)
+      return f"mongodb://{user_q}:{pass_q}@{MONGO_HOST}:{MONGO_PORT}/?authSource={MONGO_AUTH_SOURCE}"
+
+  return f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 
 
 def find_latest_backup():
@@ -63,13 +86,9 @@ def restore_from_backup(backup_path):
             logger.error(f"Директория дампа не найдена: {dump_dir}")
             return False
         
-        # Извлекаем хост и порт из MONGO_URL
-        mongo_host = MONGO_URL.replace('mongodb://', '').split('/')[0]
-        if ':' in mongo_host:
-            host, port = mongo_host.split(':')
-        else:
-            host = mongo_host
-            port = '27017'
+        # Используем хост и порт из окружения (или значения по умолчанию)
+        host = str(MONGO_HOST)
+        port = str(MONGO_PORT)
         
         logger.info(f"Восстановление БД {DB_NAME} на хост {host}:{port}...")
         
@@ -78,7 +97,12 @@ def restore_from_backup(backup_path):
         max_retries = 30
         for i in range(max_retries):
             try:
-                cmd_test = ['mongosh', '--host', host, '--port', port, '--eval', 'db.adminCommand("ping")']
+                cmd_test = ['mongosh', '--host', host, '--port', port]
+                if MONGO_USER and MONGO_PASSWORD is not None:
+                    cmd_test.extend(['--username', MONGO_USER])
+                    cmd_test.extend(['--password', MONGO_PASSWORD])
+                    cmd_test.extend(['--authenticationDatabase', MONGO_AUTH_SOURCE])
+                cmd_test.extend(['--eval', 'db.adminCommand("ping")'])
                 result = subprocess.run(
                     cmd_test,
                     capture_output=True,
@@ -104,8 +128,14 @@ def restore_from_backup(backup_path):
             '--port', port,
             '--db', DB_NAME,
             '--drop',  # Удаляем существующую БД перед восстановлением
-            str(dump_dir)
         ]
+
+        if MONGO_USER and MONGO_PASSWORD is not None:
+            cmd.extend(['--username', MONGO_USER])
+            cmd.extend(['--password', MONGO_PASSWORD])
+            cmd.extend(['--authenticationDatabase', MONGO_AUTH_SOURCE])
+
+        cmd.append(str(dump_dir))
         
         logger.info(f"Выполнение команды: {' '.join(cmd)}")
         result = subprocess.run(
@@ -140,7 +170,7 @@ def check_db_empty():
     try:
         from pymongo import MongoClient
         
-        client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
+        client = MongoClient(build_mongo_url(), serverSelectionTimeoutMS=5000)
         db = client[DB_NAME]
         
         collections = db.list_collection_names()
@@ -160,7 +190,10 @@ def check_db_empty():
 def main():
     """Основная функция восстановления"""
     logger.info("Запуск восстановления БД из бэкапа")
-    logger.info(f"БД: {DB_NAME}, URL: {MONGO_URL}")
+    logger.info(
+        f"БД: {DB_NAME}, host: {MONGO_HOST}:{MONGO_PORT}, "
+        f"authSource: {MONGO_AUTH_SOURCE}, auth: {'on' if MONGO_USER else 'off'}"
+    )
     logger.info(f"Директория бэкапов: {BACKUP_DIR}")
     
     # Проверяем, пустая ли БД

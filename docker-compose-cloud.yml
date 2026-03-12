@@ -34,7 +34,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
       - backups_data:/app/backups
-      - imported_images_volume:/app/frontend/public/media/imported/images
+      - imported_images_volume:/app/media/imported/images
       - images_volume:/app/images
     depends_on:
       mongodb:

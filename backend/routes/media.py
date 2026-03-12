@@ -135,7 +135,7 @@ async def upload_to_source(
     """Upload a file to a specific source directory (imported or images volume)
     
     Sources:
-    - 'imported': /app/frontend/public/media/imported/images (Docker volume)
+    - 'imported': /app/media/imported/images (Docker volume)
     - 'images': /app/images (Docker volume)
     """
     user = await get_current_user(request)
@@ -153,7 +153,7 @@ async def upload_to_source(
         base_dir = Path("/app/images").resolve()
         url_prefix = "/images"
     else:
-        base_dir = Path("/app/frontend/public/media/imported/images").resolve()
+        base_dir = Path("/app/media/imported/images").resolve()
         url_prefix = "/media/imported/images"
     
     # Validate file type - только изображения для этих источников
@@ -263,11 +263,11 @@ async def browse_imported_media(
     limit: int = Query(200, ge=1, le=2000),
 ):
     """Browse local media files from different sources.
-
+    
     Sources:
-    - 'imported': /app/frontend/public/media/imported/images (Docker volume with imported images)
+    - 'imported': /app/media/imported/images (Docker volume with imported images)
     - 'images': /app/images (Docker volume with site images)
-
+    
     Returns URLs usable directly in <img src="...">.
     """
     user = await get_current_user(request)
@@ -281,7 +281,7 @@ async def browse_imported_media(
         url_prefix = "/images"
     else:
         # Docker volume с импортированными изображениями
-        base_dir = Path("/app/frontend/public/media/imported/images").resolve()
+        base_dir = Path("/app/media/imported/images").resolve()
         url_prefix = "/media/imported/images"
 
     # Если prefix пустой, используем корень базовой директории
@@ -372,7 +372,7 @@ async def delete_from_source(
     """Delete a file from a specific source directory (imported or images volume)
     
     Sources:
-    - 'imported': /app/frontend/public/media/imported/images (Docker volume)
+    - 'imported': /app/media/imported/images (Docker volume)
     - 'images': /app/images (Docker volume)
     """
     user = await get_current_user(request)
@@ -389,7 +389,7 @@ async def delete_from_source(
     if source == "images":
         base_dir = Path("/app/images").resolve()
     else:
-        base_dir = Path("/app/frontend/public/media/imported/images").resolve()
+        base_dir = Path("/app/media/imported/images").resolve()
     
     # Получаем путь к файлу
     file_path = (base_dir / path).resolve()
@@ -426,7 +426,7 @@ async def rename_file_in_source(
     """Rename a file in a specific source directory (imported or images volume)
     
     Sources:
-    - 'imported': /app/frontend/public/media/imported/images (Docker volume)
+    - 'imported': /app/media/imported/images (Docker volume)
     - 'images': /app/images (Docker volume)
     """
     user = await get_current_user(request)
@@ -448,7 +448,7 @@ async def rename_file_in_source(
         base_dir = Path("/app/images").resolve()
         url_prefix = "/images"
     else:
-        base_dir = Path("/app/frontend/public/media/imported/images").resolve()
+        base_dir = Path("/app/media/imported/images").resolve()
         url_prefix = "/media/imported/images"
     
     # Получаем путь к текущему файлу

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, X, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ export default function LinkInserter({ editor, onInsert }) {
   const [loading, setLoading] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState(['person', 'team', 'show', 'kvn']);
 
-  const searchContent = async (searchQuery) => {
+  const searchContent = useCallback(async (searchQuery) => {
     if (!searchQuery || searchQuery.length < 2) {
       setResults([]);
       return;
@@ -33,7 +33,7 @@ export default function LinkInserter({ editor, onInsert }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTypes]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -41,7 +41,7 @@ export default function LinkInserter({ editor, onInsert }) {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [query, selectedTypes]);
+  }, [query, searchContent]);
 
   const handleInsert = (item) => {
     if (editor) {

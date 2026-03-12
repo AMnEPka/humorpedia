@@ -57,7 +57,8 @@ const moduleIcons = {
   rating_widget: Star,
   tags_cloud: Tag,
   social_links: Users,
-  first_league_champions: Trophy
+  first_league_champions: Trophy,
+  vl_league_champions: Trophy
 };
 
 const moduleNames = {
@@ -86,7 +87,8 @@ const moduleNames = {
   rating_widget: 'Рейтинг',
   tags_cloud: 'Облако тегов',
   social_links: 'Социальные ссылки',
-  first_league_champions: 'Чемпионы Первой лиги КВН'
+  first_league_champions: 'Чемпионы Первой лиги КВН',
+  vl_league_champions: 'Чемпионы Высшей лиги КВН'
 };
 
 const modulesByType = {
@@ -98,7 +100,7 @@ const modulesByType = {
   quiz: ['poster_photo', 'quiz_questions', 'quiz_results', 'text_block'],
   wiki: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
   page: ['poster_photo', 'text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery'],
-  kvn: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'first_league_champions', 'text_block', 'table', 'gallery', 'video', 'quote', 'table_of_contents']
+  kvn: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'first_league_champions', 'vl_league_champions', 'text_block', 'table', 'gallery', 'video', 'quote', 'table_of_contents']
 };
 
 function SortableModule({ module, onEdit, onDelete }) {
@@ -889,6 +891,18 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
             <Alert>
               <AlertDescription>
                 Таблица чемпионов строится автоматически по данным дочерних сезонов Первой лиги.
+                Порядок блока можно менять перетаскиванием в списке модулей. Заголовок блока можно задать ниже.
+              </AlertDescription>
+            </Alert>
+          </div>
+        );
+
+      case 'vl_league_champions':
+        return (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                Таблица чемпионов строится автоматически по данным дочерних сезонов Высшей лиги.
                 Порядок блока можно менять перетаскиванием в списке модулей. Заголовок блока можно задать ниже.
               </AlertDescription>
             </Alert>
