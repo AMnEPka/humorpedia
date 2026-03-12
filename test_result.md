@@ -182,6 +182,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "MongoDB unification smoke test PASSED. GET /api/content/articles?limit=1 возвращает корректную структуру с items array. Endpoint работает через единый get_db() без ошибок подключения."
+      - working: true
+        agent: "testing"
+        comment: "CRUD GENERALIZATION TESTING COMPLETE ✅ Full CRUD cycle tested successfully using universal helpers: POST /api/content/articles creates article with auto-set published_at when status=published, returns id+slug. GET /api/content/articles/{id} retrieves with published_at correctly set. PUT /api/content/articles/{id} updates using universal update_content helper, returns updated:true. DELETE /api/content/articles/{id} deletes using universal delete_content helper, returns deleted:true. GET /api/content/articles lists with items+total structure. All 11 article CRUD tests passed."
 
   - task: "CRUD для News"
     implemented: true
@@ -197,6 +200,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "MongoDB unification smoke test PASSED. GET /api/content/news?limit=1 возвращает корректную структуру с items array. Endpoint работает через единый get_db() без ошибок подключения."
+      - working: true
+        agent: "testing"
+        comment: "CRUD GENERALIZATION TESTING COMPLETE ✅ Full CRUD cycle tested successfully using universal helpers: POST /api/content/news creates news with auto-set published_at when status=published, returns id+slug. GET /api/content/news/{id} retrieves with published_at correctly set. PUT /api/content/news/{id} updates using universal update_content helper, returns updated:true. DELETE /api/content/news/{id} deletes using universal delete_content helper, returns deleted:true. All 8 news CRUD tests passed."
 
   - task: "CRUD для Quizzes"
     implemented: true
@@ -302,6 +308,21 @@ backend:
       - working: true
         agent: "testing"
         comment: "MongoDB unification smoke test PASSED. GET /api/templates?limit=1 возвращает корректную структуру с items array. Endpoint работает через единый get_db() без ошибок подключения."
+
+  - task: "Content Search API Generalization"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/content.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "search_content дедуплицирован: 4 блока if → 1 цикл по конфиг-таблице"
+      - working: true
+        agent: "testing"
+        comment: "CONTENT SEARCH GENERALIZATION TESTING COMPLETE ✅ Both search scenarios work correctly: GET /api/content/content/search?query=test&types=person,team returns results array with filtered types. GET /api/content/content/search?query=test searches all types and returns results array. Generalized search using config table works properly for all content types."
 
   - task: "MongoDB Connection Unification"
     implemented: true
@@ -573,14 +594,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "DB connection unification smoke test"
+    - "CRUD generalization testing completed"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Этап 2 — унификация MongoDB подключения. Удалён дублирующий _build_mongo_url_from_parts() и AsyncIOMotorClient из server.py. ЕДИНСТВЕННЫЙ источник подключения — get_db() из utils/database.py. server.py lifespan вызывает get_db() и хранит ссылку в app.state.db для обратной совместимости. sections.py и cities.py переведены на get_db(). Тестировать: все endpoints — auth login/me/refresh, stats, sections, cities, content/people, tags, templates. Все должны работать через единый пул."
+    message: "Этап 4 — обобщение CRUD паттерна. 1) create_content() расширен параметрами published_status, related_person_ids, content_label для автоматической установки published_at и линковки персон. 2) update_content() расширен аналогично. 3) Articles CREATE/UPDATE переведены с ручного кода на хелперы (было ~60 строк ручного CRUD, стало 2 вызова). 4) News CREATE/UPDATE аналогично. 5) search_content дедуплицирован: 4 блока if → 1 цикл по конфиг-таблице. Тестировать: POST/GET/PUT/DELETE для articles и news (published_at должен ставиться автоматически), GET /content/search (должен работать по всем типам). Ранее работающие endpoints people/teams/shows/kvn НЕ затронуты."
   - agent: "testing"
     message: "Протестировал публичные страницы людей после реимпорта. Страницы /people/shastun-i-makar и /people/irina-chesnokova загружаются корректно. Биография и хронология отображаются с правильным HTML-форматированием без литеральных тегов или лишних слешей. Обнаружена проблема Mixed Content (HTTP запросы с HTTPS страницы), но это не влияет на основной контент страниц."
   - agent: "testing"
@@ -599,3 +620,5 @@ agent_communication:
     message: "Завершено тестирование обновленной auth system с новым /api/auth/refresh endpoint. ✅ Все 8 сценариев тестирования прошли успешно: логин с валидными данными возвращает токен и user data, GET /api/auth/me работает с Bearer token, POST /api/auth/refresh с валидным токеном возвращает новый access_token, новый токен работает корректно, ошибки 401 возвращаются для невалидных токенов и отсутствующих headers. ✅ 30-дневный grace период для refresh токенов реализован корректно. ✅ Все error cases обрабатываются правильно (401 для неверного пароля, отсутствующего токена, невалидного токена). Backend logs подтверждают корректную работу всех endpoints. Система авторизации готова к production использованию."
   - agent: "testing"
     message: "✅ MongoDB Connection Unification SMOKE TEST COMPLETED SUCCESSFULLY. Протестированы ВСЕ 15 основных endpoints после рефакторинга: GET /api/health (status=healthy), GET /api/stats (все счетчики), POST /api/auth/login (access_token), GET /api/auth/me (user info), POST /api/auth/refresh (новый токен), GET /api/content/* endpoints (people, teams, shows, articles, news - все возвращают items array), GET /api/sections/ (с trailing slash), GET /api/cities/ (с trailing slash), GET /api/tags, GET /api/templates, GET /api/comments (с обязательными параметрами). ✅ Единый get_db() из utils/database.py работает корректно для ВСЕХ маршрутов. ✅ Backend logs подтверждают: Connected to MongoDB humorpedia, все endpoints возвращают 200 OK, никаких ошибок подключения. ✅ Рефакторинг прошел успешно - дублирующие MongoDB подключения удалены, все routes используют единый пул соединений. База данных пустая (только admin user), но ВСЅ API endpoints работают правильно и возвращают корректные структуры данных."
+  - agent: "testing"
+    message: "🎉 CRUD GENERALIZATION TESTING COMPLETED SUCCESSFULLY. ✅ Все 25 тестов CRUD обобщения прошли успешно. ✅ ARTICLES: POST /api/content/articles с status='published' автоматически устанавливает published_at через universal create_content helper, возвращает id+slug. GET retrieval работает, PUT update через update_content helper возвращает updated:true, DELETE через delete_content возвращает deleted:true. ✅ NEWS: аналогично - полный CRUD цикл через универсальные хелперы работает корректно с auto-set published_at. ✅ SEARCH: GET /api/content/content/search работает как с параметром types (person,team), так и без него (все типы) - возвращает results array. ✅ BACKWARD COMPATIBILITY: существующие endpoints /api/content/people и /api/content/teams продолжают работать после рефакторинга. Generalized CRUD pattern успешно заменил ~60 строк ручного кода на вызовы универсальных хелперов."

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for Humorpedia
-Tests auth system (including new /auth/refresh endpoint), hierarchical import feature, show children endpoint, and Cities API
+Tests CRUD generalization refactoring for Articles/News, auth system, hierarchical import feature, show children endpoint, and Cities API
 """
 
 import requests
@@ -773,6 +773,283 @@ def test_mongodb_unification_smoke():
     return results
 
 
+def test_crud_generalization():
+    """Test CRUD generalization refactoring for Articles and News"""
+    results = TestResults()
+    
+    # Get auth token first
+    access_token = None
+    try:
+        response = requests.post(f"{API_BASE}/auth/login", json={
+            "email": "admin@humorpedia.local", 
+            "password": "admin"
+        }, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            access_token = data.get('access_token')
+            results.success("Authentication for CRUD tests")
+        else:
+            results.fail("Authentication for CRUD tests", f"Status {response.status_code}")
+            return results
+    except Exception as e:
+        results.fail("Authentication for CRUD tests", str(e))
+        return results
+    
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Test article IDs and news IDs storage
+    created_article_id = None
+    created_news_id = None
+    
+    # === ARTICLES TESTS ===
+    
+    # Test 1: POST /api/content/articles - Create with auto published_at
+    try:
+        article_data = {
+            "title": "Test Article",
+            "slug": "test-art-gen",
+            "excerpt": "Test",
+            "modules": [],
+            "tags": ["test"],
+            "status": "published"
+        }
+        response = requests.post(f"{API_BASE}/content/articles", json=article_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("POST /api/content/articles creates article")
+            
+            if 'id' in data and 'slug' in data:
+                results.success("Article creation returns id and slug")
+                created_article_id = data['id']
+            else:
+                results.fail("Article creation returns id and slug", f"Response: {data}")
+        else:
+            results.fail("POST /api/content/articles creates article", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("POST /api/content/articles creates article", str(e))
+    
+    # Test 2: GET /api/content/articles/{id} - Verify published_at is auto-set
+    if created_article_id:
+        try:
+            response = requests.get(f"{API_BASE}/content/articles/{created_article_id}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("GET /api/content/articles/{id} retrieves article")
+                
+                if data.get('published_at') is not None:
+                    results.success("Article published_at is auto-set by create_content")
+                else:
+                    results.fail("Article published_at is auto-set by create_content", "published_at is null")
+            else:
+                results.fail("GET /api/content/articles/{id} retrieves article", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("GET /api/content/articles/{id} retrieves article", str(e))
+    
+    # Test 3: PUT /api/content/articles/{id} - Update using generalized helper
+    if created_article_id:
+        try:
+            update_data = {
+                "title": "Updated Art"
+            }
+            response = requests.put(f"{API_BASE}/content/articles/{created_article_id}", json=update_data, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("PUT /api/content/articles/{id} updates article")
+                
+                if data.get('updated') is True:
+                    results.success("Article update returns updated:true")
+                else:
+                    results.fail("Article update returns updated:true", f"Response: {data}")
+            else:
+                results.fail("PUT /api/content/articles/{id} updates article", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("PUT /api/content/articles/{id} updates article", str(e))
+    
+    # Test 4: GET /api/content/articles - List with total
+    try:
+        response = requests.get(f"{API_BASE}/content/articles", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("GET /api/content/articles lists articles")
+            
+            if 'items' in data and 'total' in data:
+                results.success("Article list returns items and total")
+            else:
+                results.fail("Article list returns items and total", f"Missing keys in: {list(data.keys())}")
+        else:
+            results.fail("GET /api/content/articles lists articles", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/content/articles lists articles", str(e))
+    
+    # Test 5: DELETE /api/content/articles/{id}
+    if created_article_id:
+        try:
+            response = requests.delete(f"{API_BASE}/content/articles/{created_article_id}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("DELETE /api/content/articles/{id} deletes article")
+                
+                if data.get('deleted') is True:
+                    results.success("Article delete returns deleted:true")
+                else:
+                    results.fail("Article delete returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("DELETE /api/content/articles/{id} deletes article", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("DELETE /api/content/articles/{id} deletes article", str(e))
+    
+    # === NEWS TESTS ===
+    
+    # Test 6: POST /api/content/news - Create with auto published_at
+    try:
+        news_data = {
+            "title": "Test News",
+            "slug": "test-news-gen",
+            "excerpt": "Test",
+            "modules": [],
+            "tags": ["test"],
+            "status": "published"
+        }
+        response = requests.post(f"{API_BASE}/content/news", json=news_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("POST /api/content/news creates news")
+            
+            if 'id' in data and 'slug' in data:
+                results.success("News creation returns id and slug")
+                created_news_id = data['id']
+            else:
+                results.fail("News creation returns id and slug", f"Response: {data}")
+        else:
+            results.fail("POST /api/content/news creates news", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("POST /api/content/news creates news", str(e))
+    
+    # Test 7: GET /api/content/news/{id} - Verify published_at is auto-set
+    if created_news_id:
+        try:
+            response = requests.get(f"{API_BASE}/content/news/{created_news_id}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("GET /api/content/news/{id} retrieves news")
+                
+                if data.get('published_at') is not None:
+                    results.success("News published_at is auto-set by create_content")
+                else:
+                    results.fail("News published_at is auto-set by create_content", "published_at is null")
+            else:
+                results.fail("GET /api/content/news/{id} retrieves news", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("GET /api/content/news/{id} retrieves news", str(e))
+    
+    # Test 8: PUT /api/content/news/{id} - Update using generalized helper
+    if created_news_id:
+        try:
+            update_data = {
+                "title": "Updated News"
+            }
+            response = requests.put(f"{API_BASE}/content/news/{created_news_id}", json=update_data, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("PUT /api/content/news/{id} updates news")
+                
+                if data.get('updated') is True:
+                    results.success("News update returns updated:true")
+                else:
+                    results.fail("News update returns updated:true", f"Response: {data}")
+            else:
+                results.fail("PUT /api/content/news/{id} updates news", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("PUT /api/content/news/{id} updates news", str(e))
+    
+    # Test 9: DELETE /api/content/news/{id}
+    if created_news_id:
+        try:
+            response = requests.delete(f"{API_BASE}/content/news/{created_news_id}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("DELETE /api/content/news/{id} deletes news")
+                
+                if data.get('deleted') is True:
+                    results.success("News delete returns deleted:true")
+                else:
+                    results.fail("News delete returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("DELETE /api/content/news/{id} deletes news", f"Status {response.status_code}: {response.text}")
+        except Exception as e:
+            results.fail("DELETE /api/content/news/{id} deletes news", str(e))
+    
+    # === SEARCH TESTS ===
+    
+    # Test 10: GET /api/content/content/search with specific types
+    try:
+        response = requests.get(f"{API_BASE}/content/content/search?query=test&types=person,team", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("GET /api/content/content/search with types parameter")
+            
+            if 'results' in data and isinstance(data['results'], list):
+                results.success("Content search returns results array")
+            else:
+                results.fail("Content search returns results array", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("GET /api/content/content/search with types parameter", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/content/content/search with types parameter", str(e))
+    
+    # Test 11: GET /api/content/content/search without types (all types)
+    try:
+        response = requests.get(f"{API_BASE}/content/content/search?query=test", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("GET /api/content/content/search without types (all types)")
+            
+            if 'results' in data and isinstance(data['results'], list):
+                results.success("Content search all types returns results")
+            else:
+                results.fail("Content search all types returns results", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("GET /api/content/content/search without types (all types)", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/content/content/search without types (all types)", str(e))
+    
+    # === EXISTING ENDPOINTS TESTS ===
+    
+    # Test 12: Verify existing people endpoint still works
+    try:
+        response = requests.get(f"{API_BASE}/content/people?limit=1", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("GET /api/content/people still works after refactoring")
+            
+            if 'items' in data:
+                results.success("People endpoint returns items array")
+            else:
+                results.fail("People endpoint returns items array", f"Response: {list(data.keys())}")
+        else:
+            results.fail("GET /api/content/people still works after refactoring", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/content/people still works after refactoring", str(e))
+    
+    # Test 13: Verify existing teams endpoint still works
+    try:
+        response = requests.get(f"{API_BASE}/content/teams?limit=1", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("GET /api/content/teams still works after refactoring")
+            
+            if 'items' in data:
+                results.success("Teams endpoint returns items array")
+            else:
+                results.fail("Teams endpoint returns items array", f"Response: {list(data.keys())}")
+        else:
+            results.fail("GET /api/content/teams still works after refactoring", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("GET /api/content/teams still works after refactoring", str(e))
+    
+    return results
+
+
 def main():
     """Run all tests"""
     print("🧪 Starting Backend API Tests for Humorpedia")
@@ -782,6 +1059,7 @@ def main():
     
     # Run test suites
     test_suites = [
+        ("CRUD Generalization", test_crud_generalization),
         ("MongoDB Unification Smoke Test", test_mongodb_unification_smoke),
         ("API Health", test_api_health),
         ("Auth System", test_auth_system),

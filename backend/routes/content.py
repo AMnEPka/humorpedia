@@ -1014,8 +1014,25 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
     return facts, ordered, modules_sorted
 
 
-async def create_content(collection_name: str, model_instance, tags: list = None):
-    """Universal create handler"""
+async def create_content(
+    collection_name: str,
+    model_instance,
+    tags: list = None,
+    *,
+    published_status=None,
+    related_person_ids: list = None,
+    content_label: str = None
+):
+    """Universal create handler.
+    
+    Args:
+        collection_name: MongoDB collection name
+        model_instance: Pydantic model instance to insert
+        tags: Tags to sync (fallback: doc["tags"])
+        published_status: If set and matches data.status, set published_at
+        related_person_ids: IDs for linking_service (articles, news)
+        content_label: Label for linking_service (e.g. "article", "news")
+    """
     db = await get_db()
     collection = getattr(db, collection_name)
     
@@ -1030,25 +1047,32 @@ async def create_content(collection_name: str, model_instance, tags: list = None
         if "id" not in doc or not doc.get("id"):
             doc["id"] = str(uuid.uuid4())
     
+    # Auto-set published_at when status is published
+    if published_status and doc.get("status") == published_status:
+        doc["published_at"] = datetime.now(timezone.utc).isoformat()
+    
     # Проверка на дубликаты primary_tag для людей и команд
     primary_tag = doc.get("primary_tag")
     if primary_tag and collection_name in ["people", "teams"]:
         await check_primary_tag_duplicate(collection_name, primary_tag)
     
     # Синхронизация primary_tag в tags для людей и команд
-    # Используем tags из doc, а не из параметра, так как они уже должны совпадать
     if collection_name in ["people", "teams"]:
         updated_tags = await sync_primary_tag_to_tags(doc)
-        # Обновляем tags в doc, если они изменились
         if updated_tags != doc.get("tags", []):
             doc["tags"] = updated_tags
     
-    # Sync tags (используем tags из doc, так как они уже синхронизированы с primary_tag)
+    # Sync tags
     final_tags = doc.get("tags", [])
     if final_tags:
         await tag_service.sync_tags(final_tags)
     
     await collection.insert_one(doc)
+    
+    # Link to persons if needed (articles, news)
+    doc_id = doc.get("id") if collection_name == "kvn" else doc["_id"]
+    if related_person_ids and content_label:
+        await linking_service.update_person_links(content_label, doc_id, related_person_ids)
     
     # For KVN, return the UUID 'id' field instead of _id
     if collection_name == "kvn":
@@ -1147,8 +1171,23 @@ async def update_tags_everywhere(
         logger.info(f"Всего обновлено {total_updated} документов при замене тега '{old_primary_tag}' на '{new_primary_tag}'")
 
 
-async def update_content(collection_name: str, item_id: str, data, not_found_msg: str):
-    """Universal update handler"""
+async def update_content(
+    collection_name: str,
+    item_id: str,
+    data,
+    not_found_msg: str,
+    *,
+    published_status=None,
+    related_person_ids=None,
+    content_label: str = None
+):
+    """Universal update handler.
+    
+    Args:
+        published_status: If data.status matches this value and published_at is not set, set it now.
+        related_person_ids: If provided, update person links via linking_service.
+        content_label: Label for linking_service (e.g. "article", "news").
+    """
     db = await get_db()
     collection = getattr(db, collection_name)
     
@@ -1162,6 +1201,11 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
     # Use model_dump with exclude_unset=True to only include fields that were explicitly set
     update_data = {k: v for k, v in data.model_dump(exclude_unset=True).items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Auto-set published_at when status changes to published
+    if published_status and getattr(data, 'status', None) == published_status:
+        if not current_item.get("published_at"):
+            update_data["published_at"] = datetime.now(timezone.utc).isoformat()
     
     # Если primary_tag не задан в обновлении, но его нет в текущем документе, устанавливаем по умолчанию
     if hasattr(data, 'primary_tag') and 'primary_tag' not in update_data:
@@ -1225,6 +1269,10 @@ async def update_content(collection_name: str, item_id: str, data, not_found_msg
     if hasattr(data, 'primary_tag') and final_new_primary_tag != old_primary_tag:
         # Обновляем теги везде, где они используются
         await update_tags_everywhere(db, old_primary_tag, final_new_primary_tag)
+    
+    # Update person links if provided
+    if related_person_ids is not None and content_label:
+        await linking_service.update_person_links(content_label, item_id, related_person_ids)
     
     return {"id": item_id, "updated": True}
 
@@ -1643,72 +1691,55 @@ async def search_content(
     
     types_list = [t.strip() for t in types.split(',')] if types else ['person', 'team', 'show', 'kvn']
     
+    # Config table: type → (collection, search_fields, title_fields, url_builder)
+    search_configs = {
+        'person': {
+            'collection': db.people,
+            'search_fields': ["title", "full_name", "slug"],
+            'projection': {"title": 1, "full_name": 1, "slug": 1},
+            'title_fn': lambda d: d.get("full_name") or d.get("title"),
+            'url_fn': lambda d: f"/people/{d.get('slug')}",
+        },
+        'team': {
+            'collection': db.teams,
+            'search_fields': ["name", "title", "slug"],
+            'projection': {"name": 1, "title": 1, "slug": 1},
+            'title_fn': lambda d: d.get("name") or d.get("title"),
+            'url_fn': lambda d: f"/kvn/teams/{d.get('slug')}",
+        },
+        'show': {
+            'collection': db.shows,
+            'search_fields': ["name", "title", "slug"],
+            'projection': {"name": 1, "title": 1, "slug": 1},
+            'title_fn': lambda d: d.get("name") or d.get("title"),
+            'url_fn': lambda d: f"/shows/{d.get('slug')}",
+        },
+        'kvn': {
+            'collection': db.kvn,
+            'search_fields': ["name", "title", "slug", "full_path"],
+            'projection': {"name": 1, "title": 1, "slug": 1, "full_path": 1},
+            'title_fn': lambda d: d.get("name") or d.get("title"),
+            'url_fn': lambda d: (
+                f"/{(d.get('full_path') or d.get('slug', '')).lstrip('/')}"
+                if d.get('full_path') else f"/kvn/{d.get('slug')}"
+            ),
+        },
+    }
+    
     results = []
-    
-    if 'person' in types_list:
-        async for doc in db.people.find({
-            "$or": [
-                {"title": {"$regex": query, "$options": "i"}},
-                {"full_name": {"$regex": query, "$options": "i"}},
-                {"slug": {"$regex": query, "$options": "i"}}
-            ]
-        }, {"title": 1, "full_name": 1, "slug": 1}).limit(limit):
+    for content_type in types_list:
+        cfg = search_configs.get(content_type)
+        if not cfg:
+            continue
+        
+        mongo_query = {"$or": [{f: {"$regex": query, "$options": "i"}} for f in cfg['search_fields']]}
+        async for doc in cfg['collection'].find(mongo_query, cfg['projection']).limit(limit):
             results.append({
-                "type": "person",
+                "type": content_type,
                 "id": str(doc["_id"]),
                 "slug": doc.get("slug"),
-                "title": doc.get("full_name") or doc.get("title"),
-                "url": f"/people/{doc.get('slug')}"
-            })
-    
-    if 'team' in types_list:
-        async for doc in db.teams.find({
-            "$or": [
-                {"name": {"$regex": query, "$options": "i"}},
-                {"title": {"$regex": query, "$options": "i"}},
-                {"slug": {"$regex": query, "$options": "i"}}
-            ]
-        }, {"name": 1, "title": 1, "slug": 1}).limit(limit):
-            results.append({
-                "type": "team",
-                "id": str(doc["_id"]),
-                "slug": doc.get("slug"),
-                "title": doc.get("name") or doc.get("title"),
-                "url": f"/kvn/teams/{doc.get('slug')}"
-            })
-    
-    if 'show' in types_list:
-        async for doc in db.shows.find({
-            "$or": [
-                {"name": {"$regex": query, "$options": "i"}},
-                {"title": {"$regex": query, "$options": "i"}},
-                {"slug": {"$regex": query, "$options": "i"}}
-            ]
-        }, {"name": 1, "title": 1, "slug": 1}).limit(limit):
-            results.append({
-                "type": "show",
-                "id": str(doc["_id"]),
-                "slug": doc.get("slug"),
-                "title": doc.get("name") or doc.get("title"),
-                "url": f"/shows/{doc.get('slug')}"
-            })
-    
-    if 'kvn' in types_list:
-        async for doc in db.kvn.find({
-            "$or": [
-                {"name": {"$regex": query, "$options": "i"}},
-                {"title": {"$regex": query, "$options": "i"}},
-                {"slug": {"$regex": query, "$options": "i"}},
-                {"full_path": {"$regex": query, "$options": "i"}}
-            ]
-        }, {"name": 1, "title": 1, "slug": 1, "full_path": 1}).limit(limit):
-            full_path = doc.get("full_path") or doc.get("slug")
-            results.append({
-                "type": "kvn",
-                "id": str(doc["_id"]),
-                "slug": doc.get("slug"),
-                "title": doc.get("name") or doc.get("title"),
-                "url": f"/{full_path.lstrip('/')}" if full_path else f"/kvn/{doc.get('slug')}"
+                "title": cfg['title_fn'](doc),
+                "url": cfg['url_fn'](doc),
             })
     
     return {"results": results[:limit]}
@@ -3746,25 +3777,12 @@ async def create_article(data: ArticleCreate):
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         featured=data.featured, related_person_ids=data.related_person_ids or []
     )
-    
-    doc = article.model_dump(by_alias=True)
-    doc["created_at"] = doc["created_at"].isoformat()
-    doc["updated_at"] = doc["updated_at"].isoformat()
-    
-    if data.status == ContentStatus.PUBLISHED:
-        doc["published_at"] = datetime.now(timezone.utc).isoformat()
-    
-    if data.tags:
-        await tag_service.sync_tags(data.tags)
-    
-    db = await get_db()
-    await db.articles.insert_one(doc)
-    
-    # Update person links
-    if data.related_person_ids:
-        await linking_service.update_person_links("article", doc["_id"], data.related_person_ids)
-    
-    return {"id": doc["_id"], "slug": doc["slug"]}
+    return await create_content(
+        "articles", article, data.tags,
+        published_status=ContentStatus.PUBLISHED,
+        related_person_ids=data.related_person_ids,
+        content_label="article"
+    )
 
 
 @router.get("/articles", response_model=dict)
@@ -3791,30 +3809,12 @@ async def get_article(id_or_slug: str):
 @router.put("/articles/{id}", response_model=dict)
 async def update_article(id: str, data: ArticleUpdate):
     """Update article"""
-    db = await get_db()
-    
-    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
-    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-    
-    if data.tags:
-        await tag_service.sync_tags(data.tags)
-    
-    # Set published_at if status changed to published
-    if data.status == ContentStatus.PUBLISHED:
-        article = await db.articles.find_one({"_id": id})
-        if article and not article.get("published_at"):
-            update_data["published_at"] = datetime.now(timezone.utc).isoformat()
-    
-    result = await db.articles.update_one({"_id": id}, {"$set": update_data})
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Article not found")
-    
-    # Update person links if related_person_ids changed
-    if data.related_person_ids is not None:
-        await linking_service.update_person_links("article", id, data.related_person_ids)
-    
-    return {"id": id, "updated": True}
+    return await update_content(
+        "articles", id, data, "Article not found",
+        published_status=ContentStatus.PUBLISHED,
+        related_person_ids=data.related_person_ids,
+        content_label="article"
+    )
 
 
 @router.delete("/articles/{id}")
@@ -3836,25 +3836,12 @@ async def create_news(data: NewsCreate):
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         related_person_ids=data.related_person_ids or []
     )
-    
-    doc = news.model_dump(by_alias=True)
-    doc["created_at"] = doc["created_at"].isoformat()
-    doc["updated_at"] = doc["updated_at"].isoformat()
-    
-    if data.status == ContentStatus.PUBLISHED:
-        doc["published_at"] = datetime.now(timezone.utc).isoformat()
-    
-    if data.tags:
-        await tag_service.sync_tags(data.tags)
-    
-    db = await get_db()
-    await db.news.insert_one(doc)
-    
-    # Update person links
-    if data.related_person_ids:
-        await linking_service.update_person_links("news", doc["_id"], data.related_person_ids)
-    
-    return {"id": doc["_id"], "slug": doc["slug"]}
+    return await create_content(
+        "news", news, data.tags,
+        published_status=ContentStatus.PUBLISHED,
+        related_person_ids=data.related_person_ids,
+        content_label="news"
+    )
 
 
 @router.get("/news", response_model=dict)
@@ -3879,13 +3866,12 @@ async def get_news_item(id_or_slug: str):
 @router.put("/news/{id}", response_model=dict)
 async def update_news(id: str, data: NewsUpdate):
     """Update news"""
-    result = await update_content("news", id, data, "News not found")
-    
-    # Update person links if related_person_ids changed
-    if data.related_person_ids is not None:
-        await linking_service.update_person_links("news", id, data.related_person_ids)
-    
-    return result
+    return await update_content(
+        "news", id, data, "News not found",
+        published_status=ContentStatus.PUBLISHED,
+        related_person_ids=data.related_person_ids,
+        content_label="news"
+    )
 
 
 @router.delete("/news/{id}")
