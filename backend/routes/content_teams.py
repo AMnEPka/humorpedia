@@ -7,7 +7,8 @@ import re
 import uuid
 import logging
 
-from models.base import ContentStatus, ContentType, ModuleType, PageModule
+from models.base import ContentStatus, ContentType
+from models.modules import ModuleType, PageModule
 from models.content import Team, TeamCreate, TeamUpdate
 from utils.database import get_db
 from utils.slugify import generate_slug

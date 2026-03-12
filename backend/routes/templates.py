@@ -381,7 +381,7 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
 
     # We must iterate because we also want to keep per-team intro (name/city) consistent
     # and ensure stable order via the existing scaffold normalizer.
-    from routes.content import (
+    from routes.content_teams import (
         _ensure_team_scaffold_fields,
         _team_placeholder_logo,
         _pick_team_logo,
@@ -416,7 +416,7 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
         team_slug = team.get("slug")
         if team.get("team_type") == "kvn" and team_slug:
             try:
-                from routes.content import _update_team_games_module
+                from routes.content_teams import _update_team_games_module
                 new_modules = await _update_team_games_module(team_slug, new_modules, db)
             except Exception as e:
                 import logging

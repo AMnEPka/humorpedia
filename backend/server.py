@@ -244,7 +244,17 @@ async def health_check():
 
 
 # Import and include routers
-from routes.content import router as content_router
+# Content routes (split from monolithic content.py)
+from routes.content_people import router as content_people_router
+from routes.content_teams import router as content_teams_router
+from routes.content_shows import router as content_shows_router
+from routes.content_kvn import router as content_kvn_router
+from routes.content_articles import router as content_articles_router
+from routes.content_news import router as content_news_router
+from routes.content_quizzes import router as content_quizzes_router
+from routes.content_wiki import router as content_wiki_router
+from routes.content_search import router as content_search_router
+
 from routes.auth import router as auth_router
 from routes.users import router as users_router
 from routes.tags import router as tags_router
@@ -255,7 +265,17 @@ from routes.sections import router as sections_router
 from routes.mongo_admin import router as mongo_admin_router
 from routes.cities import router as cities_router
 
-api_router.include_router(content_router)
+# Content routes (order matters — specific routes before generic catch-alls)
+api_router.include_router(content_articles_router)
+api_router.include_router(content_news_router)
+api_router.include_router(content_quizzes_router)
+api_router.include_router(content_wiki_router)
+api_router.include_router(content_people_router)
+api_router.include_router(content_teams_router)
+api_router.include_router(content_shows_router)
+api_router.include_router(content_kvn_router)
+api_router.include_router(content_search_router)
+
 api_router.include_router(auth_router)
 api_router.include_router(users_router)
 api_router.include_router(tags_router)
