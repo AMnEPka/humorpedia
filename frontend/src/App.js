@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { usePageTitle } from '@/utils/pageTitle';
 import { AuthProvider, useAuth } from './admin/hooks/useAuth';
 import AdminLayout from './admin/components/AdminLayout';
@@ -69,6 +70,49 @@ import JuryStatsPage from './public/pages/JuryStatsPage';
 
 import { Loader2 } from 'lucide-react';
 import '@/App.css';
+
+function ScrollRestoration() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const isFirstRenderRef = useRef(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const storageKey = `scroll:${location.key || location.pathname || ''}`;
+
+    // На самом первом рендере не трогаем скролл — даём браузеру самому
+    // восстановить позицию при F5/перезагрузке.
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+    } else if (navigationType === 'POP') {
+      // Назад / вперёд по истории — восстанавливаем сохранённую позицию
+      const stored = sessionStorage.getItem(storageKey);
+      const y = stored !== null ? Number(stored) : 0;
+      window.scrollTo(0, Number.isFinite(y) ? y : 0);
+    } else {
+      // Обычные переходы по ссылкам — скроллим к началу страницы
+      window.scrollTo(0, 0);
+    }
+
+    const saveScroll = () => {
+      try {
+        const y = window.scrollY ?? window.pageYOffset ?? 0;
+        sessionStorage.setItem(storageKey, String(y));
+      } catch {
+        // Игнорируем ошибки доступа к sessionStorage (например, в приватном режиме)
+      }
+    };
+
+    window.addEventListener('beforeunload', saveScroll);
+    return () => {
+      saveScroll();
+      window.removeEventListener('beforeunload', saveScroll);
+    };
+  }, [location, navigationType]);
+
+  return null;
+}
 
 function WithTitle({ title, children }) {
   usePageTitle(title);
@@ -221,6 +265,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ScrollRestoration />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
