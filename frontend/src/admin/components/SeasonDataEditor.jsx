@@ -1475,10 +1475,12 @@ function GameContent({
                 }
               });
               
-              const expectedRows = game.teams && game.teams.length > 0 ? game.teams.length : dataRows.length;
+              // Логика ошибок в превью должна соответствовать applyTableData:
+              // - ошибка, если не удалось определить конкурсы (contests.length === 0),
+              // - или если в режиме обновления не найден хотя бы один из существующих конкурсов.
               const hasError =
-                (game.teams && game.teams.length > 0 && dataRows.length !== expectedRows) ||
-                contests.length === 0;
+                contests.length === 0 ||
+                (existingContests.length > 0 && contestColumnMap.size !== contests.length);
               
               return (
                 <div className="space-y-2">
