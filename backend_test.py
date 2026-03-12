@@ -1050,6 +1050,664 @@ def test_crud_generalization():
     return results
 
 
+def test_content_module_split():
+    """Test complete content.py module split verification - ALL CRUD operations for each content type"""
+    results = TestResults()
+    
+    # Get auth token first
+    access_token = None
+    try:
+        response = requests.post(f"{API_BASE}/auth/login", json={
+            "email": "admin@humorpedia.local", 
+            "password": "admin"
+        }, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            access_token = data.get('access_token')
+            results.success("Authentication for Content Module Split tests")
+        else:
+            results.fail("Authentication for Content Module Split tests", f"Status {response.status_code}")
+            return results
+    except Exception as e:
+        results.fail("Authentication for Content Module Split tests", str(e))
+        return results
+    
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Storage for created content IDs for cleanup
+    created_items = {}
+    
+    # === ARTICLES TESTS ===
+    print("  Testing ARTICLES (content_articles.py)...")
+    
+    # 1. POST /api/content/articles
+    try:
+        article_data = {
+            "title": "Test Art",
+            "slug": "test-art-split",
+            "excerpt": "Test",
+            "modules": [],
+            "tags": ["test"],
+            "status": "published"
+        }
+        response = requests.post(f"{API_BASE}/content/articles", json=article_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("1. POST /api/content/articles → creates article")
+            if 'id' in data and 'slug' in data:
+                results.success("   Returns id+slug")
+                created_items['article'] = data['id']
+            else:
+                results.fail("   Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("1. POST /api/content/articles → creates article", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("1. POST /api/content/articles → creates article", str(e))
+    
+    # 2. GET /api/content/articles/{id} → published_at set
+    if created_items.get('article'):
+        try:
+            response = requests.get(f"{API_BASE}/content/articles/{created_items['article']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("2. GET /api/content/articles/{id} → retrieves article")
+                if data.get('published_at'):
+                    results.success("   Has published_at set for published status")
+                else:
+                    results.fail("   Has published_at set for published status", "published_at is missing")
+            else:
+                results.fail("2. GET /api/content/articles/{id} → retrieves article", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("2. GET /api/content/articles/{id} → retrieves article", str(e))
+    
+    # 3. PUT /api/content/articles/{id} → updated:true
+    if created_items.get('article'):
+        try:
+            update_data = {"title": "Updated"}
+            response = requests.put(f"{API_BASE}/content/articles/{created_items['article']}", json=update_data, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("3. PUT /api/content/articles/{id} → updates article")
+                if data.get('updated') is True:
+                    results.success("   Returns updated:true")
+                else:
+                    results.fail("   Returns updated:true", f"Response: {data}")
+            else:
+                results.fail("3. PUT /api/content/articles/{id} → updates article", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("3. PUT /api/content/articles/{id} → updates article", str(e))
+    
+    # 4. GET /api/content/articles?limit=5 → items array
+    try:
+        response = requests.get(f"{API_BASE}/content/articles?limit=5", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("4. GET /api/content/articles?limit=5 → list articles")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("   Returns items array")
+            else:
+                results.fail("   Returns items array", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("4. GET /api/content/articles?limit=5 → list articles", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("4. GET /api/content/articles?limit=5 → list articles", str(e))
+    
+    # 5. DELETE /api/content/articles/{id} → deleted:true
+    if created_items.get('article'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/articles/{created_items['article']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("5. DELETE /api/content/articles/{id} → deletes article")
+                if data.get('deleted') is True:
+                    results.success("   Returns deleted:true")
+                else:
+                    results.fail("   Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("5. DELETE /api/content/articles/{id} → deletes article", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("5. DELETE /api/content/articles/{id} → deletes article", str(e))
+    
+    # === NEWS TESTS (6-10) ===
+    print("  Testing NEWS (content_news.py)...")
+    
+    # 6. POST /api/content/news
+    try:
+        news_data = {
+            "title": "Test News",
+            "slug": "test-news-split",
+            "excerpt": "Test",
+            "modules": [],
+            "tags": ["test"],
+            "status": "published"
+        }
+        response = requests.post(f"{API_BASE}/content/news", json=news_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("6. POST /api/content/news → creates news")
+            if 'id' in data and 'slug' in data:
+                results.success("   Returns id+slug")
+                created_items['news'] = data['id']
+            else:
+                results.fail("   Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("6. POST /api/content/news → creates news", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("6. POST /api/content/news → creates news", str(e))
+    
+    # 7. GET /api/content/news/{id}
+    if created_items.get('news'):
+        try:
+            response = requests.get(f"{API_BASE}/content/news/{created_items['news']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("7. GET /api/content/news/{id} → retrieves news")
+                if data.get('published_at'):
+                    results.success("   Has published_at set for published status")
+                else:
+                    results.fail("   Has published_at set for published status", "published_at is missing")
+            else:
+                results.fail("7. GET /api/content/news/{id} → retrieves news", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("7. GET /api/content/news/{id} → retrieves news", str(e))
+    
+    # 8. PUT /api/content/news/{id}
+    if created_items.get('news'):
+        try:
+            update_data = {"title": "Updated"}
+            response = requests.put(f"{API_BASE}/content/news/{created_items['news']}", json=update_data, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("8. PUT /api/content/news/{id} → updates news")
+                if data.get('updated') is True:
+                    results.success("   Returns updated:true")
+                else:
+                    results.fail("   Returns updated:true", f"Response: {data}")
+            else:
+                results.fail("8. PUT /api/content/news/{id} → updates news", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("8. PUT /api/content/news/{id} → updates news", str(e))
+    
+    # 9. GET /api/content/news?limit=5
+    try:
+        response = requests.get(f"{API_BASE}/content/news?limit=5", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("9. GET /api/content/news?limit=5 → list news")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("   Returns items array")
+            else:
+                results.fail("   Returns items array", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("9. GET /api/content/news?limit=5 → list news", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("9. GET /api/content/news?limit=5 → list news", str(e))
+    
+    # 10. DELETE /api/content/news/{id}
+    if created_items.get('news'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/news/{created_items['news']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("10. DELETE /api/content/news/{id} → deletes news")
+                if data.get('deleted') is True:
+                    results.success("    Returns deleted:true")
+                else:
+                    results.fail("    Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("10. DELETE /api/content/news/{id} → deletes news", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("10. DELETE /api/content/news/{id} → deletes news", str(e))
+    
+    # === PEOPLE TESTS (11-16) ===
+    print("  Testing PEOPLE (content_people.py)...")
+    
+    # 11. POST /api/content/people
+    try:
+        people_data = {
+            "title": "Test Person",
+            "slug": "test-person-split",
+            "full_name": "Person Test",
+            "modules": [],
+            "tags": ["test"],
+            "status": "draft"
+        }
+        response = requests.post(f"{API_BASE}/content/people", json=people_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("11. POST /api/content/people → creates person")
+            if 'id' in data and 'slug' in data:
+                results.success("    Returns id+slug")
+                created_items['person'] = data['id']
+            else:
+                results.fail("    Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("11. POST /api/content/people → creates person", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("11. POST /api/content/people → creates person", str(e))
+    
+    # 12. GET /api/content/people/{id}
+    if created_items.get('person'):
+        try:
+            response = requests.get(f"{API_BASE}/content/people/{created_items['person']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("12. GET /api/content/people/{id} → retrieves person")
+            else:
+                results.fail("12. GET /api/content/people/{id} → retrieves person", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("12. GET /api/content/people/{id} → retrieves person", str(e))
+    
+    # 13. PUT /api/content/people/{id}
+    if created_items.get('person'):
+        try:
+            update_data = {"title": "Updated Person"}
+            response = requests.put(f"{API_BASE}/content/people/{created_items['person']}", json=update_data, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("13. PUT /api/content/people/{id} → updates person")
+                if data.get('updated') is True:
+                    results.success("    Returns updated:true")
+                else:
+                    results.fail("    Returns updated:true", f"Response: {data}")
+            else:
+                results.fail("13. PUT /api/content/people/{id} → updates person", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("13. PUT /api/content/people/{id} → updates person", str(e))
+    
+    # 14. GET /api/content/people?limit=5
+    try:
+        response = requests.get(f"{API_BASE}/content/people?limit=5", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("14. GET /api/content/people?limit=5 → list people")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("    Returns items array")
+            else:
+                results.fail("    Returns items array", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("14. GET /api/content/people?limit=5 → list people", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("14. GET /api/content/people?limit=5 → list people", str(e))
+    
+    # 15. GET /api/content/people/search?q=test
+    try:
+        response = requests.get(f"{API_BASE}/content/people/search?q=test", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("15. GET /api/content/people/search?q=test → search people")
+            if isinstance(data, list):
+                results.success("    Returns array")
+            else:
+                results.fail("    Returns array", f"Response type: {type(data)}")
+        else:
+            results.fail("15. GET /api/content/people/search?q=test → search people", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("15. GET /api/content/people/search?q=test → search people", str(e))
+    
+    # 16. DELETE /api/content/people/{id}
+    if created_items.get('person'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/people/{created_items['person']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("16. DELETE /api/content/people/{id} → deletes person")
+                if data.get('deleted') is True:
+                    results.success("    Returns deleted:true")
+                else:
+                    results.fail("    Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("16. DELETE /api/content/people/{id} → deletes person", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("16. DELETE /api/content/people/{id} → deletes person", str(e))
+    
+    # === TEAMS TESTS (17-20) ===
+    print("  Testing TEAMS (content_teams.py)...")
+    
+    # 17. POST /api/content/teams
+    try:
+        team_data = {
+            "title": "Test Team",
+            "slug": "test-team-split",
+            "name": "Test Team",
+            "modules": [],
+            "tags": ["test"],
+            "status": "draft"
+        }
+        response = requests.post(f"{API_BASE}/content/teams", json=team_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("17. POST /api/content/teams → creates team")
+            if 'id' in data and 'slug' in data:
+                results.success("    Returns id+slug")
+                created_items['team'] = data['id']
+            else:
+                results.fail("    Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("17. POST /api/content/teams → creates team", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("17. POST /api/content/teams → creates team", str(e))
+    
+    # 18. GET /api/content/teams/{id}
+    if created_items.get('team'):
+        try:
+            response = requests.get(f"{API_BASE}/content/teams/{created_items['team']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("18. GET /api/content/teams/{id} → retrieves team")
+            else:
+                results.fail("18. GET /api/content/teams/{id} → retrieves team", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("18. GET /api/content/teams/{id} → retrieves team", str(e))
+    
+    # 19. GET /api/content/teams?limit=5
+    try:
+        response = requests.get(f"{API_BASE}/content/teams?limit=5", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("19. GET /api/content/teams?limit=5 → list teams")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("    Returns items array")
+            else:
+                results.fail("    Returns items array", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("19. GET /api/content/teams?limit=5 → list teams", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("19. GET /api/content/teams?limit=5 → list teams", str(e))
+    
+    # 20. DELETE /api/content/teams/{id}
+    if created_items.get('team'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/teams/{created_items['team']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("20. DELETE /api/content/teams/{id} → deletes team")
+                if data.get('deleted') is True:
+                    results.success("    Returns deleted:true")
+                else:
+                    results.fail("    Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("20. DELETE /api/content/teams/{id} → deletes team", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("20. DELETE /api/content/teams/{id} → deletes team", str(e))
+    
+    # === SHOWS TESTS (21-24) ===
+    print("  Testing SHOWS (content_shows.py)...")
+    
+    # 21. POST /api/content/shows
+    try:
+        show_data = {
+            "title": "Test Show",
+            "slug": "test-show-split",
+            "name": "Show Test",
+            "modules": [],
+            "tags": ["test"],
+            "status": "draft"
+        }
+        response = requests.post(f"{API_BASE}/content/shows", json=show_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("21. POST /api/content/shows → creates show")
+            if 'id' in data and 'slug' in data:
+                results.success("    Returns id+slug")
+                created_items['show'] = data['id']
+            else:
+                results.fail("    Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("21. POST /api/content/shows → creates show", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("21. POST /api/content/shows → creates show", str(e))
+    
+    # 22. GET /api/content/shows/{id}
+    if created_items.get('show'):
+        try:
+            response = requests.get(f"{API_BASE}/content/shows/{created_items['show']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("22. GET /api/content/shows/{id} → retrieves show")
+            else:
+                results.fail("22. GET /api/content/shows/{id} → retrieves show", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("22. GET /api/content/shows/{id} → retrieves show", str(e))
+    
+    # 23. GET /api/content/shows?limit=5
+    try:
+        response = requests.get(f"{API_BASE}/content/shows?limit=5", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("23. GET /api/content/shows?limit=5 → list shows")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("    Returns items array")
+            else:
+                results.fail("    Returns items array", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("23. GET /api/content/shows?limit=5 → list shows", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("23. GET /api/content/shows?limit=5 → list shows", str(e))
+    
+    # 24. DELETE /api/content/shows/{id}
+    if created_items.get('show'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/shows/{created_items['show']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("24. DELETE /api/content/shows/{id} → deletes show")
+                if data.get('deleted') is True:
+                    results.success("    Returns deleted:true")
+                else:
+                    results.fail("    Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("24. DELETE /api/content/shows/{id} → deletes show", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("24. DELETE /api/content/shows/{id} → deletes show", str(e))
+    
+    # === QUIZZES TESTS (25-27) ===
+    print("  Testing QUIZZES (content_quizzes.py)...")
+    
+    # 25. POST /api/content/quizzes
+    try:
+        quiz_data = {
+            "title": "Test Quiz",
+            "slug": "test-quiz-split",
+            "modules": [],
+            "tags": ["test"],
+            "status": "draft"
+        }
+        response = requests.post(f"{API_BASE}/content/quizzes", json=quiz_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("25. POST /api/content/quizzes → creates quiz")
+            if 'id' in data and 'slug' in data:
+                results.success("    Returns id+slug")
+                created_items['quiz'] = data['id']
+            else:
+                results.fail("    Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("25. POST /api/content/quizzes → creates quiz", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("25. POST /api/content/quizzes → creates quiz", str(e))
+    
+    # 26. GET /api/content/quizzes/{id}
+    if created_items.get('quiz'):
+        try:
+            response = requests.get(f"{API_BASE}/content/quizzes/{created_items['quiz']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("26. GET /api/content/quizzes/{id} → retrieves quiz")
+            else:
+                results.fail("26. GET /api/content/quizzes/{id} → retrieves quiz", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("26. GET /api/content/quizzes/{id} → retrieves quiz", str(e))
+    
+    # 27. DELETE /api/content/quizzes/{id}
+    if created_items.get('quiz'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/quizzes/{created_items['quiz']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("27. DELETE /api/content/quizzes/{id} → deletes quiz")
+                if data.get('deleted') is True:
+                    results.success("    Returns deleted:true")
+                else:
+                    results.fail("    Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("27. DELETE /api/content/quizzes/{id} → deletes quiz", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("27. DELETE /api/content/quizzes/{id} → deletes quiz", str(e))
+    
+    # === WIKI TESTS (28-30) ===
+    print("  Testing WIKI (content_wiki.py)...")
+    
+    # 28. POST /api/content/wiki
+    try:
+        wiki_data = {
+            "title": "Test Wiki",
+            "slug": "test-wiki-split",
+            "modules": [],
+            "tags": ["test"],
+            "status": "draft"
+        }
+        response = requests.post(f"{API_BASE}/content/wiki", json=wiki_data, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("28. POST /api/content/wiki → creates wiki")
+            if 'id' in data and 'slug' in data:
+                results.success("    Returns id+slug")
+                created_items['wiki'] = data['id']
+            else:
+                results.fail("    Returns id+slug", f"Response: {data}")
+        else:
+            results.fail("28. POST /api/content/wiki → creates wiki", f"Status {response.status_code}: {response.text}")
+    except Exception as e:
+        results.fail("28. POST /api/content/wiki → creates wiki", str(e))
+    
+    # 29. GET /api/content/wiki/{id}
+    if created_items.get('wiki'):
+        try:
+            response = requests.get(f"{API_BASE}/content/wiki/{created_items['wiki']}", timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("29. GET /api/content/wiki/{id} → retrieves wiki")
+            else:
+                results.fail("29. GET /api/content/wiki/{id} → retrieves wiki", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("29. GET /api/content/wiki/{id} → retrieves wiki", str(e))
+    
+    # 30. DELETE /api/content/wiki/{id}
+    if created_items.get('wiki'):
+        try:
+            response = requests.delete(f"{API_BASE}/content/wiki/{created_items['wiki']}", headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results.success("30. DELETE /api/content/wiki/{id} → deletes wiki")
+                if data.get('deleted') is True:
+                    results.success("    Returns deleted:true")
+                else:
+                    results.fail("    Returns deleted:true", f"Response: {data}")
+            else:
+                results.fail("30. DELETE /api/content/wiki/{id} → deletes wiki", f"Status {response.status_code}")
+        except Exception as e:
+            results.fail("30. DELETE /api/content/wiki/{id} → deletes wiki", str(e))
+    
+    # === SEARCH TESTS (31-34) ===
+    print("  Testing SEARCH (content_search.py)...")
+    
+    # 31. GET /api/content/search?q=test
+    try:
+        response = requests.get(f"{API_BASE}/content/search?q=test", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("31. GET /api/content/search?q=test → search all")
+            if isinstance(data, dict):
+                results.success("    Returns results dict")
+            else:
+                results.fail("    Returns results dict", f"Response type: {type(data)}")
+        else:
+            results.fail("31. GET /api/content/search?q=test → search all", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("31. GET /api/content/search?q=test → search all", str(e))
+    
+    # 32. GET /api/content/search/autocomplete?q=test
+    try:
+        response = requests.get(f"{API_BASE}/content/search/autocomplete?q=test", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("32. GET /api/content/search/autocomplete?q=test → autocomplete")
+            if isinstance(data, list):
+                results.success("    Returns array")
+            else:
+                results.fail("    Returns array", f"Response type: {type(data)}")
+        else:
+            results.fail("32. GET /api/content/search/autocomplete?q=test → autocomplete", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("32. GET /api/content/search/autocomplete?q=test → autocomplete", str(e))
+    
+    # 33. GET /api/content/content/search?query=test
+    try:
+        response = requests.get(f"{API_BASE}/content/content/search?query=test", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("33. GET /api/content/content/search?query=test → content search")
+            if 'results' in data:
+                results.success("    Returns results")
+            else:
+                results.fail("    Returns results", f"Response structure: {list(data.keys())}")
+        else:
+            results.fail("33. GET /api/content/content/search?query=test → content search", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("33. GET /api/content/content/search?query=test → content search", str(e))
+    
+    # 34. GET /api/content/search/by-tag/test
+    try:
+        response = requests.get(f"{API_BASE}/content/search/by-tag/test", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("34. GET /api/content/search/by-tag/test → search by tag")
+            if isinstance(data, dict) and 'results' in data:
+                results.success("    Returns results dict")
+            else:
+                results.fail("    Returns results dict", f"Response: {data}")
+        else:
+            results.fail("34. GET /api/content/search/by-tag/test → search by tag", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("34. GET /api/content/search/by-tag/test → search by tag", str(e))
+    
+    # === HIERARCHY TESTS (35-36) ===
+    print("  Testing HIERARCHY endpoints...")
+    
+    # 35. GET /api/content/shows-hierarchy
+    try:
+        response = requests.get(f"{API_BASE}/content/shows-hierarchy", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("35. GET /api/content/shows-hierarchy → hierarchy")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("    Returns items array")
+            else:
+                results.fail("    Returns items array", f"Response: {data}")
+        else:
+            results.fail("35. GET /api/content/shows-hierarchy → hierarchy", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("35. GET /api/content/shows-hierarchy → hierarchy", str(e))
+    
+    # 36. GET /api/content/kvn-hierarchy
+    try:
+        response = requests.get(f"{API_BASE}/content/kvn-hierarchy", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results.success("36. GET /api/content/kvn-hierarchy → kvn hierarchy")
+            if 'items' in data and isinstance(data['items'], list):
+                results.success("    Returns items array")
+            else:
+                results.fail("    Returns items array", f"Response: {data}")
+        else:
+            results.fail("36. GET /api/content/kvn-hierarchy → kvn hierarchy", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("36. GET /api/content/kvn-hierarchy → kvn hierarchy", str(e))
+    
+    return results
+
+
 def main():
     """Run all tests"""
     print("🧪 Starting Backend API Tests for Humorpedia")
@@ -1059,6 +1717,7 @@ def main():
     
     # Run test suites
     test_suites = [
+        ("Content Module Split Full Verification", test_content_module_split),
         ("CRUD Generalization", test_crud_generalization),
         ("MongoDB Unification Smoke Test", test_mongodb_unification_smoke),
         ("API Health", test_api_health),
