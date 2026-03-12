@@ -34,7 +34,18 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
-      window.location.href = '/admin/login';
+      // IMPORTANT:
+      // This axios instance is also used by AuthProvider on app boot.
+      // If token expires while user is on a public page, we must NOT force-redirect them to /admin/login.
+      // Only redirect when the user is currently inside the admin area.
+      if (typeof window !== 'undefined') {
+        const path = window.location?.pathname || '';
+        const isAdminArea = path === '/admin' || path.startsWith('/admin/');
+        const isLoginPage = path === '/admin/login';
+        if (isAdminArea && !isLoginPage) {
+          window.location.assign('/admin/login');
+        }
+      }
     }
     return Promise.reject(error);
   }
