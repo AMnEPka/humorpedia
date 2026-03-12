@@ -21,7 +21,8 @@ from typing import Tuple
 # Константы
 CONTAINER_NAME = "humorpedia-backend"
 SOURCE_DIR = Path("frontend/public/media/imported/images")
-VOLUME_MOUNT_PATH = "/app/frontend/public/media/imported/images"
+# Внутри контейнера backend volume imported_images_volume монтируется в /app/media/imported/images
+VOLUME_MOUNT_PATH = "/app/media/imported/images"
 
 
 def run_command(cmd: list, check: bool = True) -> Tuple[int, str, str]:

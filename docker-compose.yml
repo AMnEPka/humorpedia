@@ -51,7 +51,7 @@ services:
       - ./backups:/app/backups
       # Docker volume for imported images (accessible via /media/imported/images/*)
       # Read-write access for uploading files through web interface
-      - imported_images_volume:/app/frontend/public/media/imported/images
+      - imported_images_volume:/app/media/imported/images
       # Docker volume with site images (accessible via /images/*)
       # Read-write access for uploading files through web interface
       - images_volume:/app/images
