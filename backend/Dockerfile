@@ -31,7 +31,12 @@ EXPOSE 8001
 
 # Use bash as entrypoint so we can normalize CRLF -> LF even when /app is bind-mounted from Windows.
 # (When ./backend is mounted into /app, the COPY+dos2unix layer is shadowed by the host file.)
-# NOTE: do not include a trailing `--` element in this JSON array; it would be passed as
-# the first positional argument to start.sh and later executed as a command by `exec "$@"`.
-ENTRYPOINT ["/bin/bash", "-lc", "dos2unix /app/start.sh >/dev/null 2>&1 || true; chmod +x /app/start.sh >/dev/null 2>&1 || true; exec /app/start.sh \"$@\""]
+# NOTE:
+# - Do NOT include a trailing `--` element in this JSON array; it would be passed as
+#   the first positional argument to start.sh and later executed as a command by `exec "$@"`.
+# - When using `bash -lc '... "$@"'` the first argument from Docker's CMD becomes `$0`
+#   inside the `-c` script and is NOT part of `$@`. We therefore explicitly forward both
+#   `$0` and `$@` to start.sh so that it receives the full original command line
+#   (e.g. `uvicorn server:app --host ...`) and can `exec "$@"` correctly.
+ENTRYPOINT ["/bin/bash", "-lc", "dos2unix /app/start.sh >/dev/null 2>&1 || true; chmod +x /app/start.sh >/dev/null 2>&1 || true; exec /app/start.sh \"$0\" \"$@\""]
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
