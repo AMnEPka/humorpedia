@@ -29,6 +29,7 @@ COPY . /app
 
 EXPOSE 8001
 
-# Use start script for automatic DB restoration
-ENTRYPOINT ["/bin/bash", "/app/start.sh"]
+# Use bash as entrypoint so we can normalize CRLF -> LF even when /app is bind-mounted from Windows.
+# (When ./backend is mounted into /app, the COPY+dos2unix layer is shadowed by the host file.)
+ENTRYPOINT ["/bin/bash", "-lc", "dos2unix /app/start.sh >/dev/null 2>&1 || true; chmod +x /app/start.sh >/dev/null 2>&1 || true; exec /app/start.sh \"$@\"", "--"]
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]

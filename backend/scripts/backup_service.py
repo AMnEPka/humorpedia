@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 import logging
+from urllib.parse import quote_plus
 
 # Настройка логирования
 logging.basicConfig(
@@ -23,11 +24,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://mongodb:27017')
+MONGO_URL = os.environ.get('MONGO_URL')
+MONGO_HOST = os.environ.get('MONGO_HOST', 'mongodb')
+MONGO_PORT = os.environ.get('MONGO_PORT', '27017')
+MONGO_USER = os.environ.get('MONGO_USER')
+MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
+MONGO_AUTH_SOURCE = os.environ.get('MONGO_AUTH_SOURCE', 'admin')
 DB_NAME = os.environ.get('DB_NAME', 'humorpedia')
 BACKUP_DIR = Path(os.environ.get('BACKUP_DIR', '/app/backups'))
 CHECK_INTERVAL = int(os.environ.get('BACKUP_CHECK_INTERVAL', 3600))  # Проверка каждые 3600 секунд (1 час)
 STATE_FILE = BACKUP_DIR / 'backup_state.json'
+
+def build_mongo_url():
+    if MONGO_URL:
+        return MONGO_URL
+    if MONGO_USER and MONGO_PASSWORD is not None:
+        return f"mongodb://{quote_plus(MONGO_USER)}:{quote_plus(MONGO_PASSWORD)}@{MONGO_HOST}:{MONGO_PORT}/?authSource={MONGO_AUTH_SOURCE}"
+    return f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 
 
 async def get_db_hash(db):
@@ -106,13 +119,8 @@ def create_backup():
         # Создаем директорию для дампа
         dump_dir.mkdir(parents=True, exist_ok=True)
         
-        # Извлекаем хост и порт из MONGO_URL
-        mongo_host = MONGO_URL.replace('mongodb://', '').split('/')[0]
-        if ':' in mongo_host:
-            host, port = mongo_host.split(':')
-        else:
-            host = mongo_host
-            port = '27017'
+        host = str(MONGO_HOST)
+        port = str(MONGO_PORT)
         
         logger.info(f"Создание дампа БД {DB_NAME} с хоста {host}:{port}...")
         
@@ -124,6 +132,11 @@ def create_backup():
             '--db', DB_NAME,
             '--out', str(dump_dir)
         ]
+
+        if MONGO_USER and MONGO_PASSWORD is not None:
+            cmd.extend(['--username', MONGO_USER])
+            cmd.extend(['--password', MONGO_PASSWORD])
+            cmd.extend(['--authenticationDatabase', MONGO_AUTH_SOURCE])
         
         result = subprocess.run(
             cmd,
@@ -183,7 +196,7 @@ async def check_and_backup():
     """Проверяет изменения в БД и создает бэкап при необходимости"""
     try:
         # Подключаемся к БД
-        client = AsyncIOMotorClient(MONGO_URL)
+        client = AsyncIOMotorClient(build_mongo_url())
         db = client[DB_NAME]
         
         # Получаем текущее состояние БД
@@ -225,7 +238,7 @@ async def check_and_backup():
 async def main():
     """Основной цикл сервиса бэкапа"""
     logger.info("Запуск сервиса автоматического бэкапа MongoDB")
-    logger.info(f"БД: {DB_NAME}, URL: {MONGO_URL}")
+    logger.info(f"БД: {DB_NAME}, host: {MONGO_HOST}:{MONGO_PORT}, authSource: {MONGO_AUTH_SOURCE}, auth: {'on' if MONGO_USER else 'off'}")
     logger.info(f"Интервал проверки: {CHECK_INTERVAL} секунд")
     logger.info(f"Директория бэкапов: {BACKUP_DIR}")
     
