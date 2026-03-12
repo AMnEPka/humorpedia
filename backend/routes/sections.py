@@ -84,7 +84,7 @@ async def check_circular_reference(section_id: str, new_parent_id: Optional[str]
 @router.post("/", response_model=dict)
 async def create_section(data: SectionCreate, request: Request):
     """Create a new section"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Check slug uniqueness at the same level
     if data.parent_id:
@@ -159,7 +159,7 @@ async def list_sections(
     search: Optional[str] = None
 ):
     """List sections with pagination and filters"""
-    db = request.app.state.db
+    db = await get_db()
     
     query = {}
     
@@ -199,7 +199,7 @@ async def list_sections(
 @router.get("/tree", response_model=List[SectionTree])
 async def get_sections_tree(request: Request, status: Optional[ContentStatus] = None):
     """Get hierarchical tree of all sections"""
-    db = request.app.state.db
+    db = await get_db()
     
     query = {}
     if status:
@@ -242,7 +242,7 @@ async def get_sections_tree(request: Request, status: Optional[ContentStatus] = 
 @router.get("/{id_or_slug}", response_model=dict)
 async def get_section(id_or_slug: str, request: Request, increment_views: bool = True):
     """Get section by ID, slug, or full path"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Try to find by ID, slug, or full_path
     section = await db.sections.find_one({"_id": id_or_slug})
@@ -294,7 +294,7 @@ async def get_section_children(
     status: Optional[ContentStatus] = None
 ):
     """Get all direct children of a section"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Verify parent exists
     parent = await db.sections.find_one({"_id": section_id})
@@ -325,7 +325,7 @@ async def get_section_children(
 @router.put("/{id}", response_model=dict)
 async def update_section(id: str, data: SectionUpdate, request: Request):
     """Update section"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Check if section exists
     section = await db.sections.find_one({"_id": id})
@@ -393,7 +393,7 @@ async def delete_section(id: str, request: Request, cascade: bool = Query(False)
     If cascade=True, deletes all children recursively.
     If cascade=False and section has children, returns error.
     """
-    db = request.app.state.db
+    db = await get_db()
     
     # Check if section exists
     section = await db.sections.find_one({"_id": id})
@@ -424,7 +424,7 @@ async def delete_section(id: str, request: Request, cascade: bool = Query(False)
 @router.get("/path/{path:path}", response_model=dict)
 async def get_section_by_path(path: str, request: Request):
     """Get section or KVN page by full path (e.g., /kvn/vysshaya-liga/2005)"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Normalize path - try both with and without leading slash
     path_with_slash = f"/{path}" if not path.startswith("/") else path

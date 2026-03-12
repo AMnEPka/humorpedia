@@ -662,6 +662,117 @@ def test_cities_filtering():
     return results
 
 
+def test_mongodb_unification_smoke():
+    """Test all major endpoints after MongoDB connection unification"""
+    results = TestResults()
+    
+    # First get auth token for authenticated endpoints
+    access_token = None
+    try:
+        response = requests.post(f"{API_BASE}/auth/login", json={
+            "email": "admin@humorpedia.local", 
+            "password": "admin"
+        }, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            access_token = data.get('access_token')
+            results.success("Authentication for smoke tests")
+        else:
+            results.fail("Authentication for smoke tests", f"Status {response.status_code}")
+    except Exception as e:
+        results.fail("Authentication for smoke tests", str(e))
+    
+    # Test endpoints list from review request
+    endpoints_to_test = [
+        # Basic endpoints
+        ("GET /api/health", "/health", None),
+        ("GET /api/stats", "/stats", None),
+        
+        # Auth endpoints (with token)
+        ("GET /api/auth/me", "/auth/me", access_token),
+        ("POST /api/auth/refresh", "/auth/refresh", access_token),
+        
+        # Content endpoints
+        ("GET /api/content/people", "/content/people?limit=1", None),
+        ("GET /api/content/teams", "/content/teams?limit=1", None),
+        ("GET /api/content/shows", "/content/shows?limit=1", None),
+        ("GET /api/content/articles", "/content/articles?limit=1", None),
+        ("GET /api/content/news", "/content/news?limit=1", None),
+        
+        # Special endpoints with trailing slash
+        ("GET /api/sections/", "/sections/?limit=1", None),
+        ("GET /api/cities/", "/cities/?limit=1", None),
+        
+        # Other endpoints
+        ("GET /api/tags", "/tags?limit=1", None),
+        ("GET /api/templates", "/templates?limit=1", None),
+        ("GET /api/comments", "/comments?resource_type=article&resource_id=test&limit=1", access_token),
+    ]
+    
+    for test_name, endpoint, needs_auth in endpoints_to_test:
+        try:
+            headers = {}
+            if needs_auth and access_token:
+                headers["Authorization"] = f"Bearer {access_token}"
+            elif needs_auth and not access_token:
+                results.fail(test_name, "No auth token available")
+                continue
+                
+            # Special handling for POST requests
+            if endpoint == "/auth/refresh":
+                response = requests.post(f"{API_BASE}{endpoint}", headers=headers, timeout=10)
+            else:
+                response = requests.get(f"{API_BASE}{endpoint}", headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Validate response structure based on endpoint
+                if endpoint == "/health":
+                    if data.get("status") == "healthy":
+                        results.success(f"{test_name} → correct response")
+                    else:
+                        results.fail(f"{test_name} → correct response", f"Expected status=healthy, got: {data}")
+                
+                elif endpoint == "/stats":
+                    expected_keys = ["people", "teams", "shows", "articles", "news", "sections", "cities", "users", "comments", "tags"]
+                    if all(key in data for key in expected_keys):
+                        results.success(f"{test_name} → has all stat counts")
+                    else:
+                        missing = [key for key in expected_keys if key not in data]
+                        results.fail(f"{test_name} → has all stat counts", f"Missing keys: {missing}")
+                
+                elif endpoint == "/auth/me":
+                    if data.get("username") and data.get("email"):
+                        results.success(f"{test_name} → user info returned")
+                    else:
+                        results.fail(f"{test_name} → user info returned", f"Missing user fields in: {data}")
+                
+                elif endpoint == "/auth/refresh":
+                    if data.get("access_token") and data.get("user"):
+                        results.success(f"{test_name} → new token returned")
+                    else:
+                        results.fail(f"{test_name} → new token returned", f"Missing token or user in: {data}")
+                
+                elif "limit=1" in endpoint:
+                    # Content list endpoints should return items array
+                    if "items" in data:
+                        results.success(f"{test_name} → items array returned")
+                    else:
+                        results.fail(f"{test_name} → items array returned", f"No 'items' field in: {list(data.keys())}")
+                
+                else:
+                    results.success(f"{test_name} → 200 OK")
+                    
+            else:
+                results.fail(test_name, f"Status {response.status_code}: {response.text[:200]}")
+                
+        except Exception as e:
+            results.fail(test_name, str(e))
+    
+    return results
+
+
 def main():
     """Run all tests"""
     print("🧪 Starting Backend API Tests for Humorpedia")
@@ -671,6 +782,7 @@ def main():
     
     # Run test suites
     test_suites = [
+        ("MongoDB Unification Smoke Test", test_mongodb_unification_smoke),
         ("API Health", test_api_health),
         ("Auth System", test_auth_system),
         ("Cities API", test_cities_api),
