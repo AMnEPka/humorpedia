@@ -191,8 +191,12 @@ export default function SectionDetailPage() {
         const allDefs = [...leagueDefs.main, ...leagueDefs.former];
         const leagueDocs = await Promise.all(
           allDefs.map(async (ld) => {
-            const res = await publicApi.getKvnByPath(`kvn/${ld.slug}`);
-            return { def: ld, doc: res.data };
+            try {
+              const res = await publicApi.getKvnByPath(`kvn/${ld.slug}`);
+              return { def: ld, doc: res.data };
+            } catch {
+              return { def: ld, doc: null };
+            }
           })
         );
 
