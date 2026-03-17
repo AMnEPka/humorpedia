@@ -103,8 +103,9 @@ services:
 
   backup:
     build:
-      context: ./backend
+      context: ./backup
       dockerfile: Dockerfile
+    image: humorpedia-backup
     container_name: humorpedia-backup
     environment:
       - DB_NAME=${DB_NAME:-humorpedia}
@@ -113,17 +114,14 @@ services:
       - MONGO_USER=${MONGO_INITDB_ROOT_USERNAME:-humorpedia}
       - MONGO_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-change_me_in_prod}
       - MONGO_AUTH_SOURCE=admin
-      - BACKUP_DIR=/app/backups
-      - BACKUP_CHECK_INTERVAL=3600
+      - BACKUP_DIR=/backup/output
+      - KEEP_LAST_N=10
+      - BACKUP_INTERVAL=3600
     volumes:
-      - ./backups:/app/backups
+      - ./backups:/backup/output
     depends_on:
       mongodb:
         condition: service_healthy
-      backend:
-        condition: service_started
-    entrypoint: []
-    command: python scripts/backup_service.py
     restart: unless-stopped
 
 volumes:

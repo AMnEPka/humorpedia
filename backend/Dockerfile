@@ -34,9 +34,10 @@ EXPOSE 8001
 # NOTE:
 # - Do NOT include a trailing `--` element in this JSON array; it would be passed as
 #   the first positional argument to start.sh and later executed as a command by `exec "$@"`.
-# - When using `bash -lc '... "$@"'` the first argument from Docker's CMD becomes `$0`
-#   inside the `-c` script and is NOT part of `$@`. We therefore explicitly forward both
-#   `$0` and `$@` to start.sh so that it receives the full original command line
-#   (e.g. `uvicorn server:app --host ...`) and can `exec "$@"` correctly.
-ENTRYPOINT ["/bin/bash", "-lc", "dos2unix /app/start.sh >/dev/null 2>&1 || true; chmod +x /app/start.sh >/dev/null 2>&1 || true; exec /app/start.sh \"$0\" \"$@\""]
+# - With `bash -lc 'script' arg1 arg2 ...`, the first argument becomes $0 and the rest $@.
+#   If no CMD args are passed, $0 is the shell name (e.g. "bash"), so passing "$0" "$@" would
+#   make start.sh exec bash. We pass a dummy first argument ("invoke") so that Docker CMD
+#   args become $@ in full; we then forward only "$@" to start.sh so exec "$@" runs the
+#   intended command (e.g. uvicorn server:app --host ...).
+ENTRYPOINT ["/bin/bash", "-lc", "dos2unix /app/start.sh >/dev/null 2>&1 || true; chmod +x /app/start.sh >/dev/null 2>&1 || true; exec /app/start.sh \"$@\"", "invoke"]
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
