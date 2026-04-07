@@ -10,11 +10,22 @@ import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
 import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
-import striptags from 'striptags';
 
 function stripHtml(input) {
   if (typeof input !== 'string') return '';
-  return striptags(input);
+  // Prefer a real HTML parser instead of regex-based stripping.
+  // `textContent` yields a plain-text representation, avoiding tag re-introduction edge cases.
+  try {
+    if (typeof window !== 'undefined' && typeof window.DOMParser !== 'undefined') {
+      const doc = new window.DOMParser().parseFromString(String(input), 'text/html');
+      return (doc?.body?.textContent || '').replace(/\s+/g, ' ');
+    }
+  } catch {
+    // Fall through to minimal safe fallback.
+  }
+
+  // Non-browser / extremely constrained environments: ensure no tag delimiters remain.
+  return String(input).replace(/[<>]/g, '').replace(/\s+/g, ' ');
 }
 
 export default function SectionDetailPage() {
