@@ -14,10 +14,13 @@ export default function ModuleRenderer({ module, personId }) {
 
   switch (type) {
     case 'text_block':
+      // Allow explicit anchor id (for custom TOC / SEO pages)
+      // Falls back to a simple slug from title.
+      const anchorId = data?.anchor_id || (data?.title ? data.title.toLowerCase().replace(/\s+/g, '-') : null);
       return (
         <div className="prose prose-lg max-w-none">
           {data?.title && (
-            <h2 className="text-xl font-bold mb-3" id={data.title.toLowerCase().replace(/\s+/g, '-')}>
+            <h2 className="text-xl font-bold mb-3" id={anchorId}>
               {data.title}
             </h2>
           )}

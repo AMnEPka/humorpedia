@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,23 @@ import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
 
+function stripHtml(input) {
+  if (typeof input !== 'string') return '';
+  // Prefer a real HTML parser instead of regex-based stripping.
+  // `textContent` yields a plain-text representation, avoiding tag re-introduction edge cases.
+  try {
+    if (typeof window !== 'undefined' && typeof window.DOMParser !== 'undefined') {
+      const doc = new window.DOMParser().parseFromString(String(input), 'text/html');
+      return (doc?.body?.textContent || '').replace(/\s+/g, ' ');
+    }
+  } catch {
+    // Fall through to minimal safe fallback.
+  }
+
+  // Non-browser / extremely constrained environments: ensure no tag delimiters remain.
+  return String(input).replace(/[<>]/g, '').replace(/\s+/g, ' ');
+}
+
 export default function SectionDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -18,6 +35,7 @@ export default function SectionDetailPage() {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [kvnLeagueCards, setKvnLeagueCards] = useState({ main: [], former: [] });
 
   usePageTitle((section?.name || section?.title) || (loading ? 'Раздел' : (error ? 'Раздел не найден' : 'Раздел')));
 
@@ -105,6 +123,222 @@ export default function SectionDetailPage() {
     section.slug === 'vl-kvn' ||
     section.full_path === 'kvn/1l-kvn' ||
     section.full_path === 'kvn/vl-kvn'
+  );
+
+  const isKvnRootPage = section && (section.full_path === 'kvn' || section.slug === 'kvn');
+
+  const filteredChildren = useMemo(() => {
+    if (!isKvnRootPage) return children;
+    // Remove Dalnevostochnaya league from the main KVN page UI (content remains in DB)
+    return (children || []).filter((c) => c?.slug !== 'dl-kvn');
+  }, [children, isKvnRootPage]);
+
+  // Fetch champions for league cards on KVN root
+  useEffect(() => {
+    if (!isKvnRootPage) return;
+
+    const TARGET_YEAR = 2025; // current year minus one (per requirement)
+
+    const leagueDefs = {
+      main: [
+        { slug: 'vl-kvn', title: 'Высшая лига КВН', href: '/kvn/vl-kvn/' },
+        { slug: 'premier-liga', title: 'Премьер-лига КВН', href: '/kvn/premier-liga/' },
+        { slug: '1l-kvn', title: 'Первая лига КВН', href: '/kvn/1l-kvn/' },
+      ],
+      former: [
+        { slug: 'ml-kvn', title: 'Международная лига КВН', href: '/kvn/ml-kvn/' },
+        { slug: 'vul', title: 'Высшая украинская лига КВН', href: '/kvn/vul/' },
+      ],
+    };
+
+    const pickSeasonChampion = (seasons) => {
+      const normalized = (seasons || [])
+        .filter((s) => s && s.season_data)
+        .map((s) => ({
+          year: s.season_data?.year,
+          winners: Array.isArray(s.season_data?.winners) ? s.season_data.winners : [],
+          teamData: s.team_data || {},
+        }))
+        .filter((s) => typeof s.year === 'number');
+
+      const exact = normalized.find((s) => s.year === TARGET_YEAR);
+      const fallback = normalized.sort((a, b) => b.year - a.year)[0];
+      const season = exact || fallback;
+      if (!season) return { year: null, winner: null };
+
+      const w0 = season.winners[0];
+      if (!w0) return { year: season.year, winner: null };
+
+      if (typeof w0 === 'string') {
+        return { year: season.year, winner: { name: w0 } };
+      }
+
+      const slug = w0.slug || '';
+      const teamInfo = slug ? (season.teamData?.[slug] || {}) : {};
+      const name = teamInfo.name || w0.name || w0.slug || '';
+      const city = teamInfo.city || w0.city || '';
+
+      return {
+        year: season.year,
+        winner: {
+          slug: slug || undefined,
+          name: city && name && !name.includes(`(${city})`) ? `${name} (${city})` : name,
+        },
+      };
+    };
+
+    const pickLeagueBlurb = (leagueDoc, fallbackText) => {
+      const raw = stripHtml(leagueDoc?.description || '').trim();
+      if (raw) return raw;
+      const textBlock = (leagueDoc?.modules || []).find((m) => m?.type === 'text_block' && m?.data?.content);
+      const plain = stripHtml(textBlock?.data?.content || '').trim();
+      return plain || fallbackText || '';
+    };
+
+    const FALLBACK_BLURBS = {
+      'vl-kvn': 'Главная лига МС КВН: сезонные игры и финал — главная витрина движения.',
+      'premier-liga': 'Вторая по статусу лига МС КВН, важный этап на пути в Высшую лигу.',
+      '1l-kvn': 'Официальная лига МС КВН, где раскрываются будущие участники главных лиг.',
+      'ml-kvn': 'Бывшая главная лига МС КВН (2014–2025), проводившаяся в Минске и Смоленске.',
+      'vul': 'Лига МС КВН (1999–2013), важная часть истории украинского и постсоветского КВН.',
+    };
+
+    const load = async () => {
+      try {
+        const allDefs = [...leagueDefs.main, ...leagueDefs.former];
+        const leagueDocs = await Promise.all(
+          allDefs.map(async (ld) => {
+            try {
+              const res = await publicApi.getKvnByPath(`kvn/${ld.slug}`);
+              return { def: ld, doc: res.data };
+            } catch {
+              return { def: ld, doc: null };
+            }
+          })
+        );
+
+        const seasonsByLeague = await Promise.all(
+          allDefs.map(async (ld) => {
+            try {
+              const res = await publicApi.getKvnChildren(ld.slug);
+              return { slug: ld.slug, items: res.data?.items || [] };
+            } catch {
+              return { slug: ld.slug, items: [] };
+            }
+          })
+        );
+        const seasonsMap = new Map(seasonsByLeague.map((x) => [x.slug, x.items]));
+
+        const makeCard = ({ def, doc }) => {
+          const blurb = pickLeagueBlurb(doc, FALLBACK_BLURBS[def.slug]);
+          const { year, winner } = pickSeasonChampion(seasonsMap.get(def.slug));
+          return {
+            slug: def.slug,
+            title: def.title,
+            href: def.href,
+            blurb,
+            championYear: year,
+            champion: winner,
+          };
+        };
+
+        const cards = leagueDocs.map(makeCard);
+        const main = leagueDefs.main.map((d) => cards.find((c) => c.slug === d.slug)).filter(Boolean);
+        const former = leagueDefs.former.map((d) => cards.find((c) => c.slug === d.slug)).filter(Boolean);
+
+        setKvnLeagueCards({ main, former });
+      } catch (e) {
+        // Keep page functional even if cards fail
+        setKvnLeagueCards({ main: [], former: [] });
+      }
+    };
+
+    load();
+  }, [isKvnRootPage]);
+
+  const scrollToAnchor = (id) => {
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const kvnTocItems = useMemo(() => ([
+    { id: 'glavnye-ligi', label: 'Главные лиги КВН' },
+    { id: 'centralnye-ligi', label: 'Центральные лиги КВН' },
+    { id: 'komandy-kvn', label: 'Команды КВН' },
+    { id: 'specproekty-i-turniry', label: 'Спецпроекты и турниры КВН' },
+    { id: 'istoriya-kvn', label: 'История телепередачи КВН' },
+  ]), []);
+
+  const renderKvnToc = () => (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle className="text-xl">Оглавление</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {kvnTocItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => scrollToAnchor(item.id)}
+              className="text-left px-3 py-2 rounded-md hover:bg-gray-100 text-gray-900 transition-colors"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const LeagueCard = ({ card }) => {
+    const championLabel = card?.champion
+      ? (
+        card.champion.slug
+          ? <Link className="text-blue-600 hover:underline" to={`/kvn/teams/${card.champion.slug}`}>{card.champion.name}</Link>
+          : <span>{card.champion.name}</span>
+      )
+      : <span className="text-gray-500">нет данных</span>;
+
+    return (
+      <Card className="hover:shadow-lg transition-shadow">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">
+            <Link to={card.href} className="hover:underline">
+              {card.title}
+            </Link>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {card.blurb && (
+            <p className="text-sm text-gray-600 line-clamp-4">{card.blurb}</p>
+          )}
+          <div className="text-sm">
+            <div className="text-gray-500">Действующий чемпион{card.championYear ? ` (${card.championYear})` : ''}</div>
+            <div className="font-medium text-gray-900">{championLabel}</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderKvnLeagueCards = () => (
+    <div className="space-y-10 mb-10">
+      <section id="glavnye-ligi" className="space-y-5 scroll-mt-24">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Главные лиги КВН</h2>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {kvnLeagueCards.main.map((c) => <LeagueCard key={c.slug} card={c} />)}
+        </div>
+      </section>
+
+      <section className="space-y-5">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Бывшие главные лиги</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          {kvnLeagueCards.former.map((c) => <LeagueCard key={c.slug} card={c} />)}
+        </div>
+      </section>
+    </div>
   );
 
   if (loading) {
@@ -200,18 +434,73 @@ export default function SectionDetailPage() {
           {/* Modular Content */}
           {section.modules && section.modules.length > 0 && (
             <div className="mb-8">
-              <ModuleList modules={section.modules} />
+              {isKvnRootPage ? (
+                (() => {
+                  const sorted = (section.modules || [])
+                    .filter((m) => m && m.visible !== false)
+                    .slice()
+                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+                  // Heuristic: intro is the first text_block with empty title/data.title
+                  const intro = sorted.find((m) => m.type === 'text_block' && !(m.title || m.data?.title));
+
+                  // Hide the old TOC and old "Главные лиги" module blocks on the root page;
+                  // replaced by dedicated UI (TOC + cards).
+                  const rest = sorted.filter((m) => {
+                    if (m === intro) return false;
+                    if (m.type !== 'text_block') return true;
+                    const t = (m.title || m.data?.title || '').toLowerCase();
+                    if (t.includes('оглавление')) return false;
+                    if (t.includes('главные лиги')) return false;
+                    return true;
+                  });
+
+                  const wrapWithAnchor = (module) => {
+                    if (module?.type !== 'text_block') return <ModuleRenderer key={module.id} module={module} />;
+                    const title = module.title || module.data?.title || '';
+                    const map = {
+                      'Центральные лиги КВН': 'centralnye-ligi',
+                      'Команды КВН': 'komandy-kvn',
+                      'Спецпроекты и турниры КВН': 'specproekty-i-turniry',
+                      'История телепередачи КВН': 'istoriya-kvn',
+                    };
+                    const anchor = map[title] || null;
+                    return (
+                      <section
+                        key={module.id}
+                        id={anchor || undefined}
+                        className={anchor ? 'scroll-mt-24' : undefined}
+                      >
+                        <ModuleRenderer module={module} />
+                      </section>
+                    );
+                  };
+
+                  return (
+                    <div className="space-y-10">
+                      {intro && <ModuleRenderer module={intro} />}
+                      {renderKvnToc()}
+                      {renderKvnLeagueCards()}
+                      <div className="space-y-10">
+                        {rest.map(wrapWithAnchor)}
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <ModuleList modules={section.modules} />
+              )}
             </div>
           )}
 
           {/* Children Sections */}
-          {children.length > 0 && (
+          {filteredChildren.length > 0 && (
             <div className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Подразделы
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {children.map((child) => (
+                {filteredChildren.map((child) => (
                   <Card
                     key={child.id || child._id}
                     className="hover:shadow-lg transition-shadow cursor-pointer"
