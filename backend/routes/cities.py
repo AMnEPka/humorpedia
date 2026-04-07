@@ -32,7 +32,7 @@ async def check_slug_unique(slug: str, exclude_id: str = None):
 @router.post("/", response_model=dict)
 async def create_city(data: CityCreate, request: Request):
     """Create a new city"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Check slug uniqueness
     existing = await db.cities.find_one({"slug": data.slug})
@@ -81,7 +81,7 @@ async def list_cities(
     sort_order: int = Query(1, ge=-1, le=1)
 ):
     """List cities with pagination and filters"""
-    db = request.app.state.db
+    db = await get_db()
     
     query = {}
     
@@ -116,7 +116,7 @@ async def list_cities(
 @router.get("/{id_or_slug}", response_model=dict)
 async def get_city(id_or_slug: str, request: Request, increment_views: bool = True):
     """Get city by ID or slug"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Try to find by ID or slug
     city = await db.cities.find_one({"_id": id_or_slug})
@@ -136,7 +136,7 @@ async def get_city(id_or_slug: str, request: Request, increment_views: bool = Tr
 @router.put("/{id}", response_model=dict)
 async def update_city(id: str, data: CityUpdate, request: Request):
     """Update city"""
-    db = request.app.state.db
+    db = await get_db()
     
     # Check if city exists
     city = await db.cities.find_one({"_id": id})
@@ -167,7 +167,7 @@ async def update_city(id: str, data: CityUpdate, request: Request):
 @router.delete("/{id}")
 async def delete_city(id: str, request: Request):
     """Delete city"""
-    db = request.app.state.db
+    db = await get_db()
     
     result = await db.cities.delete_one({"_id": id})
     
@@ -184,7 +184,7 @@ async def get_city_related_people(
     limit: int = Query(20, ge=1, le=100)
 ):
     """Get people related to a city"""
-    db = request.app.state.db
+    db = await get_db()
     
     city = await db.cities.find_one({"_id": city_id})
     if not city:
@@ -209,7 +209,7 @@ async def get_city_related_teams(
     limit: int = Query(20, ge=1, le=100)
 ):
     """Get teams related to a city"""
-    db = request.app.state.db
+    db = await get_db()
     
     city = await db.cities.find_one({"_id": city_id})
     if not city:
@@ -241,7 +241,7 @@ async def link_all_cities_endpoint(request: Request):
     """
     from services.city_linking import link_all_cities
     
-    db = request.app.state.db
+    db = await get_db()
     result = await link_all_cities(db)
     
     return result
@@ -254,7 +254,7 @@ async def link_city_endpoint(city_id: str, request: Request):
     """
     from services.city_linking import link_city
     
-    db = request.app.state.db
+    db = await get_db()
     result = await link_city(db, city_id)
     
     return result

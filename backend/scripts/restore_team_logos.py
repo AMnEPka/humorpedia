@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.database import get_db
-from routes.content import _pick_team_logo, _is_placeholder_logo
+from routes.content_teams import _pick_team_logo, _is_placeholder_logo
 from datetime import datetime, timezone
 
 

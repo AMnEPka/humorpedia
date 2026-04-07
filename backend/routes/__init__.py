@@ -1,4 +1,12 @@
-from .content import router as content_router
+from .content_people import router as content_people_router
+from .content_teams import router as content_teams_router
+from .content_shows import router as content_shows_router
+from .content_kvn import router as content_kvn_router
+from .content_articles import router as content_articles_router
+from .content_news import router as content_news_router
+from .content_quizzes import router as content_quizzes_router
+from .content_wiki import router as content_wiki_router
+from .content_search import router as content_search_router
 from .auth import router as auth_router
 from .users import router as users_router
 from .media import router as media_router

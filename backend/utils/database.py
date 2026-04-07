@@ -38,6 +38,8 @@ async def get_db():
 
 async def close_db():
     """Close database connection"""
-    global _client
+    global _client, _db
     if _client:
         _client.close()
+        _client = None
+        _db = None

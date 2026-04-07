@@ -7,7 +7,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import sys
 import logging
@@ -28,29 +27,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# MongoDB connection
-def _build_mongo_url_from_parts() -> str:
-    """
-    Keep server startup consistent with utils.database:
-    allow connecting via docker service name (mongodb) and support auth without
-    embedding special characters directly in the URI.
-    """
-    from urllib.parse import quote_plus
-
-    host = os.environ.get("MONGO_HOST", "localhost")
-    port = os.environ.get("MONGO_PORT", "27017")
-    user = os.environ.get("MONGO_USER")
-    password = os.environ.get("MONGO_PASSWORD")
-    auth_source = os.environ.get("MONGO_AUTH_SOURCE", "admin")
-
-    if user and password is not None:
-        return f"mongodb://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/?authSource={auth_source}"
-
-    return f"mongodb://{host}:{port}"
-
-
-mongo_url = os.environ.get("MONGO_URL") or _build_mongo_url_from_parts()
-db_name = os.environ.get('DB_NAME', 'humorpedia')
+# Use the single DB connection from utils.database (no duplication)
+from utils.database import get_db, close_db
 
 # Default admin credentials
 DEFAULT_ADMIN_USERNAME = "admin"
@@ -121,23 +99,25 @@ async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown"""
     # Startup
     logger.info("Starting Humorpedia API server...")
-    app.state.mongo_client = AsyncIOMotorClient(mongo_url)
-    app.state.db = app.state.mongo_client[db_name]
-    
+
+    # Single DB connection via get_db() — shared with all routes and services
+    db = await get_db()
+    app.state.db = db  # keep for backward compat (sections.py, cities.py, stats)
+
     # Create indexes
-    db = app.state.db
     await create_indexes(db)
     
     # Create default admin if not exists
     await ensure_default_admin(db)
     
+    db_name = os.environ.get('DB_NAME', 'humorpedia')
     logger.info(f"Connected to MongoDB: {db_name}")
     
     yield
     
     # Shutdown
     logger.info("Shutting down...")
-    app.state.mongo_client.close()
+    await close_db()
 
 
 async def create_indexes(db):
@@ -264,7 +244,17 @@ async def health_check():
 
 
 # Import and include routers
-from routes.content import router as content_router
+# Content routes (split from monolithic content.py)
+from routes.content_people import router as content_people_router
+from routes.content_teams import router as content_teams_router
+from routes.content_shows import router as content_shows_router
+from routes.content_kvn import router as content_kvn_router
+from routes.content_articles import router as content_articles_router
+from routes.content_news import router as content_news_router
+from routes.content_quizzes import router as content_quizzes_router
+from routes.content_wiki import router as content_wiki_router
+from routes.content_search import router as content_search_router
+
 from routes.auth import router as auth_router
 from routes.users import router as users_router
 from routes.tags import router as tags_router
@@ -275,7 +265,17 @@ from routes.sections import router as sections_router
 from routes.mongo_admin import router as mongo_admin_router
 from routes.cities import router as cities_router
 
-api_router.include_router(content_router)
+# Content routes (order matters — specific routes before generic catch-alls)
+api_router.include_router(content_articles_router)
+api_router.include_router(content_news_router)
+api_router.include_router(content_quizzes_router)
+api_router.include_router(content_wiki_router)
+api_router.include_router(content_people_router)
+api_router.include_router(content_teams_router)
+api_router.include_router(content_shows_router)
+api_router.include_router(content_kvn_router)
+api_router.include_router(content_search_router)
+
 api_router.include_router(auth_router)
 api_router.include_router(users_router)
 api_router.include_router(tags_router)
@@ -291,7 +291,7 @@ api_router.include_router(cities_router)
 @api_router.get("/stats")
 async def get_stats(request: Request):
     """Get site statistics"""
-    db = request.app.state.db
+    db = await get_db()
     
     stats = {
         "people": await db.people.count_documents({"status": "published"}),
@@ -315,7 +315,7 @@ async def get_stats(request: Request):
 @api_router.get("/random/{content_type}")
 async def get_random_content(content_type: str, request: Request):
     """Get random content item"""
-    db = request.app.state.db
+    db = await get_db()
     
     collection_map = {
         "person": db.people,
