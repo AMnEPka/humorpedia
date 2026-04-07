@@ -10,6 +10,12 @@ import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
 import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
+import striptags from 'striptags';
+
+function stripHtml(input) {
+  if (typeof input !== 'string') return '';
+  return striptags(input);
+}
 
 export default function SectionDetailPage() {
   const location = useLocation();
@@ -171,10 +177,10 @@ export default function SectionDetailPage() {
     };
 
     const pickLeagueBlurb = (leagueDoc, fallbackText) => {
-      const raw = (leagueDoc?.description || '').replace(/<[^>]+>/g, '').trim();
+      const raw = stripHtml(leagueDoc?.description || '').trim();
       if (raw) return raw;
       const textBlock = (leagueDoc?.modules || []).find((m) => m?.type === 'text_block' && m?.data?.content);
-      const plain = (textBlock?.data?.content || '').replace(/<[^>]+>/g, '').trim();
+      const plain = stripHtml(textBlock?.data?.content || '').trim();
       return plain || fallbackText || '';
     };
 
