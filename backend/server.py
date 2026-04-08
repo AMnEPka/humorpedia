@@ -110,6 +110,10 @@ async def lifespan(app: FastAPI):
     # Create default admin if not exists
     await ensure_default_admin(db)
     
+    # Запускаем батчевый счётчик просмотров
+    from services.views_counter import views_counter
+    await views_counter.start(db)
+
     db_name = os.environ.get('DB_NAME', 'humorpedia')
     logger.info(f"Connected to MongoDB: {db_name}")
     
@@ -117,6 +121,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down...")
+    await views_counter.stop()
     await close_db()
 
 
@@ -313,17 +318,27 @@ api_router.include_router(redirects_router)
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
 from services.cache import cache_service
+from services.views_counter import views_counter as vc_instance
 
 @api_router.get("/cache/stats")
 async def get_cache_stats():
-    """Статистика кэша: hit rate, размеры."""
-    return cache_service.stats()
+    """Статистика кэша и счётчика просмотров."""
+    return {
+        **cache_service.stats(),
+        "views_counter": vc_instance.stats(),
+    }
 
 @api_router.post("/cache/flush")
 async def flush_cache():
     """Полный сброс всех кэшей. Использовать после массовых обновлений контента."""
     cache_service.flush_all()
     return {"success": True, "message": "All caches flushed"}
+
+@api_router.post("/views/flush")
+async def flush_views():
+    """Принудительный сброс счётчика просмотров в БД."""
+    count = await vc_instance.flush()
+    return {"success": True, "flushed_updates": count}
 
 
 # Statistics endpoint

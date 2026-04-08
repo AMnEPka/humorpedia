@@ -19,6 +19,7 @@ from services.tags import tag_service
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
+from services.views_counter import views_counter
 
 logger = logging.getLogger(__name__)
 
@@ -588,8 +589,8 @@ async def get_kvn_by_path(path: str):
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
     
-    # Increment views (fire-and-forget, не блокируем ответ)
-    await db.kvn.update_one({"_id": kvn["_id"]}, {"$inc": {"views": 1}})
+    # Increment views (батч — без записи в DB)
+    views_counter.increment("kvn", kvn["_id"])
     
     # Get children
     section_id = kvn.get("id")

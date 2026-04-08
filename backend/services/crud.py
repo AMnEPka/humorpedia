@@ -419,7 +419,8 @@ async def get_by_id_or_slug(collection_name: str, id_or_slug: str, not_found_msg
         raise HTTPException(status_code=404, detail=not_found_msg)
 
     if increment_views:
-        await collection.update_one({"_id": item["_id"]}, {"$inc": {"views": 1}})
+        from services.views_counter import views_counter
+        views_counter.increment(collection_name, item["_id"])
 
     item = convert_objectids_to_strings(item)
     if "_id" in item:

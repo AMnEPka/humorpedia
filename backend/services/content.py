@@ -110,10 +110,8 @@ class ContentService:
             item = await collection.find_one({"slug": id_or_slug})
         
         if item and increment_views:
-            await collection.update_one(
-                {"_id": item["_id"]},
-                {"$inc": {"views": 1}}
-            )
+            from services.views_counter import views_counter
+            views_counter.increment(content_type, item["_id"])
         
         return item
     
