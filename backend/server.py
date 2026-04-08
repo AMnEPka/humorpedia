@@ -125,25 +125,32 @@ async def create_indexes(db):
     try:
         # People indexes
         await db.people.create_index("slug", unique=True)
+        await db.people.create_index("id", unique=True)
         await db.people.create_index("title")
         await db.people.create_index("full_name")
         await db.people.create_index("tags")
         await db.people.create_index("status")
         await db.people.create_index([("title", "text"), ("full_name", "text")])
+        await db.people.create_index("old_urls")
         
         # Teams indexes
         await db.teams.create_index("slug", unique=True)
+        await db.teams.create_index("id", unique=True)
         await db.teams.create_index("name")
         await db.teams.create_index("team_type")
         await db.teams.create_index("tags")
         await db.teams.create_index("status")
+        await db.teams.create_index([("status", 1), ("name", 1)], name="status_name_1")
         await db.teams.create_index([("name", "text"), ("title", "text")])
+        await db.teams.create_index("old_urls")
         
         # Shows indexes
         await db.shows.create_index("slug", unique=True)
+        await db.shows.create_index("id", unique=True)
         await db.shows.create_index("name")
         await db.shows.create_index("tags")
         await db.shows.create_index("status")
+        await db.shows.create_index("old_urls")
         
         # Articles indexes
         await db.articles.create_index("slug", unique=True)
@@ -186,6 +193,21 @@ async def create_indexes(db):
         await db.tags.create_index("slug", unique=True)
         await db.tags.create_index("name", unique=True)
         await db.tags.create_index("usage_count")
+        await db.tags.create_index([("usage_count", -1)], name="usage_count_desc")
+        await db.tags.create_index("type")
+        
+        # KVN indexes (основная коллекция — самая нагруженная)
+        await db.kvn.create_index("full_path", unique=True, sparse=True)
+        await db.kvn.create_index("slug")
+        await db.kvn.create_index("id", unique=True)
+        await db.kvn.create_index([("parent_id", 1), ("status", 1)], name="parent_id_status_1")
+        await db.kvn.create_index(
+            [("season_data.league_slug", 1), ("season_data.year", 1)],
+            sparse=True,
+            name="league_slug_year_1"
+        )
+        await db.kvn.create_index("status")
+        await db.kvn.create_index("old_urls")
         
         # Media indexes
         await db.media.create_index("url")
