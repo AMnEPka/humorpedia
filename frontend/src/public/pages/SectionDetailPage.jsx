@@ -11,6 +11,8 @@ import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 function stripHtml(input) {
   if (typeof input !== 'string') return '';
   // Prefer a real HTML parser instead of regex-based stripping.
@@ -110,6 +112,21 @@ export default function SectionDetailPage() {
         }
       } catch (err) {
         console.error('Error fetching section:', err);
+        // Пробуем найти редирект для старых URL
+        try {
+          const redirectRes = await fetch(
+            `${BACKEND_URL}/api/redirects/lookup?path=${encodeURIComponent(location.pathname)}`
+          );
+          if (redirectRes.ok) {
+            const redirectData = await redirectRes.json();
+            if (redirectData.found && redirectData.new_path) {
+              navigate(redirectData.new_path, { replace: true });
+              return;
+            }
+          }
+        } catch (redirectErr) {
+          console.warn('Redirect lookup failed:', redirectErr);
+        }
         setError('Раздел не найден');
       } finally {
         setLoading(false);

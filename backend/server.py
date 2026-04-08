@@ -264,6 +264,7 @@ from routes.templates import router as templates_router
 from routes.sections import router as sections_router
 from routes.mongo_admin import router as mongo_admin_router
 from routes.cities import router as cities_router
+from routes.redirects import router as redirects_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -285,6 +286,7 @@ api_router.include_router(templates_router)
 api_router.include_router(sections_router)
 api_router.include_router(mongo_admin_router)
 api_router.include_router(cities_router)
+api_router.include_router(redirects_router)
 
 
 # Statistics endpoint
