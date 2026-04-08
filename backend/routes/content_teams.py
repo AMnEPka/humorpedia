@@ -1222,7 +1222,7 @@ async def list_teams(
 
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str):
-    """Get team by ID or slug"""
+    """Get team by ID or slug — чистое чтение, без write-on-read."""
     # ─── Кэш: проверяем ──────────────────────────────────────────────
     cached = cache_service.get_team(id_or_slug)
     if cached is not None:
@@ -1230,75 +1230,7 @@ async def get_team(id_or_slug: str):
 
     team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
 
-    # Self-healing: ensure baseline scaffold exists for older/empty teams
-    try:
-        db = await get_db()
-        name = (team.get("name") or team.get("title") or "").strip()
-        facts = team.get("facts") if isinstance(team.get("facts"), dict) else {}
-        city = facts.get("Город") or facts.get("city")
-
-        new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
-            {"facts": facts, "facts_order": team.get("facts_order") or [], "modules": team.get("modules") or []},
-            name=name or (team.get("title") or ""),
-            city=city
-        )
-
-        # Auto-update "Список игр команды" module for KVN teams
-        team_slug = team.get("slug")
-        if team.get("team_type") == "kvn" and team_slug:
-            try:
-                new_modules = await _update_team_games_module(team_slug, new_modules, db)
-            except Exception as e:
-                logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
-
-        # Remove empty placeholder blocks unless this team was intentionally created empty via bulk import
-        if not team.get("allow_empty_modules"):
-            new_modules = _prune_empty_modules(new_modules)
-
-        changes = {}
-
-        # Smart logo picker: preserve existing logo or restore from legacy image/poster fields
-        # This prevents overwriting real logos with placeholders
-        picked_logo = _pick_team_logo(team)
-        current_logo = team.get("logo")
-        # Only update if logo is missing, placeholder, or different from picked
-        if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
-            changes["logo"] = picked_logo
-
-        if new_facts != facts:
-            changes["facts"] = new_facts
-        if new_order != (team.get("facts_order") or []):
-            changes["facts_order"] = new_order
-        if new_modules != (team.get("modules") or []):
-            changes["modules"] = new_modules
-
-        # Ensure tags contain primary_tag if possible (avoid breaking on duplicates)
-        primary_tag = team.get("primary_tag")
-        if not primary_tag:
-            candidate = name or team.get("title")
-            if candidate:
-                try:
-                    await check_primary_tag_duplicate("teams", candidate, exclude_id=team.get("_id"))
-                    changes["primary_tag"] = candidate
-                    primary_tag = candidate
-                except HTTPException:
-                    primary_tag = None
-
-        if primary_tag:
-            tags = list(team.get("tags") or [])
-            if not any(isinstance(t, str) and t.lower() == primary_tag.lower() for t in tags):
-                tags.append(primary_tag)
-                changes["tags"] = tags
-                await tag_service.sync_tags(tags)
-
-        if changes:
-            changes["updated_at"] = datetime.now(timezone.utc).isoformat()
-            await db.teams.update_one({"_id": team["_id"]}, {"$set": changes})
-            team.update(changes)
-    except Exception as e:
-        logger.warning(f"Team scaffold self-heal skipped: {e}")
-
-    # Разрешаем ссылки в модулях для ответа
+    # Разрешаем ссылки в модулях для ответа (кэшируется внутри LinkResolver)
     if team.get('modules'):
         team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
 
@@ -1309,6 +1241,124 @@ async def get_team(id_or_slug: str):
         cache_service.set_team(id_or_slug, team)
 
     return team
+
+
+# ─── Self-healing: выделенные эндпоинты (НЕ на каждом чтении) ──────────────
+
+async def _run_team_self_healing(team_doc: dict, db) -> dict:
+    """
+    Self-healing для одной команды: scaffold, games module, logo, tags.
+    Возвращает dict с изменениями (или пустой dict).
+    """
+    name = (team_doc.get("name") or team_doc.get("title") or "").strip()
+    facts = team_doc.get("facts") if isinstance(team_doc.get("facts"), dict) else {}
+    city = facts.get("Город") or facts.get("city")
+
+    new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
+        {"facts": facts, "facts_order": team_doc.get("facts_order") or [], "modules": team_doc.get("modules") or []},
+        name=name or (team_doc.get("title") or ""),
+        city=city
+    )
+
+    # Auto-update "Список игр команды" for KVN teams
+    team_slug = team_doc.get("slug")
+    if team_doc.get("team_type") == "kvn" and team_slug:
+        try:
+            new_modules = await _update_team_games_module(team_slug, new_modules, db)
+        except Exception as e:
+            logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
+
+    if not team_doc.get("allow_empty_modules"):
+        new_modules = _prune_empty_modules(new_modules)
+
+    changes = {}
+
+    picked_logo = _pick_team_logo(team_doc)
+    current_logo = team_doc.get("logo")
+    if not current_logo or _is_placeholder_logo(current_logo) or current_logo != picked_logo:
+        changes["logo"] = picked_logo
+
+    if new_facts != facts:
+        changes["facts"] = new_facts
+    if new_order != (team_doc.get("facts_order") or []):
+        changes["facts_order"] = new_order
+    if new_modules != (team_doc.get("modules") or []):
+        changes["modules"] = new_modules
+
+    primary_tag = team_doc.get("primary_tag")
+    if not primary_tag:
+        candidate = name or team_doc.get("title")
+        if candidate:
+            try:
+                await check_primary_tag_duplicate("teams", candidate, exclude_id=team_doc.get("_id"))
+                changes["primary_tag"] = candidate
+                primary_tag = candidate
+            except HTTPException:
+                primary_tag = None
+
+    if primary_tag:
+        tags = list(team_doc.get("tags") or [])
+        if not any(isinstance(t, str) and t.lower() == primary_tag.lower() for t in tags):
+            tags.append(primary_tag)
+            changes["tags"] = tags
+            await tag_service.sync_tags(tags)
+
+    if changes:
+        changes["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.teams.update_one({"_id": team_doc["_id"]}, {"$set": changes})
+
+    return changes
+
+
+@router.post("/teams/{id_or_slug}/refresh", response_model=dict)
+async def refresh_team(id_or_slug: str):
+    """
+    Принудительный self-healing для одной команды.
+    Пересчитывает scaffold, «Список игр», лого, теги.
+    """
+    db = await get_db()
+    team_doc = await db.teams.find_one({"$or": [{"slug": id_or_slug}, {"id": id_or_slug}]})
+    if not team_doc:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    changes = await _run_team_self_healing(team_doc, db)
+    cache_service.invalidate_team(team_doc.get("slug"))
+    cache_service.invalidate_team(id_or_slug)
+
+    return {"success": True, "slug": team_doc.get("slug"), "changes_count": len(changes)}
+
+
+@router.post("/teams-refresh-all", response_model=dict)
+async def refresh_all_teams(
+    limit: int = Query(default=0, description="Сколько команд обработать (0 = все)"),
+    only_kvn: bool = Query(default=True, description="Только KVN-команды"),
+):
+    """
+    Массовый self-healing всех команд. Запускать после импорта данных или обновления сезонов.
+    """
+    db = await get_db()
+    query = {"team_type": "kvn"} if only_kvn else {}
+    cursor = db.teams.find(query)
+    if limit > 0:
+        cursor = cursor.limit(limit)
+
+    total = 0
+    updated = 0
+    errors = 0
+    async for team_doc in cursor:
+        total += 1
+        try:
+            changes = await _run_team_self_healing(team_doc, db)
+            if changes:
+                updated += 1
+        except Exception as e:
+            errors += 1
+            logger.warning(f"Refresh failed for {team_doc.get('slug')}: {e}")
+
+    cache_service.invalidate_team()  # flush all team cache
+    cache_service.invalidate_team_lists()
+
+    return {"success": True, "total": total, "updated": updated, "errors": errors}
 
 
 async def update_team_slug_in_seasons(old_slug: str, new_slug: str, new_name: str, team_id: str, db):
@@ -1604,6 +1654,15 @@ async def update_team(id: str, data: TeamUpdate):
             logger.info(f"Team name changed: '{old_name}' -> '{new_name}', updating in all seasons...")
             await update_team_name_in_seasons(team_slug, new_name, db)
     
+    # ─── Self-healing при сохранении ─────────────────────────────────
+    # Пересчитываем scaffold и «Список игр» только при сохранении из админки
+    try:
+        refreshed_team = await db.teams.find_one({"_id": id})
+        if refreshed_team:
+            await _run_team_self_healing(refreshed_team, db)
+    except Exception as e:
+        logger.warning(f"Self-healing after update failed for {id}: {e}")
+
     # ─── Инвалидация кэша ─────────────────────────────────────────────
     cache_service.invalidate_team(old_slug)
     cache_service.invalidate_team(new_slug)
