@@ -155,6 +155,7 @@ async def create_indexes(db):
         await db.shows.create_index("name")
         await db.shows.create_index("tags")
         await db.shows.create_index("status")
+        await db.shows.create_index([("name", "text"), ("title", "text")])
         await db.shows.create_index("old_urls")
         
         # Articles indexes
@@ -170,6 +171,7 @@ async def create_indexes(db):
         await db.news.create_index("tags")
         await db.news.create_index("status")
         await db.news.create_index("published_at")
+        await db.news.create_index([("title", "text")])
         
         # Quizzes indexes
         await db.quizzes.create_index("slug", unique=True)
@@ -212,6 +214,7 @@ async def create_indexes(db):
             name="league_slug_year_1"
         )
         await db.kvn.create_index("status")
+        await db.kvn.create_index([("name", "text"), ("title", "text")])
         await db.kvn.create_index("old_urls")
         
         # Media indexes

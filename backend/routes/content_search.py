@@ -21,13 +21,13 @@ router = APIRouter(prefix="/content", tags=["search"])
 #  Content search (for link insertion in editor)
 # ---------------------------------------------------------------------------
 
-@router.get("/content/search")
+@router.get("/search-for-links")
 async def search_content_for_links(
     query: str = Query(..., description="Поисковый запрос"),
     types: Optional[str] = Query(None, description="Типы контента через запятую: person,team,show,kvn"),
     limit: int = Query(10, ge=1, le=50)
 ):
-    """Поиск контента для вставки ссылок."""
+    """Поиск контента для вставки ссылок (для админ-редактора)."""
     db = await get_db()
 
     types_list = [t.strip() for t in types.split(',')] if types else ['person', 'team', 'show', 'kvn']
@@ -71,7 +71,12 @@ async def search_content_for_links(
         cfg = search_configs.get(content_type)
         if not cfg:
             continue
-        mongo_query = {"$or": [{f: {"$regex": query, "$options": "i"}} for f in cfg['search_fields']]}
+        
+        # Use MongoDB text search instead of regex for better performance
+        mongo_query = {
+            "$text": {"$search": query}
+        }
+        
         async for doc in cfg['collection'].find(mongo_query, cfg['projection']).limit(limit):
             results.append({
                 "type": content_type,
@@ -84,7 +89,7 @@ async def search_content_for_links(
     return {"results": results[:limit]}
 
 
-@router.get("/content/{content_type}/{id_or_slug}/resolve-link")
+@router.get("/{content_type}/{id_or_slug}/resolve-link")
 async def resolve_content_link(content_type: str, id_or_slug: str):
     """Получить актуальный URL для контента."""
     db = await get_db()
@@ -151,12 +156,15 @@ async def search_all(
             continue
         coll_name, fields = collection_map[content_type]
         collection = getattr(db, coll_name)
+        
+        # Use MongoDB text search for published content
         query = {
             "$and": [
                 {"status": "published"},
-                {"$or": [{f: {"$regex": q, "$options": "i"}} for f in fields]}
+                {"$text": {"$search": q}}
             ]
         }
+        
         cursor = collection.find(query, {"modules": 0}).limit(limit)
         items = await cursor.to_list(limit)
         if items:
@@ -185,7 +193,13 @@ async def search_autocomplete(
 
     for coll_name, field, content_type in collections_config:
         collection = getattr(db, coll_name)
-        query = {"status": "published", field: {"$regex": q, "$options": "i"}}
+        
+        # Use MongoDB text search for autocomplete
+        query = {
+            "status": "published",
+            "$text": {"$search": q}
+        }
+        
         cursor = collection.find(query, {"_id": 1, field: 1, "slug": 1, "full_path": 1}).limit(limit)
         items = await cursor.to_list(limit)
 
