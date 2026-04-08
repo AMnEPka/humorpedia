@@ -8,6 +8,7 @@ import os
 import re
 from fastapi import APIRouter, Query
 from motor.motor_asyncio import AsyncIOMotorClient
+from services.cache import cache_service
 
 router = APIRouter(prefix="/redirects", tags=["redirects"])
 
@@ -31,6 +32,11 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
     if clean != "/" and clean.endswith("/"):
         clean = clean.rstrip("/")
 
+    # ─── Кэш ──────────────────────────────────────────────────────────
+    cached = cache_service.get_redirect(clean)
+    if cached is not None:
+        return cached
+
     # Поиск по коллекциям: (collection_name, new_path_builder)
     search_targets = [
         ("kvn",      lambda doc: "/" + doc.get("full_path", doc.get("slug", ""))),
@@ -48,14 +54,20 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
         )
         if doc:
             new_path = path_builder(doc)
-            return {"found": True, "new_path": new_path, "collection": coll_name}
+            result = {"found": True, "new_path": new_path, "collection": coll_name}
+            cache_service.set_redirect(clean, result)
+            return result
 
     # Фоллбэк: попробуем известные паттерны без обращения к БД
     fallback = _try_pattern_redirect(clean)
     if fallback:
-        return {"found": True, "new_path": fallback, "collection": "pattern"}
+        result = {"found": True, "new_path": fallback, "collection": "pattern"}
+        cache_service.set_redirect(clean, result)
+        return result
 
-    return {"found": False}
+    not_found = {"found": False}
+    cache_service.set_redirect(clean, not_found)
+    return not_found
 
 
 def _try_pattern_redirect(path: str) -> str | None:

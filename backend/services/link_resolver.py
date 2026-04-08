@@ -2,6 +2,7 @@
 import re
 from typing import Dict, Optional, List
 from utils.database import get_db
+from services.cache import cache_service
 
 
 class LinkResolver:
@@ -11,17 +12,16 @@ class LinkResolver:
     async def resolve_links_in_html(html: str) -> str:
         """
         Обновляет ссылки в HTML, проверяя актуальность slug'ов.
-        Это гарантирует, что даже если slug изменился, ссылка будет правильной.
-        
-        Args:
-            html: HTML контент со ссылками
-            
-        Returns:
-            HTML с обновленными ссылками
+        Результат кэшируется по хэшу исходного HTML.
         """
         if not html:
             return html
         
+        # ─── Кэш ──────────────────────────────────────────────────────
+        cached = cache_service.get_resolved_html(html)
+        if cached is not None:
+            return cached
+
         db = await get_db()
         
         # Паттерн для поиска ссылок
@@ -100,18 +100,15 @@ class LinkResolver:
         for start, end, replacement in reversed(replacements):
             result = result[:start] + replacement + result[end:]
         
+        # ─── Кэш: сохраняем ──────────────────────────────────────────
+        cache_service.set_resolved_html(html, result)
+
         return result
     
     @staticmethod
     async def resolve_links_in_modules(modules: List[Dict]) -> List[Dict]:
         """
         Разрешает ссылки во всех text_block модулях
-        
-        Args:
-            modules: Список модулей страницы
-            
-        Returns:
-            Список модулей с обновленными ссылками
         """
         if not modules:
             return modules

@@ -20,6 +20,7 @@ from services.crud import (
 )
 from services.tags import tag_service
 from services.link_resolver import LinkResolver
+from services.cache import cache_service
 from routes.auth import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -1140,6 +1141,10 @@ async def create_team(data: TeamCreate):
         except Exception as e:
             logger.warning(f"Failed to auto-update team games module for {data.slug}: {e}")
     
+    # ─── Инвалидация кэша ─────────────────────────────────────────────
+    cache_service.invalidate_team(data.slug)
+    cache_service.invalidate_team_lists()
+
     return result
 
 
@@ -1154,6 +1159,12 @@ async def list_teams(
     letter: Optional[str] = None
 ):
     """List teams with pagination and filters"""
+    # ─── Кэш: проверяем ──────────────────────────────────────────────
+    cache_key = f"tl:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}"
+    cached = cache_service.get_team_list(cache_key)
+    if cached is not None:
+        return cached
+
     db = await get_db()
     query = {}
     
@@ -1196,17 +1207,27 @@ async def list_teams(
     cursor = db.teams.find(query, {"modules": 0}).skip(skip).limit(limit).sort("name", 1)
     items = await cursor.to_list(limit)
     
-    return {
+    result = {
         "items": items,
         "total": total,
         "skip": skip,
         "limit": limit
     }
 
+    # ─── Кэш: сохраняем ──────────────────────────────────────────────
+    cache_service.set_team_list(cache_key, result)
+
+    return result
+
 
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str):
     """Get team by ID or slug"""
+    # ─── Кэш: проверяем ──────────────────────────────────────────────
+    cached = cache_service.get_team(id_or_slug)
+    if cached is not None:
+        return cached
+
     team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
 
     # Self-healing: ensure baseline scaffold exists for older/empty teams
@@ -1280,6 +1301,12 @@ async def get_team(id_or_slug: str):
     # Разрешаем ссылки в модулях для ответа
     if team.get('modules'):
         team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
+
+    # ─── Кэш: сохраняем ──────────────────────────────────────────────
+    team_slug = team.get("slug", id_or_slug)
+    cache_service.set_team(team_slug, team)
+    if team_slug != id_or_slug:
+        cache_service.set_team(id_or_slug, team)
 
     return team
 
@@ -1577,11 +1604,20 @@ async def update_team(id: str, data: TeamUpdate):
             logger.info(f"Team name changed: '{old_name}' -> '{new_name}', updating in all seasons...")
             await update_team_name_in_seasons(team_slug, new_name, db)
     
+    # ─── Инвалидация кэша ─────────────────────────────────────────────
+    cache_service.invalidate_team(old_slug)
+    cache_service.invalidate_team(new_slug)
+    cache_service.invalidate_team_lists()
+
     return result
 
 
 @router.delete("/teams/{id}")
 async def delete_team(id: str):
     """Delete team"""
-    return await delete_content("teams", id, "Team not found")
+    result = await delete_content("teams", id, "Team not found")
+    # ─── Инвалидация кэша ─────────────────────────────────────────────
+    cache_service.invalidate_team()  # flush all team cache
+    cache_service.invalidate_team_lists()
+    return result
 

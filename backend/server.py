@@ -311,6 +311,21 @@ api_router.include_router(cities_router)
 api_router.include_router(redirects_router)
 
 
+# ─── Cache management endpoints ───────────────────────────────────────────────
+from services.cache import cache_service
+
+@api_router.get("/cache/stats")
+async def get_cache_stats():
+    """Статистика кэша: hit rate, размеры."""
+    return cache_service.stats()
+
+@api_router.post("/cache/flush")
+async def flush_cache():
+    """Полный сброс всех кэшей. Использовать после массовых обновлений контента."""
+    cache_service.flush_all()
+    return {"success": True, "message": "All caches flushed"}
+
+
 # Statistics endpoint
 @api_router.get("/stats")
 async def get_stats(request: Request):
@@ -408,6 +423,24 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+# ─── HTTP Cache-Control headers для публичных GET-запросов ─────────────────────
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class CacheControlMiddleware(BaseHTTPMiddleware):
+    """Добавляет Cache-Control заголовки для публичных GET-ответов (кроме /auth, /admin)."""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if request.method == "GET" and response.status_code == 200:
+            path = request.url.path
+            # Не кэшируем auth, admin и mutation эндпоинты
+            if "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
+                # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
+                response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+        return response
+
+app.add_middleware(CacheControlMiddleware)
 
 
 # Validation error handler
