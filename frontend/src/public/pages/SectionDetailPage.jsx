@@ -39,12 +39,15 @@ export default function SectionDetailPage() {
 
   usePageTitle((section?.name || section?.title) || (loading ? 'Раздел' : (error ? 'Раздел не найден' : 'Раздел')));
 
+  // Список slug'ов телевизионных лиг КВН
+  const LEAGUE_SLUGS = ['1l-kvn', 'vl-kvn', 'premier-liga', 'ml-kvn', 'vul'];
+
   // Авторитетный slug лиги: сначала из URL, при отсутствии — из section.full_path
   const leagueSlugFromPath = (() => {
     const parts = (location.pathname || '').split('/').filter(Boolean);
     if (parts[0] !== 'kvn') return null;
     const slug = parts[1] || null;
-    if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
+    if (LEAGUE_SLUGS.includes(slug)) return slug;
     return null;
   })();
   const leagueSlugFromSectionFullPath = (() => {
@@ -52,7 +55,7 @@ export default function SectionDetailPage() {
     const parts = String(section.full_path).split('/').filter(Boolean);
     if (parts[0] !== 'kvn') return null;
     const slug = parts[1] || null;
-    if (slug === '1l-kvn' || slug === 'vl-kvn') return slug;
+    if (LEAGUE_SLUGS.includes(slug)) return slug;
     return null;
   })();
 
@@ -115,14 +118,11 @@ export default function SectionDetailPage() {
     fetchSection();
   }, [location.pathname]);
 
-  // Страницы лиг с сезонами (Первая лига, Высшая лига)
+  // Страницы лиг с сезонами (все телевизионные лиги)
   const isLeaguePage = section && (
-    leagueSlugFromPath === '1l-kvn' ||
-    leagueSlugFromPath === 'vl-kvn' ||
-    section.slug === '1l-kvn' ||
-    section.slug === 'vl-kvn' ||
-    section.full_path === 'kvn/1l-kvn' ||
-    section.full_path === 'kvn/vl-kvn'
+    LEAGUE_SLUGS.includes(leagueSlugFromPath) ||
+    LEAGUE_SLUGS.includes(section.slug) ||
+    LEAGUE_SLUGS.some(ls => section.full_path === `kvn/${ls}`)
   );
 
   const isKvnRootPage = section && (section.full_path === 'kvn' || section.slug === 'kvn');
@@ -566,12 +566,35 @@ function getCityFromFactsForSeason(facts) {
   return String(cityValue).trim();
 }
 
+// Названия лиг для заголовков
+const LEAGUE_NAMES = {
+  'vl-kvn': 'Высшая лига КВН',
+  'premier-liga': 'Премьер-лига КВН',
+  '1l-kvn': 'Первая лига КВН',
+  'ml-kvn': 'Международная лига КВН',
+  'vul': 'Высшая украинская лига КВН',
+};
+
+// Названия лиг в родительном падеже (для "Чемпионы ... лиги")
+const LEAGUE_NAMES_GENITIVE = {
+  'vl-kvn': 'Высшей лиги КВН',
+  'premier-liga': 'Премьер-лиги КВН',
+  '1l-kvn': 'Первой лиги КВН',
+  'ml-kvn': 'Международной лиги КВН',
+  'vul': 'Высшей украинской лиги КВН',
+};
+
 // Блок таблицы чемпионов лиги (модуль first_league_champions или vl_league_champions)
 function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
   if (!normalizeSeasons || normalizeSeasons.length === 0) return null;
 
-  const defaultTitle = leagueSlug === 'vl-kvn' ? 'Чемпионы Высшей лиги КВН' : 'Чемпионы Первой лиги КВН';
+  const defaultTitle = LEAGUE_NAMES_GENITIVE[leagueSlug]
+    ? `Чемпионы ${LEAGUE_NAMES_GENITIVE[leagueSlug]}`
+    : 'Чемпионы лиги';
   const heading = title || defaultTitle;
+
+  // Колонка «Город проведения» показывается только для Первой лиги
+  const showCityColumn = leagueSlug === '1l-kvn';
 
   return (
     <section className="space-y-4">
@@ -583,7 +606,7 @@ function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[90px]">Сезон</TableHead>
-                  {leagueSlug === '1l-kvn' && (
+                  {showCityColumn && (
                     <TableHead className="w-[220px]">Город проведения лиги</TableHead>
                   )}
                   <TableHead>Чемпион(ы)</TableHead>
@@ -604,7 +627,7 @@ function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
                         {season.year}
                       </Link>
                     </TableCell>
-                    {leagueSlug === '1l-kvn' && (
+                    {showCityColumn && (
                       <TableCell>
                         {season.venueCity ? (
                           season.venueCity
@@ -668,7 +691,7 @@ function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
   );
 }
 
-// Страница лиги с сезонами (Первая лига 1l-kvn, Высшая лига vl-kvn)
+// Страница лиги с сезонами (все телевизионные лиги)
 function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
   const normalizeSeasons = (seasons || [])
     .filter((s) => s && s.season_data)
@@ -698,13 +721,46 @@ function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
     .filter((s) => s.year)
     .sort((a, b) => a.year - b.year);
 
-  const uniqueCities = Array.from(
-    new Set(
-      normalizeSeasons
-        .map((s) => s.venueCity)
-        .filter((c) => c && c.length > 0)
-    )
-  );
+  const leagueName = LEAGUE_NAMES[leagueSlug] || leagueSlug;
+
+  // Определяем, является ли модуль блоком чемпионов
+  const isChampionsModule = (module) => {
+    if (module.type === 'first_league_champions' || module.type === 'vl_league_champions') return true;
+    if (module.type === 'text_block') {
+      const title = (module.title || module.data?.title || '').toLowerCase();
+      if (title.includes('чемпион')) return true;
+      // Для VUL: заголовок внутри контента
+      const content = (module.data?.content || '').toLowerCase();
+      if (content.match(/^<h[1-6]>\s*чемпион/)) return true;
+    }
+    return false;
+  };
+
+  // Определяем, является ли модуль старой статической таблицей чемпионов
+  const isStaticChampionTable = (module) => {
+    if (module.type !== 'text_block') return false;
+    const title = (module.title || module.data?.title || '').trim();
+    if (title) return false; // Если есть заголовок — это не «голая» таблица
+    const content = (module.data?.content || '').trim();
+    const lower = content.toLowerCase();
+    // Таблица чемпионов: содержит <table> и (слово «чемпион» или заголовок «Сезон»)
+    if (!content.startsWith('<table')) return false;
+    if (lower.includes('чемпион') || lower.includes('<strong>сезон</strong>')) return true;
+    return false;
+  };
+
+  // Определяем, является ли модуль старой навигационной сеткой годов (год-ссылки в таблице)
+  const isStaticYearNavGrid = (module) => {
+    if (module.type !== 'text_block') return false;
+    const title = (module.title || module.data?.title || '').trim();
+    if (title) return false;
+    const content = (module.data?.content || '').trim();
+    if (!content.startsWith('<table')) return false;
+    // Проверяем, что таблица содержит в основном 4-значные годы как ссылки
+    const yearLinks = (content.match(/>\d{4}<\/a>/g) || []).length;
+    const totalCells = (content.match(/<td/g) || []).length;
+    return yearLinks > 0 && totalCells > 0 && yearLinks >= totalCells * 0.5;
+  };
 
   return (
     <div className="space-y-10">
@@ -714,27 +770,78 @@ function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
           .slice()
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-        // Оба типа чемпионов рендерим блоком LeagueChampionsBlock по данным текущей страницы лиги.
-        // Если в админке ошибочно добавлен «чужой» тип (например vl_league_champions на 1l-kvn),
-        // всё равно показываем таблицу чемпионов этой лиги, а не скрываем модуль (ModuleRenderer для них вернёт null).
-        const isChampionsModule = (module) =>
-          module.type === 'first_league_champions' || module.type === 'vl_league_champions';
+        // Отслеживаем, был ли уже отрисован динамический блок чемпионов
+        let championsRendered = false;
+
+        // Собираем индексы модулей, которые нужно скрыть
+        // (статические таблицы чемпионов, если динамический блок уже отрисован)
+        const modulesToHide = new Set();
+
+        // Первый проход: находим модули-чемпионы и их смежные статические таблицы
+        let firstChampionIdx = -1;
+        for (let i = 0; i < sortedModules.length; i++) {
+          if (isChampionsModule(sortedModules[i])) {
+            if (firstChampionIdx === -1) {
+              firstChampionIdx = i;
+            } else {
+              // Последующие блоки «Чемпионы» — скрываем (будет одна динамическая таблица)
+              modulesToHide.add(i);
+            }
+            // Скрываем следующие модули, если это статические таблицы чемпионов
+            for (let j = i + 1; j < sortedModules.length; j++) {
+              if (isStaticChampionTable(sortedModules[j])) {
+                modulesToHide.add(j);
+              } else {
+                break;
+              }
+            }
+          }
+          // Старые навигационные сетки годов — скрываем (заменены на LeagueSeasonsNav)
+          if (isStaticYearNavGrid(sortedModules[i])) {
+            modulesToHide.add(i);
+          }
+        }
 
         return (
           <div className="space-y-10">
-            {sortedModules.map((module) =>
-              isChampionsModule(module) ? (
-                <LeagueChampionsBlock
-                  key={module.id}
-                  normalizeSeasons={normalizeSeasons}
-                  leagueSlug={leagueSlug}
-                  title={module.title || module.data?.title}
-                />
-              ) : (
-                <div key={module.id}>
+            {sortedModules.map((module, idx) => {
+              // Скрытые модули
+              if (modulesToHide.has(idx)) return null;
+
+              // Первый модуль-чемпион → динамическая таблица
+              if (isChampionsModule(module) && !championsRendered) {
+                championsRendered = true;
+                // Для модулей с городом в заголовке (например "в Минске") — используем дефолтный заголовок,
+                // т.к. динамическая таблица охватывает все города
+                const moduleTitle = module.title || module.data?.title || '';
+                const cityPattern = /\sв\s/i;
+                const passTitle = cityPattern.test(moduleTitle) ? null : moduleTitle;
+                return (
+                  <LeagueChampionsBlock
+                    key={module.id || `champ-${idx}`}
+                    normalizeSeasons={normalizeSeasons}
+                    leagueSlug={leagueSlug}
+                    title={passTitle}
+                  />
+                );
+              }
+
+              // Последующие блоки чемпионов — уже скрыты через modulesToHide
+              if (isChampionsModule(module) && championsRendered) return null;
+
+              return (
+                <div key={module.id || `mod-${idx}`}>
                   <ModuleRenderer module={module} />
                 </div>
-              )
+              );
+            })}
+
+            {/* Если ни один модуль-чемпион не нашёлся — всё равно показываем динамическую таблицу */}
+            {!championsRendered && normalizeSeasons.length > 0 && (
+              <LeagueChampionsBlock
+                normalizeSeasons={normalizeSeasons}
+                leagueSlug={leagueSlug}
+              />
             )}
           </div>
         );
@@ -744,7 +851,7 @@ function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
       <LeagueSeasonsNav
         seasons={normalizeSeasons}
         leagueSlug={leagueSlug}
-        title={leagueSlug === 'vl-kvn' ? 'Все сезоны Высшей лиги КВН' : 'Все сезоны лиги'}
+        title={`Все сезоны ${LEAGUE_NAMES_GENITIVE[leagueSlug] || leagueName}`}
       />
     </div>
   );

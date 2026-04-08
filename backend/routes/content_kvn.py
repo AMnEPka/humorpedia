@@ -36,15 +36,12 @@ def get_league_slug_from_parent(parent_doc):
     parent_slug = parent_doc.get("slug", "")
     parent_full_path = parent_doc.get("full_path", "")
     
+    # Список всех телевизионных лиг
+    LEAGUE_SLUGS = {"vl-kvn", "premier-liga", "1l-kvn", "ml-kvn", "vul"}
+    
     # Проверяем slug родителя
-    if parent_slug == "vl-kvn":
-        return "vl-kvn"
-    elif parent_slug == "premier-liga":
-        return "premier-liga"
-    elif parent_slug == "1l-kvn":
-        return "1l-kvn"
-    elif parent_slug == "ml-kvn":
-        return "ml-kvn"
+    if parent_slug in LEAGUE_SLUGS:
+        return parent_slug
 
 def extract_year_from_slug(slug: str) -> int:
     """Извлекает год из slug сезона."""
