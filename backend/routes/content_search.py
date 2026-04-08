@@ -1,7 +1,9 @@
 """Search, resolve-link, and duplicate routes."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from typing import Optional
 from datetime import datetime, timezone
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 import copy as copy_module
 import uuid
 import logging
@@ -13,6 +15,9 @@ from services.crud import (
 from services.tags import tag_service
 
 logger = logging.getLogger(__name__)
+
+# Rate limiter for search endpoints
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/content", tags=["search"])
 
@@ -130,7 +135,9 @@ async def resolve_content_link(content_type: str, id_or_slug: str):
 # ---------------------------------------------------------------------------
 
 @router.get("/search", response_model=dict)
+@limiter.limit("60/minute")  # 60 requests per minute for public search
 async def search_all(
+    request: Request,
     q: str = Query(..., min_length=2),
     types: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100)
@@ -174,7 +181,9 @@ async def search_all(
 
 
 @router.get("/search/autocomplete", response_model=list)
+@limiter.limit("120/minute")  # Higher limit for autocomplete (fast typing)
 async def search_autocomplete(
+    request: Request,
     q: str = Query(..., min_length=2),
     limit: int = Query(5, ge=1, le=20)
 ):

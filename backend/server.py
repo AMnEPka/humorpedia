@@ -7,6 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import sys
 import logging
@@ -26,6 +29,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Rate Limiter setup (protect against DDoS)
+limiter = Limiter(key_func=get_remote_address, default_limits=["1000/minute"])
 
 # Use the single DB connection from utils.database (no duplication)
 from utils.database import get_db, close_db
@@ -258,13 +264,18 @@ app = FastAPI(
     redirect_slashes=False  # Disable trailing slash redirects to avoid HTTP/HTTPS issues
 )
 
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Create API router
 api_router = APIRouter(prefix="/api")
 
 
 # Health check
 @api_router.get("/")
-async def root():
+@limiter.limit("100/minute")
+async def root(request: Request):
     return {"message": "Humorpedia API", "version": "1.0.0"}
 
 
