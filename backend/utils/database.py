@@ -24,13 +24,25 @@ def _build_mongo_url_from_parts() -> str:
 
 
 async def get_db():
-    """Get database instance"""
+    """Get database instance with optimized connection pool"""
     global _client, _db
     
     if _db is None:
         mongo_url = os.environ.get("MONGO_URL") or _build_mongo_url_from_parts()
         db_name = os.environ.get("DB_NAME", "humorpedia")
-        _client = AsyncIOMotorClient(mongo_url)
+        
+        # Configure connection pool for high-load scenarios
+        # maxPoolSize: max number of connections in the pool
+        # minPoolSize: min number of connections to maintain
+        # maxIdleTimeMS: close idle connections after 45s
+        # serverSelectionTimeoutMS: timeout for server selection
+        _client = AsyncIOMotorClient(
+            mongo_url,
+            maxPoolSize=50,          # Up to 50 concurrent connections
+            minPoolSize=10,          # Always maintain 10 connections
+            maxIdleTimeMS=45000,     # Close idle connections after 45s
+            serverSelectionTimeoutMS=5000,  # 5s timeout for server selection
+        )
         _db = _client[db_name]
     
     return _db

@@ -18,6 +18,8 @@ from services.crud import (
 from services.tags import tag_service
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
+from services.cache import cache_service
+from services.views_counter import views_counter
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +38,12 @@ def get_league_slug_from_parent(parent_doc):
     parent_slug = parent_doc.get("slug", "")
     parent_full_path = parent_doc.get("full_path", "")
     
+    # Список всех телевизионных лиг
+    LEAGUE_SLUGS = {"vl-kvn", "premier-liga", "1l-kvn", "ml-kvn", "vul"}
+    
     # Проверяем slug родителя
-    if parent_slug == "vl-kvn":
-        return "vl-kvn"
-    elif parent_slug == "premier-liga":
-        return "premier-liga"
-    elif parent_slug == "1l-kvn":
-        return "1l-kvn"
-    elif parent_slug == "ml-kvn":
-        return "ml-kvn"
+    if parent_slug in LEAGUE_SLUGS:
+        return parent_slug
 
 def extract_year_from_slug(slug: str) -> int:
     """Извлекает год из slug сезона."""
@@ -530,6 +529,11 @@ async def create_kvn(data: KVNCreate):
     if data.team_ids:
         await linking_service.update_team_links("kvn", result["id"], data.team_ids)
     
+    # ─── Инвалидация кэша ─────────────────────────────────────────────
+    cache_service.invalidate_kvn()  # Сбрасываем весь KVN-кэш
+    cache_service.invalidate_kvn_children()  # Сбрасываем кэш детей
+    cache_service.invalidate_team_lists()  # Команды могут ссылаться на KVN
+
     return result
 
 
@@ -567,11 +571,16 @@ async def list_kvn(
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
 async def get_kvn_by_path(path: str):
     """Get KVN page by full path with children and breadcrumbs"""
+    path_clean = path.lstrip("/")
+
+    # ─── Кэш: проверяем ───────────────────────────────────────────────
+    cached = cache_service.get_kvn(path_clean)
+    if cached is not None:
+        return cached
+
     db = await get_db()
     
     # Try both with and without leading slash
-    path_clean = path.lstrip("/")
-    
     kvn = await db.kvn.find_one({"full_path": path_clean})
     if not kvn:
         kvn = await db.kvn.find_one({"full_path": f"/{path_clean}"})
@@ -580,8 +589,8 @@ async def get_kvn_by_path(path: str):
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
     
-    # Increment views
-    await db.kvn.update_one({"_id": kvn["_id"]}, {"$inc": {"views": 1}})
+    # Increment views (батч — без записи в DB)
+    views_counter.increment("kvn", kvn["_id"])
     
     # Get children
     section_id = kvn.get("id")
@@ -594,21 +603,28 @@ async def get_kvn_by_path(path: str):
     else:
         kvn["children"] = []
     
-    # Get breadcrumbs
-    breadcrumbs = []
-    if kvn.get("parent_id"):
-        current_parent_id = kvn["parent_id"]
-        while current_parent_id:
-            parent = await db.kvn.find_one({"id": current_parent_id})
-            if parent:
-                breadcrumbs.insert(0, {
-                    "id": parent.get("id"),
-                    "title": parent.get("name") or parent.get("title"),
-                    "full_path": parent.get("full_path") or parent.get("slug")
-                })
-                current_parent_id = parent.get("parent_id")
-            else:
-                break
+    # Get breadcrumbs (с кэшем)
+    kvn_id = kvn.get("id", "")
+    cached_bc = cache_service.get_breadcrumbs(kvn_id) if kvn_id else None
+    if cached_bc is not None:
+        breadcrumbs = cached_bc
+    else:
+        breadcrumbs = []
+        if kvn.get("parent_id"):
+            current_parent_id = kvn["parent_id"]
+            while current_parent_id:
+                parent = await db.kvn.find_one({"id": current_parent_id})
+                if parent:
+                    breadcrumbs.insert(0, {
+                        "id": parent.get("id"),
+                        "title": parent.get("name") or parent.get("title"),
+                        "full_path": parent.get("full_path") or parent.get("slug")
+                    })
+                    current_parent_id = parent.get("parent_id")
+                else:
+                    break
+        if kvn_id:
+            cache_service.set_breadcrumbs(kvn_id, breadcrumbs)
     
     kvn["breadcrumbs"] = breadcrumbs
     
@@ -705,12 +721,20 @@ async def get_kvn_by_path(path: str):
     if "_id" in kvn:
         del kvn["_id"]
     
+    # ─── Кэш: сохраняем ──────────────────────────────────────────────
+    cache_service.set_kvn(path_clean, kvn)
+
     return kvn
 
 
 @router.get("/kvn/{parent_slug}/children", response_model=dict)
 async def get_kvn_children(parent_slug: str):
     """Get children of a KVN page"""
+    # ─── Кэш ──────────────────────────────────────────────────────────
+    cached = cache_service.get_kvn_children(parent_slug)
+    if cached is not None:
+        return cached
+
     db = await get_db()
     parent = await db.kvn.find_one({"slug": parent_slug})
     if not parent:
@@ -722,7 +746,9 @@ async def get_kvn_children(parent_slug: str):
         {"_id": 0}
     ).sort("title", 1).to_list(100)
     
-    return {"items": children, "total": len(children), "parent": parent.get("title")}
+    result = {"items": children, "total": len(children), "parent": parent.get("title")}
+    cache_service.set_kvn_children(parent_slug, result)
+    return result
 
 
 @router.get("/kvn/{id_or_slug}", response_model=dict)
@@ -1176,6 +1202,12 @@ async def update_kvn(id: str, data: KVNUpdate):
         updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
         if updated:
             updated = convert_objectids_to_strings(updated)
+
+        # ─── Инвалидация кэша ─────────────────────────────────────────
+        cache_service.invalidate_kvn()
+        cache_service.invalidate_kvn_children()
+        cache_service.breadcrumbs.clear()
+
         return updated
     except Exception as e:
         logger.error(f"Error returning updated document for KVN {id}: {e}", exc_info=True)
@@ -1225,6 +1257,11 @@ async def delete_kvn(id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")
     
+    # ─── Инвалидация кэша ─────────────────────────────────────────────
+    cache_service.invalidate_kvn()
+    cache_service.invalidate_kvn_children()
+    cache_service.breadcrumbs.clear()
+
     return {"success": True}
 
 

@@ -699,6 +699,45 @@ export default function TeamEditPage() {
               </div>
             </CardContent>
           </Card>
+          <Card className="mt-4">
+            <CardHeader><CardTitle>Старые URL (редиректы)</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                URL со старого сайта humorpedia.ru, с которых будет идти переадресация на текущую страницу.
+              </p>
+              {(team.old_urls || []).map((url, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <Input
+                    value={url}
+                    onChange={(e) => {
+                      const newUrls = [...(team.old_urls || [])];
+                      newUrls[idx] = e.target.value;
+                      setTeam(p => ({ ...p, old_urls: newUrls }));
+                    }}
+                    placeholder="/kvn/team/negoden.html"
+                    className="font-mono text-sm"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const newUrls = (team.old_urls || []).filter((_, i) => i !== idx);
+                      setTeam(p => ({ ...p, old_urls: newUrls }));
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTeam(p => ({ ...p, old_urls: [...(p.old_urls || []), ''] }))}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Добавить старый URL
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

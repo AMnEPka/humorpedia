@@ -126,9 +126,10 @@ async def get_city(id_or_slug: str, request: Request, increment_views: bool = Tr
     if not city:
         raise HTTPException(status_code=404, detail="City not found")
     
-    # Increment views
+    # Increment views (батч)
     if increment_views:
-        await db.cities.update_one({"_id": city["_id"]}, {"$inc": {"views": 1}})
+        from services.views_counter import views_counter
+        views_counter.increment("cities", city["_id"])
     
     return city
 
