@@ -126,6 +126,7 @@ class TeamCreate(BaseModel):
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
+    old_urls: Optional[List[str]] = None
 
 
 class TeamUpdate(BaseModel):
@@ -146,6 +147,7 @@ class TeamUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     member_ids: Optional[List[str]] = None
     show_ids: Optional[List[str]] = None
+    old_urls: Optional[List[str]] = None
 
 
 # === SHOW ===
@@ -472,6 +474,7 @@ class KVNCreate(BaseModel):
     status: ContentStatus = ContentStatus.DRAFT
     team_ids: Optional[List[str]] = None
     person_ids: Optional[List[str]] = None
+    old_urls: Optional[List[str]] = None  # Старые URL для редиректов
 
 
 class KVNUpdate(BaseModel):
@@ -494,3 +497,4 @@ class KVNUpdate(BaseModel):
     jury_cards: Optional[Dict[str, Dict[str, Any]]] = None  # { [juryName]: { photo: MediaFile, text: str } }
     season_data: Optional[Dict[str, Any]] = None  # Структурированные данные сезона
     related_kvn_ids: Optional[List[str]] = None
+    old_urls: Optional[List[str]] = None  # Старые URL для редиректов

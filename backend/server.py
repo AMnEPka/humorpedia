@@ -7,6 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import sys
 import logging
@@ -26,6 +29,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Rate Limiter setup (protect against DDoS)
+limiter = Limiter(key_func=get_remote_address, default_limits=["1000/minute"])
 
 # Use the single DB connection from utils.database (no duplication)
 from utils.database import get_db, close_db
@@ -110,6 +116,10 @@ async def lifespan(app: FastAPI):
     # Create default admin if not exists
     await ensure_default_admin(db)
     
+    # Запускаем батчевый счётчик просмотров
+    from services.views_counter import views_counter
+    await views_counter.start(db)
+
     db_name = os.environ.get('DB_NAME', 'humorpedia')
     logger.info(f"Connected to MongoDB: {db_name}")
     
@@ -117,6 +127,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down...")
+    await views_counter.stop()
     await close_db()
 
 
@@ -125,25 +136,33 @@ async def create_indexes(db):
     try:
         # People indexes
         await db.people.create_index("slug", unique=True)
+        await db.people.create_index("id", unique=True)
         await db.people.create_index("title")
         await db.people.create_index("full_name")
         await db.people.create_index("tags")
         await db.people.create_index("status")
         await db.people.create_index([("title", "text"), ("full_name", "text")])
+        await db.people.create_index("old_urls")
         
         # Teams indexes
         await db.teams.create_index("slug", unique=True)
+        await db.teams.create_index("id", unique=True)
         await db.teams.create_index("name")
         await db.teams.create_index("team_type")
         await db.teams.create_index("tags")
         await db.teams.create_index("status")
+        await db.teams.create_index([("status", 1), ("name", 1)], name="status_name_1")
         await db.teams.create_index([("name", "text"), ("title", "text")])
+        await db.teams.create_index("old_urls")
         
         # Shows indexes
         await db.shows.create_index("slug", unique=True)
+        await db.shows.create_index("id", unique=True)
         await db.shows.create_index("name")
         await db.shows.create_index("tags")
         await db.shows.create_index("status")
+        await db.shows.create_index([("name", "text"), ("title", "text")])
+        await db.shows.create_index("old_urls")
         
         # Articles indexes
         await db.articles.create_index("slug", unique=True)
@@ -158,6 +177,7 @@ async def create_indexes(db):
         await db.news.create_index("tags")
         await db.news.create_index("status")
         await db.news.create_index("published_at")
+        await db.news.create_index([("title", "text")])
         
         # Quizzes indexes
         await db.quizzes.create_index("slug", unique=True)
@@ -186,6 +206,22 @@ async def create_indexes(db):
         await db.tags.create_index("slug", unique=True)
         await db.tags.create_index("name", unique=True)
         await db.tags.create_index("usage_count")
+        await db.tags.create_index([("usage_count", -1)], name="usage_count_desc")
+        await db.tags.create_index("type")
+        
+        # KVN indexes (основная коллекция — самая нагруженная)
+        await db.kvn.create_index("full_path", unique=True, sparse=True)
+        await db.kvn.create_index("slug")
+        await db.kvn.create_index("id", unique=True)
+        await db.kvn.create_index([("parent_id", 1), ("status", 1)], name="parent_id_status_1")
+        await db.kvn.create_index(
+            [("season_data.league_slug", 1), ("season_data.year", 1)],
+            sparse=True,
+            name="league_slug_year_1"
+        )
+        await db.kvn.create_index("status")
+        await db.kvn.create_index([("name", "text"), ("title", "text")])
+        await db.kvn.create_index("old_urls")
         
         # Media indexes
         await db.media.create_index("url")
@@ -228,13 +264,18 @@ app = FastAPI(
     redirect_slashes=False  # Disable trailing slash redirects to avoid HTTP/HTTPS issues
 )
 
+# Add rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Create API router
 api_router = APIRouter(prefix="/api")
 
 
 # Health check
 @api_router.get("/")
-async def root():
+@limiter.limit("100/minute")
+async def root(request: Request):
     return {"message": "Humorpedia API", "version": "1.0.0"}
 
 
@@ -264,6 +305,7 @@ from routes.templates import router as templates_router
 from routes.sections import router as sections_router
 from routes.mongo_admin import router as mongo_admin_router
 from routes.cities import router as cities_router
+from routes.redirects import router as redirects_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -285,6 +327,32 @@ api_router.include_router(templates_router)
 api_router.include_router(sections_router)
 api_router.include_router(mongo_admin_router)
 api_router.include_router(cities_router)
+api_router.include_router(redirects_router)
+
+
+# ─── Cache management endpoints ───────────────────────────────────────────────
+from services.cache import cache_service
+from services.views_counter import views_counter as vc_instance
+
+@api_router.get("/cache/stats")
+async def get_cache_stats():
+    """Статистика кэша и счётчика просмотров."""
+    return {
+        **cache_service.stats(),
+        "views_counter": vc_instance.stats(),
+    }
+
+@api_router.post("/cache/flush")
+async def flush_cache():
+    """Полный сброс всех кэшей. Использовать после массовых обновлений контента."""
+    cache_service.flush_all()
+    return {"success": True, "message": "All caches flushed"}
+
+@api_router.post("/views/flush")
+async def flush_views():
+    """Принудительный сброс счётчика просмотров в БД."""
+    count = await vc_instance.flush()
+    return {"success": True, "flushed_updates": count}
 
 
 # Statistics endpoint
@@ -384,6 +452,24 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+# ─── HTTP Cache-Control headers для публичных GET-запросов ─────────────────────
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class CacheControlMiddleware(BaseHTTPMiddleware):
+    """Добавляет Cache-Control заголовки для публичных GET-ответов (кроме /auth, /admin)."""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if request.method == "GET" and response.status_code == 200:
+            path = request.url.path
+            # Не кэшируем auth, admin и mutation эндпоинты
+            if "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
+                # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
+                response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+        return response
+
+app.add_middleware(CacheControlMiddleware)
 
 
 # Validation error handler

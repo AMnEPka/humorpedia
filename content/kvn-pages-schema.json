@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KVN Pages Schema",
+  "description": "JSON schema for generating KVN section pages on humorpedia",
+  "type": "object",
+  "properties": {
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/KVNPage"
+      }
+    }
+  },
+  "$defs": {
+    "KVNPage": {
+      "type": "object",
+      "required": ["title", "slug", "full_path", "modules"],
+      "properties": {
+        "title": { "type": "string", "description": "Page title (H1)" },
+        "slug": { "type": "string", "description": "URL slug" },
+        "full_path": { "type": "string", "description": "Full URL path (e.g. kvn/league/lampa)" },
+        "parent_path": { "type": "string", "description": "Parent's full_path (e.g. kvn/league)" },
+        "name": { "type": "string", "description": "Display name" },
+        "description": { "type": "string", "description": "Short description / meta description" },
+        "old_id": { "type": "integer", "description": "Legacy MODX resource ID" },
+        "status": { "type": "string", "enum": ["published", "draft"], "default": "published" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "seo": { "$ref": "#/$defs/SEO" },
+        "facts": { "$ref": "#/$defs/FactsMap" },
+        "modules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PageModule" }
+        }
+      }
+    },
+    "SEO": {
+      "type": "object",
+      "properties": {
+        "meta_description": { "type": "string", "maxLength": 160 },
+        "h1": { "type": "string" },
+        "meta_keywords": { "type": "string" }
+      }
+    },
+    "FactsMap": {
+      "type": "object",
+      "description": "Key-value facts (displayed in facts_table module)",
+      "additionalProperties": { "type": "string" }
+    },
+    "PageModule": {
+      "type": "object",
+      "required": ["type", "data"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text_block", "facts_table", "poster_photo", "tags_cloud",
+            "social_links", "rating_widget", "timeline", "table",
+            "gallery", "video", "quote", "team_members",
+            "first_league_champions", "vl_league_champions"
+          ]
+        },
+        "order": { "type": "integer", "minimum": 0 },
+        "title": { "type": "string" },
+        "visible": { "type": "boolean", "default": true },
+        "data": {
+          "type": "object",
+          "description": "Module-specific data (see TextBlockData, TimelineData, TableData, etc.)"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "pages": [
+        {
+          "title": "КВН",
+          "slug": "kvn",
+          "full_path": "kvn",
+          "name": "КВН — Клуб Весёлых и Находчивых",
+          "description": "КВН — крупнейшая юмористическая телеигра.",
+          "status": "published",
+          "tags": ["КВН"],
+          "seo": {
+            "meta_description": "КВН — крупнейшая юмористическая телеигра. Высшая лига, Премьер-лига, центральные лиги, история, турниры, команды КВН и спецпроекты.",
+            "h1": "КВН — Клуб Весёлых и Находчивых"
+          },
+          "modules": [
+            {
+              "type": "text_block",
+              "order": 0,
+              "title": "",
+              "data": {
+                "content": "<p>КВН («Клуб Весёлых и Находчивых») — старейшая и самая массовая юмористическая телевизионная игра.</p>"
+              }
+            },
+            {
+              "type": "text_block",
+              "order": 1,
+              "title": "Главные лиги КВН",
+              "data": {
+                "title": "Главные лиги КВН",
+                "content": "<p>Главные лиги — вершина пирамиды КВН...</p>"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Центральные лиги КВН",
+          "slug": "league",
+          "full_path": "kvn/league",
+          "parent_path": "kvn",
+          "name": "Центральные лиги КВН",
+          "description": "Все центральные лиги МС КВН.",
+          "status": "published",
+          "modules": [
+            {
+              "type": "text_block",
+              "order": 0,
+              "data": {
+                "content": "<p>Центральные лиги — второй уровень в иерархии МС КВН...</p>"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -101,31 +101,6 @@ services:
     command: yarn start
     restart: unless-stopped
 
-  backup:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: humorpedia-backup
-    environment:
-      - DB_NAME=${DB_NAME:-humorpedia}
-      - MONGO_HOST=mongodb
-      - MONGO_PORT=27017
-      - MONGO_USER=${MONGO_INITDB_ROOT_USERNAME:-humorpedia}
-      - MONGO_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-change_me_in_prod}
-      - MONGO_AUTH_SOURCE=admin
-      - BACKUP_DIR=/app/backups
-      - BACKUP_CHECK_INTERVAL=3600
-    volumes:
-      - ./backups:/app/backups
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      backend:
-        condition: service_started
-    entrypoint: []
-    command: python scripts/backup_service.py
-    restart: unless-stopped
-
 volumes:
   mongo_data:
   # Isolate node_modules from host mount so deps stay inside container; named for clear docker volume ls

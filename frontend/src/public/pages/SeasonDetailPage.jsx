@@ -668,20 +668,27 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
         )
       ))}
 
-      {/* Навигация по сезонам лиги (Первая / Высшая лига — блок по десятилетиям) */}
-      {(league_slug === '1l-kvn' || league_slug === 'vl-kvn') && leagueSeasons.length > 0 ? (
+      {/* Навигация по сезонам лиги — блок по десятилетиям */}
+      {['1l-kvn', 'vl-kvn', 'premier-liga', 'ml-kvn', 'vul'].includes(league_slug) && leagueSeasons.length > 0 ? (
         <LeagueSeasonsNav
           seasons={leagueSeasons}
           leagueSlug={league_slug}
-          title={league_slug === 'vl-kvn' ? 'Все сезоны Высшей лиги КВН' : 'Все сезоны Первой лиги КВН'}
+          title={`Все сезоны ${({
+            'vl-kvn': 'Высшей лиги КВН',
+            'premier-liga': 'Премьер-лиги КВН',
+            '1l-kvn': 'Первой лиги КВН',
+            'ml-kvn': 'Международной лиги КВН',
+            'vul': 'Высшей украинской лиги КВН',
+          })[league_slug] || leagueName}`}
         />
       ) : (
-        <div className="mt-12 pt-8 border-t">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Все сезоны {leagueName}</h3>
-          <p className="text-gray-600 mb-4">
-            Навигация по сезонам будет добавлена позже
-          </p>
-        </div>
+        leagueSeasons.length > 0 ? (
+          <LeagueSeasonsNav
+            seasons={leagueSeasons}
+            leagueSlug={league_slug}
+            title={`Все сезоны ${leagueName}`}
+          />
+        ) : null
       )}
     </div>
   );

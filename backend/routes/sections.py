@@ -256,9 +256,10 @@ async def get_section(id_or_slug: str, request: Request, increment_views: bool =
     if not section:
         raise HTTPException(status_code=404, detail="Section not found")
     
-    # Increment views
+    # Increment views (батч)
     if increment_views:
-        await db.sections.update_one({"_id": section["_id"]}, {"$inc": {"views": 1}})
+        from services.views_counter import views_counter
+        views_counter.increment("sections", section["_id"])
     
     # Get children count
     children_count = await db.sections.count_documents({"parent_id": section["_id"]})
@@ -451,8 +452,9 @@ async def get_section_by_path(path: str, request: Request):
     if not section:
         raise HTTPException(status_code=404, detail="Section or KVN page not found")
     
-    # Increment views
-    await db[collection_name].update_one({"_id": section["_id"]}, {"$inc": {"views": 1}})
+    # Increment views (батч)
+    from services.views_counter import views_counter
+    views_counter.increment(collection_name, section["_id"])
     
     # Get children count
     # For KVN, parent_id references the 'id' field, not '_id'

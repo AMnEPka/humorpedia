@@ -71,3 +71,8 @@ tzdata==2025.2
 urllib3==2.6.1
 uvicorn==0.25.0
 watchfiles==1.1.1
+cachetools
+slowapi==0.1.9
+limits==5.8.0
+slowapi==0.1.9
+wrapt==2.1.2

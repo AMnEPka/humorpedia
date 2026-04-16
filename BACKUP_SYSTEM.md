@@ -1,129 +1,116 @@
-# Система автоматического бэкапа MongoDB
+# Система бэкапа MongoDB
 
 ## Описание
 
-Проект настроен для автоматического создания бэкапов базы данных MongoDB и их восстановления при развертывании.
+Бэкапы MongoDB создаются отдельным лёгким контейнером на Alpine с `mongodump`. Без проверки по хешу — каждый запуск создаёт новый дамп и архив. Восстановление по-прежнему выполняется из контейнера backend.
 
 ## Компоненты
 
-### 1. Сервис автоматического бэкапа (`backend/scripts/backup_service.py`)
+### 1. Контейнер бэкапа (`backup/`)
 
-- **Функция**: Периодически проверяет изменения в БД и создает бэкапы при наличии изменений
-- **Интервал проверки**: По умолчанию 3600 секунд (1 час), настраивается через переменную окружения `BACKUP_CHECK_INTERVAL`
-- **Хранение**: Бэкапы сохраняются в папке `./backups/` в формате `humorpedia_backup_YYYYMMDD_HHMMSS.tar.gz`
-- **Очистка**: Автоматически удаляются старые бэкапы, оставляя только последние 10
+- **Образ**: Alpine + MongoDB Database Tools (только mongodump).
+- **Скрипт**: `backup/backup.sh` — делает `mongodump`, упаковывает в `humorpedia_backup_YYYYMMDD_HHMMSS.tar.gz`, удаляет старые (оставляет последние 10).
+- **Автозапуск**: контейнер стартует вместе с `docker compose up`, работает в фоне и делает бэкап при старте, затем раз в час (или по `BACKUP_INTERVAL`).
 
-### 2. Скрипт восстановления (`backend/scripts/restore_backup.py`)
+### 2. Восстановление (backend)
 
-- **Функция**: Восстанавливает БД из последнего доступного бэкапа
-- **Условия**: Восстановление происходит только если БД пустая
-- **Запуск**: Автоматически выполняется при старте backend сервера через `backend/start.sh`
+- **Скрипты**: `backend/scripts/restore_backup.py` (при старте backend при пустой БД), `backend/scripts/restore_specific_backup.py` (восстановление из выбранного файла).
+- Запуск — из контейнера backend (см. ниже).
 
-### 3. Docker сервис бэкапа
+## Как запускать бэкап вручную (один раз)
 
-В `docker-compose.yml` добавлен сервис `backup`, который:
-- Запускается автоматически вместе с приложением
-- Работает в фоновом режиме
-- Периодически проверяет изменения и создает бэкапы
-
-## Использование
-
-### Автоматическое использование
-
-При развертывании через `docker-compose up`:
-
-1. MongoDB запускается первой
-2. Backend запускается и автоматически восстанавливает БД из бэкапа (если БД пустая)
-3. Сервис бэкапа запускается и начинает периодически создавать бэкапы
-
-### Ручное создание бэкапа
+По умолчанию контейнер `backup` уже крутится в фоне и бэкапит по расписанию. Чтобы сделать **одноразовый** бэкап и выйти (без фонового цикла):
 
 ```bash
-# В контейнере backend
-docker exec -it humorpedia-backend python scripts/backup_service.py
+docker compose run --rm -e BACKUP_INTERVAL=0 backup
 ```
 
-### Ручное восстановление из бэкапа
+Бэкап появится в каталоге `./backups/` в корне проекта.
+
+### Запуск образа backup без compose (один раз)
 
 ```bash
-# В контейнере backend
-docker exec -it humorpedia-backend python scripts/restore_backup.py
+docker run --rm \
+  --network humorpedia_default \
+  -e MONGO_HOST=mongodb \
+  -e MONGO_PORT=27017 \
+  -e MONGO_USER=humorpedia \
+  -e MONGO_PASSWORD=ваш_пароль \
+  -e MONGO_AUTH_SOURCE=admin \
+  -e DB_NAME=humorpedia \
+  -e BACKUP_DIR=/backup/output \
+  -v "$(pwd)/backups:/backup/output" \
+  humorpedia-backup
 ```
 
-### Просмотр бэкапов
+Сеть `humorpedia_default` — стандартное имя сети при `docker compose` в этой папке. Имя может отличаться (например, `humorpedia_default` или с префиксом папки). Проверить: `docker network ls`.
+
+## Переменные окружения (контейнер backup)
+
+| Переменная | По умолчанию | Описание |
+|------------|--------------|----------|
+| `MONGO_HOST` | `mongodb` | Хост MongoDB |
+| `MONGO_PORT` | `27017` | Порт |
+| `MONGO_USER` | — | Пользователь (если есть auth) |
+| `MONGO_PASSWORD` | — | Пароль |
+| `MONGO_AUTH_SOURCE` | `admin` | База аутентификации |
+| `DB_NAME` | `humorpedia` | Имя БД |
+| `BACKUP_DIR` | `/backup/output` | Каталог для архивов (в контейнере) |
+| `KEEP_LAST_N` | `10` | Сколько последних бэкапов хранить |
+| `BACKUP_INTERVAL` | `3600` | Интервал между бэкапами (секунды). `0` = один раз и выход (для ручного запуска) |
+
+## Восстановление из бэкапа
+
+Восстановление по-прежнему выполняется в контейнере backend.
+
+**Из последнего бэкапа** (при пустой БД — автоматически при старте backend):
+
+- Убедитесь, что нужный файл лежит в `./backups/` и backend при старте подхватит последний по имени.
+
+**Вручную из конкретного файла**:
 
 ```bash
-# На хосте
-ls -lh backups/
+# Файл в ./backups/
+docker exec -it humorpedia-backend python scripts/restore_specific_backup.py имя_файла.tar.gz --force
+
+# Или полный путь в контейнере
+docker exec -it humorpedia-backend python scripts/restore_specific_backup.py /app/backups/имя_файла.tar.gz --force
 ```
 
-## Настройка
+Подробнее см. `RESTORE_BACKUP.md`.
 
-### Переменные окружения
+## Расписание
 
-- `BACKUP_DIR` - директория для хранения бэкапов (по умолчанию `/app/backups`)
-- `BACKUP_CHECK_INTERVAL` - интервал проверки изменений в секундах (по умолчанию 3600)
-- `MONGO_URL` - URL подключения к MongoDB (по умолчанию `mongodb://mongodb:27017`)
-- `DB_NAME` - имя базы данных (по умолчанию `humorpedia`)
+При `docker compose up` контейнер `backup` сам делает бэкап при старте и затем раз в `BACKUP_INTERVAL` секунд (по умолчанию 3600 = 1 час). Интервал задаётся переменной окружения `BACKUP_INTERVAL` в `docker-compose.yml`.
 
-### Изменение интервала проверки
+Если стек не крутится постоянно, можно вызывать одноразовый бэкап по cron:
 
-В `docker-compose.yml` измените значение `BACKUP_CHECK_INTERVAL`:
-
-```yaml
-backup:
-  environment:
-    - BACKUP_CHECK_INTERVAL=1800  # Проверка каждые 30 минут
+```bash
+0 * * * * cd /путь/к/humorpedia && docker compose run --rm -e BACKUP_INTERVAL=0 backup >> /var/log/humorpedia-backup.log 2>&1
 ```
 
 ## Структура бэкапа
 
-Каждый бэкап представляет собой tar.gz архив, содержащий:
-- Дамп MongoDB (созданный через `mongodump`)
-- Метаданные о времени создания
+Архив: `humorpedia_backup_YYYYMMDD_HHMMSS.tar.gz` — внутри дамп MongoDB (как от `mongodump`). Формат совместим со скриптами восстановления в backend.
 
 ## Безопасность
 
-- Папка `backups/` добавлена в `.gitignore` - бэкапы не попадают в репозиторий
-- Бэкапы содержат все данные БД, включая пользователей и пароли
-- Рекомендуется настроить дополнительное резервное копирование на внешний сервис
+- Каталог `backups/` в `.gitignore` — в репозиторий не попадает.
+- В бэкапах лежат все данные БД; храните каталог и логи с паролями в безопасном месте.
 
 ## Устранение неполадок
 
-### Бэкапы не создаются
+**Бэкап не создаётся**
 
-1. Проверьте логи сервиса бэкапа:
+1. Проверить, что MongoDB доступна:
    ```bash
-   docker logs humorpedia-backup
+   docker compose exec mongodb mongosh --eval "db.adminCommand('ping')"
    ```
-
-2. Убедитесь, что MongoDB доступна:
+2. Проверить логи контейнера бэкапа:
    ```bash
-   docker exec -it humorpedia-mongodb mongosh --eval "db.adminCommand('ping')"
+   docker compose run --rm backup
    ```
+   (ошибки будут в выводе)
+3. Права на каталог: `ls -la backups/`
 
-3. Проверьте права доступа к папке backups:
-   ```bash
-   ls -la backups/
-   ```
-
-### Восстановление не работает
-
-1. Проверьте наличие бэкапов:
-   ```bash
-   ls -lh backups/
-   ```
-
-2. Проверьте логи backend при запуске:
-   ```bash
-   docker logs humorpedia-backend
-   ```
-
-3. Убедитесь, что MongoDB запущена и доступна
-
-## Примечания
-
-- Бэкапы создаются только при наличии изменений в БД
-- Восстановление происходит только если БД пустая (нет документов)
-- Старые бэкапы автоматически удаляются (остаются последние 10)
-
+**Восстановление** — см. `RESTORE_BACKUP.md`.
