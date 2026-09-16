@@ -21,8 +21,9 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 from services.modx_content import (
-    LinkMapper, clean_html, clean_office_tables, extract_details, image_url, is_blank_html, parse_facts_table,
-    plain_text, split_by_headings, split_tables, table_rows,
+    LinkMapper, clean_html, clean_office_tables, clean_tables_in_html, extract_details, image_url, is_blank_html,
+    parse_facts_table, plain_text, split_by_headings, split_details_in_order, split_tables, table_rows,
+    unwrap_search_highlight,
 )
 from services.modx_dump import ModxSite, json_list
 from services.modx_people import SOCIAL_FIELDS, TEMPLATE_PERSON, _module, _timeline_events, _timestamp, sidebar_modules
@@ -53,14 +54,34 @@ def show_chain(site: ModxSite, resource: dict, root_id: int) -> Optional[List[di
     return None
 
 
+TEAM_FACT_KEYS = {"Год основания", "Капитан"}
+
+
+def looks_like_team(site: ModxSite, resource: dict) -> bool:
+    """Страница-вики команды (факты «Год основания», «Капитан» — например, команды Лиги Смеха)."""
+    cache = site.__dict__.setdefault("_team_like_cache", {})
+    rid = resource["id"]
+    if rid not in cache:
+        keys = set()
+        if site.tv_values.get(rid):
+            for section in site.migx_sections(rid):
+                if section.get("MIGX_formname") == "info":
+                    keys |= {k for k, _ in parse_facts_table(section.get("table") or "")}
+        cache[rid] = bool(keys & TEAM_FACT_KEYS)
+    return cache[rid]
+
+
 def is_show_page(site: ModxSite, resource: dict, root_id: int) -> bool:
-    """Страница шоу (а не команда шоу): внутри раздела, не шаблон «Команда», не внутри страницы «Команды …»."""
+    """Страница шоу (а не команда шоу): внутри раздела, не шаблон «Команда», не внутри страницы «Команды …»,
+    не вики-страница команды."""
     if resource.get("deleted") or resource.get("template") == TEMPLATE_TEAM:
         return False
     chain = show_chain(site, resource, root_id)
     if not chain:
         return False
-    return not any(plain_text(r.get("pagetitle") or "").startswith("Команды") for r in chain[:-1])
+    if any(plain_text(r.get("pagetitle") or "").startswith("Команды") for r in chain[:-1]):
+        return False
+    return not looks_like_team(site, resource)
 
 
 def page_slug(resource: dict) -> str:
@@ -124,6 +145,43 @@ def _participants(site: ModxSite, section: dict, mapper: Optional[LinkMapper]) -
     if not items:
         return None
     return {"title": plain_text(section.get("title") or "") or "Участники", "items": items}
+
+
+# ─── Разбор текста страницы ──────────────────────────────────────────────────
+
+def text_blocks(block_title: str, html: str) -> List[Tuple[str, str, dict]]:
+    """Очищенный HTML секции → модули, как у Убойной лиги:
+    - спойлеры <details> на своих местах → свёрнутые блоки (одна таблица table_sort → сортируемая таблица);
+    - длинный текст без заголовка с несколькими подзаголовками h3 → блоки по разделам;
+    - таблицы очищены от оформления Excel/Word, победители (id="green_table") подсвечены."""
+    blocks: List[Tuple[str, str, dict]] = []
+    current_title = block_title
+    for part in split_details_in_order(unwrap_search_highlight(html)):
+        if part[0] == "html":
+            fragment = clean_html(clean_tables_in_html(part[1]))
+            if is_blank_html(fragment):
+                continue
+            if not current_title and len(re.findall(r"<h3\b", fragment, re.I)) >= 2 and len(fragment) > 5000:
+                for heading, section in split_by_headings(fragment):
+                    if not is_blank_html(section):
+                        blocks.append(("text_block", heading, {"title": heading, "content": clean_html(section)}))
+            else:
+                blocks.append(("text_block", current_title, {"title": current_title, "content": fragment}))
+            current_title = ""
+            continue
+        summary, inner = part[1].rstrip(":").strip(), part[2]
+        tables = split_tables(inner)
+        if len(tables) == 1 and "table_sort" in tables[0]:
+            headers, rows = table_rows(tables[0])
+            blocks.append(("table", summary, {
+                "title": summary, "description": plain_text(inner[:inner.find("<table")]), "headers": headers,
+                "rows": rows, "hasHeaders": True, "sortable": True, "collapsed": True,
+            }))
+        else:
+            fragment = clean_html(clean_tables_in_html(inner))
+            if not is_blank_html(fragment):
+                blocks.append(("text_block", summary, {"title": summary, "content": fragment, "collapsed": True}))
+    return blocks
 
 
 # ─── Страницы с уникальной структурой ────────────────────────────────────────
@@ -216,7 +274,10 @@ def build_show(site: ModxSite, resource_id: int, mapper: Optional[LinkMapper] = 
         if not block_title and pending_title:
             block_title, pending_title = pending_title, ""
         first_text = False
-        content.append(("text_block", block_title, {"title": block_title, "content": html}))
+        if resource_id in SPECIAL_PAGES:  # у особых страниц текст разбирает свой обработчик
+            content.append(("text_block", block_title, {"title": block_title, "content": html}))
+        else:
+            content.extend(text_blocks(block_title, html))
 
     for section in site.migx_sections(resource_id):
         form = section.get("MIGX_formname")

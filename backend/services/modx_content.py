@@ -283,6 +283,37 @@ def clean_office_tables(html: str, winner_marker: str = "green_table") -> str:
     return html.strip()
 
 
+_HIGHLIGHT_RE = re.compile(r'<span class="highlight">(.*?)</span>', re.I | re.S)
+_TABLE_WRAP_RE = re.compile(
+    r'<div\b[^>]*class="[^"]*(?:big-table|table-wrap)[^"]*"[^>]*>((?:\s|<br\s*/?>)*<table\b.*?</table>(?:\s|&nbsp;| )*)</div>',
+    re.I | re.S)
+
+
+def unwrap_search_highlight(html: str) -> str:
+    """Убрать подсветку поиска MODX (<span class="highlight">кино</span>театр), попавшую в сохранённый текст."""
+    return _HIGHLIGHT_RE.sub(r"\1", html or "")
+
+
+def clean_tables_in_html(html: str) -> str:
+    """Очистить все таблицы внутри HTML (clean_office_tables), снять обёртки div вокруг таблиц; остальной текст не трогается."""
+    html = _TABLE_WRAP_RE.sub(r"\1", html or "")
+    return _TABLE_RE.sub(lambda m: clean_office_tables(m.group(0)), html)
+
+
+def split_details_in_order(html: str) -> List[Tuple[str, ...]]:
+    """HTML → последовательность ("html", фрагмент) и ("details", summary, содержимое) в исходном порядке."""
+    parts: List[Tuple[str, ...]] = []
+    pos = 0
+    for m in _DETAILS_RE.finditer(html or ""):
+        if m.start() > pos:
+            parts.append(("html", html[pos:m.start()]))
+        parts.append(("details", plain_text(m.group(1) or ""), m.group(2)))
+        pos = m.end()
+    if pos < len(html or ""):
+        parts.append(("html", html[pos:]))
+    return parts
+
+
 def split_tables(html: str) -> List[str]:
     """Все таблицы HTML по отдельности."""
     return _TABLE_RE.findall(html or "")

@@ -13,6 +13,7 @@
     python scripts/import_shows_modx.py --ids 1622 --show             # документ целиком
     python scripts/import_shows_modx.py --ids 1617 1646 --apply --update
     python scripts/import_shows_modx.py --ids 1625 --tree --apply     # шоу вместе со всеми подстраницами
+    python scripts/import_shows_modx.py --all --apply --update        # весь раздел (родители раньше детей)
     python scripts/import_shows_modx.py --ids 1649 --publish 1649 --apply   # неопубликованное на старом сайте — опубликовать
 """
 import argparse
@@ -87,6 +88,9 @@ async def run(args) -> None:
         return
 
     ids = [i for i in (args.ids or []) if i in pages]
+    if args.all:
+        ids = [rid for rid, r in pages.items() if r["parent"] == root_id]
+        args.tree = True
     for i in set(args.ids or []) - set(ids):
         print(f"[!] {i}: не страница раздела «Шоу» (или команда шоу)")
     if args.tree:
@@ -98,7 +102,7 @@ async def run(args) -> None:
                     stack.append(child)
     ids.sort(key=lambda i: (depth[i], pages[i]["menuindex"], i))
     if not ids:
-        raise SystemExit("Укажите --ids (или --list)")
+        raise SystemExit("Укажите --ids или --all (или --list)")
 
     known_urls = await load_old_id_urls(db)
     builders = [show_url_builder(site)]
@@ -178,6 +182,7 @@ if __name__ == "__main__":
     parser.add_argument("--dump", default=DEFAULT_DUMP)
     parser.add_argument("--ids", nargs="*", type=int, help="id ресурсов MODX")
     parser.add_argument("--tree", action="store_true", help="вместе со всеми подстраницами")
+    parser.add_argument("--all", action="store_true", help="весь раздел «Шоу» (все верхние шоу с подстраницами)")
     parser.add_argument("--publish", nargs="*", type=int, help="id неопубликованных на старом сайте, которые опубликовать")
     parser.add_argument("--list", action="store_true", help="дерево раздела «Шоу»")
     parser.add_argument("--show", action="store_true", help="напечатать документ целиком")

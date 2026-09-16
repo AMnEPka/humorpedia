@@ -10,21 +10,7 @@ import { isSystemModule } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
 import { mediaUrl, orderedFacts } from '@/utils/media';
 import ContentTable from '../components/ContentTable';
-
-// Свёрнутый по умолчанию блок: содержимое монтируется при первом раскрытии (в блоке могут быть сотни таблиц)
-function CollapsibleCard({ title, children }) {
-  const [opened, setOpened] = useState(false);
-  return (
-    <Card>
-      <details onToggle={(e) => e.currentTarget.open && setOpened(true)}>
-        <summary className="cursor-pointer select-none px-6 py-4 text-lg font-semibold hover:text-blue-600">
-          {title || 'Подробнее'}
-        </summary>
-        {opened && <CardContent>{children}</CardContent>}
-      </details>
-    </Card>
-  );
-}
+import CollapsibleCard from '../components/CollapsibleCard';
 
 // Module renderer component
 function ModuleRenderer({ module }) {

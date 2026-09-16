@@ -414,3 +414,32 @@ def test_ubojnaya_liga_layout():
     assert first_season["collapsed"] and first_season["content"].count("<table>") == 2
     assert "<mark" in first_season["content"] and "big-table" not in first_season["content"]
     assert modules[-1][2]["content"] == "<p>* - признана в РФ иностранным агентом.</p>"
+
+
+def test_show_text_blocks_generic():
+    from services.modx_shows import text_blocks
+    long_text = "<p>" + "Текст. " * 800 + "</p>"
+    html = (f'<p>Вступление <span class="highlight">кино</span>театр</p><h3>Правила</h3>{long_text}<h3>Жюри</h3><p>Ж</p>'
+            '<details><summary>Статистика участников:</summary><p>Легенда</p><table class="table_sort"><thead><tr><th>ФИО</th><th>Победы</th></tr></thead>'
+            '<tbody><tr><td>А</td><td>2</td></tr></tbody></table></details>'
+            '<p>Между спойлерами</p>'
+            '<details><summary>Выпуски</summary><div class="big-table"><table width="600"><tr><td id="green_table" class="xl65">Победитель</td></tr></table></div></details>')
+    blocks = text_blocks("", html)
+    assert [(t, title, bool(d.get("collapsed"))) for t, title, d in blocks] == [
+        ("text_block", "", False), ("text_block", "Правила", False), ("text_block", "Жюри", False),
+        ("table", "Статистика участников", True), ("text_block", "", False), ("text_block", "Выпуски", True),
+    ]
+    assert blocks[0][2]["content"] == "<p>Вступление кинотеатр</p>"
+    assert blocks[3][2]["rows"] == [["А", "2"]] and blocks[3][2]["description"] == "Легенда"
+    assert blocks[5][2]["content"].startswith("<table><tr><td><mark") and "big-table" not in blocks[5][2]["content"]
+    # короткий текст с заголовком не режется
+    assert [t for t, _, _ in text_blocks("Схема", "<h3>А</h3><p>1</p><h3>Б</h3><p>2</p>")] == ["text_block"]
+
+
+def test_team_like_wiki_pages_are_not_shows():
+    site = shows_site()
+    site.resources[1760] = {"id": 1760, "template": 19, "parent": 1629, "alias": "de-rishele", "uri": "ls/team/de-rishele.html",
+                            "pagetitle": "Де Ришелье", "deleted": 0}
+    site.tv_values[1760] = {"config": json.dumps([{"MIGX_formname": "info",
+                                                   "table": "<table><tr><td>Город</td><td>Одесса</td></tr><tr><td>Капитан</td><td>В. Катан</td></tr></table>"}])}
+    assert not is_show_page(site, site.resources[1760], 33)
