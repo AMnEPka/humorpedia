@@ -54,11 +54,9 @@ def show_chain(site: ModxSite, resource: dict, root_id: int) -> Optional[List[di
     return None
 
 
-TEAM_FACT_KEYS = {"Год основания", "Капитан"}
-
-
 def looks_like_team(site: ModxSite, resource: dict) -> bool:
-    """Страница-вики команды (факты «Год основания», «Капитан» — например, команды Лиги Смеха)."""
+    """Страница-вики команды: в фактах «Капитан» или «Город» + «Год основания» (команды Лиги Смеха,
+    Импровизации). У студий («Квартал-95») год основания есть, города нет — это шоу."""
     cache = site.__dict__.setdefault("_team_like_cache", {})
     rid = resource["id"]
     if rid not in cache:
@@ -67,7 +65,7 @@ def looks_like_team(site: ModxSite, resource: dict) -> bool:
             for section in site.migx_sections(rid):
                 if section.get("MIGX_formname") == "info":
                     keys |= {k for k, _ in parse_facts_table(section.get("table") or "")}
-        cache[rid] = bool(keys & TEAM_FACT_KEYS)
+        cache[rid] = "Капитан" in keys or {"Город", "Год основания"} <= keys
     return cache[rid]
 
 

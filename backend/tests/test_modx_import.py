@@ -443,3 +443,9 @@ def test_team_like_wiki_pages_are_not_shows():
     site.tv_values[1760] = {"config": json.dumps([{"MIGX_formname": "info",
                                                    "table": "<table><tr><td>Город</td><td>Одесса</td></tr><tr><td>Капитан</td><td>В. Катан</td></tr></table>"}])}
     assert not is_show_page(site, site.resources[1760], 33)
+    # студия: год основания есть, города и капитана нет — это шоу
+    site.resources[1659] = {"id": 1659, "template": 25, "parent": 33, "alias": "kvartal-95", "uri": "kvartal-95/",
+                            "pagetitle": "Студия Квартал-95", "deleted": 0}
+    site.tv_values[1659] = {"config": json.dumps([{"MIGX_formname": "info",
+                                                   "table": "<table><tr><td>Год основания</td><td>2003</td></tr></table>"}])}
+    assert is_show_page(site, site.resources[1659], 33)
