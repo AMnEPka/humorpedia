@@ -188,7 +188,13 @@ async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
                 for k in [k for k, v in old_ids.items() if v == doc.get("old_id")]:
                     result[k] = URL_BUILDERS[coll](doc)
                     old_ids.pop(k)
-    old_paths = {"/" + k: k for k in pending if not k.startswith("~") and k not in result}
+    # старый адрес хранится в old_urls как «/show/x.html»; в тексте после перевода ссылок — «/show/x»
+    old_paths = {}
+    for k in pending:
+        if not k.startswith("~") and k not in result:
+            old_paths["/" + k] = k
+            if not k.endswith(".html"):
+                old_paths.setdefault("/" + k + ".html", k)
     if old_paths:
         for coll in OLD_URL_COLLECTIONS:
             async for doc in db[coll].find({"old_urls": {"$in": list(old_paths)}, **PUBLISHED},

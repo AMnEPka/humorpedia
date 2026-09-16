@@ -29,6 +29,7 @@ from services.competitions import sync_kvn_pages  # noqa: E402
 from services.link_resolver import load_old_id_urls  # noqa: E402
 from services.modx_content import LinkMapper, rewrite_links  # noqa: E402
 from services.modx_dump import load_modx_site  # noqa: E402
+from services.modx_shows import show_url_builder  # noqa: E402
 from utils.database import close_db, get_db  # noqa: E402
 
 DEFAULT_DUMP = "/app/backups/idemsku8_modx2.sql"
@@ -56,7 +57,7 @@ async def main(args) -> None:
     try:
         print(f"Читаю дамп {args.dump} …")
         site = load_modx_site(args.dump, keep_content_for=lambda r: False)
-        mapper = LinkMapper(site, _try_pattern_redirect, await load_old_id_urls(db))
+        mapper = LinkMapper(site, _try_pattern_redirect, await load_old_id_urls(db), [show_url_builder(site)])
         changed_kvn = []
         for coll in COLLECTIONS:
             docs = changed_strings = 0

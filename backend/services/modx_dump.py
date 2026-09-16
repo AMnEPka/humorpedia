@@ -10,6 +10,7 @@ NULL → None).
 """
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
@@ -117,6 +118,23 @@ def iter_table_rows(lines: Iterable[str], tables: Iterable[str]) -> Iterator[Tup
                 break
 
 
+def json_list(value) -> list:
+    """Значение MIGX-поля → список: уже разобранный список, JSON-массив или JSON-объект с ключами-номерами."""
+    if isinstance(value, list):
+        return value
+    if isinstance(value, dict):
+        return list(value.values())
+    if not value:
+        return []
+    try:
+        data = json.loads(value)
+    except (TypeError, ValueError):
+        return []
+    if isinstance(data, dict):
+        return list(data.values())
+    return data if isinstance(data, list) else []
+
+
 @dataclass
 class ModxSite:
     """Нужные для импорта данные сайта MODX."""
@@ -147,8 +165,16 @@ class ModxSite:
         return names
 
     def resource_by_uri(self, uri: str) -> Optional[dict]:
-        rid = self.by_uri.get(uri.strip("/"))
+        """Ресурс по uri; допускается путь без `.html` (так старые ссылки хранятся после перевода)."""
+        key = uri.strip("/")
+        rid = self.by_uri.get(key)
+        if rid is None and key and not key.endswith(".html"):
+            rid = self.by_uri.get(key + ".html")
         return self.resources.get(rid) if rid is not None else None
+
+    def migx_sections(self, resource_id: int) -> List[dict]:
+        """Секции MIGX страницы (TV `config`): список или объект {"1": {...}, "2": ...} — в порядке следования."""
+        return [s for s in json_list(self.tv(resource_id, "config")) if isinstance(s, dict)]
 
 
 # Большие текстовые колонки, которые не нужны для ссылок и списков — не держим их в памяти

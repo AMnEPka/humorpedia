@@ -1,4 +1,9 @@
-"""Show routes — CRUD + hierarchy + path."""
+"""Шоу: CRUD, иерархия и выдача по пути.
+
+Шоу может быть дочерней страницей другого шоу (сезон, подпроект, раздел): `parent_id` = `_id` родителя,
+`full_path` = путь родителя + "/" + slug, публичный адрес — `/shows/{full_path}`. slug уникален только
+среди соседей (у разных шоу бывает «season1»), уникален `full_path`.
+"""
 from fastapi import APIRouter, HTTPException, Query, Depends
 from utils.auth import require_editor_on_write
 from typing import Optional
@@ -6,12 +11,9 @@ from datetime import datetime, timezone
 import logging
 
 from models.base import ContentStatus
-from models.content import Show, ShowCreate, ShowUpdate, ShowFacts
+from models.content import Show, ShowCreate, ShowUpdate
 from utils.database import get_db
-from services.crud import (
-    check_slug_unique, create_content, delete_content,
-    get_by_id_or_slug, list_content, build_query,
-)
+from services.crud import create_content, delete_content, get_by_id_or_slug, list_content, build_query
 from services.tags import tag_service
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
@@ -20,24 +22,76 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/content", tags=["shows"], dependencies=[Depends(require_editor_on_write)])
 
+ROOT_QUERY = {"$or": [{"parent_id": None}, {"parent_id": ""}, {"parent_id": {"$exists": False}}]}
+PUBLIC_STATUS = {"status": {"$nin": ["draft", "archived"]}}
+LINK_FIELDS = ("modules", "facts", "description")
+
+
+def _full_path(parent: Optional[dict], slug: str) -> str:
+    return f"{parent['full_path'].strip('/')}/{slug}" if parent else slug
+
+
+async def _get_parent(db, parent_id: Optional[str]) -> Optional[dict]:
+    if not parent_id:
+        return None
+    parent = await db.shows.find_one({"_id": parent_id})
+    if not parent:
+        raise HTTPException(status_code=400, detail="Родительское шоу не найдено")
+    if not parent.get("full_path"):
+        raise HTTPException(status_code=400, detail="У родительского шоу не задан путь (full_path)")
+    return parent
+
+
+async def _check_path_free(db, full_path: str, exclude_id: Optional[str] = None) -> None:
+    query = {"full_path": full_path}
+    if exclude_id:
+        query["_id"] = {"$ne": exclude_id}
+    if await db.shows.find_one(query, {"_id": 1}):
+        raise HTTPException(status_code=400, detail=f"Адрес /shows/{full_path} уже занят")
+
+
+async def _move_descendants(db, show_id: str, full_path: str, level: int) -> None:
+    """Пересчитать full_path и level у всех потомков после смены slug или родителя."""
+    async for child in db.shows.find({"parent_id": show_id}, {"slug": 1}):
+        child_path = f"{full_path}/{child['slug']}"
+        await db.shows.update_one({"_id": child["_id"]}, {"$set": {"full_path": child_path, "level": level + 1}})
+        await _move_descendants(db, child["_id"], child_path, level + 1)
+
+
+async def _add_hierarchy(db, show: dict) -> dict:
+    """Дочерние страницы (опубликованные, по order) и хлебные крошки для публичной страницы."""
+    children = await db.shows.find(
+        {"parent_id": show["_id"], **PUBLIC_STATUS},
+        {"title": 1, "name": 1, "slug": 1, "full_path": 1, "poster": 1, "order": 1, "description": 1},
+    ).sort([("order", 1), ("title", 1)]).to_list(500)
+    show["children"] = children
+    crumbs = []
+    parent_id = show.get("parent_id")
+    while parent_id and len(crumbs) < 10:
+        parent = await db.shows.find_one({"_id": parent_id}, {"title": 1, "full_path": 1, "slug": 1, "parent_id": 1})
+        if not parent:
+            break
+        crumbs.insert(0, {"title": parent.get("title"), "path": "/shows/" + (parent.get("full_path") or parent["slug"])})
+        parent_id = parent.get("parent_id")
+    show["breadcrumbs"] = crumbs
+    return show
+
 
 @router.post("/shows", response_model=dict)
 async def create_show(data: ShowCreate):
     """Create a new show."""
-    await check_slug_unique("shows", data.slug)
+    db = await get_db()
+    parent = await _get_parent(db, data.parent_id)
+    full_path = _full_path(parent, data.slug)
+    await _check_path_free(db, full_path)
 
-    facts_data = data.facts
-    if facts_data is None:
-        facts_data = ShowFacts()
-    elif isinstance(facts_data, dict):
-        try:
-            facts_data = ShowFacts(**facts_data)
-        except Exception:
-            facts_data = ShowFacts()
-
+    facts = data.facts or {}
     show = Show(
         title=data.title, slug=data.slug, name=data.name, poster=data.poster,
-        facts=facts_data, description=data.description,
+        facts=facts, facts_order=data.facts_order or list(facts), social_links=data.social_links or {},
+        description=data.description,
+        parent_id=parent["_id"] if parent else None, full_path=full_path,
+        level=(parent.get("level", 0) + 1) if parent else 0, order=data.order or 0,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         related_person_ids=data.related_person_ids or []
     )
@@ -61,35 +115,32 @@ async def list_shows(
     """List shows with pagination (excludes child shows by default)."""
     query = build_query(status, tag, search, ["title", "name"])
     if not include_children:
-        query["$or"] = [{"level": 0}, {"level": {"$exists": False}}]
+        query = {"$and": [query, ROOT_QUERY]} if query else ROOT_QUERY
     return await list_content("shows", skip, limit, query, "name", 1)
 
 
 @router.get("/shows/by-path/{path:path}", response_model=dict)
 async def get_show_by_path(path: str):
-    """Get show by full path (e.g., comedy-battle/season1)."""
+    """Шоу по полному пути (например, comedy-battle/season1) — с дочерними страницами и хлебными крошками."""
     db = await get_db()
-    show = await db.shows.find_one({"full_path": path}, {"_id": 0})
-    if not show:
-        show = await db.shows.find_one({"slug": path}, {"_id": 0})
+    path = path.strip("/")
+    show = await db.shows.find_one({"full_path": path})
+    if not show and "/" not in path:
+        show = await db.shows.find_one({"slug": path, **ROOT_QUERY})
     if not show:
         raise HTTPException(status_code=404, detail="Show not found")
-    return await LinkResolver.resolve_document(show)
+    await _add_hierarchy(db, show)
+    return await LinkResolver.resolve_document(show, LINK_FIELDS)
 
 
 @router.get("/shows/{parent_slug}/children", response_model=dict)
 async def get_show_children(parent_slug: str):
-    """Get children of a show."""
+    """Get children of a show (по slug корневого шоу или _id)."""
     db = await get_db()
-    parent = await db.shows.find_one({"slug": parent_slug})
+    parent = await db.shows.find_one({"$or": [{"_id": parent_slug}, {"full_path": parent_slug}]})
     if not parent:
         raise HTTPException(status_code=404, detail="Parent show not found")
-
-    parent_id = parent.get("id")
-    children = await db.shows.find(
-        {"parent_id": parent_id}, {"_id": 0}
-    ).sort("title", 1).to_list(100)
-
+    children = await db.shows.find({"parent_id": parent["_id"]}).sort([("order", 1), ("title", 1)]).to_list(500)
     return {"items": children, "total": len(children), "parent": parent.get("title")}
 
 
@@ -98,7 +149,7 @@ async def get_show(id_or_slug: str, raw: bool = Query(False, description="без
     """Get show by ID or slug."""
     show = await get_by_id_or_slug("shows", id_or_slug, "Show not found")
     if not raw:
-        await LinkResolver.resolve_document(show)
+        await LinkResolver.resolve_document(show, LINK_FIELDS)
     return show
 
 
@@ -106,105 +157,76 @@ async def get_show(id_or_slug: str, raw: bool = Query(False, description="без
 async def get_shows_hierarchy(status: Optional[ContentStatus] = None):
     """Get all shows with hierarchy for admin panel."""
     db = await get_db()
-    query = {}
-    if status:
-        query["status"] = status.value
-    all_shows = await db.shows.find(query, {"_id": 0}).sort([("level", 1), ("title", 1)]).to_list(1000)
+    query = {"status": status.value} if status else {}
+    all_shows = await db.shows.find(query, {"modules": 0}).sort([("level", 1), ("order", 1), ("title", 1)]).to_list(5000)
 
-    shows_by_id = {s.get('id'): s for s in all_shows}
-    root_shows = []
+    by_id = {s["_id"]: s for s in all_shows}
+    roots = []
     for show in all_shows:
-        show['children'] = []
-        parent_id = show.get('parent_id')
-        if not parent_id:
-            root_shows.append(show)
+        show.setdefault("children", [])
+        parent = by_id.get(show.get("parent_id"))
+        if parent is not None:
+            parent.setdefault("children", []).append(show)
         else:
-            parent = shows_by_id.get(parent_id)
-            if parent:
-                if 'children' not in parent:
-                    parent['children'] = []
-                parent['children'].append(show)
-    return {"items": root_shows, "total": len(all_shows)}
+            roots.append(show)
+    return {"items": roots, "total": len(all_shows)}
 
 
 @router.put("/shows/{id}", response_model=dict)
 async def update_show(id: str, data: ShowUpdate):
     """Update show."""
-    try:
-        logger.info(f"Update show {id}, received data: {data.model_dump(exclude_unset=True)}")
-    except Exception as e:
-        logger.error(f"Error logging data: {e}")
-
     db = await get_db()
-    update_data = {}
+    current = await db.shows.find_one({"_id": id})
+    if not current:
+        raise HTTPException(status_code=404, detail="Show not found")
 
-    if data.title is not None:
-        update_data["title"] = data.title
-    if data.slug is not None:
-        update_data["slug"] = data.slug
-    if data.name is not None:
-        update_data["name"] = data.name
-    if data.poster is not None:
-        if isinstance(data.poster, dict) and not data.poster.get('url'):
-            update_data["poster"] = None
-        else:
-            update_data["poster"] = data.poster.model_dump() if hasattr(data.poster, 'model_dump') else data.poster
-    if data.facts is not None:
-        try:
-            if isinstance(data.facts, dict):
-                facts_obj = ShowFacts(**data.facts)
-                update_data["facts"] = facts_obj.model_dump()
-            else:
-                update_data["facts"] = data.facts.model_dump() if hasattr(data.facts, 'model_dump') else data.facts
-        except Exception:
-            update_data["facts"] = data.facts if isinstance(data.facts, dict) else {}
-    if data.description is not None:
-        update_data["description"] = data.description
-    if data.parent_id is not None:
-        update_data["parent_id"] = data.parent_id
-    if data.modules is not None:
-        try:
-            update_data["modules"] = [
-                m.model_dump() if hasattr(m, 'model_dump') else (m if isinstance(m, dict) else {})
-                for m in data.modules
-            ]
-        except Exception as e:
-            logger.error(f"Error processing modules: {e}")
-            update_data["modules"] = data.modules if isinstance(data.modules, list) else []
-    if data.tags is not None:
-        update_data["tags"] = data.tags
-        await tag_service.sync_tags(data.tags)
-    if data.seo is not None:
-        update_data["seo"] = data.seo.model_dump() if hasattr(data.seo, 'model_dump') else data.seo
-    if data.status is not None:
-        update_data["status"] = data.status.value if hasattr(data.status, 'value') else data.status
-    if data.participant_ids is not None:
-        update_data["participant_ids"] = data.participant_ids
-    if data.team_ids is not None:
-        update_data["team_ids"] = data.team_ids
-    if data.related_person_ids is not None:
-        update_data["related_person_ids"] = data.related_person_ids
+    incoming = data.model_dump(exclude_unset=True, mode="json")
+    update_data = {
+        key: value for key, value in incoming.items()
+        if value is not None and key not in ("slug", "parent_id", "poster")
+    }
+    if "poster" in incoming:
+        poster = incoming["poster"]
+        update_data["poster"] = poster if poster and poster.get("url") else None
+    if "facts" in update_data and "facts_order" not in update_data:
+        keys = list(update_data["facts"])
+        kept = [k for k in current.get("facts_order") or [] if k in keys]
+        update_data["facts_order"] = kept + [k for k in keys if k not in kept]
 
+    # slug / родитель → новый full_path (и у всех потомков)
+    new_slug = incoming.get("slug") or current["slug"]
+    new_parent_id = current.get("parent_id")
+    if "parent_id" in incoming:
+        new_parent_id = incoming["parent_id"] or None
+    if new_slug != current["slug"] or new_parent_id != current.get("parent_id") or not current.get("full_path"):
+        parent = await _get_parent(db, new_parent_id)
+        if parent and (parent["_id"] == id or (current.get("full_path")
+                                                and parent["full_path"].startswith(current["full_path"] + "/"))):
+            raise HTTPException(status_code=400, detail="Шоу нельзя вложить в само себя или в своего потомка")
+        full_path = _full_path(parent, new_slug)
+        await _check_path_free(db, full_path, exclude_id=id)
+        level = (parent.get("level", 0) + 1) if parent else 0
+        update_data.update({"slug": new_slug, "parent_id": parent["_id"] if parent else None,
+                            "full_path": full_path, "level": level})
+        await _move_descendants(db, id, full_path, level)
+
+    if "tags" in update_data:
+        await tag_service.sync_tags(update_data["tags"])
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.shows.update_one({"_id": id}, {"$set": update_data})
 
-    try:
-        result = await db.shows.update_one({"_id": id}, {"$set": update_data})
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Show not found")
-        if data.related_person_ids is not None:
-            try:
-                await linking_service.update_person_links("show", id, data.related_person_ids)
-            except Exception as e:
-                logger.error(f"Error updating person links: {e}")
-        return {"id": id, "updated": True}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating show {id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error updating show: {str(e)}")
+    if data.related_person_ids is not None:
+        try:
+            await linking_service.update_person_links("show", id, data.related_person_ids)
+        except Exception as e:
+            logger.error(f"Error updating person links: {e}")
+    return {"id": id, "updated": True}
 
 
 @router.delete("/shows/{id}")
 async def delete_show(id: str):
-    """Delete show."""
+    """Delete show (только без дочерних страниц)."""
+    db = await get_db()
+    if await db.shows.find_one({"parent_id": id}, {"_id": 1}):
+        raise HTTPException(status_code=400, detail="У шоу есть дочерние страницы — сначала удалите или перенесите их")
     return await delete_content("shows", id, "Show not found")

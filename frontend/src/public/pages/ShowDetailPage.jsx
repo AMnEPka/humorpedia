@@ -8,6 +8,7 @@ import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react
 import EmojiRating from '@/components/EmojiRating';
 import { isSystemModule } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
+import { mediaUrl, orderedFacts } from '@/utils/media';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
@@ -46,8 +47,8 @@ function ModuleRenderer({ module }) {
           )}
           <CardContent>
             <style>{tableStyles}</style>
-            <div 
-              className="prose prose-lg max-w-none"
+            <div
+              className="prose prose-lg max-w-none overflow-x-auto break-words"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
             />
           </CardContent>
@@ -115,6 +116,64 @@ function ModuleRenderer({ module }) {
         </div>
       );
     
+    case 'timeline':
+      if (!module.data?.events?.length) return null;
+      return (
+        <Card>
+          <CardHeader><CardTitle>{module.data.title || 'Хронология'}</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {module.data.events.map((event, i) => (
+              <div key={i} className="border-l-2 border-blue-500 pl-4">
+                <div className="text-sm font-medium text-blue-600">{event.date || event.year}</div>
+                <div className="font-medium">{event.title}</div>
+                {event.description && (
+                  <div className="prose prose-sm max-w-none text-gray-600 mt-1" dangerouslySetInnerHTML={{ __html: event.description }} />
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      );
+
+    case 'participants':
+      if (!module.data?.items?.length) return null;
+      return (
+        <Card>
+          <CardHeader><CardTitle>{module.data.title || 'Участники'}</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {module.data.items.map((item, i) => {
+                const photo = mediaUrl(item.photo);
+                const name = item.person_slug
+                  ? <Link to={`/people/${item.person_slug}`} className="hover:text-blue-600">{item.name}</Link>
+                  : item.name;
+                return (
+                  <div key={i} className="flex gap-3 p-3 rounded-lg border bg-white min-w-0">
+                    <div className="w-20 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                      {photo ? (
+                        <img src={photo} alt={item.name} className="w-full h-full object-cover object-top" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                          {item.name?.[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 text-sm">
+                      <div className="font-semibold text-base mb-1">{name}</div>
+                      {(item.facts || []).map((fact, j) => (
+                        <div key={j} className="text-gray-600">
+                          <span className="text-gray-500">{fact.title}:</span> {fact.value}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      );
+
     case 'seasons_list':
       return (
         <div>
@@ -167,12 +226,8 @@ export default function ShowDetailPage() {
       return;
     }
 
-    // Если путь содержит /, используем API by-path, иначе обычный getShow
-    const fetchShow = fullPath.includes('/') 
-      ? publicApi.getShowByPath(fullPath)
-      : publicApi.getShow(fullPath);
-    
-    fetchShow
+    // by-path отдаёт и корневые, и вложенные шоу вместе с дочерними страницами и хлебными крошками
+    publicApi.getShowByPath(fullPath)
       .then(res => setShow(res.data))
       .catch(() => setError('Шоу не найдено'))
       .finally(() => setLoading(false));
@@ -222,20 +277,7 @@ export default function ShowDetailPage() {
       { label: 'Шоу', path: '/shows' }
     ];
     
-    if (show.full_path && show.full_path.includes('/')) {
-      const pathParts = show.full_path.split('/');
-      let currentPath = '/shows';
-      
-      // Добавляем родительские элементы (все кроме последнего)
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        currentPath += '/' + pathParts[i];
-        crumbs.push({ 
-          label: pathParts[i], // Будет заменено на title если есть
-          path: currentPath,
-          isParent: true
-        });
-      }
-    }
+    (show.breadcrumbs || []).forEach((crumb) => crumbs.push({ label: crumb.title, path: crumb.path }));
     
     // Текущая страница (без ссылки)
     crumbs.push({ label: show.title, path: null });
@@ -267,11 +309,11 @@ export default function ShowDetailPage() {
       <div className="mb-8">
         <div className="flex items-start gap-6">
           {/* Poster - рендерится если есть модуль poster_photo */}
-          {sidebarModules.find(m => m.type === 'poster_photo') && show.poster && (
-            <div className="w-48 flex-shrink-0">
+          {sidebarModules.find(m => m.type === 'poster_photo') && mediaUrl(show.poster) && (
+            <div className="w-32 sm:w-48 flex-shrink-0">
               <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg">
                 <img
-                  src={show.poster}
+                  src={mediaUrl(show.poster)}
                   alt={show.title}
                   className="w-full h-full object-cover"
                 />
@@ -280,8 +322,8 @@ export default function ShowDetailPage() {
           )}
 
           {/* Title & Description */}
-          <div className="flex-1">
-            <h1 className="text-4xl font-bold mb-4">{show.title}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-4">{show.title}</h1>
             {show.description && (
               <div 
                 className="text-lg text-gray-700 leading-relaxed mb-4"
@@ -306,7 +348,31 @@ export default function ShowDetailPage() {
       {/* Main content - 2 column layout */}
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-6 min-w-0">
+          {/* Дочерние страницы: сезоны, подпроекты, разделы */}
+          {show.children?.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Tv className="h-5 w-5" /> Разделы
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <nav className="space-y-1">
+                  {show.children.map((child) => (
+                    <Link
+                      key={child._id}
+                      to={`/shows/${child.full_path || child.slug}`}
+                      className="block px-2 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
+                    >
+                      {child.title}
+                    </Link>
+                  ))}
+                </nav>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Facts Table - рендерится если есть модуль facts_table */}
           {sidebarModules.find(m => m.type === 'facts_table') && show.facts && Object.keys(show.facts).length > 0 && (
             <Card>
@@ -318,7 +384,7 @@ export default function ShowDetailPage() {
               <CardContent className="p-4 pt-0">
                 <table className="w-full text-sm border-collapse border border-gray-200">
                   <tbody>
-                    {Object.entries(show.facts).map(([key, value], i) => (
+                    {orderedFacts(show.facts, show.facts_order).map(([key, value], i) => (
                       <tr key={i} className={`border-b border-gray-200 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                         <td className="py-2 pr-4 pl-2 text-gray-600 font-medium border-r border-gray-200 align-top">{key}</td>
                         <td className="py-2 pl-2" dangerouslySetInnerHTML={{ __html: value }} />
@@ -401,7 +467,7 @@ export default function ShowDetailPage() {
         </div>
 
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {contentModules.map((module) => (
             <ModuleRenderer key={module.id} module={module} />
           ))}

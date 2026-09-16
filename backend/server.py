@@ -93,6 +93,17 @@ async def _ensure_index(collection, keys, **kwargs):
         logger.error(f"Index {collection.name} {keys} {kwargs} not created: {e}")
 
 
+async def _drop_unique_index(collection, name: str):
+    """Удалить уникальный индекс, если он есть (при смене схемы на неуникальный)."""
+    try:
+        info = await collection.index_information()
+        if info.get(name, {}).get("unique"):
+            await collection.drop_index(name)
+            logger.info(f"Index {collection.name}.{name}: уникальный индекс удалён")
+    except Exception as e:
+        logger.error(f"Index {collection.name}.{name} not dropped: {e}")
+
+
 async def create_indexes(db):
     """Create MongoDB indexes for optimal performance"""
     _index_failures.clear()
@@ -119,7 +130,12 @@ async def create_indexes(db):
         await _ensure_index(db.teams, "old_urls")
         
         # Shows indexes
-        await _ensure_index(db.shows, "slug", unique=True)
+        # slug уникален только среди соседей (у разных шоу бывают «season1»), адрес — full_path
+        await _drop_unique_index(db.shows, "slug_1")
+        await _ensure_index(db.shows, "slug")
+        await _ensure_index(db.shows, "full_path", unique=True,
+                            partialFilterExpression={"full_path": {"$type": "string"}})
+        await _ensure_index(db.shows, "parent_id")
         await _ensure_index(db.shows, "id", unique=True, sparse=True)  # у импортированных шоу поля id нет
         await _ensure_index(db.shows, "name")
         await _ensure_index(db.shows, "tags")

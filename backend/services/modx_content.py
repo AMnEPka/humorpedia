@@ -80,11 +80,14 @@ class LinkMapper:
     """
 
     def __init__(self, site: ModxSite, pattern_redirect: Optional[Callable[[str], Optional[str]]] = None,
-                 known_urls: Optional[Dict[int, str]] = None):
+                 known_urls: Optional[Dict[int, str]] = None,
+                 url_builders: Optional[List[Callable[[dict], Optional[str]]]] = None):
         self.site = site
         self.pattern_redirect = pattern_redirect
         # id ресурса MODX → адрес уже перенесённой страницы (документы с old_id)
         self.known_urls = known_urls or {}
+        # адреса по разделам старого сайта для ещё не перенесённых страниц (например, шоу)
+        self.url_builders = url_builders or []
         self.unresolved: List[str] = []
 
     def resource_url(self, resource: dict) -> Optional[str]:
@@ -94,6 +97,10 @@ class LinkMapper:
         template_url = TEMPLATE_URLS.get(resource.get("template"))
         if template_url and resource.get("alias"):
             return template_url.format(alias=resource["alias"])
+        for build in self.url_builders:
+            url = build(resource)
+            if url:
+                return url
         return None
 
     def map(self, href: str) -> str:

@@ -41,7 +41,7 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
         ("kvn",      lambda doc: "/" + doc.get("full_path", doc.get("slug", ""))),
         ("teams",    lambda doc: "/kvn/teams/" + doc.get("slug", "")),
         ("people",   lambda doc: "/people/" + doc.get("slug", "")),
-        ("shows",    lambda doc: "/shows/" + doc.get("slug", "")),
+        ("shows",    lambda doc: "/shows/" + (doc.get("full_path") or doc.get("slug", ""))),
         ("articles", lambda doc: "/articles/" + doc.get("slug", "")),
         ("news",     lambda doc: "/news/" + doc.get("slug", "")),
     ]

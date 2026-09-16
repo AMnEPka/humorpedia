@@ -15,7 +15,6 @@
 """
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
@@ -23,7 +22,7 @@ from typing import List, Optional, Tuple
 from services.modx_content import (
     LinkMapper, clean_html, image_url, is_blank_html, parse_facts_table, plain_text,
 )
-from services.modx_dump import ModxSite
+from services.modx_dump import ModxSite, json_list
 
 TEMPLATE_PERSON = 20
 
@@ -36,16 +35,7 @@ SOCIAL_FIELDS = {
 _IGNORED_SECTIONS = {"tags", "table_of_contents", "popular_articles", "ad_250", "ad_block_120"}
 
 
-def _json_list(value) -> list:
-    if isinstance(value, list):
-        return value
-    if not value:
-        return []
-    try:
-        data = json.loads(value)
-    except (TypeError, ValueError):
-        return []
-    return data if isinstance(data, list) else []
+_json_list = json_list
 
 
 def _module(type_: str, order: int, title: str, data: dict) -> dict:
@@ -104,7 +94,7 @@ def build_person(site: ModxSite, resource_id: int, mapper: Optional[LinkMapper] 
     title = (resource.get("pagetitle") or "").strip()
     full_name = (resource.get("longtitle") or "").strip() or title
 
-    sections = _json_list(site.tv(resource_id, "config"))
+    sections = site.migx_sections(resource_id)
     facts: dict = {}
     social: dict = {}
     content: List[Tuple[str, str, dict]] = []

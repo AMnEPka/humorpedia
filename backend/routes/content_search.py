@@ -54,10 +54,10 @@ async def search_content_for_links(
         },
         'show': {
             'collection': db.shows,
-            'search_fields': ["name", "title", "slug"],
-            'projection': {"name": 1, "title": 1, "slug": 1},
+            'search_fields': ["name", "title", "slug", "full_path"],
+            'projection': {"name": 1, "title": 1, "slug": 1, "full_path": 1},
             'title_fn': lambda d: d.get("name") or d.get("title"),
-            'url_fn': lambda d: f"/shows/{d.get('slug')}",
+            'url_fn': lambda d: f"/shows/{d.get('full_path') or d.get('slug')}",
         },
         'kvn': {
             'collection': db.kvn,
@@ -119,6 +119,8 @@ async def resolve_content_link(content_type: str, id_or_slug: str):
     if content_type == 'kvn':
         full_path = doc.get('full_path') or doc.get('slug')
         url = f"/{full_path.lstrip('/')}" if full_path else f"{url_prefix}{doc.get('slug')}"
+    elif content_type == 'show':
+        url = f"{url_prefix}{doc.get('full_path') or doc.get('slug')}"
     else:
         url = f"{url_prefix}{doc.get('slug')}"
 

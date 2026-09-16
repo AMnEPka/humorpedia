@@ -253,3 +253,105 @@ def test_replace_links_missing_pages_become_text():
     assert replace_links(html, targets) == (
         '<p><a href="/people/anton-shastun" class="x">Шастун</a>, <a href="/people/new-slug"><b>Старый</b></a>, '
         'Никто, <a href="https://vk.com/a">vk</a>, <a href="#n">сноска</a></p>')
+
+
+# ─── Шоу ─────────────────────────────────────────────────────────────────────
+
+from services.modx_shows import build_show, is_show_page, section_id, show_path, show_url_builder, strip_nav_paragraph  # noqa: E402
+
+
+def shows_site():
+    site = ModxSite()
+    rows = [
+        # id, template, parent, alias, uri, pagetitle, longtitle
+        (33, 12, 0, "show", "show/", "Шоу", ""),
+        (1629, 19, 33, "comedy-battle", "comedy-battle/", "Comedy Баттл", ""),
+        (1703, 19, 1629, "season1", "comedy-battle/season1.html", "Comedy Баттл 1 сезон", ""),
+        (1618, 25, 33, "improv-teams", "improv-teams/", "ИК", "Импровизация. Команды"),
+        (1673, 19, 1618, "team", "improv-teams/team.html", "Команды ИК", ""),
+        (1905, 19, 1673, "baikalskiye", "improv-teams/baikalskiye.html", "Байкальские", ""),
+        (1771, 19, 1618, "team", "liga-gorodov/team/", "Команды ЛГ", ""),
+        (2000, 21, 1771, "eto-oni-lg", "liga-gorodov/team/eto-oni-lg.html", "Это они (ЛГ)", ""),
+        (682, 20, 30, "natalya-andreevna", "people/natalya-andreevna.html", "Еприкян Наталья", "Наталья Еприкян"),
+    ]
+    for rid, template, parent, alias, uri, title, longtitle in rows:
+        site.resources[rid] = {"id": rid, "template": template, "parent": parent, "alias": alias, "uri": uri,
+                               "pagetitle": title, "longtitle": longtitle, "published": 1, "deleted": 0,
+                               "menuindex": 3, "description": "Описание шоу", "keywords": "", "rating": 9.5,
+                               "votes": 4, "createdon": 1713441486, "publishedon": 0}
+        site.by_uri[uri.strip("/")] = rid
+    return site
+
+
+def test_show_tree_paths_and_team_pages_excluded():
+    site = shows_site()
+    root = section_id(site)
+    assert root == 33
+    assert show_path(site, site.resources[1703], root) == "comedy-battle/season1"
+    assert is_show_page(site, site.resources[1703], root)
+    assert is_show_page(site, site.resources[1673], root)          # страница-список «Команды ИК» — раздел шоу
+    assert not is_show_page(site, site.resources[1905], root)      # команда внутри «Команды …»
+    assert not is_show_page(site, site.resources[2000], root)      # шаблон «Команда»
+    assert not is_show_page(site, site.resources[682], root)       # вне раздела
+    mapper = LinkMapper(site, _try_pattern_redirect, url_builders=[show_url_builder(site)])
+    assert mapper.map("comedy-battle/season1.html") == "/shows/comedy-battle/season1"
+    assert mapper.map("/comedy-battle/season1") == "/shows/comedy-battle/season1"   # путь без .html
+    assert mapper.map("improv-teams/") == "/shows/improv-teams"
+
+
+def test_strip_nav_paragraph():
+    html = '<p><a href="/x">&lt; Смех без правил</a> &nbsp; <a href="/y">Турнир &gt;</a></p><p>Текст</p>'
+    assert strip_nav_paragraph(html) == "<p>Текст</p>"
+    assert strip_nav_paragraph("<p>Обычный <a href='/x'>текст</a></p>") == "<p>Обычный <a href='/x'>текст</a></p>"
+
+
+def test_build_show_sections():
+    site = shows_site()
+    info = {"MIGX_formname": "info",
+            "table": "<table><tr><td>Статус шоу</td><td>Завершено</td></tr><tr><td>Дата премьеры</td><td>28 августа 2010 года</td></tr></table>",
+            "list_social": [{"link": "https://premier.one/show/x", "name": "global"}]}
+    config = {  # объект с ключами-номерами, а не список
+        "1": info,
+        "2": {"MIGX_formname": "text", "title": "Comedy Баттл",
+              "content": "<p>&lt; <a href=\"smeh-bez-pravil/\">СБП</a></p><p>Шоу на ТНТ.</p>"},
+        "3": {"MIGX_formname": "text", "title": "Сезоны и победители", "content": "<p>...</p>"},
+        "4": {"MIGX_formname": "table", "content": "<table><tr><td>Сезон</td></tr></table>"},
+        "5": {"MIGX_formname": "people_cards", "title": "Основной состав", "list_people": json.dumps([
+            {"photo": "images/cw/natalya.jpg", "link": "682", "list_double": json.dumps([
+                {"title": "Сценическое имя", "content": "<p>Наталья Андреевна</p>"},
+                {"title": "Выпуски", "content": "<p>237</p>"}])}])},
+        "6": {"MIGX_formname": "post_footer"},
+        "7": {"MIGX_formname": "tags"},
+    }
+    site.tv_values[1629] = {"config": json.dumps(config), "img": "images/shows/comedy-battle.jpg"}
+    payload, extra, warnings = build_show(site, 1629, LinkMapper(site, _try_pattern_redirect))
+
+    assert payload["title"] == payload["name"] == "Comedy Баттл" and payload["slug"] == "comedy-battle"
+    assert payload["facts"] == {"Статус шоу": "Завершено", "Дата премьеры": "28 августа 2010 года"}
+    assert payload["facts_order"] == ["Статус шоу", "Дата премьеры"]
+    assert payload["social_links"] == {"website": "https://premier.one/show/x"}
+    assert payload["poster"]["url"] == "/media/imported/images/shows/comedy-battle.jpg"
+    assert payload["order"] == 3 and payload["description"] == "Описание шоу"
+    content = [(m["type"], m["title"]) for m in payload["modules"][5:]]
+    # заголовок = название страницы не повторяется; «Сезоны и победители» переходит к таблице
+    assert content == [("text_block", ""), ("text_block", "Сезоны и победители"), ("participants", "Основной состав")]
+    assert payload["modules"][5]["data"]["content"] == "<p>Шоу на ТНТ.</p>"
+    assert payload["modules"][7]["data"]["items"] == [{
+        "name": "Наталья Андреевна", "person_slug": "natalya-andreevna",
+        "photo": "/media/imported/images/cw/natalya.jpg",
+        "facts": [{"title": "Сценическое имя", "value": "Наталья Андреевна"}, {"title": "Выпуски", "value": "237"}],
+    }]
+    assert extra["old_urls"] == ["/comedy-battle"] and extra["rating"] == {"average": 9.5, "count": 4}
+    assert extra["published_at"] == extra["created_at"]
+    assert warnings == []
+
+    from models.content import Show, ShowCreate
+    create = ShowCreate(**payload)
+    Show(**{**create.model_dump(), "seo": create.seo or {}, "related_person_ids": []})  # как create_show
+
+
+def test_build_show_title_from_longtitle():
+    site = shows_site()
+    site.tv_values[1618] = {"config": "[]"}
+    payload, _, warnings = build_show(site, 1618)
+    assert payload["title"] == "Импровизация. Команды" and "на странице нет текста" in warnings

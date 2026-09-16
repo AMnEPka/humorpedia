@@ -4,6 +4,7 @@ import { Loader2, ChevronLeft, ChevronRight, Tv } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import publicApi from '../utils/api';
+import { mediaUrl } from '@/utils/media';
 
 export default function ShowsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,9 +66,9 @@ export default function ShowsListPage() {
               <Link key={show.id} to={`/shows/${show.full_path || show.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
                   <div className="aspect-video bg-gray-100 overflow-hidden">
-                    {show.poster ? (
-                      <img 
-                        src={show.poster} 
+                    {mediaUrl(show.poster) ? (
+                      <img
+                        src={mediaUrl(show.poster)}  
                         alt={show.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

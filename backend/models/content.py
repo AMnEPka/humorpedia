@@ -152,32 +152,23 @@ class TeamUpdate(BaseModel):
 
 # === SHOW ===
 
-class ShowFacts(BaseModel):
-    """Quick facts about a show"""
-    start_year: Optional[int] = None
-    end_year: Optional[int] = None
-    network: Optional[str] = None  # TV channel
-    episodes_count: Optional[int] = None
-    seasons_count: Optional[int] = None
-    hosts: List[str] = Field(default_factory=list)  # Host names
-    host_ids: List[str] = Field(default_factory=list)  # Host person IDs
-    genre: List[str] = Field(default_factory=list)
-    status: str = "ongoing"  # ongoing, ended, hiatus
-
-
 class Show(BaseContent):
-    """Show/Project page"""
+    """Страница шоу/проекта. Может быть дочерней (сезон, подпроект): адрес — /shows/{full_path}."""
     content_type: ContentType = ContentType.SHOW
-    
+
     # Basic info
     name: str
     poster: Optional[MediaFile] = None
-    facts: ShowFacts = Field(default_factory=ShowFacts)
+    facts: Dict[str, str] = Field(default_factory=dict)  # «Статус шоу», «Дата премьеры», … (таблица фактов)
+    facts_order: List[str] = Field(default_factory=list)
+    social_links: SocialLinks = Field(default_factory=SocialLinks)
     description: Optional[str] = None  # HTML
-    
-    # Hierarchy support
-    parent_id: Optional[str] = None  # For child shows (seasons, episodes)
-    child_show_ids: List[str] = Field(default_factory=list)  # List of child shows
+
+    # Иерархия: parent_id = _id родителя; full_path = путь родителя + "/" + slug (уникален); order — порядок среди соседей
+    parent_id: Optional[str] = None
+    full_path: Optional[str] = None
+    level: int = 0
+    order: int = 0
     
     # Modular content
     modules: List[PageModule] = Field(default_factory=list)
@@ -196,9 +187,12 @@ class ShowCreate(BaseModel):
     slug: str
     name: str
     poster: Optional[MediaFile] = None
-    facts: Optional[Dict[str, Any]] = None  # Accept dict, will be converted to ShowFacts in endpoint
+    facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
+    social_links: Optional[SocialLinks] = None
     description: Optional[str] = None
-    parent_id: Optional[str] = None  # For child shows
+    parent_id: Optional[str] = None  # родитель (сезон, подпроект)
+    order: Optional[int] = None
     modules: List[PageModule] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
@@ -212,9 +206,12 @@ class ShowUpdate(BaseModel):
     slug: Optional[str] = None
     name: Optional[str] = None
     poster: Optional[MediaFile] = None
-    facts: Optional[Dict[str, Any]] = None  # Accept dict, will be converted to ShowFacts in endpoint
+    facts: Optional[Dict[str, str]] = None
+    facts_order: Optional[List[str]] = None
+    social_links: Optional[SocialLinks] = None
     description: Optional[str] = None
-    parent_id: Optional[str] = None  # For child shows
+    parent_id: Optional[str] = None  # "" — сделать шоу корневым
+    order: Optional[int] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None

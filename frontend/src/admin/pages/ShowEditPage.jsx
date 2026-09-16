@@ -14,12 +14,15 @@ import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
 import MediaSelector from '../components/MediaSelector';
+import FactsEditor from '../components/FactsEditor';
 
 const emptyShow = {
   title: '', slug: '', name: '', status: 'draft',
   poster: null, description: '',
   facts: {},  // Произвольные факты key-value
+  facts_order: [],  // Порядок фактов
   social_links: {},  // Социальные ссылки
+  order: 0,  // Порядок среди соседних страниц (сезонов)
   modules: [], tags: [], related_person_ids: [],
   seo: { meta_title: '', meta_description: '' }
 };
@@ -121,7 +124,11 @@ export default function ShowEditPage() {
         // Explicitly set to null to clear poster
         dataToSend.poster = null;
       }
-      if (show.facts && Object.keys(show.facts).length > 0) dataToSend.facts = show.facts;
+      dataToSend.facts = show.facts || {};
+      dataToSend.facts_order = (show.facts_order || []).filter((k) => k in dataToSend.facts)
+        .concat(Object.keys(dataToSend.facts).filter((k) => !(show.facts_order || []).includes(k)));
+      dataToSend.social_links = show.social_links || {};
+      dataToSend.order = Number(show.order) || 0;
       if (show.description) dataToSend.description = show.description;
       if (show.parent_id) dataToSend.parent_id = show.parent_id;
       if (show.modules) dataToSend.modules = show.modules;
@@ -168,7 +175,7 @@ export default function ShowEditPage() {
         </div>
         <div className="flex items-center gap-2">
           {!isNew && show.slug && (
-            <Button variant="outline" onClick={() => window.open(`/shows/${show.slug}`, '_blank')}>
+            <Button variant="outline" onClick={() => window.open(`/shows/${show.full_path || show.slug}`, '_blank')}>
               <ExternalLink className="mr-2 h-4 w-4" />Предпросмотр
             </Button>
           )}
@@ -213,7 +220,16 @@ export default function ShowEditPage() {
                 <div className="space-y-2">
                   <Label>URL (slug)</Label>
                   <Input value={show.slug} onChange={(e) => setShow(p => ({ ...p, slug: e.target.value }))} />
+                  {show.full_path && (
+                    <p className="text-xs text-muted-foreground">Адрес: /shows/{show.full_path}</p>
+                  )}
                 </div>
+                {show.parent_id && (
+                  <div className="space-y-2">
+                    <Label>Порядок среди разделов родительского шоу</Label>
+                    <Input type="number" value={show.order ?? 0} onChange={(e) => setShow(p => ({ ...p, order: e.target.value }))} />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Описание</Label>
                   <Textarea value={show.description || ''} onChange={(e) => setShow(p => ({ ...p, description: e.target.value }))} rows={4} />
@@ -244,40 +260,13 @@ export default function ShowEditPage() {
           <Card>
             <CardHeader><CardTitle>Факты о шоу</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {/* Существующие факты */}
-              {Object.entries(show.facts || {}).length > 0 ? (
-                <div className="space-y-2">
-                  {Object.entries(show.facts).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      <Input 
-                        value={key} 
-                        className="w-1/3 bg-background"
-                        onChange={(e) => {
-                          const newFacts = { ...show.facts };
-                          delete newFacts[key];
-                          newFacts[e.target.value] = value;
-                          setShow(p => ({ ...p, facts: newFacts }));
-                        }}
-                      />
-                      <Input 
-                        value={value} 
-                        className="flex-1 bg-background"
-                        onChange={(e) => setShow(p => ({ ...p, facts: { ...p.facts, [key]: e.target.value } }))}
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => {
-                          const newFacts = { ...show.facts };
-                          delete newFacts[key];
-                          setShow(p => ({ ...p, facts: newFacts }));
-                        }}
-                      >
-                        <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+              {/* Существующие факты (порядок — перетаскиванием) */}
+              {Object.keys(show.facts || {}).length > 0 ? (
+                <FactsEditor
+                  facts={show.facts || {}}
+                  factsOrder={show.facts_order || []}
+                  onChange={({ facts, facts_order }) => setShow(p => ({ ...p, facts, facts_order }))}
+                />
               ) : (
                 <p className="text-muted-foreground text-sm">Нет фактов</p>
               )}
@@ -297,7 +286,7 @@ export default function ShowEditPage() {
                   className="flex-1"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newFactKey.trim() && newFactValue.trim()) {
-                      setShow(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                      setShow(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() }, facts_order: [...(p.facts_order || []), newFactKey.trim()] }));
                       setNewFactKey('');
                       setNewFactValue('');
                     }
@@ -307,7 +296,7 @@ export default function ShowEditPage() {
                   variant="outline"
                   onClick={() => {
                     if (newFactKey.trim() && newFactValue.trim()) {
-                      setShow(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() } }));
+                      setShow(p => ({ ...p, facts: { ...p.facts, [newFactKey.trim()]: newFactValue.trim() }, facts_order: [...(p.facts_order || []), newFactKey.trim()] }));
                       setNewFactKey('');
                       setNewFactValue('');
                     }
