@@ -62,7 +62,7 @@
 | GET | `/teams/{id_or_slug}` | документ (кэш 5 мин), без записи при чтении |
 | POST | `/teams/{id_or_slug}/refresh` ✏️ | self-healing: scaffold фактов/модулей, авто-модуль «Список игр команды» из season_data, логотип, primary_tag |
 | POST | `/teams-refresh-all` ✏️ | self-healing всех команд |
-| PUT | `/teams/{id}` ✏️ | обновить; при смене slug/названия — обновляет упоминания во всех `kvn.season_data` |
+| PUT | `/teams/{id}` ✏️ | обновить; при смене slug — обновляет ссылки во всех `kvn.season_data` и пересобирает сезоны (исторические названия не меняются) |
 | DELETE | `/teams/{id}` ✏️ | удалить |
 
 ### КВН (`content_kvn.py`, коллекция `kvn`)
@@ -138,3 +138,7 @@ POST `` ✏️(admin/editor) · GET `?content_type` · GET `/default/{content_ty
 
 ## mongo_admin.py — `/mongo` 🛡 (страница админки «База данных»)
 GET `/collections` · POST `/export` (query/projection/sort/limit) · POST `/import` (insert/upsert/replace) · POST `/delete` (непустой query) · POST `/aggregate` · GET `/stats`
+
+## competitions.py — `/competitions` (турниры, сезоны, перекрёстные ссылки)
+GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + сезоны) · GET `/seasons/{id}` · GET `/seasons/by-page/{page_id}` · PUT `/seasons/{id}` ✏️ (пишет и в `season_data` страницы) · GET `/unresolved` · POST `/sync` 🛡 · GET `/teams/{id_or_slug}/participations?games=`
+Подробно — [COMPETITIONS.md](COMPETITIONS.md).

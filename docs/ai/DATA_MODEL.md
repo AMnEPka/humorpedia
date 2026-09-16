@@ -24,6 +24,9 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `media` | — | media | `url`, `uploaded_at`, `status` (soft delete) |
 | `templates` | `PageTemplate` | templates | `name` уникально, `content_type`, `modules[]`, `is_default` |
 | `cache_meta` | — | server.py middleware | `{_id: "version", v: int}` — поколение in-memory кэша для синхронизации воркеров |
+| `tournaments` | `competition.py` | competitions | турнир/лига/проект: `show`, `slug`, `participant_type` (team/person), ссылка на страницу — см. COMPETITIONS.md |
+| `seasons` | `SeasonUpdate` | competitions | сезон: список участников, победители, этапы → игры → результаты (ссылки на `teams._id`) — источник истины вместо `kvn.season_data` |
+| `participations` | — | competitions | производная: участие команды/человека в сезоне (`kind=season`) и в игре (`kind=game`) для перекрёстных ссылок |
 
 Индексы создаются при каждом старте в `server.py:create_indexes` — при добавлении полей для фильтрации добавлять индекс туда.
 
@@ -81,6 +84,8 @@ kvn                                   level 0, full_path "kvn"
 - Команды КВН живут в отдельной коллекции `teams`, публичный URL `/kvn/teams/{slug}`.
 
 ## `season_data` (документ сезона в `kvn`)
+
+> С этапа 1 источник истины — коллекция `seasons` (docs/ai/COMPETITIONS.md); `season_data` синхронизируется с ней автоматически и остаётся форматом для публичной страницы и старого редактора.
 
 Формируется `migration/kvn/process_seasons.py` (парсинг HTML MODX) и редактируется в `SeasonDataEditor.jsx`.
 Подробная схема парсера — `migration/kvn/README_SEASONS.md`.

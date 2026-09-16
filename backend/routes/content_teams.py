@@ -23,11 +23,21 @@ from services.tags import tag_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
 from services.views_counter import views_counter
+from services.competitions import sync_kvn_pages
 from utils.auth import get_current_user, require_admin
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/content", tags=["teams"], dependencies=[Depends(require_editor_on_write)])
+
+
+def _pages_with_team_query(slug: str) -> dict:
+    """Страницы сезонов КВН, где упоминается команда с данным slug."""
+    return {"$or": [
+        {"season_data.stages.games.teams.team_slug": slug},
+        {"season_data.all_teams.slug": slug},
+        {"season_data.winners.slug": slug},
+    ]}
 
 
 # ---------------------------------------------------------------------------
@@ -1529,82 +1539,6 @@ async def update_team_slug_in_seasons(old_slug: str, new_slug: str, new_name: st
         logger.warning(f"⚠️  No seasons found with team slug '{old_slug}' to update. Team may not be in any seasons yet.")
 
 
-async def update_team_name_in_seasons(team_slug: str, new_name: str, db):
-    """
-    Обновляет название команды во всех сезонах КВН, где она упоминается.
-    Обновляет:
-    - season_data.all_teams[].name (сохраняет город, если он был: "Новое название (Город)")
-    - season_data.stages[].games[].teams[].team_name (сохраняет город, если он был)
-    """
-    if not team_slug or not new_name:
-        return
-    
-    updated_seasons = 0
-    
-    # Находим все сезоны, где упоминается эта команда
-    async for season in db.kvn.find({"season_data": {"$exists": True}}):
-        season_data = season.get("season_data", {})
-        if not season_data:
-            continue
-        
-        needs_update = False
-        
-        # Обновляем в all_teams
-        all_teams = season_data.get("all_teams", [])
-        for team_entry in all_teams:
-            if isinstance(team_entry, dict) and team_entry.get("slug") == team_slug:
-                old_name = team_entry.get("name", "")
-                # Если старое название содержит город в скобках, сохраняем его
-                city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_name)
-                if city_match:
-                    city = city_match.group(1)
-                    updated_name = f"{new_name} ({city})"
-                else:
-                    updated_name = new_name
-                
-                if old_name != updated_name:
-                    team_entry["name"] = updated_name
-                    needs_update = True
-            elif isinstance(team_entry, str) and team_entry == team_slug:
-                # Если all_teams содержит только slug'и, пропускаем (не обновляем)
-                pass
-        
-        # Обновляем в играх (stages -> games -> teams)
-        stages = season_data.get("stages", [])
-        for stage in stages:
-            games = stage.get("games", [])
-            for game in games:
-                teams = game.get("teams", [])
-                for team in teams:
-                    if isinstance(team, dict) and team.get("team_slug") == team_slug:
-                        old_team_name = team.get("team_name", "")
-                        # Если старое название содержит город в скобках, сохраняем его
-                        city_match = re.search(r'\s*\(([^)]+)\)\s*$', old_team_name)
-                        if city_match:
-                            city = city_match.group(1)
-                            updated_team_name = f"{new_name} ({city})"
-                        else:
-                            updated_team_name = new_name
-                        
-                        if old_team_name != updated_team_name:
-                            team["team_name"] = updated_team_name
-                            needs_update = True
-        
-        # Сохраняем обновления, если были изменения
-        if needs_update:
-            try:
-                await db.kvn.update_one(
-                    {"_id": season["_id"]},
-                    {"$set": {"season_data": season_data, "updated_at": datetime.now(timezone.utc).isoformat()}}
-                )
-                updated_seasons += 1
-            except Exception as e:
-                logger.error(f"Failed to update season {season.get('full_path', season.get('_id'))}: {e}")
-    
-    if updated_seasons > 0:
-        logger.info(f"Updated team name '{new_name}' in {updated_seasons} seasons for team slug '{team_slug}'")
-
-
 @router.put("/teams/{id}", response_model=dict)
 async def update_team(id: str, data: TeamUpdate):
     """Update team"""
@@ -1615,7 +1549,6 @@ async def update_team(id: str, data: TeamUpdate):
     if not current_team:
         raise HTTPException(status_code=404, detail="Team not found")
     
-    old_name = current_team.get("name") or current_team.get("title")
     old_slug = current_team.get("slug")
     
     # Выполняем обновление
@@ -1626,28 +1559,16 @@ async def update_team(id: str, data: TeamUpdate):
     if not updated_team:
         return result
     
-    new_name = updated_team.get("name") or updated_team.get("title")
     new_slug = updated_team.get("slug")
     
-    # Если изменился slug команды, обновляем его во всех сезонах
-    # При этом также обновляем team_name, используя актуальное название
+    # Если изменился slug команды — обновляем ссылки во всех сезонах.
+    # Названия в сезонах НЕ трогаем: там хранится название, под которым команда играла в том сезоне.
     if old_slug and new_slug and old_slug != new_slug:
         logger.info(f"Team slug changed: '{old_slug}' -> '{new_slug}', updating in all seasons...")
         team_id = updated_team.get("_id") or updated_team.get("id")
-        await update_team_slug_in_seasons(old_slug, new_slug, new_name, team_id, db)
-        # Используем новый slug для обновления названия (если оно тоже изменилось)
-        team_slug = new_slug
-        # Если название тоже изменилось, обновляем его отдельно (для случаев, когда slug не менялся)
-        if new_name and new_name != old_name:
-            logger.info(f"Team name also changed: '{old_name}' -> '{new_name}', updating in all seasons...")
-            await update_team_name_in_seasons(team_slug, new_name, db)
-    else:
-        team_slug = old_slug or new_slug
-        # Если изменилось только название (без изменения slug), обновляем его в сезонах
-        if team_slug and new_name and new_name != old_name:
-            logger.info(f"Team name changed: '{old_name}' -> '{new_name}', updating in all seasons...")
-            await update_team_name_in_seasons(team_slug, new_name, db)
-    
+        await update_team_slug_in_seasons(old_slug, new_slug, None, team_id, db)
+        await sync_kvn_pages(db, _pages_with_team_query(new_slug))
+
     # ─── Self-healing при сохранении ─────────────────────────────────
     # Пересчитываем scaffold и «Список игр» только при сохранении из админки
     try:
@@ -1668,7 +1589,12 @@ async def update_team(id: str, data: TeamUpdate):
 @router.delete("/teams/{id}")
 async def delete_team(id: str):
     """Delete team"""
+    db = await get_db()
+    team = await db.teams.find_one({"_id": id}, {"slug": 1})
     result = await delete_content("teams", id, "Team not found")
+    # Модель соревнований: ссылки на удалённую команду в сезонах становятся непривязанными
+    if team and team.get("slug"):
+        await sync_kvn_pages(db, _pages_with_team_query(team["slug"]))
     # ─── Инвалидация кэша ─────────────────────────────────────────────
     cache_service.invalidate_team()  # flush all team cache
     cache_service.invalidate_team_lists()

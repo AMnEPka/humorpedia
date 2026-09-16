@@ -21,6 +21,7 @@ from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
 from services.views_counter import views_counter
+from services.competitions import sync_from_kvn_page, delete_season_for_page
 
 logger = logging.getLogger(__name__)
 
@@ -524,12 +525,15 @@ async def create_kvn(data: KVNCreate):
                 {"$addToSet": {"child_kvn_ids": result["id"]}}
             )
     
-    # Update person and team links
+    # Update person links (team_ids уже сохранены в документе)
     if data.person_ids:
         await linking_service.update_person_links("kvn", result["id"], data.person_ids)
-    if data.team_ids:
-        await linking_service.update_team_links("kvn", result["id"], data.team_ids)
-    
+
+    # Модель соревнований: если для страницы автоматически создан season_data — завести сезон
+    created_page = await db.kvn.find_one({"id": result["id"]})
+    if created_page and created_page.get("season_data"):
+        await sync_from_kvn_page(db, created_page)
+
     # ─── Инвалидация кэша ─────────────────────────────────────────────
     cache_service.invalidate_kvn()  # Сбрасываем весь KVN-кэш
     cache_service.invalidate_kvn_children()  # Сбрасываем кэш детей
@@ -1199,6 +1203,12 @@ async def update_kvn(id: str, data: KVNUpdate):
                 if seasons_to_update:
                     logger.info(f"Обновлены {len(seasons_to_update)} сезонов, которые ссылались на старый slug {old_slug}")
     
+    # Модель соревнований: season_data, путь или статус страницы могли измениться — пересобрать сезон
+    if data.season_data is not None or any(k in update_data for k in ("full_path", "slug", "title", "status")):
+        page_after = await db.kvn.find_one({"_id": kvn_id})
+        if page_after:
+            await sync_from_kvn_page(db, page_after)
+
     # Return updated document, converting ObjectIds to strings
     try:
         updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
@@ -1258,7 +1268,9 @@ async def delete_kvn(id: str):
     result = await db.kvn.delete_one({"_id": kvn_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")
-    
+
+    await delete_season_for_page(db, str(kvn_id))
+
     # ─── Инвалидация кэша ─────────────────────────────────────────────
     cache_service.invalidate_kvn()
     cache_service.invalidate_kvn_children()

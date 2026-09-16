@@ -14,6 +14,7 @@ import os
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
+from pymongo.errors import OperationFailure
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
@@ -35,6 +36,7 @@ from utils.rate_limit import limiter
 from utils.database import get_db, close_db
 from utils.auth import require_admin, SAFE_METHODS
 from services.admin_bootstrap import ensure_admin_from_env
+from services.competitions import ensure_competitions_synced, create_competition_indexes
 
 
 @asynccontextmanager
@@ -52,6 +54,9 @@ async def lifespan(app: FastAPI):
     
     # Первый администратор из ADMIN_EMAIL / ADMIN_PASSWORD (если админов ещё нет)
     await ensure_admin_from_env(db)
+
+    # Модель соревнований: первичная синхронизация из страниц КВН, если сезонов ещё нет
+    await ensure_competitions_synced(db)
     
     # Запускаем батчевый счётчик просмотров
     from services.views_counter import views_counter
@@ -75,6 +80,12 @@ async def _ensure_index(collection, keys, **kwargs):
     """Создать индекс; ошибка одного индекса (например, дубликаты в данных) не мешает остальным."""
     try:
         await collection.create_index(keys, **kwargs)
+    except OperationFailure as e:
+        if e.code in (85, 86):  # IndexOptionsConflict / IndexKeySpecsConflict: индекс уже есть с другими опциями
+            logger.info(f"Index {collection.name} {keys} уже существует с другими параметрами — оставлен как есть")
+            return
+        _index_failures.append(f"{collection.name}.{keys}")
+        logger.error(f"Index {collection.name} {keys} {kwargs} not created: {e}")
     except Exception as e:
         _index_failures.append(f"{collection.name}.{keys}")
         logger.error(f"Index {collection.name} {keys} {kwargs} not created: {e}")
@@ -86,7 +97,7 @@ async def create_indexes(db):
     try:
         # People indexes
         await _ensure_index(db.people, "slug", unique=True)
-        await _ensure_index(db.people, "id", unique=True)
+        await _ensure_index(db.people, "id", unique=True, sparse=True)
         await _ensure_index(db.people, "title")
         await _ensure_index(db.people, "full_name")
         await _ensure_index(db.people, "tags")
@@ -96,7 +107,7 @@ async def create_indexes(db):
         
         # Teams indexes
         await _ensure_index(db.teams, "slug", unique=True)
-        await _ensure_index(db.teams, "id", unique=True)
+        await _ensure_index(db.teams, "id", unique=True, sparse=True)
         await _ensure_index(db.teams, "name")
         await _ensure_index(db.teams, "team_type")
         await _ensure_index(db.teams, "tags")
@@ -199,6 +210,9 @@ async def create_indexes(db):
         await _ensure_index(db.cities, "tags")
         await _ensure_index(db.cities, "status")
         await _ensure_index(db.cities, [("title", "text"), ("name", "text")])
+
+        # Соревнования: турниры, сезоны, перекрёстные ссылки
+        await create_competition_indexes(_ensure_index, db)
         
         if _index_failures:
             logger.warning(f"MongoDB indexes: {len(_index_failures)} not created: {_index_failures}")
@@ -255,6 +269,7 @@ from routes.sections import router as sections_router
 from routes.mongo_admin import router as mongo_admin_router
 from routes.cities import router as cities_router
 from routes.redirects import router as redirects_router
+from routes.competitions import router as competitions_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -277,6 +292,7 @@ api_router.include_router(sections_router)
 api_router.include_router(mongo_admin_router)
 api_router.include_router(cities_router)
 api_router.include_router(redirects_router)
+api_router.include_router(competitions_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
