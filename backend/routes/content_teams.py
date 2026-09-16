@@ -771,8 +771,11 @@ async def list_teams(
 
 
 @router.get("/teams/{id_or_slug}", response_model=dict)
-async def get_team(id_or_slug: str):
+async def get_team(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get team by ID or slug — чистое чтение, без write-on-read."""
+    if raw:
+        return await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+
     # ─── Кэш: проверяем ──────────────────────────────────────────────
     cached = cache_service.get_team(id_or_slug)
     if cached is not None:
@@ -781,9 +784,8 @@ async def get_team(id_or_slug: str):
 
     team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
 
-    # Разрешаем ссылки в модулях для ответа (кэшируется внутри LinkResolver)
-    if team.get('modules'):
-        team['modules'] = await LinkResolver.resolve_links_in_modules(team['modules'])
+    # Ссылки в тексте: актуальные адреса, на отсутствующие страницы — текстом
+    await LinkResolver.resolve_document(team)
 
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
     team_slug = team.get("slug", id_or_slug)

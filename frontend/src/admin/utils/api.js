@@ -148,7 +148,8 @@ export const authApi = {
 export const contentApi = {
   // People
   listPeople: (params) => api.get('/content/people', { params }),
-  getPerson: (id) => api.get(`/content/people/${id}`),
+  // raw: ссылки как в данных, без замены отсутствующих страниц текстом (иначе сохранение их потеряет)
+  getPerson: (id) => api.get(`/content/people/${id}`, { params: { raw: true } }),
   searchPeople: (q, limit = 10) => api.get('/content/people/search', { params: { q, limit } }),
   getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
   searchContent: (query, types, limit = 10) => api.get('/content/content/search', { params: { query, types, limit } }),
@@ -159,7 +160,7 @@ export const contentApi = {
 
   // Teams
   listTeams: (params) => api.get('/content/teams', { params }),
-  getTeam: (id) => api.get(`/content/teams/${id}`),
+  getTeam: (id) => api.get(`/content/teams/${id}`, { params: { raw: true } }),
   createTeam: (data) => api.post('/content/teams', data),
   updateTeam: (id, data) => api.put(`/content/teams/${id}`, data),
   deleteTeam: (id) => api.delete(`/content/teams/${id}`),
@@ -169,7 +170,7 @@ export const contentApi = {
   // Shows
   listShows: (params) => api.get('/content/shows', { params }),
   listShowsHierarchy: () => api.get('/content/shows-hierarchy'),
-  getShow: (id) => api.get(`/content/shows/${id}`),
+  getShow: (id) => api.get(`/content/shows/${id}`, { params: { raw: true } }),
   createShow: (data) => api.post('/content/shows', data),
   updateShow: (id, data) => api.put(`/content/shows/${id}`, data),
   deleteShow: (id) => api.delete(`/content/shows/${id}`),
@@ -177,7 +178,7 @@ export const contentApi = {
   // KVN
   listKvn: (params) => api.get('/content/kvn', { params }),
   listKvnHierarchy: () => api.get('/content/kvn-hierarchy'),
-  getKvn: (id) => api.get(`/content/kvn/${id}`),
+  getKvn: (id) => api.get(`/content/kvn/${id}`, { params: { raw: true } }),
   createKvn: (data) => api.post('/content/kvn', data),
   updateKvn: (id, data) => api.put(`/content/kvn/${id}`, data),
   deleteKvn: (id) => api.delete(`/content/kvn/${id}`),

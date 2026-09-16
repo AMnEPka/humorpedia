@@ -724,6 +724,9 @@ async def get_kvn_by_path(path: str):
     kvn["team_data"] = team_data
     kvn["team_data_version"] = datetime.now(timezone.utc).isoformat()
     
+    # Ссылки в тексте: актуальные адреса, на отсутствующие страницы — текстом
+    await LinkResolver.resolve_document(kvn, ("modules", "facts", "season_data", "jury_cards"))
+
     # Remove MongoDB _id from response (в кэше храним отдельно — для счётчика просмотров)
     doc_id = kvn.pop("_id", None)
 
@@ -758,14 +761,11 @@ async def get_kvn_children(parent_slug: str):
 
 
 @router.get("/kvn/{id_or_slug}", response_model=dict)
-async def get_kvn(id_or_slug: str):
+async def get_kvn(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get KVN page by ID or slug"""
     kvn = await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
-    
-    # Разрешаем ссылки в модулях
-    if kvn.get('modules'):
-        kvn['modules'] = await LinkResolver.resolve_links_in_modules(kvn['modules'])
-    
+    if not raw:
+        await LinkResolver.resolve_document(kvn, ("modules", "facts", "season_data", "jury_cards"))
     return kvn
 
 

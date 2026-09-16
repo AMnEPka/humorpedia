@@ -94,11 +94,11 @@ async def get_person_linked_content(
 
 
 @router.get("/people/{id_or_slug}", response_model=dict)
-async def get_person(id_or_slug: str):
+async def get_person(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get person by ID or slug."""
     person = await get_by_id_or_slug("people", id_or_slug, "Person not found")
-    if person.get('modules'):
-        person['modules'] = await LinkResolver.resolve_links_in_modules(person['modules'])
+    if not raw:
+        await LinkResolver.resolve_document(person)
     return person
 
 

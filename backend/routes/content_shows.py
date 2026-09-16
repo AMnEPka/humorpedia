@@ -74,7 +74,7 @@ async def get_show_by_path(path: str):
         show = await db.shows.find_one({"slug": path}, {"_id": 0})
     if not show:
         raise HTTPException(status_code=404, detail="Show not found")
-    return show
+    return await LinkResolver.resolve_document(show)
 
 
 @router.get("/shows/{parent_slug}/children", response_model=dict)
@@ -94,11 +94,11 @@ async def get_show_children(parent_slug: str):
 
 
 @router.get("/shows/{id_or_slug}", response_model=dict)
-async def get_show(id_or_slug: str):
+async def get_show(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get show by ID or slug."""
     show = await get_by_id_or_slug("shows", id_or_slug, "Show not found")
-    if show.get('modules'):
-        show['modules'] = await LinkResolver.resolve_links_in_modules(show['modules'])
+    if not raw:
+        await LinkResolver.resolve_document(show)
     return show
 
 

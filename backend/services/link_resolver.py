@@ -1,190 +1,274 @@
 """
-Батчевый резолвер ссылок в HTML-контенте.
+Ссылки в HTML контента при выдаче на публичный сайт.
 
-Вместо N отдельных find_one запросов (по одному на каждую ссылку),
-собирает все slug'и, делает 1 запрос ($in) на коллекцию, затем заменяет разом.
+- ссылка на существующую опубликованную страницу → её актуальный адрес (в том числе по старому URL MODX
+  из `old_urls`, по `[[~id]]` через `old_id` и по известным паттернам старых адресов);
+- ссылка на страницу, которой пока нет или которая не опубликована → обычный текст. В данных ссылка
+  остаётся и «оживёт», когда страница появится (кэш сбрасывается при любой записи);
+- внешние ссылки, якоря, файлы и служебные разделы сайта не трогаются.
 
-Было:  50 ссылок → 50 find_one → ~50 × 1ms = 50ms
-Стало: 50 ссылок → 1 parse + max 6 find($in) → ~6 × 1ms = 6ms
+Документы в данных не меняются. Админка читает их с `?raw=true`, чтобы при сохранении не потерять ссылки.
+
+Все ссылки одного ответа проверяются пачкой: по одному запросу `$in` на коллекцию.
 """
+from __future__ import annotations
 
+import html as html_lib
 import re
-from typing import Dict, List
-from utils.database import get_db
-from services.cache import cache_service
+from collections import defaultdict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
+from urllib.parse import urlsplit
 
-# Паттерн для поиска ссылок в HTML
-_LINK_RE = re.compile(
-    r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
-    re.IGNORECASE | re.DOTALL
-)
+from services.cache import cache_service
+from utils.database import get_db
+
+_A_RE = re.compile(r"<a\b([^>]*)>(.*?)</a\s*>", re.I | re.S)
+_HREF_RE = re.compile(r"""(\bhref\s*=\s*)(["'])(.*?)\2""", re.I | re.S)
+_MODX_LINK_RE = re.compile(r"^\[\[~(\d+)[^\]]*\]\]$")
+_SITE_HOSTS = {"humorpedia.ru", "www.humorpedia.ru", "dev.humorpedia.ru"}
+
+# Разделы нового сайта без документа в БД (списки, служебные страницы) — ссылки на них всегда живые
+STATIC_PATHS = {
+    "", "news", "articles", "people", "kvn/teams", "shows", "quizzes", "city", "contacts", "policy",
+    "search", "kvn/vl-kvn/vl-jury",
+}
+PASS_PREFIXES = ("tags/", "admin", "media/", "images/", "uploads/", "api/", "static/", "assets/")
+
+PUBLISHED = {"status": {"$nin": ["draft", "archived"]}}
+
+# Коллекция → адрес документа на сайте
+URL_BUILDERS: Dict[str, Callable[[dict], str]] = {
+    "people": lambda d: f"/people/{d['slug']}",
+    "teams": lambda d: f"/kvn/teams/{d['slug']}",
+    "kvn": lambda d: "/" + (d.get("full_path") or f"kvn/{d['slug']}").strip("/"),
+    "shows": lambda d: "/shows/" + (d.get("full_path") or d["slug"]).strip("/"),
+    "articles": lambda d: f"/articles/{d['slug']}",
+    "news": lambda d: f"/news/{d['slug']}",
+    "quizzes": lambda d: f"/quizzes/{d['slug']}",
+    "cities": lambda d: f"/city/{d['slug']}",
+}
+OLD_URL_COLLECTIONS = ("people", "teams", "kvn", "shows", "articles", "news")
+
+
+def link_key(href: str) -> Optional[str]:
+    """Ключ проверки ссылки: путь без слэшей по краям, `~<id>` для `[[~id]]`; None — ссылку не трогаем."""
+    href = html_lib.unescape((href or "").strip())
+    if not href or href.startswith(("#", "mailto:", "tel:", "javascript:", "data:")):
+        return None
+    modx = _MODX_LINK_RE.match(href)
+    if modx:
+        return "~" + modx.group(1)
+    parts = urlsplit(href)
+    if (parts.scheme or parts.netloc) and parts.hostname not in _SITE_HOSTS:
+        return None
+    path = parts.path.strip("/")
+    if path in STATIC_PATHS or path.startswith(PASS_PREFIXES):
+        return None
+    return path
+
+
+def link_suffix(href: str) -> str:
+    parts = urlsplit(html_lib.unescape((href or "").strip()))
+    return ("?" + parts.query if parts.query else "") + ("#" + parts.fragment if parts.fragment else "")
+
+
+def direct_query(path: str) -> Optional[Tuple[str, str, str]]:
+    """Путь нового сайта → (коллекция, поле, значение) для поиска документа."""
+    parts = path.split("/")
+    if parts[0] == "people" and len(parts) == 2:
+        return "people", "slug", parts[1]
+    if path.startswith("kvn/teams/") and len(parts) == 3:
+        return "teams", "slug", parts[2]
+    if parts[0] == "kvn":
+        return "kvn", "full_path", path
+    if parts[0] == "shows" and len(parts) >= 2:
+        return "shows", "full_path", "/".join(parts[1:])
+    if parts[0] in ("news", "articles", "quizzes") and len(parts) == 2:
+        return parts[0], "slug", parts[1]
+    if parts[0] == "city" and len(parts) == 2:
+        return "cities", "slug", parts[1]
+    return None
+
+
+def replace_links(html: str, targets: Dict[str, Optional[str]]) -> str:
+    """Подставить найденные адреса; ссылки на отсутствующие страницы превратить в текст."""
+
+    def repl(m: re.Match) -> str:
+        attrs, inner = m.group(1), m.group(2)
+        href_m = _HREF_RE.search(attrs)
+        if not href_m:
+            return m.group(0)
+        href = href_m.group(3)
+        key = link_key(href)
+        if key is None or key not in targets:
+            return m.group(0)
+        url = targets[key]
+        if url is None:
+            return inner
+        new_href = url + link_suffix(href)
+        if new_href == href:
+            return m.group(0)
+        new_attrs = attrs[:href_m.start(3)] + html_lib.escape(new_href, quote=True) + attrs[href_m.end(3):]
+        return f"<a{new_attrs}>{inner}</a>"
+
+    return _A_RE.sub(repl, html)
+
+
+def collect_keys(html: str) -> Set[str]:
+    keys = set()
+    for m in _A_RE.finditer(html or ""):
+        href_m = _HREF_RE.search(m.group(1))
+        if href_m:
+            key = link_key(href_m.group(3))
+            if key is not None:
+                keys.add(key)
+    return keys
+
+
+def _html_strings(value: Any) -> Iterable[str]:
+    if isinstance(value, str):
+        if "<a" in value:
+            yield value
+    elif isinstance(value, dict):
+        for v in value.values():
+            yield from _html_strings(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _html_strings(v)
+
+
+def _replace_strings(value: Any, resolved: Dict[str, str]) -> Any:
+    if isinstance(value, str):
+        return resolved.get(value, value)
+    if isinstance(value, dict):
+        return {k: _replace_strings(v, resolved) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_replace_strings(v, resolved) for v in value]
+    return value
+
+
+async def _find_urls(db, queries: Dict[str, Tuple[str, str, str]]) -> Dict[str, str]:
+    """{ключ: (коллекция, поле, значение)} → {ключ: адрес} для найденных опубликованных документов."""
+    grouped: Dict[Tuple[str, str], Dict[Any, List[str]]] = defaultdict(lambda: defaultdict(list))
+    for key, (coll, field, value) in queries.items():
+        grouped[(coll, field)][value].append(key)
+    found: Dict[str, str] = {}
+    for (coll, field), values in grouped.items():
+        query = {field: {"$in": list(values)}, **PUBLISHED}
+        async for doc in db[coll].find(query, {"slug": 1, "full_path": 1, field: 1}):
+            for key in values.get(doc.get(field), []):
+                found[key] = URL_BUILDERS[coll](doc)
+    return found
+
+
+async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
+    """Ключи ссылок → адрес на сайте или None, если страницы нет."""
+    from routes.redirects import _try_pattern_redirect
+
+    result: Dict[str, Optional[str]] = {}
+    pending = set(keys)
+
+    # 1. Адреса нового сайта
+    queries = {k: q for k in pending if not k.startswith("~") and (q := direct_query(k))}
+    result.update(await _find_urls(db, queries))
+    # у части шоу нет full_path — ищем по slug последнего сегмента
+    show_slugs = {k: ("shows", "slug", k.split("/")[-1]) for k in pending
+                  if k.startswith("shows/") and k not in result}
+    result.update(await _find_urls(db, show_slugs))
+    pending -= result.keys()
+
+    # 2. [[~id]] и старые адреса MODX (old_id / old_urls)
+    old_ids = {k: int(k[1:]) for k in pending if k.startswith("~")}
+    if old_ids:
+        for coll in URL_BUILDERS:
+            if not old_ids:
+                break
+            async for doc in db[coll].find({"old_id": {"$in": list(old_ids.values())}, **PUBLISHED},
+                                           {"slug": 1, "full_path": 1, "old_id": 1}):
+                for k in [k for k, v in old_ids.items() if v == doc.get("old_id")]:
+                    result[k] = URL_BUILDERS[coll](doc)
+                    old_ids.pop(k)
+    old_paths = {"/" + k: k for k in pending if not k.startswith("~") and k not in result}
+    if old_paths:
+        for coll in OLD_URL_COLLECTIONS:
+            async for doc in db[coll].find({"old_urls": {"$in": list(old_paths)}, **PUBLISHED},
+                                           {"slug": 1, "full_path": 1, "old_urls": 1}):
+                for url in doc.get("old_urls") or []:
+                    if url in old_paths and old_paths[url] not in result:
+                        result[old_paths[url]] = URL_BUILDERS[coll](doc)
+    pending -= result.keys()
+
+    # 3. Известные паттерны старых адресов → адрес нового сайта
+    patterned = {}
+    for k in pending:
+        if k.startswith("~"):
+            continue
+        new_path = _try_pattern_redirect("/" + k)
+        if new_path and new_path.strip("/") != k:
+            new_key = new_path.strip("/")
+            if new_key in STATIC_PATHS:
+                result[k] = "/" + new_key
+            elif (q := direct_query(new_key)):
+                patterned[k] = q
+    result.update(await _find_urls(db, patterned))
+    pending -= result.keys()
+
+    for k in pending:
+        result[k] = None
+    return result
+
+
+async def load_old_id_urls(db) -> Dict[int, str]:
+    """id ресурса старого сайта (old_id) → адрес перенесённой страницы. Для перевода ссылок при импорте."""
+    urls: Dict[int, str] = {}
+    for coll, build in URL_BUILDERS.items():
+        async for doc in db[coll].find({"old_id": {"$ne": None}}, {"slug": 1, "full_path": 1, "old_id": 1}):
+            try:
+                urls.setdefault(int(doc["old_id"]), build(doc))
+            except (TypeError, ValueError, KeyError):
+                continue
+    return urls
 
 
 class LinkResolver:
-    """Разрешает ссылки в HTML контенте, проверяя актуальность slug'ов."""
+    """Обработка ссылок в ответах публичного API."""
+
+    @staticmethod
+    async def resolve_value(value: Any) -> Any:
+        """Вернуть копию структуры (строка / dict / list), где все HTML-строки обработаны."""
+        strings = set(_html_strings(value))
+        if not strings:
+            return value
+        resolved: Dict[str, str] = {}
+        todo = []
+        for s in strings:
+            cached = cache_service.get_resolved_html(s)
+            if cached is not None:
+                resolved[s] = cached
+            else:
+                todo.append(s)
+        if todo:
+            keys = set().union(*(collect_keys(s) for s in todo))
+            targets = await resolve_targets(await get_db(), keys) if keys else {}
+            for s in todo:
+                out = replace_links(s, targets) if keys else s
+                cache_service.set_resolved_html(s, out)
+                resolved[s] = out
+        return _replace_strings(value, resolved)
 
     @staticmethod
     async def resolve_links_in_html(html: str) -> str:
-        """
-        Обновляет ссылки в HTML, проверяя актуальность slug'ов.
-        Результат кэшируется по хэшу исходного HTML.
-        """
-        if not html:
-            return html
-
-        # ─── Кэш ──────────────────────────────────────────────────────
-        cached = cache_service.get_resolved_html(html)
-        if cached is not None:
-            return cached
-
-        # ─── Фаза 1: Парсим все ссылки ────────────────────────────────
-        matches = list(_LINK_RE.finditer(html))
-        if not matches:
-            cache_service.set_resolved_html(html, html)
-            return html
-
-        # Собираем уникальные slug'и и full_path'ы по коллекциям
-        # {collection_name: set_of_slugs}
-        slug_requests: Dict[str, set] = {}
-        # {full_path: True} — для KVN ссылок с полным путём
-        full_path_requests: set = set()
-
-        parsed_links = []  # (match, url, url_parts, content_type, slug, is_full_path)
-
-        for match in matches:
-            url = match.group(1)
-
-            # Пропускаем внешние, якоря, короткие
-            if (url.startswith(('http://', 'https://', 'mailto:', '#'))
-                    or not url.strip('/')):
-                parsed_links.append((match, url, None, None, None, False))
-                continue
-
-            url_parts = url.strip('/').split('/')
-            if len(url_parts) < 2:
-                parsed_links.append((match, url, url_parts, None, None, False))
-                continue
-
-            content_type = url_parts[0]
-            slug = url_parts[-1]
-
-            # KVN full path (kvn/vl-kvn/vl-2025 и т.д.)
-            if content_type == 'kvn' and len(url_parts) > 2:
-                fp = '/'.join(url_parts).lstrip('/')
-                full_path_requests.add(fp)
-                parsed_links.append((match, url, url_parts, content_type, slug, True))
-            elif content_type in ('people', 'kvn', 'teams', 'shows', 'articles', 'news'):
-                slug_requests.setdefault(content_type, set()).add(slug)
-                parsed_links.append((match, url, url_parts, content_type, slug, False))
-            else:
-                parsed_links.append((match, url, url_parts, None, None, False))
-
-        # ─── Фаза 2: Батчевые запросы к БД ────────────────────────────
-        db = await get_db()
-
-        # Маппинг collection_name → (db_collection, url_prefix)
-        collection_map = {
-            'people':   (db.people,   '/people/'),
-            'kvn':      (db.kvn,      '/kvn/'),
-            'teams':    (db.teams,    '/kvn/teams/'),
-            'shows':    (db.shows,    '/shows/'),
-            'articles': (db.articles, '/articles/'),
-            'news':     (db.news,     '/news/'),
-        }
-
-        # slug → doc  (по коллекциям)
-        slug_lookup: Dict[str, Dict[str, dict]] = {}  # {content_type: {slug: doc}}
-
-        for coll_name, slugs in slug_requests.items():
-            if not slugs or coll_name not in collection_map:
-                continue
-            db_coll = collection_map[coll_name][0]
-            docs = await db_coll.find(
-                {"slug": {"$in": list(slugs)}},
-                {"slug": 1, "full_path": 1, "_id": 0}
-            ).to_list(len(slugs) + 10)
-            slug_lookup[coll_name] = {doc["slug"]: doc for doc in docs}
-
-        # full_path → doc  (для KVN)
-        fp_lookup: Dict[str, dict] = {}
-        if full_path_requests:
-            fp_docs = await db.kvn.find(
-                {"full_path": {"$in": list(full_path_requests)}},
-                {"slug": 1, "full_path": 1, "_id": 0}
-            ).to_list(len(full_path_requests) + 10)
-            fp_lookup = {doc["full_path"]: doc for doc in fp_docs}
-
-        # ─── Фаза 3: Замена ссылок ────────────────────────────────────
-        replacements = []
-        for (match, url, url_parts, content_type, slug, is_full_path) in parsed_links:
-            full_tag = match.group(0)
-            text = match.group(2)
-
-            if content_type is None:
-                # Ссылка не подлежит резолву
-                replacements.append((match.start(), match.end(), full_tag))
-                continue
-
-            if is_full_path:
-                fp = '/'.join(url_parts).lstrip('/')
-                doc = fp_lookup.get(fp)
-                if doc:
-                    correct_url = f"/{doc.get('full_path', '').lstrip('/')}"
-                    replacements.append((match.start(), match.end(),
-                                         f'<a href="{correct_url}">{text}</a>'))
-                else:
-                    replacements.append((match.start(), match.end(), full_tag))
-                continue
-
-            coll_docs = slug_lookup.get(content_type, {})
-            doc = coll_docs.get(slug)
-            if doc:
-                current_slug = doc.get('slug')
-                if current_slug != slug:
-                    # Slug изменился — обновляем
-                    if content_type == 'kvn':
-                        fp = doc.get('full_path') or current_slug
-                        correct_url = f"/{fp.lstrip('/')}"
-                    else:
-                        correct_url = f"{collection_map[content_type][1]}{current_slug}"
-                    replacements.append((match.start(), match.end(),
-                                         f'<a href="{correct_url}">{text}</a>'))
-                else:
-                    replacements.append((match.start(), match.end(), full_tag))
-            else:
-                replacements.append((match.start(), match.end(), full_tag))
-
-        # Применяем замены в обратном порядке
-        result = html
-        for start, end, replacement in reversed(replacements):
-            result = result[:start] + replacement + result[end:]
-
-        # ─── Кэш: сохраняем ──────────────────────────────────────────
-        cache_service.set_resolved_html(html, result)
-
-        return result
+        return await LinkResolver.resolve_value(html) if html else html
 
     @staticmethod
     async def resolve_links_in_modules(modules: List[Dict]) -> List[Dict]:
-        """
-        Разрешает ссылки во всех text_block модулях.
-        """
-        if not modules:
-            return modules
+        return await LinkResolver.resolve_value(modules) if modules else modules
 
-        resolved_modules = []
-        for module in modules:
-            if module.get('type') == 'text_block':
-                content = module.get('data', {}).get('content', '')
-                if content:
-                    resolved_content = await LinkResolver.resolve_links_in_html(content)
-                    new_module = module.copy()
-                    new_module['data'] = module['data'].copy()
-                    new_module['data']['content'] = resolved_content
-                    resolved_modules.append(new_module)
-                else:
-                    resolved_modules.append(module)
-            else:
-                resolved_modules.append(module)
-
-        return resolved_modules
+    @staticmethod
+    async def resolve_document(doc: dict, fields: Iterable[str] = ("modules", "facts")) -> dict:
+        """Обработать ссылки в указанных полях документа (на месте)."""
+        present = {f: doc[f] for f in fields if doc.get(f)}
+        if present:
+            resolved = await LinkResolver.resolve_value(present)
+            doc.update(resolved)
+        return doc

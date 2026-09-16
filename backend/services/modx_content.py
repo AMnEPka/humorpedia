@@ -9,7 +9,7 @@ from __future__ import annotations
 import html as html_lib
 import re
 from html.parser import HTMLParser
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 from urllib.parse import urlsplit
 
 from services.modx_dump import ModxSite
@@ -79,12 +79,18 @@ class LinkMapper:
     его разрешит поиск редиректов, когда страница появится.
     """
 
-    def __init__(self, site: ModxSite, pattern_redirect: Optional[Callable[[str], Optional[str]]] = None):
+    def __init__(self, site: ModxSite, pattern_redirect: Optional[Callable[[str], Optional[str]]] = None,
+                 known_urls: Optional[Dict[int, str]] = None):
         self.site = site
         self.pattern_redirect = pattern_redirect
+        # id ресурса MODX → адрес уже перенесённой страницы (документы с old_id)
+        self.known_urls = known_urls or {}
         self.unresolved: List[str] = []
 
     def resource_url(self, resource: dict) -> Optional[str]:
+        known = self.known_urls.get(resource.get("id"))
+        if known:
+            return known
         template_url = TEMPLATE_URLS.get(resource.get("template"))
         if template_url and resource.get("alias"):
             return template_url.format(alias=resource["alias"])
@@ -126,6 +132,17 @@ class LinkMapper:
         if not resource:
             self.unresolved.append(href)
         return "/" + path + suffix
+
+
+def rewrite_links(value: str, mapper: LinkMapper) -> str:
+    """Перевести href/src старого сайта на адреса нового, не трогая остальной HTML (для уже сохранённого контента)."""
+    return _ATTR_RE.sub(
+        lambda m: m.group(1) + m.group(2) + _keep_or_map(m.group(3), mapper) + m.group(2), value or "")
+
+
+def _keep_or_map(raw: str, mapper: LinkMapper) -> str:
+    mapped = mapper.map(html_lib.unescape(raw))
+    return raw if mapped == html_lib.unescape(raw) else html_lib.escape(mapped, quote=True)
 
 
 def clean_html(value: str, mapper: Optional[LinkMapper] = None) -> str:

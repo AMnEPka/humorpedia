@@ -5,8 +5,9 @@ import pytest
 
 from models.content import Person, PersonCreate
 from routes.redirects import _try_pattern_redirect
+from services.link_resolver import collect_keys, direct_query, link_key, replace_links
 from services.modx_content import (
-    LinkMapper, clean_html, decode_entities, image_url, parse_facts_table, plain_text,
+    LinkMapper, clean_html, decode_entities, image_url, parse_facts_table, plain_text, rewrite_links,
 )
 from services.modx_dump import ModxSite, iter_table_rows, parse_values, unescape_mysql
 from services.modx_people import build_person, swap_name_order
@@ -206,3 +207,49 @@ def test_build_person_status_and_missing_photo(published, deleted, status):
     assert payload["full_name"] == "Антон Андреевич Шастун" and payload["primary_tag"] == "Антон Шастун"
     # дата публикации не заполнена в MODX → дата создания
     assert extra.get("published_at") == (extra["created_at"] if status == "published" else None)
+
+
+# ─── Ссылки: перевод сохранённого контента и выдача на сайт ──────────────────
+
+def test_mapper_prefers_migrated_page_by_old_id():
+    site = site_with_resources()
+    mapper = LinkMapper(site, _try_pattern_redirect, known_urls={77: "/kvn/vl-kvn", 500: "/kvn/teams/dals-renamed"})
+    assert mapper.map("kvn/vysshaya-liga/") == "/kvn/vl-kvn"
+    assert mapper.map("[[~500]]") == "/kvn/teams/dals-renamed"
+    assert mapper.map("/people/anton-shastun") == "/people/anton-shastun"   # новые адреса не трогаются
+
+
+def test_rewrite_links_changes_only_attributes():
+    mapper = LinkMapper(site_with_resources(), _try_pattern_redirect)
+    html = ('<p style="x">&laquo;Текст&raquo; <a href="kvn/team/dals.html" target="_blank">ДАЛС</a> '
+            '<a href="https://vk.com/a?b=1&amp;c=2">vk</a> <img src="images/t.jpg"></p>')
+    assert rewrite_links(html, mapper) == (
+        '<p style="x">&laquo;Текст&raquo; <a href="/kvn/teams/dals" target="_blank">ДАЛС</a> '
+        '<a href="https://vk.com/a?b=1&amp;c=2">vk</a> <img src="/media/imported/images/t.jpg"></p>')
+
+
+def test_link_key_and_direct_query():
+    assert link_key("/people/anton-shastun") == "people/anton-shastun"
+    assert link_key("people/x.html") == "people/x.html"
+    assert link_key("https://humorpedia.ru/kvn/teams/dals#a") == "kvn/teams/dals"
+    assert link_key("[[~116]]") == "~116"
+    for skipped in ("https://vk.com/x", "#top", "/people", "/tags/КВН", "/media/imported/images/a.jpg", "mailto:a@b.c"):
+        assert link_key(skipped) is None
+    assert direct_query("people/anton-shastun") == ("people", "slug", "anton-shastun")
+    assert direct_query("kvn/teams/dals") == ("teams", "slug", "dals")
+    assert direct_query("kvn/vl-kvn/vl-2015") == ("kvn", "full_path", "kvn/vl-kvn/vl-2015")
+    assert direct_query("shows/igra/season-1") == ("shows", "full_path", "igra/season-1")
+    assert direct_query("city/voronezh") == ("cities", "slug", "voronezh")
+    assert direct_query("proekty/standup.html") is None
+
+
+def test_replace_links_missing_pages_become_text():
+    html = ('<p><a href="/people/anton-shastun" class="x">Шастун</a>, <a href="people/old.html"><b>Старый</b></a>, '
+            '<a href="/people/nobody">Никто</a>, <a href="https://vk.com/a">vk</a>, <a href="#n">сноска</a></p>')
+    keys = collect_keys(html)
+    assert keys == {"people/anton-shastun", "people/old.html", "people/nobody"}
+    targets = {"people/anton-shastun": "/people/anton-shastun", "people/old.html": "/people/new-slug",
+               "people/nobody": None}
+    assert replace_links(html, targets) == (
+        '<p><a href="/people/anton-shastun" class="x">Шастун</a>, <a href="/people/new-slug"><b>Старый</b></a>, '
+        'Никто, <a href="https://vk.com/a">vk</a>, <a href="#n">сноска</a></p>')
