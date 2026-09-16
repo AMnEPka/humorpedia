@@ -281,6 +281,13 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                 placeholder="Биография"
               />
             </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={Boolean(data.collapsed)}
+                onCheckedChange={(v) => updateData({ ...data, collapsed: v })}
+              />
+              <Label>Свёрнут по умолчанию (раскрывается по клику на заголовок)</Label>
+            </div>
             <div className="space-y-2">
               <Label>Содержимое</Label>
               <RichTextEditor
@@ -673,7 +680,34 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
               />
               <Label>Заголовки столбцов</Label>
             </div>
-            
+
+            <div className="space-y-2">
+              <Label>Пояснение над таблицей</Label>
+              <Textarea
+                value={data.description || ''}
+                onChange={(e) => updateData({ ...data, description: e.target.value })}
+                placeholder="Легенда: что означают столбцы (опционально)"
+                rows={2}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={Boolean(data.sortable)}
+                  onCheckedChange={(v) => updateData({ ...data, sortable: v })}
+                />
+                <Label>Сортировка по клику на заголовок</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={Boolean(data.collapsed)}
+                  onCheckedChange={(v) => updateData({ ...data, collapsed: v })}
+                />
+                <Label>Свёрнута по умолчанию</Label>
+              </div>
+            </div>
+
             <div className="border rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

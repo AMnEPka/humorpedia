@@ -9,6 +9,22 @@ import EmojiRating from '@/components/EmojiRating';
 import { isSystemModule } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
 import { mediaUrl, orderedFacts } from '@/utils/media';
+import ContentTable from '../components/ContentTable';
+
+// Свёрнутый по умолчанию блок: содержимое монтируется при первом раскрытии (в блоке могут быть сотни таблиц)
+function CollapsibleCard({ title, children }) {
+  const [opened, setOpened] = useState(false);
+  return (
+    <Card>
+      <details onToggle={(e) => e.currentTarget.open && setOpened(true)}>
+        <summary className="cursor-pointer select-none px-6 py-4 text-lg font-semibold hover:text-blue-600">
+          {title || 'Подробнее'}
+        </summary>
+        {opened && <CardContent>{children}</CardContent>}
+      </details>
+    </Card>
+  );
+}
 
 // Module renderer component
 function ModuleRenderer({ module }) {
@@ -38,6 +54,17 @@ function ModuleRenderer({ module }) {
   
   switch (module.type) {
     case 'text_block':
+      if (module.data?.collapsed) {
+        return (
+          <CollapsibleCard title={module.data.title}>
+            <style>{tableStyles}</style>
+            <div
+              className="prose prose-sm max-w-none overflow-x-auto break-words"
+              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
+            />
+          </CollapsibleCard>
+        );
+      }
       return (
         <Card>
           {module.data?.title && (
@@ -116,6 +143,22 @@ function ModuleRenderer({ module }) {
         </div>
       );
     
+    case 'table':
+      if (!module.data?.rows?.length) return null;
+      if (module.data.collapsed) {
+        return (
+          <CollapsibleCard title={module.data.title}>
+            <ContentTable data={module.data} />
+          </CollapsibleCard>
+        );
+      }
+      return (
+        <Card>
+          {module.data.title && <CardHeader><CardTitle>{module.data.title}</CardTitle></CardHeader>}
+          <CardContent><ContentTable data={module.data} /></CardContent>
+        </Card>
+      );
+
     case 'timeline':
       if (!module.data?.events?.length) return null;
       return (

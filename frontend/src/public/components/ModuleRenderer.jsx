@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { publicApi } from '../utils/api';
+import ContentTable from './ContentTable';
 
 /**
  * Renders a single content module based on its type
@@ -17,6 +18,16 @@ export default function ModuleRenderer({ module, personId }) {
       // Allow explicit anchor id (for custom TOC / SEO pages)
       // Falls back to a simple slug from title.
       const anchorId = data?.anchor_id || (data?.title ? data.title.toLowerCase().replace(/\s+/g, '-') : null);
+      if (data?.collapsed) {
+        return (
+          <details className="my-6 border rounded-lg">
+            <summary className="cursor-pointer select-none px-4 py-3 text-xl font-bold" id={anchorId}>
+              {data.title || 'Подробнее'}
+            </summary>
+            <div className="prose prose-lg max-w-none px-4 pb-4 overflow-x-auto" dangerouslySetInnerHTML={{ __html: data?.content || '' }} />
+          </details>
+        );
+      }
       return (
         <div className="prose prose-lg max-w-none">
           {data?.title && (
@@ -169,41 +180,11 @@ export default function ModuleRenderer({ module, personId }) {
       return null;
 
     case 'table':
-      const rows = data?.rows || [];
-      const headers = data?.headers || [];
-      const hasHeaders = data?.hasHeaders !== false && headers.length > 0;
-      
-      if (rows.length === 0) return null;
-      
+      if (!data?.rows?.length) return null;
       return (
         <div className="my-6">
           {data?.title && <h3 className="text-lg font-bold mb-3">{data.title}</h3>}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200 text-sm">
-              {hasHeaders && (
-                <thead className="bg-gray-100">
-                  <tr>
-                    {headers.map((header, i) => (
-                      <th key={i} className="border border-gray-200 px-4 py-2 text-left font-medium">
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-              )}
-              <tbody>
-                {rows.map((row, rowIdx) => (
-                  <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    {row.map((cell, cellIdx) => (
-                      <td key={cellIdx} className="border border-gray-200 px-4 py-2">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ContentTable data={data} />
         </div>
       );
 

@@ -214,3 +214,75 @@ def parse_facts_table(value: str) -> List[Tuple[str, str]]:
         seen.add(cells[0])
         facts.append((cells[0], cells[1]))
     return facts
+
+
+# ─── Разбор длинных страниц: разделы, спойлеры, таблицы ─────────────────────
+
+_DETAILS_RE = re.compile(r"<details\b[^>]*>\s*(?:<summary\b[^>]*>(.*?)</summary>)?(.*?)</details>", re.I | re.S)
+_HEADING_RE = re.compile(r"<h3\b[^>]*>(.*?)</h3>", re.I | re.S)
+_TABLE_RE = re.compile(r"<table\b.*?</table>", re.I | re.S)
+
+
+def split_by_headings(html: str) -> List[Tuple[str, str]]:
+    """HTML → [(заголовок h3, содержимое до следующего h3)]; текст до первого заголовка — с пустым заголовком."""
+    parts: List[Tuple[str, str]] = []
+    matches = list(_HEADING_RE.finditer(html or ""))
+    intro = (html or "")[:matches[0].start()] if matches else (html or "")
+    if not is_blank_html(intro):
+        parts.append(("", intro.strip()))
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(html)
+        parts.append((plain_text(m.group(1)), html[m.end():end].strip()))
+    return parts
+
+
+def extract_details(html: str) -> Tuple[str, List[Tuple[str, str]]]:
+    """Вынуть раскрывающиеся блоки <details>: (HTML без них, [(summary, содержимое)])."""
+    blocks = [(plain_text(m.group(1) or ""), m.group(2)) for m in _DETAILS_RE.finditer(html or "")]
+    return _DETAILS_RE.sub("", html or ""), blocks
+
+
+def table_rows(table_html: str) -> Tuple[List[str], List[List[str]]]:
+    """HTML-таблица → (заголовки, строки) обычным текстом; заголовки — первая строка из <th>."""
+    parser = _TableParser()
+    parser.feed(table_html)
+    parser.close()
+    rows = [[plain_text(c) for c in row] for row in parser.rows]
+    headers: List[str] = []
+    if rows and re.search(r"<th\b", table_html, re.I):
+        headers = rows.pop(0)
+    return headers, [r for r in rows if any(r)]
+
+
+_TAG_ATTRS_RE = re.compile(r"<(table|thead|tbody|tfoot|tr|td|th|div|col)\b([^>]*)>", re.I)
+_SPAN_ATTR_RE = re.compile(r"""\b(colspan|rowspan)\s*=\s*["']?(\d+)["']?""", re.I)
+WINNER_MARK = '<mark data-color="#bbf7d0" style="background-color: #bbf7d0; color: inherit">{}</mark>'
+
+
+def clean_office_tables(html: str, winner_marker: str = "green_table") -> str:
+    """Таблицы, вставленные из Excel/Word: убрать оформление (class, width, height, colgroup, обёртки div),
+    оставить colspan/rowspan. Клетки с id=winner_marker (на старом сайте — зелёные, победители) подсветить <mark>."""
+    html = re.sub(r"<colgroup\b.*?</colgroup>", "", html or "", flags=re.I | re.S)
+    html = re.sub(r"<col\b[^>]*>", "", html, flags=re.I)
+    html = re.sub(r"<div\b[^>]*>|</div>", "", html, flags=re.I)
+    html = re.sub(r"(<br\s*/?>\s*)+(?=<table)", "", html, flags=re.I)
+
+    def cell(m: re.Match) -> str:
+        tag, attrs = m.group(1).lower(), m.group(2)
+        kept = " ".join(f'{a.lower()}="{v}"' for a, v in _SPAN_ATTR_RE.findall(attrs) if v != "1")
+        opening = f"<{tag}{(' ' + kept) if kept else ''}>"
+        if tag in ("td", "th") and winner_marker and winner_marker in attrs:
+            return opening + "\x00WIN\x00"
+        return opening
+
+    html = _TAG_ATTRS_RE.sub(cell, html)
+    html = re.sub(r"<p>(?:\s|&nbsp;| )*</p>", "", html)
+    html = re.sub(r"\x00WIN\x00(.*?)(?=</t[dh]>)",
+                  lambda m: WINNER_MARK.format(m.group(1)) if plain_text(m.group(1)) else m.group(1),
+                  html, flags=re.S)
+    return html.strip()
+
+
+def split_tables(html: str) -> List[str]:
+    """Все таблицы HTML по отдельности."""
+    return _TABLE_RE.findall(html or "")

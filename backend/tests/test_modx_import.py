@@ -355,3 +355,62 @@ def test_build_show_title_from_longtitle():
     site.tv_values[1618] = {"config": "[]"}
     payload, _, warnings = build_show(site, 1618)
     assert payload["title"] == "Импровизация. Команды" and "на странице нет текста" in warnings
+
+
+# ─── Длинные страницы: разделы, спойлеры, таблицы (Убойная лига) ─────────────
+
+from services.modx_content import clean_office_tables, extract_details, split_by_headings, table_rows  # noqa: E402
+from services.modx_shows import _ubojnaya_liga  # noqa: E402
+
+
+def test_split_headings_and_details():
+    html = "<p>Вступление</p><h3>Правила</h3><ul><li>1</li></ul><details><summary>Статистика</summary><p>Л</p></details><h3>Жюри</h3><p>Ж</p>"
+    body, details = extract_details(html)
+    assert details == [("Статистика", "<p>Л</p>")]
+    assert split_by_headings(body) == [("", "<p>Вступление</p>"), ("Правила", "<ul><li>1</li></ul>"), ("Жюри", "<p>Ж</p>")]
+
+
+def test_table_rows_and_office_cleanup():
+    headers, rows = table_rows("<table><thead><tr><th>ФИО</th><th>в банк&nbsp;₽</th></tr></thead>"
+                               "<tbody><tr><td class='xl64'>Дуэт \"Компот\"</td><td>1056000</td></tr></tbody></table>")
+    assert headers == ["ФИО", "в банк ₽"] and rows == [['Дуэт "Компот"', "1056000"]]
+    excel = ('<div class="big-table"><br /><table border="0" width="624"><colgroup><col width="100" /></colgroup><tbody>'
+             '<tr><td class="xl89" width="100" height="21"><strong>Выпуск</strong></td><td class="xl96" colspan="8">1</td></tr>'
+             '<tr><td id="green_table" class="xl103" colspan="2" height="20">Денис Косяков</td>'
+             '<td id="green_table" class="xl105">\u00a0</td><td rowspan="1">0</td></tr></tbody></table>\u00a0</div>')
+    assert clean_office_tables(excel) == (
+        '<table><tbody><tr><td><strong>Выпуск</strong></td><td colspan="8">1</td></tr>'
+        '<tr><td colspan="2"><mark data-color="#bbf7d0" style="background-color: #bbf7d0; color: inherit">Денис Косяков</mark></td>'
+        '<td>\u00a0</td><td>0</td></tr></tbody></table>')
+
+
+def test_ubojnaya_liga_layout():
+    def episode(n):
+        return (f'<div class="big-table"><table><tbody><tr><td><strong>Выпуск</strong></td><td colspan="8"><strong>{n}</strong></td></tr>'
+                f'<tr><td id="green_table">Победитель {n}</td></tr></tbody></table></div>')
+    html = ("<p>«Убойная лига» — шоу.</p><h3>Правила</h3><ul><li>6 участников</li></ul>"
+            "<h3>Личная статистика участников</h3><ul><li>48 участников</li></ul><p>\u00a0</p>"
+            "<details><summary>Посмотреть подробную статистику участников</summary><p>Легенда: «В банк» — деньги.</p>"
+            "<table class=\"table_sort\"><thead><tr><th>ФИО</th><th>Победы</th></tr></thead>"
+            "<tbody><tr><td>Дуэт «Быдло»</td><td>20</td></tr></tbody></table></details>"
+            "<details><summary>Полная статистика выпусков:</summary>" + episode(1) + episode(14) + episode(15) + episode(125) +
+            "</details><p>\u00a0</p><p>* - признана в РФ иностранным агентом.</p>")
+    warnings = []
+    modules = _ubojnaya_liga([("text_block", "", {"title": "", "content": html})], warnings)
+    assert warnings == []
+    assert [(t, title) for t, title, _ in modules] == [
+        ("text_block", ""), ("text_block", "Правила"), ("text_block", "Личная статистика участников"),
+        ("table", "Подробная статистика участников"),
+        ("text_block", "Статистика выпусков: 1-й сезон (выпуски 1–14)"),
+        ("text_block", "Статистика выпусков: 2-й сезон (выпуски 15–86)"),
+        ("text_block", "Статистика выпусков: 3-й сезон (выпуски 87–125)"),
+        ("text_block", ""),
+    ]
+    assert modules[2][2]["content"] == "<ul><li>48 участников</li></ul>"
+    table = modules[3][2]
+    assert table["headers"] == ["ФИО", "Победы"] and table["rows"] == [["Дуэт «Быдло»", "20"]]
+    assert table["sortable"] and table["collapsed"] and table["description"] == "Легенда: «В банк» — деньги."
+    first_season = modules[4][2]
+    assert first_season["collapsed"] and first_season["content"].count("<table>") == 2
+    assert "<mark" in first_season["content"] and "big-table" not in first_season["content"]
+    assert modules[-1][2]["content"] == "<p>* - признана в РФ иностранным агентом.</p>"

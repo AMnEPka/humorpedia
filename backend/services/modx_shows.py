@@ -20,7 +20,10 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional, Tuple
 
-from services.modx_content import LinkMapper, clean_html, image_url, is_blank_html, parse_facts_table, plain_text
+from services.modx_content import (
+    LinkMapper, clean_html, clean_office_tables, extract_details, image_url, is_blank_html, parse_facts_table,
+    plain_text, split_by_headings, split_tables, table_rows,
+)
 from services.modx_dump import ModxSite, json_list
 from services.modx_people import SOCIAL_FIELDS, TEMPLATE_PERSON, _module, _timeline_events, _timestamp, sidebar_modules
 
@@ -123,6 +126,72 @@ def _participants(site: ModxSite, section: dict, mapper: Optional[LinkMapper]) -
     return {"title": plain_text(section.get("title") or "") or "Участники", "items": items}
 
 
+# ─── Страницы с уникальной структурой ────────────────────────────────────────
+
+def _ubojnaya_liga(content: List[Tuple[str, str, dict]], warnings: List[str]) -> List[Tuple[str, str, dict]]:
+    """«Убойная лига» (show/ubojnaya-liga.html): один текстовый блок на 388 КБ.
+
+    Разделы h3 → отдельные текстовые блоки; спойлеры со статистикой участников и дуэтов → сортируемые таблицы;
+    125 таблиц выпусков (из Excel, победители отмечены id="green_table") → три свёрнутых блока по сезонам
+    (границы сезонов — из раздела «Деление на сезоны»: выпуски 1–14, 15–86, 87–125).
+    """
+    texts = [c for c in content if c[0] == "text_block"]
+    if len(texts) != 1:
+        warnings.append("Убойная лига: ожидался один текстовый блок — структура страницы изменилась, перенесено как есть")
+        return content
+    html = texts[0][2]["content"]
+    body, details = extract_details(html)
+    footnote = ""
+    fm = re.search(r"<p>\s*\*\s*[-–].*?</p>\s*$", body, re.S)
+    if fm:
+        footnote, body = fm.group(0), body[:fm.start()]
+
+    result: List[Tuple[str, str, dict]] = []
+    for heading, part in split_by_headings(body):
+        if not is_blank_html(part):
+            result.append(("text_block", heading, {"title": heading, "content": clean_html(part)}))
+
+    seasons = [(1, 1, 14), (2, 15, 86), (3, 87, 125)]
+    for summary, inner in details:
+        tables = split_tables(inner)
+        if "table_sort" in inner and len(tables) == 1:
+            headers, rows = table_rows(tables[0])
+            legend = inner[:inner.find("<table")]
+            title = {"Посмотреть подробную статистику участников": "Подробная статистика участников",
+                     "Статистика смешаных дуэтов участников": "Статистика смешанных дуэтов участников"}.get(summary, summary)
+            result.append(("table", title, {
+                "title": title, "description": plain_text(legend), "headers": headers, "rows": rows,
+                "hasHeaders": True, "sortable": True, "collapsed": True,
+            }))
+        elif len(tables) > 1:
+            by_season = {n: [] for n, _, _ in seasons}
+            for table in tables:
+                m = re.search(r"Выпуск.*?</t[dh]>\s*<t[dh][^>]*>(?:\s|<[^>]+>)*(\d+)", table, re.S)
+                number = int(m.group(1)) if m else 0
+                season = next((n for n, lo, hi in seasons if lo <= number <= hi), None)
+                if season is None:
+                    warnings.append(f"Убойная лига: таблица без номера выпуска ({plain_text(table)[:40]}…)")
+                    season = seasons[-1][0]
+                by_season[season].append(clean_office_tables(table))
+            for n, lo, hi in seasons:
+                if by_season[n]:
+                    title = f"Статистика выпусков: {n}-й сезон (выпуски {lo}–{hi})"
+                    result.append(("text_block", title, {"title": title, "content": "\n".join(by_season[n]),
+                                                         "collapsed": True}))
+        else:
+            warnings.append(f"Убойная лига: неизвестный спойлер «{summary}» — перенесён текстом")
+            result.append(("text_block", summary, {"title": summary, "content": inner, "collapsed": True}))
+    if footnote:
+        result.append(("text_block", "", {"title": "", "content": footnote.strip()}))
+    return result
+
+
+# id ресурса MODX → обработчик уникальной структуры страницы (контентные модули после общего разбора)
+SPECIAL_PAGES = {
+    1628: _ubojnaya_liga,
+}
+
+
 def build_show(site: ModxSite, resource_id: int, mapper: Optional[LinkMapper] = None) -> Tuple[dict, dict, List[str]]:
     resource = site.resources[resource_id]
     warnings: List[str] = []
@@ -181,6 +250,8 @@ def build_show(site: ModxSite, resource_id: int, mapper: Optional[LinkMapper] = 
         elif form not in _IGNORED_SECTIONS:
             warnings.append(f"секция «{form}» не перенесена")
 
+    if resource_id in SPECIAL_PAGES:
+        content = SPECIAL_PAGES[resource_id](content, warnings)
     if not content:
         warnings.append("на странице нет текста")
 
