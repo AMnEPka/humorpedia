@@ -266,8 +266,8 @@ def shows_site():
         # id, template, parent, alias, uri, pagetitle, longtitle
         (33, 12, 0, "show", "show/", "Шоу", ""),
         (1629, 19, 33, "comedy-battle", "comedy-battle/", "Comedy Баттл", ""),
-        (1703, 19, 1629, "season1", "comedy-battle/season1.html", "Comedy Баттл 1 сезон", ""),
-        (1618, 25, 33, "improv-teams", "improv-teams/", "ИК", "Импровизация. Команды"),
+        (1703, 19, 1629, "comedy-season-1", "comedy-battle/season1.html", "Comedy Баттл 1 сезон", ""),
+        (1618, 25, 33, "improv-kom", "improv-teams/", "ИК", "Импровизация. Команды"),
         (1673, 19, 1618, "team", "improv-teams/team.html", "Команды ИК", ""),
         (1905, 19, 1673, "baikalskiye", "improv-teams/baikalskiye.html", "Байкальские", ""),
         (1771, 19, 1618, "team", "liga-gorodov/team/", "Команды ЛГ", ""),

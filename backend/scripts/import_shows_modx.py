@@ -49,14 +49,16 @@ async def main(args) -> None:
         await close_db()
 
 
-async def find_existing(db, rid: int, full_path: str, slug: str, is_root: bool):
-    doc = await db.shows.find_one({"old_id": rid})
+async def find_existing(db, resource: dict, full_path: str, slug: str, is_root: bool):
+    """Уже перенесённое шоу: по old_id, по адресу; у корневых — по slug или alias старого сайта (старый импорт)."""
+    doc = await db.shows.find_one({"old_id": resource["id"]})
     if doc:
         return doc
     doc = await db.shows.find_one({"full_path": full_path, "old_id": None})
     if doc or not is_root:
         return doc
-    return await db.shows.find_one({"slug": slug, "old_id": None, **ROOT_QUERY})
+    slugs = list({slug, (resource.get("alias") or "").strip("/")})
+    return await db.shows.find_one({"slug": {"$in": slugs}, "old_id": None, **ROOT_QUERY})
 
 
 async def run(args) -> None:
@@ -127,7 +129,7 @@ async def import_one(db, site, resource, root_id, known_urls, builders, publish,
             return "failed"
     payload["parent_id"] = parent_doc["_id"] if parent_doc else None
     full_path = f"{parent_doc['full_path']}/{payload['slug']}" if parent_doc else payload["slug"]
-    existing = await find_existing(db, rid, full_path, payload["slug"], parent_doc is None)
+    existing = await find_existing(db, resource, full_path, payload["slug"], parent_doc is None)
 
     modules = [m["type"] + (f"«{m['title']}»" if m["type"] == "text_block" and m["title"] else "")
                for m in payload["modules"][5:]]

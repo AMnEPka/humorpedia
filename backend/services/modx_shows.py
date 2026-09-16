@@ -60,9 +60,22 @@ def is_show_page(site: ModxSite, resource: dict, root_id: int) -> bool:
     return not any(plain_text(r.get("pagetitle") or "").startswith("Команды") for r in chain[:-1])
 
 
+def page_slug(resource: dict) -> str:
+    """slug страницы — последний сегмент её адреса на старом сайте (без .html).
+
+    alias в MODX часто не совпадает с адресом (uri задан вручную: improv-teams/ при alias improv-kom),
+    а знакомы читателям и поисковикам именно адреса.
+    """
+    uri = str(resource.get("uri") or "").strip("/")
+    last = uri.rsplit("/", 1)[-1]
+    if last.endswith(".html"):
+        last = last[:-5]
+    return last or (resource.get("alias") or "").strip("/")
+
+
 def show_path(site: ModxSite, resource: dict, root_id: int) -> Optional[str]:
     chain = show_chain(site, resource, root_id)
-    return "/".join((r.get("alias") or "").strip("/") for r in chain) if chain else None
+    return "/".join(page_slug(r) for r in chain) if chain else None
 
 
 def show_url_builder(site: ModxSite):
@@ -187,7 +200,7 @@ def build_show(site: ModxSite, resource_id: int, mapper: Optional[LinkMapper] = 
     payload = {
         "title": title,
         "name": title,
-        "slug": (resource.get("alias") or "").strip().strip("/"),
+        "slug": page_slug(resource),
         "status": "published" if published else "draft",
         "poster": poster,
         "facts": facts,
