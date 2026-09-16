@@ -65,6 +65,20 @@ export function PosterPhotoModule({ data, moduleData, className = '' }) {
   );
 }
 
+// Возраст в скобках в конце даты: «(35 лет)», «(82 года)», «(21 год)»
+const AGE_SUFFIX_RE = /\s*\(\d+\s+(?:лет|года?)\)\s*$/;
+
+/**
+ * «35 лет», «82 года», «21 год»
+ */
+export function formatAge(age) {
+  const mod10 = age % 10;
+  const mod100 = age % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${age} год`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${age} года`;
+  return `${age} лет`;
+}
+
 /**
  * Функция для парсинга даты из текстового формата (например, "9 декабря 1988 года" или "25 мая")
  */
@@ -72,7 +86,7 @@ function parseDateFromText(dateText) {
   if (!dateText) return null;
   
   // Убираем возраст в скобках, если он есть
-  const textWithoutAge = dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+  const textWithoutAge = dateText.replace(AGE_SUFFIX_RE, '').trim();
   
   // Пытаемся найти год (4 цифры)
   const yearMatch = textWithoutAge.match(/\b(\d{4})\b/);
@@ -121,7 +135,7 @@ function parseDateFromText(dateText) {
 function hasYearInDate(dateText) {
   if (!dateText) return false;
   // Убираем возраст в скобках перед проверкой
-  const textWithoutAge = dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+  const textWithoutAge = dateText.replace(AGE_SUFFIX_RE, '').trim();
   return /\b\d{4}\b/.test(textWithoutAge);
 }
 
@@ -130,7 +144,7 @@ function hasYearInDate(dateText) {
  */
 function removeAgeFromDate(dateText) {
   if (!dateText) return dateText;
-  return dateText.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+  return dateText.replace(AGE_SUFFIX_RE, '').trim();
 }
 
 /**
@@ -218,7 +232,7 @@ export function addAgeToDate(dateText, key, birthDate, deathDate = null, birthDa
     if (birth && death) {
       const ageAtDeath = calculateAge(birth, death);
       if (ageAtDeath !== null) {
-        return `${textWithoutAge} (${ageAtDeath} лет)`;
+        return `${textWithoutAge} (${formatAge(ageAtDeath)})`;
       }
     }
     
@@ -248,7 +262,7 @@ export function addAgeToDate(dateText, key, birthDate, deathDate = null, birthDa
     if (dateForAge) {
       const currentAge = calculateAge(dateForAge);
       if (currentAge !== null) {
-        return `${textWithoutAge} (${currentAge} лет)`;
+        return `${textWithoutAge} (${formatAge(currentAge)})`;
       }
     }
   }

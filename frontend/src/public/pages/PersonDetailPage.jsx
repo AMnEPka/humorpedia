@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Trophy } from 'lucide-react';
+import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import {
   addAgeToDate
 } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
+import { orderedFacts, personPhotoUrl } from '@/utils/media';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
@@ -166,10 +167,10 @@ export default function PersonDetailPage() {
               {/* Poster Photo Module */}
               {sidebarModules.find(m => m.type === 'poster_photo') && (
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                  {(person.cover_image?.url || person.image || person.poster || person.photo) ? (
-                    <img 
-                      src={person.cover_image?.url || person.image || person.poster || person.photo} 
-                      alt={person.cover_image?.alt || person.full_name || person.title}
+                  {personPhotoUrl(person) ? (
+                    <img
+                      src={personPhotoUrl(person)}
+                      alt={person.photo?.alt || person.cover_image?.alt || person.full_name || person.title}
                       className="w-full h-full object-cover object-top"
                     />
                   ) : (
@@ -220,6 +221,12 @@ export default function PersonDetailPage() {
                       </svg>
                     </a>
                   )}
+                  {person.social_links.website && (
+                    <a href={person.social_links.website} target="_blank" rel="noopener noreferrer"
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-700 transition-colors" title="Сайт">
+                      <Globe className="w-4 h-4 text-white" />
+                    </a>
+                  )}
                   {person.social_links.twitter && (
                     <a href={person.social_links.twitter} target="_blank" rel="noopener noreferrer"
                       className="w-8 h-8 flex items-center justify-center rounded-full bg-black hover:bg-gray-800 transition-colors" title="X (Twitter)">
@@ -262,7 +269,7 @@ export default function PersonDetailPage() {
                   <CardContent className="p-4 pt-0">
                     <table className="w-full text-sm border-collapse border border-gray-200">
                       <tbody>
-                        {Object.entries(person.facts)
+                        {orderedFacts(person.facts, person.facts_order)
                           .filter(([_, value]) => {
                             // Фильтруем только валидные значения для отображения
                             return value !== null && value !== undefined && 
@@ -294,7 +301,8 @@ export default function PersonDetailPage() {
                                 }
                               }
                               
-                              let deathDate = person.bio?.death_date || null;
+                              // Дата смерти: из bio или из факта «Дата смерти» (у умерших к дате рождения возраст не добавляется)
+                              let deathDate = person.bio?.death_date || person.facts['Дата смерти'] || null;
                               if (deathDate && typeof deathDate === 'string') {
                                 try {
                                   const date = new Date(deathDate);
@@ -311,7 +319,7 @@ export default function PersonDetailPage() {
                               let birthDateText = null;
                               const birthDateFact = person.facts['Дата рождения'];
                               if (birthDateFact && typeof birthDateFact === 'string') {
-                                birthDateText = birthDateFact.replace(/\s*\(\d+\s+лет\)\s*$/, '').trim();
+                                birthDateText = birthDateFact.replace(/\s*\(\d+\s+(?:лет|года?)\)\s*$/, '').trim();
                               } else if (birthDateFact && (typeof birthDateFact === 'number' || typeof birthDateFact === 'boolean')) {
                                 // Если это число или boolean, конвертируем в строку
                                 birthDateText = String(birthDateFact);

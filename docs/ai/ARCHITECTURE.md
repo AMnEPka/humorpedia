@@ -96,6 +96,9 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── services/
 │   │   ├── competitions.py       модель соревнований: season_data ⇄ сезон, participations, синхронизация (COMPETITIONS.md)
 │   │   ├── memberships.py        составы: разбор текста «Состав команды», связь с людьми (PersonLookup), импорт
+│   │   ├── modx_dump.py          потоковое чтение SQL-дампа MODX без MySQL (site_content, TV, теги) → ModxSite
+│   │   ├── modx_content.py       импорт со старого сайта: HTML (сущности, пустые абзацы), ссылки старых URL → новые (LinkMapper), картинки, таблица фактов
+│   │   ├── modx_people.py        страница «Человек» MODX → тело POST /content/people в формате админки + old_id/old_urls/рейтинг
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
 │   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
 │   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)
@@ -110,9 +113,10 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── rate_limit.py         общий slowapi limiter
 │   │   ├── slugify.py            транслитерация и slug
 │   │   └── team_matcher.py       нормализация названий команд
-│   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations), test_memberships.py (разбор составов, роли)
+│   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations), test_memberships.py (разбор составов, роли), test_modx_import.py (дамп MODX, конвертация человека)
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
+│       ├── import_people_modx.py      люди из SQL-дампа MODX партиями через create_person (как админка): --ids/--slugs, --list, --show, --apply, --update
 │       ├── restore_backup.py / restore_specific_backup.py   восстановление из backups/*.tar.gz
 │       ├── migrate_urls.py            обновление старых URL в контенте, поиск битых ссылок
 │       ├── auto_linker.py             автопроставление ссылок по текстовым совпадениям
@@ -129,7 +133,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── plugins/                  health-check и visual-edits (от Emergent)
 │   └── src/ …
 │
-├── migration/                    импорт из MODX (MySQL-дамп humorbd.sql, сам дамп не в репо)
+├── migration/                    СТАРЫЙ импорт из MODX (humorbd.sql). Новый импорт людей — backend/scripts/import_people_modx.py (см. DATA_MODEL.md «Импорт со старого сайта»)
 │   ├── README.md, UNIVERSAL_IMPORTER.md
 │   ├── import_people_from_sql.py основной импорт людей (--from-list --limit N --apply)
 │   ├── universal_importer.py     импорт по описанию последовательности модулей
@@ -173,6 +177,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 - `mongo_data` — данные Mongo
 - `images_volume` → `/app/images` → URL `/images/*`
 - `imported_images_volume` → `/app/media/imported/images` → URL `/media/imported/images/*` (server.py монтирует `/app/media`, запасной путь — `/app/frontend/public/media`)
+  Наполнение: папка `images/` старого сайта копируется в корень volume (`images/people/x.jpg` → URL `/media/imported/images/people/x.jpg`). Источники на машине владельца: `backups/images` (сентябрь 2026, 2359 файлов) и более полная `Downloads/images` (декабрь 2025, 3116 файлов; общие файлы совпадают побайтно) — залиты обе, 3128 файлов.
 - `frontend_node_modules`, `frontend_media` (пустой, чтобы webpack не сканировал 3000+ картинок)
 - prod: `uploads_data`, `backups_data`
 

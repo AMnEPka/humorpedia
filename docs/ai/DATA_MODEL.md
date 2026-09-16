@@ -65,6 +65,46 @@ published_at, featured
 
 Внутренние ссылки в HTML модулей при выдаче переписываются `services/link_resolver.py` (актуальные slug/пути).
 
+## Человек: документ в формате админки
+
+Эталон — то, что сохраняет `PersonEditPage` через `POST/PUT /api/content/people` (модель `Person`). Данные лежат **в полях документа**, системные модули хранят только настройки вида:
+
+```jsonc
+{
+  "title": "Шастун Антон", "slug": "anton-shastun", "full_name": "Антон Андреевич Шастун", "status": "published",
+  "photo": {"url": "/media/imported/images/people/…jpg", "alt": "…", "caption": "", "thumbnail": "…тот же url"},
+  "facts": {"Полное имя": "…", "Дата рождения": "19 апреля 1991 года", "Дата смерти": "… (82 года)"}, "facts_order": ["Полное имя", …],
+  "social_links": {"vk", "telegram", "youtube", "instagram", "website"},
+  "tags": [...], "primary_tag": "Антон Шастун",            // базовый тег по умолчанию — «Имя Фамилия»
+  "rating": {"average": 8.94, "count": 17}, "votes_count": 17,  // как у команд (модель BaseContent.rating: float — не соответствует данным)
+  "seo": {"meta_title", "meta_description", "keywords": []},
+  "old_id": 116, "old_urls": ["/people/anton-shastun.html"],  // импорт: ресурс MODX и старый URL для редиректа
+  "modules": [
+    poster_photo {size, shape} · facts_table {title, style} · rating_widget {title, style} · tags_cloud {title, style, max_tags} · social_links {title, style},
+    text_block «Биография» {title, content} · text_block «Личная жизнь» · timeline «Хронология» {title, events[{year, date, title, description}]} · text_block без заголовка (сноски)
+  ]
+}
+```
+- Публичная страница берёт фото из `photo.url` (затем устаревшие `cover_image`/`image`/`poster` — хелпер `frontend/src/utils/media.js`), факты — в порядке `facts_order`; возраст к дате рождения не добавляется, если есть факт «Дата смерти».
+- **Три человека, заведённых до сентября 2026** (Дроботенко, Шастун, «Шастун и Макар»), хранятся в старом формате: `image`/`poster` строками, данные продублированы внутри `data` системных модулей, ссылки в HTML — относительные старые (`people/x.html`), в хронологии хвосты `\"`. Пересоздаются из дампа: `import_people_modx.py --ids 109 115 116 --apply --update`.
+
+### Импорт со старого сайта (MODX)
+
+`backend/scripts/import_people_modx.py` читает SQL-дамп MODX (`backups/idemsku8_modx2.sql`, в контейнере `/app/backups/…`) через `services/modx_dump.py` и создаёт людей **тем же кодом, что админка** (`create_person` / `update_person`), затем дописывает `old_id`, `old_urls`, рейтинг и даты.
+
+Страница человека в MODX — шаблон 20, данные в TV: `img` (фото, `images/...`), `img_alt`, `tags` (id тегов Tagger через `||`), `config` (MIGX-секции):
+| Секция MIGX | → |
+|---|---|
+| `info.subtitle` / `info.content` | text_block «Биография» / «Личная жизнь» |
+| `info.table` | `facts` + `facts_order` |
+| `info.list_social` (`vk`, `telegram`, `instagram`, `youtube`, `global`) | `social_links` (`global` → `website`) |
+| `timeline.list_triple` (`title`, `subtitle` = годы, `content`) | timeline |
+| `text` | text_block без заголовка |
+| `tags`, `table_of_contents`, `popular_articles`, `ad_*` | не переносятся (выводятся автоматически / не нужны) |
+
+`pagetitle` → `title`, `longtitle` → `full_name`, `alias` → `slug`, `description` → `seo.meta_description`, `keywords` → `seo.keywords`, `rating`/`votes` → рейтинг.
+HTML: сущности раскрываются (кроме `&lt; &gt; &amp; &quot;`), пустые абзацы в конце убираются, ссылки переводятся на новый сайт (`services/modx_content.LinkMapper`): ресурс MODX по uri/`[[~id]]` → `/people/{alias}` (шаблон 20), `/kvn/teams/{alias}` (21); иначе паттерны `routes/redirects._try_pattern_redirect`; иначе абсолютный старый путь (его разрешит поиск редиректов, когда страница появится). Картинки `images/...` → `/media/imported/images/...`.
+
 ## Иерархия КВН
 
 ```

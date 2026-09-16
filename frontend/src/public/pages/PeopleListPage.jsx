@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import publicApi from '../utils/api';
+import { personPhotoUrl } from '@/utils/media';
 
 export default function PeopleListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -91,9 +92,9 @@ export default function PeopleListPage() {
               <Link key={person.id} to={`/people/${person.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="aspect-square bg-gray-100 overflow-hidden">
-                    {person.photo ? (
-                      <img 
-                        src={person.photo} 
+                    {personPhotoUrl(person) ? (
+                      <img
+                        src={personPhotoUrl(person)}
                         alt={person.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
