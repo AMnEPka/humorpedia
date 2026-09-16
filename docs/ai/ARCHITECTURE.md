@@ -99,7 +99,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── modx_dump.py          потоковое чтение SQL-дампа MODX без MySQL (site_content, TV, теги) → ModxSite
 │   │   ├── modx_content.py       импорт со старого сайта: HTML (сущности, пустые абзацы), ссылки старых URL → новые (LinkMapper), картинки, таблица фактов
 │   │   ├── modx_people.py        страница «Человек» MODX → тело POST /content/people в формате админки + old_id/old_urls/рейтинг
-│   │   ├── modx_shows.py         раздел «Шоу» MODX → тело POST /content/shows; дерево раздела, адреса /shows/<путь> для LinkMapper
+│   │   ├── modx_shows.py         раздел «Шоу» MODX → тело POST /content/shows; дерево раздела, адреса /shows/<путь> для LinkMapper; SPECIAL_PAGES — страницы с уникальной структурой
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
 │   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
 │   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)

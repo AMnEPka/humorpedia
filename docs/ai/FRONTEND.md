@@ -15,6 +15,7 @@ utils/
   number.js                    formatDecimalTrim, roundTo (баллы КВН)
   team.js                      cleanTeamName
   media.js                     mediaUrl (строка или MediaFile), personPhotoUrl (сначала photo из админки), orderedFacts (по facts_order)
+  (public/components/ContentTable.jsx — таблица модуля `table`: пояснение, сортировка по столбцам)
 components/
   ui/*                         shadcn/ui (Radix) — генерированные, не трогать без нужды
   SystemModules.jsx            рендер системных модулей сайдбара: PosterPhoto, FactsTable (addAgeToDate — возраст по дате), TagsCloud, SocialLinks, RatingWidget; isSystemModule(), renderSystemModule()

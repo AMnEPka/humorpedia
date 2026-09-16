@@ -52,7 +52,7 @@ published_at, featured
 `data` — произвольный dict (схемы `*Data` в modules.py — документация, строго не валидируются).
 
 `ModuleType` (бэкенд enum — значения, не входящие в него, отклоняются при сохранении):
-- универсальные: `hero_card`, `text_block {title, content(HTML)}`, `timeline {title, items[{year, month, title, description, image, link, type}]}`, `tags`, `table {columns[], rows[]}`, `gallery {items[{url, thumbnail, alt, caption}]}`, `video {url}`, `quote {text, author, source}`
+- универсальные: `hero_card`, `text_block {title, content(HTML), collapsed?}`, `timeline {title, events[{year, date, title, description}]}`, `tags`, `table {title, description?, headers[], rows[][], hasHeaders, sortable?, collapsed?}`, `gallery {items[{url, thumbnail, alt, caption}]}`, `video {url}`, `quote {text, author, source}`
 - системные (сайдбар): `poster_photo`, `facts_table`, `tags_cloud`, `social_links`, `rating_widget`
 - команды: `team_members`, `tv_appearances`, `games_list`
 - шоу: `episodes_list`, `participants`
@@ -153,6 +153,19 @@ HTML: сущности раскрываются (кроме `&lt; &gt; &amp; &qu
 - `--tree` — вместе с подстраницами (родитель раньше детей), `--publish ID` — опубликовать неопубликованное на старом сайте.
 
 Статус переноса и решения владельца — память проекта / KNOWN_ISSUES.
+
+**Свёрнутые блоки и сортируемые таблицы** (для длинных страниц): `text_block.collapsed` и `table.collapsed` — блок свёрнут,
+раскрывается по клику на заголовок (содержимое монтируется при первом раскрытии); `table.sortable` — сортировка по клику
+на заголовок столбца (числа как числа, крупные целые выводятся с разрядами); `table.description` — пояснение над таблицей.
+Переключатели — в редакторе модуля в админке; рендер — `ShowDetailPage` и общий `ModuleRenderer` (`public/components/ContentTable.jsx`).
+
+**Страницы с уникальной структурой** — обработчики в `modx_shows.SPECIAL_PAGES` (id ресурса MODX → функция над модулями после
+общего разбора). Помощники для длинных страниц — `modx_content`: `split_by_headings` (разделы h3), `extract_details` (спойлеры),
+`table_rows` (HTML-таблица → заголовки и строки), `clean_office_tables` (таблицы из Excel: убрать оформление, оставить colspan/rowspan,
+клетки-победители `id="green_table"` → `<mark>` зелёного цвета — редактор админки его поддерживает).
+- **Убойная лига** (1628): текст разделён по h3 на 7 блоков; спойлеры «Подробная статистика участников» (48 строк) и
+  «Статистика смешанных дуэтов» (45) → свёрнутые сортируемые таблицы; 125 таблиц выпусков → три свёрнутых блока по сезонам
+  (выпуски 1–14, 15–86, 87–125, границы — из раздела «Деление на сезоны»); сноска — отдельным блоком.
 
 ## Иерархия КВН
 
