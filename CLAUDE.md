@@ -29,7 +29,7 @@
 docker compose up --build          # dev: фронт :3000, бэк :8001, mongo внутри сети
 docker compose restart backend     # после правок Python (reload выключен)
 ```
-- В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси CRA (`REACT_APP_USE_API_PROXY=true`, см. `frontend/craco.config.js`). В Docker hot reload фронта тоже выключен — обновлять страницу вручную.
+- В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси CRA (`REACT_APP_USE_API_PROXY=true`, см. `frontend/craco.config.js`). В Docker фронт не отслеживает изменения файлов вообще (`craco.config.js`: watch ignored) — после правок или `git pull`/merge нужен `docker compose restart frontend`, иначе работает старый код (как и бэкенду — `restart backend`).
 - Swagger: http://localhost:8001/docs.
 - При старте бэкенд создаёт индексы (каждый независимо), первого админа из `ADMIN_EMAIL`/`ADMIN_PASSWORD` (только если админов в БД нет; вручную — `python init_admin.py --email … [--reset]`) и запускает батч-счётчик просмотров. `backend/start.sh` перед стартом зовёт `scripts/restore_backup.py` (восстанавливает БД из бэкапа, если она пустая).
 - Переменные окружения — шаблон `.env.example` (в корне; `.env` не коммитится). Прод (`ENVIRONMENT=production`) не стартует без `JWT_SECRET` ≥32 символов; compose-cloud требует `MONGO_INITDB_ROOT_PASSWORD`.
