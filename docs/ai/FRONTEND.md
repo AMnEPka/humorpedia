@@ -30,12 +30,13 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
     ArticleCard.jsx, NewsCard.jsx, MultiSelectWithSearch.jsx
+    competitions/              TeamParticipations (участие команды в турнирах), TeamRoster (состав), PersonCareer (команды и роли человека), labels.js
   pages/
     HomePage.jsx               новости, популярные/случайная статья
     SectionDetailPage.jsx      CATCH-ALL `/*`: kvn/by-path → sections/path → redirects/lookup; при season_data отдаёт SeasonDetailPage; таблицы чемпионов лиг
     SeasonDetailPage.jsx       страница сезона КВН (стадии, игры, победители, жюри, prev/next)
     JuryStatsPage.jsx          статистика жюри Высшей лиги
-    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН
+    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН (TeamDetailPage: структурированный состав + «Участие в турнирах»)
     PersonDetailPage.jsx / PeopleListPage.jsx
     ShowDetailPage.jsx / ShowsListPage.jsx      шоу до 4 уровней вложенности
     ArticleDetailPage / ArticlesListPage, NewsDetailPage / NewsListPage, QuizDetailPage / QuizzesListPage
@@ -54,6 +55,7 @@ admin/                         АДМИНКА
     LinkInserter.jsx           поиск контента и вставка внутренней ссылки (/content/search-for-links)
     MediaSelector.jsx          выбор/загрузка медиа (uploads и volume-папки)
     TeamSelector.jsx, GameTeamSelector.jsx, PersonSelector.jsx, TagSelector.jsx, FactsEditor.jsx
+    TeamMembershipsEditor.jsx  вкладка «Состав» в редактировании команды
   pages/                       *ListPage + *EditPage для: people, teams, shows, kvn, articles, news, quizzes, wiki, cities, sections, templates;
                                DashboardPage, LoginPage, MediaPage, TagsPage, CommentsPage, UsersPage, MongoAdminPage (сырой доступ к коллекциям)
 ```

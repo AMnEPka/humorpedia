@@ -25,6 +25,8 @@ from typing import Any, Iterable, Optional
 
 from bson import ObjectId
 
+from services.memberships import PersonLookup, load_person_lookup, name_key
+
 logger = logging.getLogger(__name__)
 
 SHOW_KVN = "kvn"
@@ -429,10 +431,10 @@ def _participant_key(ref: dict) -> Optional[str]:
     return None
 
 
-def build_participations(season: dict) -> list[dict]:
+def build_participations(season: dict, people: Optional["PersonLookup"] = None) -> list[dict]:
     """
-    Строки participations для сезона: по одной на результат в игре (kind=game)
-    и одна итоговая на участника сезона (kind=season).
+    Строки participations для сезона: по одной на результат в игре (kind=game),
+    одна итоговая на участника сезона (kind=season) и по одной на человека в роли жюри/ведущего/редактора (kind=role).
     """
     base = {
         "tournament_id": season["tournament_id"],
@@ -531,7 +533,65 @@ def build_participations(season: dict) -> list[dict]:
                 elif stage_order == row["best_stage_order"] and result.get("passed"):
                     row["last_stage_passed"] = True
 
+    rows.extend(_role_rows(season, base, people))
     return list(summary.values()) + rows
+
+
+ROLE_JURY = "jury"
+ROLE_HOST = "host"
+ROLE_EDITOR = "editor"
+
+
+def _clean_person_name(value: Any) -> str:
+    text = re.sub(r"<[^>]+>", " ", str(value or ""))
+    return re.sub(r"\s+", " ", text).strip(" ,;.")
+
+
+def _role_rows(season: dict, base: dict, people: Optional["PersonLookup"]) -> list[dict]:
+    """Строки kind=role: жюри, ведущие, редакторы сезона (по одной на человека и роль, со счётчиком игр)."""
+    found: dict[tuple[str, str], dict] = {}
+
+    def add(role: str, raw_name: Any, game: Optional[dict] = None):
+        name = _clean_person_name(raw_name)
+        key = name_key(name)
+        if not key or len(name) > 60:
+            return
+        row = found.get((role, key))
+        if row is None:
+            person_id, matched_by = people.resolve(None, name) if people else (None, None)
+            row = found[(role, key)] = {
+                **base,
+                "_id": stable_id(season["_id"], "role", role, key),
+                "kind": "role",
+                "role": role,
+                "participant_key": f"person:{person_id}" if person_id else f"name:{key}",
+                "person_id": person_id,
+                "matched_by": matched_by,
+                "team_id": None,
+                "name": name,
+                "name_key": key,
+                "games_count": 0,
+                "game_ids": [],
+            }
+        if game is not None and game.get("id") not in row["game_ids"]:
+            row["game_ids"].append(game.get("id"))
+            row["games_count"] += 1
+
+    for name in season.get("jury") or []:
+        add(ROLE_JURY, name)
+    for name in season.get("hosts") or []:
+        add(ROLE_HOST, name)
+    if season.get("host"):
+        add(ROLE_HOST, season["host"])
+    for name in season.get("editors") or []:
+        add(ROLE_EDITOR, name)
+    for stage in season.get("stages") or []:
+        for game in stage.get("games") or []:
+            for name in game.get("jury") or []:
+                add(ROLE_JURY, name, game)
+            if game.get("host"):
+                add(ROLE_HOST, game["host"], game)
+    return list(found.values())
 
 
 # ─── Работа с БД ───────────────────────────────────────────────────────────────
@@ -583,7 +643,7 @@ async def ensure_kvn_tournament(db, league_slug: str) -> Optional[dict]:
     return await db.tournaments.find_one({"_id": doc["_id"]})
 
 
-async def save_season(db, season: dict, *, write_page: bool) -> dict:
+async def save_season(db, season: dict, *, write_page: bool, people: Optional[PersonLookup] = None) -> dict:
     """Сохранить сезон, пересобрать participations; при write_page — записать season_data в страницу."""
     now = now_iso()
     existing = await db.seasons.find_one({"_id": season["_id"]}, {"created_at": 1})
@@ -591,7 +651,7 @@ async def save_season(db, season: dict, *, write_page: bool) -> dict:
     season["updated_at"] = now
     await db.seasons.replace_one({"_id": season["_id"]}, season, upsert=True)
 
-    rows = build_participations(season)
+    rows = build_participations(season, people or await load_person_lookup(db))
     await db.participations.delete_many({"season_id": season["_id"]})
     if rows:
         await db.participations.insert_many(rows, ordered=False)
@@ -611,7 +671,9 @@ async def save_season(db, season: dict, *, write_page: bool) -> dict:
     return season
 
 
-async def sync_from_kvn_page(db, page: dict, lookup: Optional[TeamLookup] = None) -> Optional[dict]:
+async def sync_from_kvn_page(
+    db, page: dict, lookup: Optional[TeamLookup] = None, people: Optional[PersonLookup] = None
+) -> Optional[dict]:
     """Синхронизировать сезон из страницы КВН. Страницы без season_data или вне лиги — удаляют сезон."""
     page_id = str(page["_id"])
     league_slug = _league_slug_from_path(page.get("full_path", ""))
@@ -624,12 +686,13 @@ async def sync_from_kvn_page(db, page: dict, lookup: Optional[TeamLookup] = None
         return None
     lookup = lookup or await load_team_lookup(db)
     season = legacy_to_season(page, tournament, lookup)
-    return await save_season(db, season, write_page=False)
+    return await save_season(db, season, write_page=False, people=people)
 
 
 async def sync_kvn_pages(db, query: Optional[dict] = None) -> dict:
     """Синхронизировать все (или отобранные) страницы КВН с season_data."""
     lookup = await load_team_lookup(db)
+    people = await load_person_lookup(db)
     stats = {"pages": 0, "seasons": 0, "skipped": 0, "errors": []}
     base_query = {"season_data": {"$exists": True}}
     if query:
@@ -637,7 +700,7 @@ async def sync_kvn_pages(db, query: Optional[dict] = None) -> dict:
     async for page in db.kvn.find(base_query):
         stats["pages"] += 1
         try:
-            season = await sync_from_kvn_page(db, page, lookup)
+            season = await sync_from_kvn_page(db, page, lookup, people)
         except Exception as e:  # одна битая страница не должна останавливать остальные
             stats["errors"].append(f"{page.get('full_path')}: {e}")
             logger.error(f"Competitions: ошибка синхронизации {page.get('full_path')}: {e}", exc_info=True)
@@ -673,3 +736,4 @@ async def create_competition_indexes(ensure_index, db) -> None:
     await ensure_index(db.participations, [("team_id", 1), ("kind", 1), ("season_year", -1)])
     await ensure_index(db.participations, [("person_id", 1), ("kind", 1), ("season_year", -1)])
     await ensure_index(db.participations, [("slug", 1), ("kind", 1)])
+    await ensure_index(db.participations, [("name_key", 1), ("kind", 1)], sparse=True)

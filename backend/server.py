@@ -37,6 +37,7 @@ from utils.database import get_db, close_db
 from utils.auth import require_admin, SAFE_METHODS
 from services.admin_bootstrap import ensure_admin_from_env
 from services.competitions import ensure_competitions_synced, create_competition_indexes
+from services.memberships import ensure_rosters_imported, create_membership_indexes
 
 
 @asynccontextmanager
@@ -57,6 +58,7 @@ async def lifespan(app: FastAPI):
 
     # Модель соревнований: первичная синхронизация из страниц КВН, если сезонов ещё нет
     await ensure_competitions_synced(db)
+    await ensure_rosters_imported(db)
     
     # Запускаем батчевый счётчик просмотров
     from services.views_counter import views_counter
@@ -213,6 +215,7 @@ async def create_indexes(db):
 
         # Соревнования: турниры, сезоны, перекрёстные ссылки
         await create_competition_indexes(_ensure_index, db)
+        await create_membership_indexes(_ensure_index, db)
         
         if _index_failures:
             logger.warning(f"MongoDB indexes: {len(_index_failures)} not created: {_index_failures}")
@@ -270,6 +273,7 @@ from routes.mongo_admin import router as mongo_admin_router
 from routes.cities import router as cities_router
 from routes.redirects import router as redirects_router
 from routes.competitions import router as competitions_router
+from routes.memberships import router as memberships_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -293,6 +297,7 @@ api_router.include_router(mongo_admin_router)
 api_router.include_router(cities_router)
 api_router.include_router(redirects_router)
 api_router.include_router(competitions_router)
+api_router.include_router(memberships_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────

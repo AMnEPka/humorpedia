@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import EmojiRating from '@/components/EmojiRating';
 import publicApi from '../utils/api';
+import PersonCareer from '../components/competitions/PersonCareer';
 import { 
   PosterPhotoModule, 
   FactsTableModule, 
@@ -158,7 +159,7 @@ export default function PersonDetailPage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar - динамический рендер системных модулей */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-6 min-w-0">
           {/* Заголовок под фото */}
           <Card>
             <CardContent className="p-6">
@@ -362,7 +363,7 @@ export default function PersonDetailPage() {
         </div>
 
         {/* Main content - динамический рендер контентных модулей */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Tags Cloud Module */}
           {sidebarModules.find(m => m.type === 'tags_cloud') && person.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -380,6 +381,9 @@ export default function PersonDetailPage() {
           {contentModules.map((module, i) => (
             <ModuleRenderer key={module.id || i} module={module} index={i} personId={person._id || person.id} />
           ))}
+
+          {/* Команды, сезоны и роли в турнирах (из составов и participations) */}
+          <PersonCareer personSlug={person.slug || person._id} />
         </div>
       </div>
     </div>

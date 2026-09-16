@@ -31,6 +31,11 @@ export const publicApi = {
   getPeople: (params) => api.get('/content/people', { params }),
   getPerson: (slug) => api.get(`/content/people/${slug}`),
   getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
+
+  // Турниры, сезоны, составы (перекрёстные ссылки)
+  getTeamParticipations: (idOrSlug, games = true) => api.get(`/competitions/teams/${idOrSlug}/participations`, { params: { games } }),
+  getTeamMembers: (idOrSlug) => api.get(`/competitions/teams/${idOrSlug}/members`),
+  getPersonCareer: (idOrSlug) => api.get(`/competitions/people/${idOrSlug}/career`),
   
   // Teams
   getTeams: (params) => api.get('/content/teams', { params }),

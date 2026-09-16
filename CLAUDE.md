@@ -12,7 +12,7 @@
 | [docs/ai/ARCHITECTURE.md](docs/ai/ARCHITECTURE.md) | Дерево файлов с назначением, инфраструктура (Docker, медиа, бэкапы), потоки данных |
 | [docs/ai/API.md](docs/ai/API.md) | Все эндпоинты `/api/*` по роутерам, что проверяет авторизацию |
 | [docs/ai/DATA_MODEL.md](docs/ai/DATA_MODEL.md) | Коллекции MongoDB, Pydantic-модели, модули страниц, иерархия КВН, `season_data` |
-| [docs/ai/COMPETITIONS.md](docs/ai/COMPETITIONS.md) | **Модель соревнований**: турниры, сезоны, participations, синхронизация с `season_data`, API `/api/competitions` |
+| [docs/ai/COMPETITIONS.md](docs/ai/COMPETITIONS.md) | **Модель соревнований и перекрёстные ссылки**: турниры, сезоны, participations, составы (memberships), синхронизация, API `/api/competitions` |
 | [docs/ai/FRONTEND.md](docs/ai/FRONTEND.md) | Маршруты React, страницы, ключевые компоненты, API-клиенты |
 | [docs/ai/KNOWN_ISSUES.md](docs/ai/KNOWN_ISSUES.md) | Найденные баги, дыры безопасности, техдолг |
 
@@ -63,7 +63,8 @@ backup/               контейнер mongodump (подключён толь�
 
 - **КВН — иерархия в коллекции `kvn`**: `full_path` вида `kvn/vl-kvn/vl-2009`, `parent_id` ссылается на поле **`id`** (UUID) родителя, а не всегда на `_id` — в коде везде ищут `find_one({"id": x})`, затем `{"_id": x}`. До 4 уровней вложенности.
 - Лиги (slug): `vl-kvn` (Высшая), `premier-liga`, `1l-kvn` (Первая), `ml-kvn` (Международная, с 2014), `vul`. Страница сезона хранит структурированные результаты в `season_data` (стадии → игры → команды/баллы).
-- **Модель соревнований** (`services/competitions.py`, см. docs/ai/COMPETITIONS.md): `tournaments` → `seasons` → `participations`. Источник истины — `seasons`; `season_data` страниц синхронизируется в обе стороны автоматически. `participations` не редактировать напрямую. Ссылка на команду — `teams._id`; в сезоне хранится название на момент сезона (переименование команды его не меняет). Команда в разных шоу — разные сущности.
+- **Модель соревнований** (`services/competitions.py`, см. docs/ai/COMPETITIONS.md): `tournaments` → `seasons` → `participations`. Источник истины — `seasons`; `season_data` страниц синхронизируется в обе стороны автоматически. `participations` не редактировать напрямую. Ссылка на команду — `teams._id`; в сезоне хранится название на момент сезона (переименование команды его не меняет). Команда в разных шоу — разные сущности. Шоу будет много — всё делать универсально (новое шоу = данные, не код).
+- **Составы** (`services/memberships.py`): записи «человек — команда — роли — годы» импортируются из текстовых блоков «Состав команды»; человек может не иметь страницы (хранятся имя и slug старого сайта), `person_id` проставляется автоматически при создании человека. Правка записи делает её ручной. Страница команды показывает «Участие в турнирах» из participations (старый модуль «Список игр команды» больше не генерируется), страница человека — «Команды» и «В турнирах».
 - **Страницы команд** — `/kvn/teams/:slug`, коллекция `teams`. Модуль «Список игр команды» генерируется автоматически из `season_data` всех сезонов (`/content/teams/{slug}/refresh`, `teams-refresh-all`), вручную его не править.
 - Публичный catch-all `/*` → `SectionDetailPage`: пробует `kvn/by-path`, затем `sections/path`, затем `redirects/lookup` (старые URL MODX в поле `old_urls`).
 - Контент страниц собирается из **модулей** (`modules: [{id, type, order, title, visible, data}]`). Системные модули (sidebar): `poster_photo`, `facts_table`, `tags_cloud`, `social_links`, `rating_widget`. Шаблоны модулей — коллекция `templates`.

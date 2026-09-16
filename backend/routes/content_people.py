@@ -12,6 +12,7 @@ from services.crud import (
 )
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
+from services.memberships import link_person, unlink_person
 
 router = APIRouter(prefix="/content", tags=["people"], dependencies=[Depends(require_editor_on_write)])
 
@@ -39,7 +40,9 @@ async def create_person(data: PersonCreate):
         facts=data.facts or {}, facts_order=data.facts_order or [], primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
-    return await create_content("people", person, data.tags)
+    result = await create_content("people", person, data.tags)
+    await _link_person_everywhere(result["id"])
+    return result
 
 
 @router.get("/people", response_model=dict)
@@ -102,10 +105,22 @@ async def get_person(id_or_slug: str):
 @router.put("/people/{id}", response_model=dict)
 async def update_person(id: str, data: PersonUpdate):
     """Update person."""
-    return await update_content("people", id, data, "Person not found")
+    result = await update_content("people", id, data, "Person not found")
+    await _link_person_everywhere(id)
+    return result
 
 
 @router.delete("/people/{id}")
 async def delete_person(id: str):
     """Delete person."""
-    return await delete_content("people", id, "Person not found")
+    result = await delete_content("people", id, "Person not found")
+    await unlink_person(await get_db(), id)
+    return result
+
+
+async def _link_person_everywhere(person_id: str) -> None:
+    """Связать человека с записями составов, где он упомянут по slug старого сайта или однозначному имени."""
+    db = await get_db()
+    person = await db.people.find_one({"_id": person_id})
+    if person:
+        await link_person(db, person)

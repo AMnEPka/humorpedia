@@ -16,6 +16,7 @@ import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
 import FactsEditor from '../components/FactsEditor';
+import TeamMembershipsEditor from '../components/TeamMembershipsEditor';
 
 const emptyTeam = {
   title: '',
@@ -402,6 +403,7 @@ export default function TeamEditPage() {
           <TabsTrigger value="main">Основное</TabsTrigger>
           <TabsTrigger value="facts">Факты</TabsTrigger>
           <TabsTrigger value="modules">Модули ({team.modules.length})</TabsTrigger>
+          {!isNew && <TabsTrigger value="members">Состав</TabsTrigger>}
           <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
@@ -673,6 +675,13 @@ export default function TeamEditPage() {
             contentType="team"
           />
         </TabsContent>
+
+        {/* Состав команды */}
+        {!isNew && (
+          <TabsContent value="members">
+            <TeamMembershipsEditor teamId={id} />
+          </TabsContent>
+        )}
 
         {/* SEO tab */}
         <TabsContent value="seo">

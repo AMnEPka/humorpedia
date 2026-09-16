@@ -221,6 +221,13 @@ export const contentApi = {
   // Search
   search: (params) => api.get('/content/search', { params }),
 
+  // Составы команд
+  getTeamMembers: (idOrSlug) => api.get(`/competitions/teams/${idOrSlug}/members`),
+  createMembership: (data) => api.post('/competitions/memberships', data),
+  updateMembership: (id, data) => api.put(`/competitions/memberships/${id}`, data),
+  deleteMembership: (id) => api.delete(`/competitions/memberships/${id}`),
+  importTeamRoster: (teamIdOrSlug) => api.post('/competitions/memberships/import-rosters', null, { params: { team: teamIdOrSlug } }),
+
   // Duplicate content
   duplicateContent: (contentType, id) => api.post(`/content/${contentType}/${id}/duplicate`),
 };

@@ -26,7 +26,8 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `cache_meta` | — | server.py middleware | `{_id: "version", v: int}` — поколение in-memory кэша для синхронизации воркеров |
 | `tournaments` | `competition.py` | competitions | турнир/лига/проект: `show`, `slug`, `participant_type` (team/person), ссылка на страницу — см. COMPETITIONS.md |
 | `seasons` | `SeasonUpdate` | competitions | сезон: список участников, победители, этапы → игры → результаты (ссылки на `teams._id`) — источник истины вместо `kvn.season_data` |
-| `participations` | — | competitions | производная: участие команды/человека в сезоне (`kind=season`) и в игре (`kind=game`) для перекрёстных ссылок |
+| `participations` | — | competitions | производная: участие в сезоне (`kind=season`), в игре (`kind=game`), роли жюри/ведущего/редактора (`kind=role`) |
+| `memberships` | — | memberships | составы команд: человек (или имя + slug старого сайта) — команда — роли — годы — статус |
 
 Индексы создаются при каждом старте в `server.py:create_indexes` — при добавлении полей для фильтрации добавлять индекс туда.
 

@@ -142,3 +142,6 @@ GET `/collections` · POST `/export` (query/projection/sort/limit) · POST `/imp
 ## competitions.py — `/competitions` (турниры, сезоны, перекрёстные ссылки)
 GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + сезоны) · GET `/seasons/{id}` · GET `/seasons/by-page/{page_id}` · PUT `/seasons/{id}` ✏️ (пишет и в `season_data` страницы) · GET `/unresolved` · POST `/sync` 🛡 · GET `/teams/{id_or_slug}/participations?games=`
 Подробно — [COMPETITIONS.md](COMPETITIONS.md).
+
+## memberships.py — `/competitions` (составы, карьера человека)
+GET `/teams/{id_or_slug}/members` · POST `/memberships` ✏️ · PUT `/memberships/{id}` ✏️ · DELETE `/memberships/{id}` ✏️ · POST `/memberships/import-rosters?team=` 🛡 · GET `/people/{id_or_slug}/career`

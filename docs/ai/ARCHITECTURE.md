@@ -91,9 +91,11 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── templates.py          шаблоны модулей, default на тип, apply-to-teams (merge модулей)
 │   │   ├── redirects.py          старые URL MODX → новые (old_urls + паттерны), auto-populate (через get_db)
 │   │   ├── mongo_admin.py        сырой доступ к коллекциям: export/import/delete/aggregate/stats — только admin
-│   │   └── competitions.py       турниры, сезоны, перекрёстные ссылки команд (/api/competitions)
+│   │   ├── competitions.py       турниры, сезоны, перекрёстные ссылки команд (/api/competitions)
+│   │   └── memberships.py        составы команд и карьера человека (/api/competitions/...)
 │   ├── services/
 │   │   ├── competitions.py       модель соревнований: season_data ⇄ сезон, participations, синхронизация (COMPETITIONS.md)
+│   │   ├── memberships.py        составы: разбор текста «Состав команды», связь с людьми (PersonLookup), импорт
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
 │   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
 │   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)
@@ -108,7 +110,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── rate_limit.py         общий slowapi limiter
 │   │   ├── slugify.py            транслитерация и slug
 │   │   └── team_matcher.py       нормализация названий команд
-│   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations)
+│   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations), test_memberships.py (разбор составов, роли)
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
 │       ├── restore_backup.py / restore_specific_backup.py   восстановление из backups/*.tar.gz

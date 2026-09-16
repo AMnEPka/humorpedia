@@ -192,11 +192,11 @@ def _merge_team_required_sections(modules: list) -> list:
     Project rule: merge split sections into one.
     Currently:
     - История команды (and История команды 2/История команды-2/…)
-    - Список игр команды: NOT merged here - handled by _update_team_games_module which removes all and creates one fresh
+    - Список игр команды: не переносится (игры команды — из participations)
     """
     ms = [m for m in (modules or []) if isinstance(m, dict)]
     ms = _merge_team_text_blocks(ms, "История команды")
-    # NOTE: "Список игр команды" is NOT merged here - _update_team_games_module will remove all and create one fresh
+    # NOTE: "Список игр команды" не переносится — удаляется в apply_template_to_teams
     return _normalize_module_orders(ms)
 
 
@@ -411,17 +411,10 @@ async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRe
             city=city,
         )
 
-        # Auto-update "Список игр команды" module for KVN teams FIRST
-        # This removes all existing "Список игр команды" modules before merging other sections
-        team_slug = team.get("slug")
-        if team.get("team_type") == "kvn" and team_slug:
-            try:
-                from routes.content_teams import _update_team_games_module
-                new_modules = await _update_team_games_module(team_slug, new_modules, db)
-            except Exception as e:
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.warning(f"Failed to auto-update team games module for {team_slug}: {e}")
+        # Старые HTML-таблицы «Список игр команды» не переносятся: игры команды показываются из participations
+        from routes.content_teams import _remove_team_games_tables
+        new_modules = _remove_team_games_tables(new_modules)
+
         
         # Project rule: merge split sections into single blocks (avoid empty duplicates)
         # NOTE: "Список игр команды" is already handled above, so _merge_team_required_sections won't touch it

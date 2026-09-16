@@ -9,6 +9,11 @@ import {
   isSystemModule 
 } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
+import TeamParticipations from '../components/competitions/TeamParticipations';
+import TeamRoster from '../components/competitions/TeamRoster';
+
+// Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
+const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
 
 // Table of Contents component for teams
 function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
@@ -71,6 +76,7 @@ export default function TeamDetailPage() {
   const { slug } = useParams();
   const category = 'kvn';
   const [team, setTeam] = useState(null);
+  const [members, setMembers] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -91,6 +97,15 @@ export default function TeamDetailPage() {
     fetchTeam();
   }, [slug]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setMembers(null);
+    publicApi.getTeamMembers(slug)
+      .then(res => { if (!cancelled) setMembers(res.data); })
+      .catch(() => { if (!cancelled) setMembers(null); });
+    return () => { cancelled = true; };
+  }, [slug]);
+
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
   const sidebarModules = useMemo(() => {
@@ -103,9 +118,19 @@ export default function TeamDetailPage() {
   const contentModules = useMemo(() => {
     if (!team?.modules) return [];
     return team.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .filter(m => m.visible !== false && !isSystemModule(m.type) && !isGamesTableModule(m))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [team?.modules]);
+
+  // Текстовые блоки состава, разобранные полностью, заменяются структурированным составом
+  const replacedRosterIds = useMemo(() => {
+    if (!members?.total) return new Set();
+    const blocks = (members.roster_blocks || []).filter(b => b.count > 0);
+    // Если хоть один блок разобран не полностью — показываем исходный текст, чтобы не потерять пояснения
+    if (blocks.length === 0 || blocks.some(b => !b.complete)) return new Set();
+    return new Set(blocks.map(b => b.module_id));
+  }, [members]);
+  const firstRosterId = contentModules.find(m => replacedRosterIds.has(m.id))?.id;
 
   const cityValue = team?.city || team?.facts?.['Город'] || team?.facts?.city || '';
 
@@ -225,7 +250,7 @@ export default function TeamDetailPage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-6 min-w-0">
           {/* Facts Table - рендерится если есть модуль facts_table */}
           {sidebarModules.find(m => m.type === 'facts_table') && factEntries.length > 0 && (
             <Card>
@@ -372,7 +397,7 @@ export default function TeamDetailPage() {
         </div>
 
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* History/Bio */}
           {team.history && (
             <Card>
@@ -381,17 +406,29 @@ export default function TeamDetailPage() {
               </CardHeader>
               <CardContent>
                 <div 
-                  className="prose prose-blue max-w-none"
+                  className="prose prose-blue max-w-none overflow-x-auto break-words"
                   dangerouslySetInnerHTML={{ __html: team.history }}
                 />
               </CardContent>
             </Card>
           )}
 
-          {/* Content Modules */}
-          {contentModules.map((module, i) => (
-            <ModuleRenderer key={module.id || i} module={module} />
-          ))}
+          {/* Content Modules: старые таблицы игр скрыты, полностью разобранный состав — структурой */}
+          {contentModules.map((module, i) => {
+            if (replacedRosterIds.has(module.id)) {
+              return module.id === firstRosterId ? (
+                <TeamRoster
+                  key={module.id}
+                  members={members}
+                  title={module.data?.title || 'Состав команды'}
+                  anchorId={`section-${module.id}`}
+                />
+              ) : null;
+            }
+            return <ModuleRenderer key={module.id || i} module={module} />;
+          })}
+
+          <TeamParticipations teamSlug={team.slug} teamName={team.name || team.title} />
         </div>
       </div>
     </div>
@@ -456,7 +493,7 @@ function ModuleRenderer({ module }) {
           <CardContent>
             <style>{contentStyles}</style>
             <div 
-              className="prose prose-blue max-w-none"
+              className="prose prose-blue max-w-none overflow-x-auto break-words"
               dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
             />
           </CardContent>
