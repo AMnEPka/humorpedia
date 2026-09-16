@@ -4,17 +4,14 @@ Redirect system: поддержка старых URL humorpedia.ru → новы�
 API ищет по всем коллекциям и возвращает новый путь для редиректа.
 """
 
-import os
 import re
-from fastapi import APIRouter, Query
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import APIRouter, Query, Depends
+from utils.auth import require_editor_on_write
 from services.cache import cache_service
+from utils.database import get_db
 
-router = APIRouter(prefix="/redirects", tags=["redirects"])
+router = APIRouter(prefix="/redirects", tags=["redirects"], dependencies=[Depends(require_editor_on_write)])
 
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-client = AsyncIOMotorClient(MONGO_URL)
-db = client.humorpedia
 
 
 # ─── lookup ────────────────────────────────────────────────────────────────────
@@ -36,6 +33,8 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
     cached = cache_service.get_redirect(clean)
     if cached is not None:
         return cached
+
+    db = await get_db()
 
     # Поиск по коллекциям: (collection_name, new_path_builder)
     search_targets = [
@@ -171,12 +170,14 @@ async def update_old_urls(collection: str, doc_id: str, body: dict):
             url = url.rstrip("/")
         normalized.append(url)
 
+    db = await get_db()
     result = await db[collection].update_one(
-        {"id": doc_id},
+        {"$or": [{"id": doc_id}, {"_id": doc_id}]},
         {"$set": {"old_urls": normalized}}
     )
     if result.matched_count == 0:
         return {"error": "Document not found"}
+    cache_service.invalidate_redirects()
     return {"success": True, "old_urls": normalized}
 
 
@@ -187,6 +188,7 @@ async def auto_populate_old_urls():
     Автоматически заполняет old_urls для всех документов в kvn, teams, people
     на основе известных паттернов старого сайта humorpedia.ru.
     """
+    db = await get_db()
     stats = {"kvn": 0, "teams": 0, "people": 0}
 
     # ─── Teams ────────────────────────────────────────────────────────────
@@ -276,4 +278,5 @@ async def auto_populate_old_urls():
     for coll_name in ["kvn", "teams", "people", "shows", "articles", "news"]:
         await db[coll_name].create_index("old_urls")
 
+    cache_service.invalidate_redirects()
     return {"success": True, "stats": stats}

@@ -1,5 +1,6 @@
 """Team routes — CRUD + bulk operations + KVN league results + scaffold."""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from utils.auth import require_editor_on_write
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Literal
 from datetime import datetime, timezone
@@ -21,11 +22,12 @@ from services.crud import (
 from services.tags import tag_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
-from routes.auth import get_current_user
+from services.views_counter import views_counter
+from utils.auth import get_current_user, require_admin
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/content", tags=["teams"])
+router = APIRouter(prefix="/content", tags=["teams"], dependencies=[Depends(require_editor_on_write)])
 
 
 # ---------------------------------------------------------------------------
@@ -964,7 +966,7 @@ async def bulk_create_teams(data: BulkTeamCreateRequest):
     return {"created": created, "skipped": skipped}
 
 
-@router.post("/teams/restore-logos", response_model=dict)
+@router.post("/teams/restore-logos", response_model=dict, dependencies=[Depends(require_admin)])
 async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
     """
     Bulk restore team logos from legacy image/poster fields.
@@ -1166,42 +1168,33 @@ async def list_teams(
         return cached
 
     db = await get_db()
-    query = {}
-    
+    conditions = []
+
     if status:
-        query["status"] = status.value
+        conditions.append({"status": status.value})
     if tag:
-        query["tags"] = tag
-    if team_type:
-        query["team_type"] = team_type
-    
-    # Улучшенный поиск для команд: ищем по name, title, slug и aliases
-    if search:
-        # Экранируем специальные символы regex для безопасности
-        # re.escape экранирует только специальные символы (., *, +, ?, ^, $, [, ], {, }, |, \, (, )),
-        # обычные буквы и цифры остаются без изменений
-        search_term = search.strip()
-        search_escaped = re.escape(search_term)
-        
-        # Для массива строк MongoDB автоматически применяет regex к каждому элементу
-        # Используем частичное совпадение - ищем подстроку в любом месте поля
-        # MongoDB regex с опцией "i" (case-insensitive) ищет подстроки, так что "бай" должно находить "Байкал"
-        search_conditions = [
+        conditions.append({"tags": tag})
+    if team_type == "kvn":
+        # Исторически у части команд КВН team_type не заполнен
+        conditions.append({"team_type": {"$in": ["kvn", None]}})
+    elif team_type:
+        conditions.append({"team_type": team_type})
+
+    # Поиск подстроки (без учёта регистра) по name, title, slug и aliases
+    if search and search.strip():
+        search_escaped = re.escape(search.strip())
+        conditions.append({"$or": [
             {"name": {"$regex": search_escaped, "$options": "i"}},
             {"title": {"$regex": search_escaped, "$options": "i"}},
             {"slug": {"$regex": search_escaped, "$options": "i"}},
-            {"aliases": {"$regex": search_escaped, "$options": "i"}}
-        ]
-        query["$or"] = search_conditions
-    
-    # Фильтр по первой букве (применяется дополнительно к поиску, если указан)
+            {"aliases": {"$regex": search_escaped, "$options": "i"}},
+        ]})
+
+    # Фильтр по первой букве
     if letter:
-        letter_condition = {"name": {"$regex": f"^{re.escape(letter)}", "$options": "i"}}
-        if "$or" in query:
-            # Если есть поиск, добавляем фильтр по букве через $and
-            query = {"$and": [{"$or": query["$or"]}, letter_condition]}
-        else:
-            query.update(letter_condition)
+        conditions.append({"name": {"$regex": f"^{re.escape(letter)}", "$options": "i"}})
+
+    query = {"$and": conditions} if conditions else {}
     
     total = await db.teams.count_documents(query)
     cursor = db.teams.find(query, {"modules": 0}).skip(skip).limit(limit).sort("name", 1)
@@ -1226,6 +1219,7 @@ async def get_team(id_or_slug: str):
     # ─── Кэш: проверяем ──────────────────────────────────────────────
     cached = cache_service.get_team(id_or_slug)
     if cached is not None:
+        views_counter.increment("teams", cached["_id"])
         return cached
 
     team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")

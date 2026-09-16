@@ -1,5 +1,6 @@
 """Show routes — CRUD + hierarchy + path."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
 import logging
@@ -17,7 +18,7 @@ from services.link_resolver import LinkResolver
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/content", tags=["shows"])
+router = APIRouter(prefix="/content", tags=["shows"], dependencies=[Depends(require_editor_on_write)])
 
 
 @router.post("/shows", response_model=dict)

@@ -6,8 +6,9 @@ from typing import Optional, Any
 import json
 from bson import json_util, ObjectId
 from utils.database import get_db
+from utils.auth import require_admin
 
-router = APIRouter(prefix="/mongo", tags=["MongoDB Admin"])
+router = APIRouter(prefix="/mongo", tags=["MongoDB Admin"], dependencies=[Depends(require_admin)])
 
 
 class ExportRequest(BaseModel):

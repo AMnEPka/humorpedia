@@ -3,6 +3,9 @@ import { authApi } from '../utils/api';
 
 const AuthContext = createContext(null);
 
+// Роли с доступом в админку
+export const STAFF_ROLES = ['admin', 'editor', 'moderator'];
+
 // How often to silently refresh the token (ms)
 const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -91,7 +94,7 @@ export function AuthProvider({ children }) {
     const { access_token, user: userData } = response.data;
     
     // Check if user has admin/editor role
-    if (!['admin', 'editor', 'moderator'].includes(userData.role)) {
+    if (!STAFF_ROLES.includes(userData.role)) {
       throw new Error('Недостаточно прав для доступа к админ-панели');
     }
 
@@ -108,19 +111,22 @@ export function AuthProvider({ children }) {
     if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
   };
 
+  // Роли совпадают с backend/utils/auth.py
   const isAdmin = user?.role === 'admin';
   const isEditor = ['admin', 'editor'].includes(user?.role);
-  const isModerator = ['admin', 'editor', 'moderator'].includes(user?.role);
+  const isModerator = ['admin', 'moderator'].includes(user?.role);
+  const isStaff = STAFF_ROLES.includes(user?.role);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
-      isAdmin, 
-      isEditor, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      logout,
+      isAdmin,
+      isEditor,
       isModerator,
+      isStaff,
       checkAuth 
     }}>
       {children}

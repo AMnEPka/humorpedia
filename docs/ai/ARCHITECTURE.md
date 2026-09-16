@@ -1,6 +1,6 @@
 # Архитектура Humorpedia
 
-> Снимок состояния: `main` @ `1c65fca` (PR #27, 2026-04-21). ~335 файлов в git, ~800 коммитов.
+> Снимок состояния: `main` @ `1c65fca` (PR #27, 2026-04-21) + этап 0 (безопасность, ветка `claude/stage0-security`). ~340 файлов в git.
 > Бэкенд ≈ 15k строк Python, фронтенд ≈ 30k строк JSX.
 
 ## 1. Общая схема
@@ -14,20 +14,20 @@
 FastAPI (backend/server.py) :8001
   ├── /api/*          роутеры из backend/routes/
   ├── /uploads/*      StaticFiles  ← UPLOAD_DIR (/app/uploads), загрузки через админку
-  ├── /media/*        StaticFiles  ← /app/frontend/public/media (импортированные картинки MODX; монтируется только если папка есть)
+  ├── /media/*        StaticFiles  ← /app/media (volume imported_images_volume), запасной путь /app/frontend/public/media
   └── /images/*       StaticFiles  ← /app/images (docker volume images_volume, картинки сайта, напр. /images/kvn-team/x.jpg)
   │
   ▼
 MongoDB 6 (база humorpedia), один Motor-клиент из utils/database.py
 ```
 
-Middleware (порядок добавления в server.py): slowapi limiter (default 1000/мин по IP; явный лимит только на `GET /api/` — 100/мин; middleware SlowAPI не подключён, поэтому default-лимит фактически не применяется к остальным эндпоинтам) → CORS (`CORS_ORIGINS`, по умолчанию `*`) → `CacheControlMiddleware` (GET 200 вне `/auth/`, `/admin/`, `/cache/` → `public, max-age=60, stale-while-revalidate=300`).
-Обработчики ошибок: `RequestValidationError` → 422 с телом запроса в ответе; любое `Exception` → 500 с текстом исключения.
+Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGINS`, по умолчанию `*`, без credentials) → `SlowAPIMiddleware` (default 1000/мин на IP; `/auth/login` 20/мин, `/auth/register` 10/час, поиск 60–120/мин) → `CacheSyncMiddleware` (сверка поколения кэша перед GET, сброс кэша во всех воркерах после успешной записи) → `CacheControlMiddleware` (GET 200 вне `/auth/`, `/admin/`, `/cache/` → `public, max-age=60, stale-while-revalidate=300`).
+Обработчики ошибок: `RequestValidationError` → 422 с `detail` без входных данных (тело не логируется); любое `Exception` → 500 (в `ENVIRONMENT=production` без деталей) с CORS-заголовком.
 
 ### Жизненный цикл бэкенда (lifespan)
 1. `get_db()` → `app.state.db`
 2. `create_indexes(db)` — все индексы (уникальные `slug`/`id`, text-индексы, `kvn.full_path`, `season_data.league_slug+year` и т.д.)
-3. `ensure_default_admin(db)` — `admin` / `admin@humorpedia.local` / `admin`
+3. `ensure_admin_from_env(db)` (`services/admin_bootstrap.py`) — создаёт админа из `ADMIN_EMAIL`/`ADMIN_PASSWORD`, только если в БД нет ни одного admin
 4. `views_counter.start(db)` — фоновая задача, раз в 30 с сбрасывает накопленные просмотры `$inc` в БД
 5. на shutdown — flush счётчика, `close_db()`
 
@@ -37,32 +37,33 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 /
 ├── CLAUDE.md                     контекст для агентов (точка входа)
 ├── docs/ai/                      подробные справочники (этот файл и соседние)
-├── README.md                     пустой шаблон
+├── README.md                     быстрый старт, прод, тесты
+├── .env.example                  шаблон переменных окружения (копировать в .env)
+├── .github/workflows/tests.yml   CI: pytest бэкенда (с MongoDB service)
 ├── DOCKER_DEV.md                 запуск в Docker (dev)
 ├── DOCKER_VOLUME_SETUP.md        volume images_volume для /images
 ├── BACKUP_SYSTEM.md, RESTORE_BACKUP.md   бэкап/восстановление Mongo
 ├── PERFORMANCE_OPTIMIZATIONS.md  что сделано для нагрузки (lazy, text-индексы, rate limit, pool)
 ├── docker-compose.yml            dev: mongodb(--auth) + backend(uvicorn, без reload) + frontend(yarn start)
-├── docker-compose-cloud.yml      prod: mongodb(без auth, порт 27017 наружу!) + backend(gunicorn 4×UvicornWorker) + frontend(nginx)
+├── docker-compose-cloud.yml      prod: mongodb(--auth, порт не публикуется) + backend(gunicorn 4×UvicornWorker) + backup(раз в сутки) + frontend(nginx); требует .env
 ├── .emergent/                    метаданные платформы Emergent (прежний AI-агент), summary.txt — отчёт о рефакторинге
 ├── .cursor/plans/                план из Cursor (линковка контента к людям / humor_chronicles)
 ├── .gitconfig                    user emergent-agent-e1 (артефакт Emergent)
-├── memory/test_credentials.md    admin@humorpedia.local / admin123 (данные Emergent; реальный дефолт в server.py — "admin")
 ├── test_result.md                протокол тестирования Emergent (служебный)
 ├── backend_test.py               смоук-тест живого API (берёт URL из frontend/.env)
 ├── mongo_unification_test.py     смоук-тест единого подключения к Mongo
 ├── mongo-dump.archive            12 МБ дамп Mongo (дубликат лежит в migration/)
 ├── 1l_kvn_games_analysis*.csv/.xlsx   выгрузка анализа игр Первой лиги
 ├── uploads/2025/12, 2026/01      несколько загруженных картинок
-├── tests/__init__.py             пусто
+├── tests/__init__.py             пусто (тесты бэкенда — в backend/tests/)
 │
 ├── backend/
-│   ├── server.py                 приложение, индексы, админ по умолчанию, /api/stats, /api/random/{type}, /api/cache/stats|flush, /api/views/flush
+│   ├── server.py                 приложение, индексы, первый админ из env, middleware, /api/stats, /api/random/{type}, /api/cache/stats|flush, /api/views/flush
 │   ├── start.sh                  entrypoint: restore_backup.py → exec CMD
 │   ├── Dockerfile                python:3.11-slim + mongodb-database-tools + mongosh; ENTRYPOINT чинит CRLF
 │   ├── Dockerfile-cloud          без mongo tools, gunicorn
-│   ├── requirements.txt          (много лишнего: boto3, pandas, numpy, mypy, black…)
-│   ├── init_admin.py             ручное создание админа (свой MONGO_URL)
+│   ├── requirements.txt          прямые runtime-зависимости (pinned); requirements-dev.txt — pytest
+│   ├── init_admin.py             CLI: создать админа / сбросить пароль (--email, --username, --reset; пароль из ADMIN_PASSWORD или ввод)
 │   ├── link_cities.py            cron-скрипт: связать города с людьми/командами
 │   ├── models/
 │   │   ├── base.py               ContentType, TeamType, ContentStatus, SEOData, MediaFile, SocialLinks, BaseDocument, BaseContent
@@ -73,8 +74,8 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 │   │   ├── user.py               User, UserRole, AuthProvider, OAuthData, TokenResponse…
 │   │   └── media_browser.py      модели ответа /media/browse
 │   ├── routes/
-│   │   ├── auth.py               JWT (7 дней, refresh с grace 30 дней), email login/register, VK и Yandex OAuth, get_current_user()
-│   │   ├── users.py              управление пользователями (require_admin / require_moderator)
+│   │   ├── auth.py               email login/register (лимиты), refresh (grace 30 дней), VK и Yandex OAuth; JWT-хелперы — в utils/auth.py
+│   │   ├── users.py              управление пользователями (admin)
 │   │   ├── content_people.py     люди + /people/search + linked-content (humor_chronicles)
 │   │   ├── content_teams.py      команды (1682 строки): bulk-check/create, restore-logos, refresh (self-healing), переименование slug во всех сезонах
 │   │   ├── content_kvn.py        КВН (1267 строк): иерархия, by-path, children, jury-stats, соседние сезоны, update с season_data
@@ -87,22 +88,24 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 │   │   ├── comments.py           комментарии, лайки, модерация
 │   │   ├── media.py              загрузка файлов, браузер volume-папок, rename/delete в источнике
 │   │   ├── templates.py          шаблоны модулей, default на тип, apply-to-teams (merge модулей)
-│   │   ├── redirects.py          старые URL MODX → новые (old_urls + паттерны), auto-populate
-│   │   └── mongo_admin.py        сырой доступ к коллекциям: export/import/delete/aggregate/stats
+│   │   ├── redirects.py          старые URL MODX → новые (old_urls + паттерны), auto-populate (через get_db)
+│   │   └── mongo_admin.py        сырой доступ к коллекциям: export/import/delete/aggregate/stats — только admin
 │   ├── services/
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
-│   │   ├── cache.py              CacheService на cachetools.TTLCache: kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs
+│   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
+│   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)
 │   │   ├── views_counter.py      батч-счётчик просмотров
 │   │   ├── link_resolver.py      резолв внутренних ссылок в HTML модулей при выдаче
 │   │   ├── linking.py            related_person_ids → страницы людей, модуль humor_chronicles
 │   │   ├── tags.py               TagService.sync_tags / get_all / search
-│   │   ├── city_linking.py       сопоставление городов по фактам людей/команд
-│   │   ├── content.py            ContentService — НЕ используется (мёртвый код после рефакторинга)
-│   │   └── link_updater.py       LinkUpdater — НЕ используется
+│   │   └── city_linking.py       сопоставление городов по фактам людей/команд
 │   ├── utils/
 │   │   ├── database.py           get_db()/close_db(): MONGO_URL или MONGO_HOST/PORT/USER/PASSWORD/AUTH_SOURCE, pool 10–50
+│   │   ├── auth.py               JWT (create/verify/grace), get_current_user, require_user/staff/editor/moderator/admin, require_editor_on_write
+│   │   ├── rate_limit.py         общий slowapi limiter
 │   │   ├── slugify.py            транслитерация и slug
 │   │   └── team_matcher.py       нормализация названий команд
+│   ├── tests/                    pytest: conftest.py, test_auth_guards.py (все маршруты: запись без токена → 401/403; роли на подменённой БД)
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
 │       ├── restore_backup.py / restore_specific_backup.py   восстановление из backups/*.tar.gz
 │       ├── migrate_urls.py            обновление старых URL в контенте, поиск битых ссылок
@@ -136,8 +139,8 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 │   ├── OPEN_QUESTIONS.md         недостающие данные по лигам
 │   └── update_kvn_pages.py       md → HTML → PUT /api/content/kvn (сохраняет системные модули, заменяет text_block); dry-run по умолчанию, --apply
 │
-└── backup/                       Dockerfile + backup.sh (mongodump → tar.gz, хранит 10 последних) + run-loop.sh (BACKUP_INTERVAL, по умолч. 3600 с)
-                                  сервис убран из docker-compose.yml (коммит 09934cd)
+└── backup/                       Dockerfile + backup.sh (mongodump → tar.gz, хранит KEEP_LAST_N) + run-loop.sh (BACKUP_INTERVAL)
+                                  подключён в docker-compose-cloud.yml (раз в сутки, 14 архивов); в dev-compose отсутствует
 ```
 
 ## 3. Переменные окружения
@@ -146,7 +149,9 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 |---|---|---|
 | `MONGO_URL` | backend | полный URI; если нет — собирается из `MONGO_HOST/PORT/USER/PASSWORD/AUTH_SOURCE` |
 | `DB_NAME` | backend | имя БД (по умолч. `humorpedia`) |
-| `JWT_SECRET` | backend | секрет JWT. **Не задан ни в одном compose** → генерируется случайно при старте процесса |
+| `JWT_SECRET` | backend | секрет JWT (≥32 символов). В dev-compose — фиксированный небезопасный дефолт; в production без него сервер не стартует |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_USERNAME` | backend | первый администратор (создаётся, если админов нет; пароль ≥12) |
+| `ENVIRONMENT` | backend | `production` — строгие проверки конфигурации, 500 без деталей |
 | `VK_CLIENT_ID/SECRET/REDIRECT_URI`, `YANDEX_*` | backend | OAuth |
 | `CORS_ORIGINS` | backend | через запятую или `*` |
 | `UPLOAD_DIR` | backend | по умолч. `/app/uploads` |
@@ -161,7 +166,7 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 
 - `mongo_data` — данные Mongo
 - `images_volume` → `/app/images` → URL `/images/*`
-- `imported_images_volume` → `/app/media/imported/images` (в dev). ⚠ `/media` в server.py монтируется из `/app/frontend/public/media`, а не из этого пути — см. KNOWN_ISSUES
+- `imported_images_volume` → `/app/media/imported/images` → URL `/media/imported/images/*` (server.py монтирует `/app/media`, запасной путь — `/app/frontend/public/media`)
 - `frontend_node_modules`, `frontend_media` (пустой, чтобы webpack не сканировал 3000+ картинок)
 - prod: `uploads_data`, `backups_data`
 
@@ -172,7 +177,7 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 
 **Редактирование сезона в админке**: `/admin/kvn/:id` → `KVNEditPage` + `SeasonDataEditor` (2665 строк, dnd-kit, ввод баллов) → `PUT /api/content/kvn/{id}` с `season_data` → очистка данных, инвалидация кэша. Обновление таблиц игр у команд — через `POST /api/content/teams/{slug}/refresh` или `/api/content/teams-refresh-all`.
 
-**Авторизация админки**: `POST /api/auth/login` → `access_token` в `localStorage.admin_token`, пользователь в `admin_user` → axios-интерсептор добавляет `Bearer`; на 401 один раз пробует `POST /api/auth/refresh` (принимает токены, просроченные до 30 дней) → `useAuth` ещё и тихо обновляет токен каждые 6 ч. Токен удаляется только при подтверждённом 401/403, не при сетевых ошибках.
+**Авторизация админки**: `POST /api/auth/login` (только роли admin/editor/moderator пускаются в админку; `ProtectedRoute` проверяет `isStaff`) → `access_token` в `localStorage.admin_token`, пользователь в `admin_user` → axios-интерсептор добавляет `Bearer`; на 401 один раз пробует `POST /api/auth/refresh` (принимает токены, просроченные до 30 дней) → `useAuth` ещё и тихо обновляет токен каждые 6 ч. Токен удаляется только при подтверждённом 401/403, не при сетевых ошибках.
 
 ## 6. История проекта (важно для понимания кода)
 
@@ -180,3 +185,4 @@ Middleware (порядок добавления в server.py): slowapi limiter (
 - Апрель 2026: рефакторинг Emergent — монолитный `routes/content.py` (~4300 строк) разбит на `content_*.py`, общий CRUD вынесен в `services/crud.py`, единое подключение к БД, refresh-токены, code splitting, text-индексы, rate limiting, in-memory кэш и батч-счётчик просмотров.
 - В `.emergent/summary.txt` упомянуты 5 md-файлов для агентов в корне — **в репозитории их нет**; их роль теперь выполняют `CLAUDE.md` + `docs/ai/`.
 - Все локальные и удалённые ветки (`debugs`, `geography`, `jury_stats`, `kvn_leagues`, `new_media`, `emergent_*`, `conflict_160426_1510`) полностью влиты в `main`.
+- Сентябрь 2026, этап 0 (Claude Code): авторизация через FastAPI-зависимости на всех операциях записи, `JWT_SECRET` из env, первый админ из env вместо `admin/admin`, Mongo с `--auth` в проде, синхронизация кэша между воркерами, устойчивое создание индексов, тесты + CI. Подробно — KNOWN_ISSUES.md, раздел «Исправлено».

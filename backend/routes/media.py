@@ -1,5 +1,5 @@
 """Media upload and management routes"""
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query, Request
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query, Request, Depends
 from typing import Optional, List
 from datetime import datetime, timezone
 import os
@@ -10,7 +10,7 @@ from pathlib import Path
 from models.user import Media, MediaCreate
 from models.media_browser import MediaBrowseResponse, MediaBrowseItem, MediaBrowseFolder
 from utils.database import get_db
-from routes.auth import get_current_user
+from utils.auth import get_current_user, require_staff, require_admin
 
 router = APIRouter(prefix="/media", tags=["media"])
 
@@ -37,7 +37,7 @@ def get_file_type(filename: str) -> Optional[str]:
     return None
 
 
-@router.post("/upload", response_model=dict)
+@router.post("/upload", response_model=dict, dependencies=[Depends(require_staff)])
 async def upload_file(
     request: Request,
     file: UploadFile = File(...),
@@ -125,7 +125,7 @@ async def upload_file(
     }
 
 
-@router.post("/upload-to-source", response_model=dict)
+@router.post("/upload-to-source", response_model=dict, dependencies=[Depends(require_staff)])
 async def upload_to_source(
     request: Request,
     file: UploadFile = File(...),
@@ -218,7 +218,7 @@ async def upload_to_source(
     }
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=dict, dependencies=[Depends(require_staff)])
 async def list_media(
     request: Request,
     skip: int = Query(0, ge=0),
@@ -254,7 +254,7 @@ async def list_media(
     }
 
 
-@router.get("/browse", response_model=MediaBrowseResponse)
+@router.get("/browse", response_model=MediaBrowseResponse, dependencies=[Depends(require_staff)])
 async def browse_imported_media(
     request: Request,
     prefix: str = Query("", description="Path prefix (e.g., 'images/people' or 'kvn-team')"),
@@ -363,7 +363,7 @@ async def browse_imported_media(
     return MediaBrowseResponse(items=items, folders=folders, total=len(items), parent_path=parent_path)
 
 
-@router.delete("/source/delete")
+@router.delete("/source/delete", dependencies=[Depends(require_staff)])
 async def delete_from_source(
     request: Request,
     source: str = Query(..., description="Source directory: 'imported' or 'images'"),
@@ -416,7 +416,7 @@ async def delete_from_source(
     return {"deleted": True, "path": path, "source": source}
 
 
-@router.put("/source/rename")
+@router.put("/source/rename", dependencies=[Depends(require_staff)])
 async def rename_file_in_source(
     request: Request,
     source: str = Query(..., description="Source directory: 'imported' or 'images'"),
@@ -506,7 +506,7 @@ async def get_media(media_id: str):
     return media
 
 
-@router.put("/{media_id}", response_model=dict)
+@router.put("/{media_id}", response_model=dict, dependencies=[Depends(require_staff)])
 async def update_media(
     media_id: str,
     request: Request,
@@ -537,7 +537,7 @@ async def update_media(
     return {"id": media_id, "updated": True}
 
 
-@router.delete("/{media_id}")
+@router.delete("/{media_id}", dependencies=[Depends(require_admin)])
 async def delete_media(media_id: str, request: Request):
     """Delete media (soft delete)"""
     user = await get_current_user(request)

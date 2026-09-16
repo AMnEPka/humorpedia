@@ -1,5 +1,6 @@
 """Person routes — CRUD + search + linked content."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 
 from models.base import ContentStatus
@@ -12,7 +13,7 @@ from services.crud import (
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
 
-router = APIRouter(prefix="/content", tags=["people"])
+router = APIRouter(prefix="/content", tags=["people"], dependencies=[Depends(require_editor_on_write)])
 
 
 @router.post("/people", response_model=dict)

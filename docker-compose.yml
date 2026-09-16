@@ -45,6 +45,12 @@ services:
       - MONGO_AUTH_SOURCE=admin
       - CORS_ORIGINS=*
       - BACKUP_DIR=/app/backups
+      # Постоянный секрет JWT, иначе сессии слетают при каждом рестарте (для dev — фиксированный)
+      - JWT_SECRET=${JWT_SECRET:-dev-only-insecure-jwt-secret-do-not-use-in-prod}
+      # Первый администратор (создаётся, только если в БД нет ни одного admin)
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
     volumes:
       - ./backend:/app
       - ./uploads:/app/uploads

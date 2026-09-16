@@ -1,12 +1,12 @@
 """Page templates management routes"""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from typing import Optional, List, Literal
 from datetime import datetime, timezone
 
 from models.modules import PageTemplate
 from pydantic import BaseModel, Field
 from utils.database import get_db
-from routes.auth import get_current_user
+from utils.auth import get_current_user, require_editor, require_admin
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 
@@ -200,7 +200,7 @@ def _merge_team_required_sections(modules: list) -> list:
     return _normalize_module_orders(ms)
 
 
-@router.post("", response_model=dict)
+@router.post("", response_model=dict, dependencies=[Depends(require_editor)])
 async def create_template(data: PageTemplate, request: Request):
     """Create a new page template"""
     user = await get_current_user(request)
@@ -284,7 +284,7 @@ async def get_template(template_id: str):
     return template
 
 
-@router.put("/{template_id}", response_model=dict)
+@router.put("/{template_id}", response_model=dict, dependencies=[Depends(require_editor)])
 async def update_template(template_id: str, data: PageTemplate, request: Request):
     """Update template"""
     user = await get_current_user(request)
@@ -305,7 +305,7 @@ async def update_template(template_id: str, data: PageTemplate, request: Request
     return {"id": template_id, "updated": True}
 
 
-@router.post("/{template_id}/set-default", response_model=dict)
+@router.post("/{template_id}/set-default", response_model=dict, dependencies=[Depends(require_admin)])
 async def set_default_template(template_id: str, request: Request):
     """Set template as default for its content type"""
     user = await get_current_user(request)
@@ -333,7 +333,7 @@ async def set_default_template(template_id: str, request: Request):
     return {"id": template_id, "is_default": True}
 
 
-@router.delete("/{template_id}")
+@router.delete("/{template_id}", dependencies=[Depends(require_admin)])
 async def delete_template(template_id: str, request: Request):
     """Delete template"""
     user = await get_current_user(request)
@@ -352,7 +352,7 @@ async def delete_template(template_id: str, request: Request):
 
 # === APPLY TEMPLATE TO EXISTING CONTENT ===
 
-@router.post("/{template_id}/apply-to-teams", response_model=dict)
+@router.post("/{template_id}/apply-to-teams", response_model=dict, dependencies=[Depends(require_admin)])
 async def apply_template_to_teams(template_id: str, body: ApplyTemplateToTeamsRequest, request: Request):
     """
     Apply a template to teams by team_type (KVN teams use team_type='kvn').

@@ -1,5 +1,6 @@
 """Wiki routes — CRUD."""
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 
 from models.base import ContentType, ContentStatus
@@ -9,7 +10,7 @@ from services.crud import (
     delete_content, get_by_id_or_slug, list_content, build_query,
 )
 
-router = APIRouter(prefix="/content", tags=["wiki"])
+router = APIRouter(prefix="/content", tags=["wiki"], dependencies=[Depends(require_editor_on_write)])
 
 
 @router.post("/wiki", response_model=dict)

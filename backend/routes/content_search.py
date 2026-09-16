@@ -1,9 +1,9 @@
 """Search, resolve-link, and duplicate routes."""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+
 import copy as copy_module
 import uuid
 import logging
@@ -16,10 +16,10 @@ from services.tags import tag_service
 
 logger = logging.getLogger(__name__)
 
-# Rate limiter for search endpoints
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiter for search endpoints (общий экземпляр)
+from utils.rate_limit import limiter
 
-router = APIRouter(prefix="/content", tags=["search"])
+router = APIRouter(prefix="/content", tags=["search"], dependencies=[Depends(require_editor_on_write)])
 
 
 # ---------------------------------------------------------------------------

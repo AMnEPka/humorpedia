@@ -1,5 +1,6 @@
 """Article routes — CRUD + random."""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 
 from models.base import ContentStatus
@@ -10,7 +11,7 @@ from services.crud import (
     delete_content, get_by_id_or_slug, list_content, build_query,
 )
 
-router = APIRouter(prefix="/content", tags=["articles"])
+router = APIRouter(prefix="/content", tags=["articles"], dependencies=[Depends(require_editor_on_write)])
 
 
 @router.get("/articles/random", response_model=dict)

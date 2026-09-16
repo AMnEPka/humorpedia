@@ -1,5 +1,6 @@
 """Tags management routes"""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
 
@@ -7,7 +8,7 @@ from models.user import Tag, TagCreate
 from utils.database import get_db
 from utils.slugify import generate_slug
 
-router = APIRouter(prefix="/tags", tags=["tags"])
+router = APIRouter(prefix="/tags", tags=["tags"], dependencies=[Depends(require_editor_on_write)])
 
 
 @router.post("", response_model=dict)

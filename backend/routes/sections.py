@@ -1,5 +1,6 @@
 """Sections/Projects API routes - hierarchical content structure"""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional, List
 from datetime import datetime, timezone
 
@@ -8,7 +9,7 @@ from models.base import ContentStatus
 from utils.database import get_db
 from services.tags import tag_service
 
-router = APIRouter(prefix="/sections", tags=["sections"])
+router = APIRouter(prefix="/sections", tags=["sections"], dependencies=[Depends(require_editor_on_write)])
 
 
 async def build_full_path(parent_id: Optional[str], slug: str, db) -> tuple[str, int]:
@@ -81,6 +82,7 @@ async def check_circular_reference(section_id: str, new_parent_id: Optional[str]
     return False
 
 
+@router.post("", response_model=dict, include_in_schema=False)
 @router.post("/", response_model=dict)
 async def create_section(data: SectionCreate, request: Request):
     """Create a new section"""
@@ -147,6 +149,7 @@ async def create_section(data: SectionCreate, request: Request):
     return {"id": doc["_id"], "slug": doc["slug"], "full_path": full_path}
 
 
+@router.get("", response_model=dict, include_in_schema=False)
 @router.get("/", response_model=dict)
 async def list_sections(
     request: Request,

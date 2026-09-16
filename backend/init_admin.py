@@ -1,100 +1,63 @@
 #!/usr/bin/env python3
-"""Initialize default admin user.
+"""Создать администратора или сбросить пароль существующему пользователю и сделать его админом.
 
-Run once to create admin user if not exists.
-Usage: python3 init_admin.py
+Использование (внутри контейнера backend):
+    python init_admin.py --email me@example.com [--username admin]
+    python init_admin.py --email me@example.com --reset
+
+Пароль берётся из переменной ADMIN_PASSWORD, иначе запрашивается интерактивно.
+Подключение к БД — как у сервера (MONGO_URL или MONGO_HOST/MONGO_USER/...).
 """
 
+import argparse
 import asyncio
+import getpass
 import os
 import sys
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import bcrypt
-from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-DB_NAME = os.getenv("DB_NAME", "emergent_db")
-
-DEFAULT_ADMIN = {
-    "username": "admin",
-    "email": "admin@humorpedia.local",
-    "password": "admin"
-}
+from utils.database import get_db, close_db  # noqa: E402
+from services.admin_bootstrap import build_admin_doc, MIN_ADMIN_PASSWORD_LENGTH  # noqa: E402
 
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+async def main(args) -> int:
+    password = os.environ.get("ADMIN_PASSWORD") or getpass.getpass("Пароль администратора: ")
+    if len(password) < MIN_ADMIN_PASSWORD_LENGTH:
+        print(f"Пароль должен быть не короче {MIN_ADMIN_PASSWORD_LENGTH} символов")
+        return 1
 
-
-async def init_admin():
-    client = AsyncIOMotorClient(MONGO_URL)
-    db = client[DB_NAME]
-    
-    # Check if admin exists
-    existing = await db.users.find_one({
-        "$or": [
-            {"username": DEFAULT_ADMIN["username"]},
-            {"email": DEFAULT_ADMIN["email"]}
-        ]
-    })
-    
-    if existing:
-        print(f"Admin user already exists: {existing.get('username')} ({existing.get('email')})")
-        client.close()
-        return False
-    
-    # Create admin user
-    admin_doc = {
-        "_id": str(uuid4()),
-        "username": DEFAULT_ADMIN["username"],
-        "email": DEFAULT_ADMIN["email"],
-        "password_hash": hash_password(DEFAULT_ADMIN["password"]),
-        "profile": {
-            "full_name": "Administrator",
-            "avatar": None,
-            "bio": None,
-            "birth_date": None,
-            "location": None
-        },
-        "role": "admin",
-        "permissions": ["comment", "vote", "edit", "delete", "moderate", "admin"],
-        "oauth": {
-            "vk_id": None,
-            "yandex_id": None,
-            "vk_data": None,
-            "yandex_data": None
-        },
-        "auth_provider": "email",
-        "stats": {
-            "articles_count": 0,
-            "comments_count": 0,
-            "votes_count": 0,
-            "quiz_attempts": 0
-        },
-        "active": True,
-        "verified": True,
-        "banned": False,
-        "old_id": None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-        "last_login_at": None
-    }
-    
-    await db.users.insert_one(admin_doc)
-    print(f"✅ Admin user created:")
-    print(f"   Username: {DEFAULT_ADMIN['username']}")
-    print(f"   Email: {DEFAULT_ADMIN['email']}")
-    print(f"   Password: {DEFAULT_ADMIN['password']}")
-    
-    client.close()
-    return True
+    db = await get_db()
+    try:
+        existing = await db.users.find_one({"$or": [{"email": args.email}, {"username": args.username}]})
+        if existing and not args.reset:
+            print(f"Пользователь уже существует: {existing.get('username')} ({existing.get('email')}). "
+                  "Используйте --reset, чтобы сбросить пароль и выдать роль admin.")
+            return 1
+        if existing:
+            await db.users.update_one({"_id": existing["_id"]}, {"$set": {
+                "password_hash": bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+                "role": "admin",
+                "banned": False,
+                "active": True,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }})
+            print(f"✅ Пароль сброшен, роль admin: {existing.get('username')} ({existing.get('email')})")
+        else:
+            await db.users.insert_one(build_admin_doc(args.username, args.email, password))
+            print(f"✅ Администратор создан: {args.username} ({args.email})")
+        return 0
+    finally:
+        await close_db()
 
 
 if __name__ == "__main__":
-    result = asyncio.run(init_admin())
-    sys.exit(0 if result else 1)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--email", required=True)
+    parser.add_argument("--username", default="admin")
+    parser.add_argument("--reset", action="store_true", help="сбросить пароль существующему пользователю")
+    sys.exit(asyncio.run(main(parser.parse_args())))

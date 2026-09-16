@@ -35,7 +35,7 @@ export const publicApi = {
   // Teams
   getTeams: (params) => api.get('/content/teams', { params }),
   getTeam: (slug) => api.get(`/content/teams/${slug}`),
-  getTeamsByCategory: (category, params) => api.get('/content/teams', { params: { ...params, category } }),
+  getTeamsByCategory: (category, params) => api.get('/content/teams', { params: { ...params, team_type: category } }),
   
   // Shows
   getShows: (params) => api.get('/content/shows', { params }),

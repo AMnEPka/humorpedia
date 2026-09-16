@@ -124,7 +124,7 @@ function WithTitle({ title, children }) {
 
 // Protected route wrapper for admin (AdminLayout тоже lazy)
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isStaff, logout } = useAuth();
 
   if (loading) {
     return (
@@ -136,6 +136,17 @@ function ProtectedRoute({ children }) {
 
   if (!user) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  if (!isStaff) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
+        <p className="text-gray-700">Недостаточно прав для доступа к админ-панели.</p>
+        <button type="button" className="text-primary underline" onClick={logout}>
+          Войти под другим пользователем
+        </button>
+      </div>
+    );
   }
 
   return (

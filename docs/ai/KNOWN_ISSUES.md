@@ -1,38 +1,52 @@
 # Известные проблемы и техдолг
 
-> Найдено при анализе кода `main` @ `1c65fca` (2026-09-16). Ничего из списка пока не исправлено.
-> Исправили что-то — удалите пункт или отметьте его.
+> Исходный список составлен при анализе `main` @ `1c65fca` (2026-09-16).
+> Этап 0 (безопасность и блокирующие баги) закрыт в ветке `claude/stage0-security` — см. раздел «Исправлено».
+> Исправили что-то — перенесите пункт в «Исправлено».
 
-## 🔴 Безопасность (критично)
+## 🟠 Открытые проблемы
 
-1. **Нет авторизации на write-эндпоинтах контента.** `POST/PUT/DELETE` для `/api/content/{people,teams,kvn,shows,articles,news,quizzes,wiki}`, `/content/{type}/{id}/duplicate`, `/teams/bulk-*`, `/teams-refresh-all`, `/sections`, `/cities` (включая `link-all`), `/tags`, `/redirects/*`, `/cache/flush`, `/views/flush` не проверяют токен. Любой может менять/удалять контент. Защита есть только в `auth`, `users`, `comments`, `media`, `templates`, `teams/restore-logos`.
-2. **`/api/mongo/*` без авторизации**: `export` любой коллекции (в т.ч. `users` с `password_hash`), `import` (можно вставить себе пользователя с `role: admin`), `delete`, `aggregate` (`$out`/`$merge` позволяют перезаписывать коллекции).
-3. **Админ по умолчанию `admin` / `admin`** создаётся при каждом старте, если его нет (`server.py:ensure_default_admin`), и пароль пишется в лог.
-4. **`JWT_SECRET` не задан в compose** → `secrets.token_hex(32)` при старте процесса. Следствия: все сессии слетают после рестарта; в проде (gunicorn, 4 воркера) у каждого воркера свой секрет → токен от одного воркера невалиден на другом → случайные 401 (вероятная первопричина жалоб «теряется авторизация»). Решение: задать постоянный `JWT_SECRET` в env.
-5. **`docker-compose-cloud.yml`: MongoDB без `--auth` и с `ports: 27017:27017`** — база открыта наружу, если хост не закрыт фаерволом.
-6. `ProtectedRoute` на фронте проверяет только наличие пользователя, не роль — любой зарегистрированный (`/auth/register`) видит админку; вкупе с п.1 может всё править.
-7. Обработчики ошибок в `server.py` возвращают клиенту текст исключения и тело запроса (утечка деталей), CORS `*` + `allow_credentials=True`.
-8. `memory/test_credentials.md` и `server.py` содержат учётные данные в репозитории.
+### Переписываются в этапах 1–3 (новая модель соревнований) — отдельно не чинить
+1. **Расхождение типов модулей**: фронтовый `ModuleRenderer` знает `image`, `image_gallery`, `video_embed`, `person_card`, `related_links`, `table_of_contents`, `html`, `divider`, а бэкенд `ModuleType` — нет (сохранение через API → 422); и наоборот, часть бэкенд-типов публично не рендерится.
+2. **Непоследовательные идентификаторы**: у `kvn`, `teams`, `people` есть отдельное поле `id` (UUID) помимо `_id`, у импортированных `shows` поля `id` нет; `season_data.year` бывает строкой, `winners` — в двух форматах.
+3. **Результаты сезонов вшиты в `kvn.season_data`**, таблица игр команды генерируется `refresh` и сохраняется в модуль; составов команд как данных нет (только текст в модуле `team_members`, `member_ids` не используется).
+4. `content_teams.py` (≈1680 строк), `content_kvn.py` (≈1270), `SeasonDataEditor.jsx` (2665) — кандидаты на декомпозицию; `find_adjacent_seasons` делает десятки regex-запросов на страницу.
+5. У 238 из 442 команд (дамп 12.01.2026) не заполнен `team_type` — пока API трактует отсутствие как `kvn`.
 
-## 🟠 Баги
+### Прочее
+6. **Черновики видны публично**: GET-эндпоинты контента не фильтруют `status` для анонимов (в дампе всё `published`, поэтому не критично). Решить вместе с очередью модерации (этап 5).
+7. Бинарники в git: `mongo-dump.archive` (12 МБ) дважды (корень и `migration/`), `*.docx`, `*.xlsx`, CSV-выгрузки, картинки в `uploads/`. Удаление — только с согласия владельца (дамп используется как тестовые данные).
+8. Наследие Emergent: `test_result.md`, `.emergent/`, `.gitconfig` (emergent-agent), `frontend/plugins/*`, `backend_test.py` (требует `frontend/.env`), `mongo_unification_test.py`.
+9. Pydantic-deprecation: class-based `Config` в `models/modules.py`, `models/section.py`; `Query(regex=...)` в `routes/tags.py`.
+10. Проверки ролей внутри хендлеров `media`/`templates`/`comments` остались как второй уровень защиты — дублируют зависимости, можно убрать при рефакторинге.
+11. Frontend: нет автотестов; CI проверяет только бэкенд.
 
-9. **`routes/redirects.py` создаёт свой `AsyncIOMotorClient(MONGO_URL)`** с дефолтом `mongodb://localhost:27017` и жёстко БД `humorpedia`. В dev-compose `MONGO_URL` не задан (используются `MONGO_HOST/USER/PASSWORD`) → в Docker-dev lookup редиректов падает. Надо перейти на `get_db()`.
-10. **In-memory кэш на процесс**: при 4 воркерах gunicorn инвалидация срабатывает только в воркере, обработавшем запись; остальные отдают устаревшие данные до истечения TTL (до 5 мин для КВН/команд, 30 мин для редиректов). Инвалидация есть только в `content_kvn.py` и `content_teams.py`; `PUT /redirects/.../old-urls` кэш редиректов не сбрасывает.
-11. `GET /content/kvn/by-path` при попадании в кэш возвращает ответ до `views_counter.increment` → просмотры страниц КВН сильно недосчитываются. Аналогично `GET /content/teams/{slug}` (при кэше просмотры не считаются).
-12. `slowapi`: `default_limits=["1000/minute"]` не работает, т.к. не подключён `SlowAPIMiddleware`; реально лимиты только на `GET /api/`, `/content/search`, `/content/search/autocomplete`.
-13. `/media` монтируется из `/app/frontend/public/media`, но в dev-compose `./frontend` в backend не монтируется, а volume `imported_images_volume` смонтирован в `/app/media/imported/images` → mount `/media` в dev, скорее всего, не создаётся (папки нет) и `/media/imported/...` отдаёт 404. Проверить на живом окружении.
-14. Расхождение типов модулей: фронтовый `ModuleRenderer` поддерживает `image`, `image_gallery`, `video_embed`, `person_card`, `related_links`, `table_of_contents`, `html`, `divider`, а бэкенд `ModuleType` их не знает (сохранение таких модулей через API вернёт 422); и наоборот, `hero_card`, `tags`, `gallery`, `video`, `team_members`, `tv_appearances`, `games_list`, `episodes_list`, `participants`, `best_articles`, … на публичной стороне не рендерятся `ModuleRenderer`-ом (часть обрабатывается на конкретных страницах — проверять).
-15. `sections` и `cities`: корневые маршруты объявлены как `"/"` при `redirect_slashes=False` → `/api/sections` (без слэша) = 404. Фронт использует `/cities/` со слэшем, для sections — `/sections` без слэша в `publicApi.getSections` → проверить, работает ли меню в Header.
-16. `publicApi.getTeamsByCategory` шлёт `category`, бэкенд такой фильтр не поддерживает.
+## ✅ Исправлено (этап 0)
 
-## 🟡 Техдолг / мусор
-
-17. Мёртвый код: `backend/services/content.py` (ContentService), `backend/services/link_updater.py`, `frontend/src/public/pages/RedirectHandler.jsx`; `backend/routes/__init__.py` импортирует не все роутеры (не используется server.py).
-18. `content_teams.py` (1682 строки), `content_kvn.py` (1267), `SeasonDataEditor.jsx` (2665) — кандидаты на декомпозицию; `find_adjacent_seasons` делает до десятков запросов с regex на одну страницу.
-19. Непоследовательные идентификаторы КВН (`id` vs `_id`), `season_data.year` бывает строкой, `winners` в двух форматах.
-20. Бинарники в git: `mongo-dump.archive` (12 МБ) дважды (корень и `migration/`), `*.docx`, `*.xlsx`, CSV-выгрузки, картинки в `uploads/`.
-21. `requirements.txt` содержит dev/лишние пакеты (black, mypy, flake8, pytest, boto3, pandas, numpy, s5cmd, jq…) и дубликат `slowapi`; `cachetools` без версии.
-22. Нет автотестов и CI; `backend_test.py` требует `frontend/.env`, которого нет.
-23. `README.md` пустой; `test_result.md`, `.emergent/`, `.gitconfig` (emergent-agent), `frontend/plugins/*` — наследие Emergent.
-24. Авторизация реализована вручную в каждом хендлере вместо FastAPI `Depends` — легко забыть проверку (см. п.1). Рекомендуется общий `Depends(require_role(...))` и подключение на уровне роутера.
-25. `backup/` не подключён ни к одному compose (сервис удалён в 09934cd), при этом `BACKUP_SYSTEM.md` описывает его как работающий «в фоне».
+| Было | Что сделано |
+|---|---|
+| Write-эндпоинты контента, `/sections`, `/cities`, `/tags`, `/redirects` без авторизации | Зависимость уровня роутера `require_editor_on_write` (`backend/utils/auth.py`): чтение открыто, любая запись — admin/editor. Новые эндпоинты в этих роутерах защищены автоматически |
+| `/api/mongo/*` без авторизации | `require_admin` на весь роутер |
+| `media`, `templates`, `comments`, `users`, `teams/restore-logos` проверяли права после валидации тела | Зависимости в декораторах (`require_staff`/`require_editor`/`require_admin`/`require_moderator`/`require_user`) |
+| `/cache/flush`, `/views/flush`, `/cache/stats` открыты | только admin |
+| Админ по умолчанию `admin/admin`, пароль в логах | Удалено. Первый админ — из `ADMIN_EMAIL`/`ADMIN_PASSWORD` (≥12 символов), только если админов нет; `python init_admin.py --email … [--reset]` |
+| `JWT_SECRET` случайный на процесс → 401 между воркерами и после рестарта | Читается из env; в `ENVIRONMENT=production` без секрета (≥32 символов) сервер не стартует; в dev-compose — фиксированный |
+| Prod-compose: Mongo без `--auth`, порт 27017 наружу | `--auth`, порт не публикуется, backend подключается по `MONGO_USER/PASSWORD` |
+| Забаненный пользователь с живым токеном проходил проверки | `get_current_user` отбрасывает `banned` и `active: false` |
+| Нет лимитов на логин/регистрацию; default-лимит slowapi не работал | `SlowAPIMiddleware` подключён; `/auth/login` 20/мин, `/auth/register` 10/час; пароль при регистрации ≥8 |
+| Frontend: `ProtectedRoute` пускал любого залогиненного | проверка роли admin/editor/moderator (`isStaff`) |
+| 422/500 возвращали тело запроса и текст исключения | 422 без `input`, тело не логируется; в production 500 без деталей; CORS без `allow_credentials` (токен в заголовке) |
+| `memory/test_credentials.md` с паролем в репо | удалён |
+| `redirects.py` — свой Mongo-клиент (не работал в dev с auth) | `get_db()`; `PUT old-urls` ищет по `id` или `_id`, сбрасывает кэш редиректов |
+| In-memory кэш расходился между воркерами gunicorn | «Поколение» кэша в `cache_meta`; `CacheSyncMiddleware` сверяет его перед чтением (раз в 2 с) и увеличивает после любой успешной записи |
+| Просмотры не считались при попадании в кэш (`kvn/by-path`, `teams/{slug}`) | счётчик вызывается и для кэшированных ответов |
+| Создание индексов прерывалось на первой ошибке (дубликаты `shows.id`) → индексы articles/news/kvn/sections/cities не создавались | каждый индекс создаётся независимо; `shows.id` — sparse |
+| `/api/sections`, `/api/cities` без слэша → 404 (меню в шапке, список разделов в админке) | корневые маршруты доступны с и без слэша |
+| `/media` монтировался из несуществующего в Docker пути | сначала volume `/app/media`, затем старый путь |
+| `category` в `publicApi.getTeamsByCategory` игнорировался | передаётся как `team_type`; `team_type=kvn` включает команды без типа |
+| `list_teams`: `search` + `letter` теряли фильтры `status/tag/team_type` | условия собираются через `$and` |
+| Мёртвый код: `services/content.py`, `services/link_updater.py`, `RedirectHandler.jsx`, неполный `routes/__init__.py` | удалены / очищен |
+| `requirements.txt` с лишними пакетами и дублями | только прямые зависимости; dev — `requirements-dev.txt` |
+| Нет тестов и CI | `backend/tests/test_auth_guards.py` (обходит все маршруты: запись без токена → 401/403, роли), GitHub Actions `.github/workflows/tests.yml` |
+| `backup/` не подключён, документация врала | сервис `backup` в `docker-compose-cloud.yml` (раз в сутки, 14 архивов), `BACKUP_SYSTEM.md` исправлен |
+| Пустой README, нет шаблона env | `README.md`, `.env.example` |

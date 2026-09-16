@@ -23,6 +23,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `tags` | — | tags | `name` и `slug` уникальны, `usage_count`, `type` |
 | `media` | — | media | `url`, `uploaded_at`, `status` (soft delete) |
 | `templates` | `PageTemplate` | templates | `name` уникально, `content_type`, `modules[]`, `is_default` |
+| `cache_meta` | — | server.py middleware | `{_id: "version", v: int}` — поколение in-memory кэша для синхронизации воркеров |
 
 Индексы создаются при каждом старте в `server.py:create_indexes` — при добавлении полей для фильтрации добавлять индекс туда.
 
@@ -126,8 +127,8 @@ kvn                                   level 0, full_path "kvn"
 
 ## Пользователи и роли
 
-`UserRole`: `user`, `editor`, `moderator`, `admin` (см. models/user.py). `AuthProvider`: `email`, `vk`, `yandex`.
-Проверки ролей разбросаны по роутам (см. API.md). Админ по умолчанию создаётся при старте: `admin` / `admin@humorpedia.local` / `admin`.
+`UserRole`: `user`, `editor`, `moderator`, `admin` (см. models/user.py). `AuthProvider`: `email`, `vk`, `yandex`. Права: `admin` — всё; `editor` — запись контента, шаблоны, медиа; `moderator` — модерация комментариев, медиа; `user` — комментарии и лайки.
+Проверки ролей — зависимости `backend/utils/auth.py` (см. API.md). Первый админ — из `ADMIN_EMAIL`/`ADMIN_PASSWORD` или `init_admin.py`. Забаненные (`banned`) и неактивные (`active: false`) считаются неавторизованными.
 
 ## Кэш и счётчики (in-memory, на процесс)
 

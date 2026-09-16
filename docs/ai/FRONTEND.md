@@ -41,9 +41,9 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     ArticleDetailPage / ArticlesListPage, NewsDetailPage / NewsListPage, QuizDetailPage / QuizzesListPage
     CityDetailPage / CitiesListPage             география
     SearchPage, TagSearchPage, ContactsPage, PolicyPage
-    RedirectHandler.jsx        НЕ используется (нигде не импортируется)
+
 admin/                         АДМИНКА
-  hooks/useAuth.js             AuthProvider/useAuth: user из localStorage (admin_user), проверка /auth/me, тихий refresh каждые 6 ч; токен удаляется только при 401/403
+  hooks/useAuth.js             AuthProvider/useAuth: user из localStorage (admin_user), проверка /auth/me, тихий refresh каждые 6 ч; токен удаляется только при 401/403; STAFF_ROLES, isAdmin/isEditor/isModerator/isStaff
   utils/api.js                 axios `api` с Bearer из localStorage.admin_token и refresh-интерсептором (очередь запросов на время refresh);
                                группы: authApi, contentApi, statsApi, usersApi, tagsApi, commentsApi, mediaApi, templatesApi, sectionsApi; getErrorMessage()
   components/
@@ -76,7 +76,7 @@ admin/                         АДМИНКА
 | `/kvn/vl-kvn/vl-jury` | JuryStatsPage |
 | `/*` | **SectionDetailPage** (КВН, разделы, редиректы старых URL) |
 
-Админка (`ProtectedRoute` — проверяет только, что пользователь залогинен, роль не проверяет; внутри `AdminLayout`):
+Админка (`ProtectedRoute` — пользователь залогинен И роль admin/editor/moderator; внутри `AdminLayout`):
 `/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/users`, `/admin/database`.
 
 HomePage, SectionDetailPage и PublicLayout грузятся синхронно; остальное — `React.lazy`, админка — отдельным чанком.

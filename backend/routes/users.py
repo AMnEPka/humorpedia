@@ -1,32 +1,16 @@
 """User management routes"""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from typing import List, Optional
 from datetime import datetime, timezone
 
 from models.user import User, UserUpdate, UserAdminUpdate, UserRole
 from utils.database import get_db
-from routes.auth import get_current_user
+from utils.auth import get_current_user, require_user, require_admin
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-async def require_admin(request: Request):
-    """Require admin role"""
-    user = await get_current_user(request)
-    if not user or user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Требуются права администратора")
-    return user
-
-
-async def require_moderator(request: Request):
-    """Require moderator or admin role"""
-    user = await get_current_user(request)
-    if not user or user.get("role") not in ["admin", "moderator", "editor"]:
-        raise HTTPException(status_code=403, detail="Недостаточно прав")
-    return user
-
-
-@router.get("", response_model=dict)
+@router.get("", response_model=dict, dependencies=[Depends(require_admin)])
 async def list_users(
     request: Request,
     skip: int = Query(0, ge=0),
@@ -36,7 +20,6 @@ async def list_users(
     banned: Optional[bool] = None
 ):
     """List users (admin only)"""
-    await require_admin(request)
     
     db = await get_db()
     
@@ -66,10 +49,9 @@ async def list_users(
     }
 
 
-@router.get("/{user_id}", response_model=dict)
+@router.get("/{user_id}", response_model=dict, dependencies=[Depends(require_admin)])
 async def get_user(user_id: str, request: Request):
     """Get user by ID (admin only)"""
-    await require_admin(request)
     
     db = await get_db()
     user = await db.users.find_one({"_id": user_id}, {"password_hash": 0})
@@ -80,7 +62,7 @@ async def get_user(user_id: str, request: Request):
     return user
 
 
-@router.put("/me", response_model=dict)
+@router.put("/me", response_model=dict, dependencies=[Depends(require_user)])
 async def update_me(data: UserUpdate, request: Request):
     """Update current user profile"""
     current_user = await get_current_user(request)
@@ -116,10 +98,9 @@ async def update_me(data: UserUpdate, request: Request):
     return {"id": current_user["_id"], "updated": True}
 
 
-@router.put("/{user_id}", response_model=dict)
+@router.put("/{user_id}", response_model=dict, dependencies=[Depends(require_admin)])
 async def admin_update_user(user_id: str, data: UserAdminUpdate, request: Request):
     """Update user (admin only)"""
-    await require_admin(request)
     
     db = await get_db()
     
@@ -135,10 +116,9 @@ async def admin_update_user(user_id: str, data: UserAdminUpdate, request: Reques
     return {"id": user_id, "updated": True}
 
 
-@router.post("/{user_id}/ban", response_model=dict)
+@router.post("/{user_id}/ban", response_model=dict, dependencies=[Depends(require_admin)])
 async def ban_user(user_id: str, request: Request):
     """Ban user (admin only)"""
-    await require_admin(request)
     
     db = await get_db()
     
@@ -153,10 +133,9 @@ async def ban_user(user_id: str, request: Request):
     return {"id": user_id, "banned": True}
 
 
-@router.post("/{user_id}/unban", response_model=dict)
+@router.post("/{user_id}/unban", response_model=dict, dependencies=[Depends(require_admin)])
 async def unban_user(user_id: str, request: Request):
     """Unban user (admin only)"""
-    await require_admin(request)
     
     db = await get_db()
     
@@ -171,10 +150,9 @@ async def unban_user(user_id: str, request: Request):
     return {"id": user_id, "banned": False}
 
 
-@router.delete("/{user_id}", response_model=dict)
+@router.delete("/{user_id}", response_model=dict, dependencies=[Depends(require_admin)])
 async def delete_user(user_id: str, request: Request):
     """Delete user (admin only)"""
-    await require_admin(request)
     
     db = await get_db()
     

@@ -1,11 +1,9 @@
 """Authentication routes - Email, VK, Yandex OAuth"""
-from fastapi import APIRouter, HTTPException, Response, Request, Depends
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, HTTPException, Request
 from typing import Optional
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import os
 import httpx
-import jwt
 import bcrypt
 import secrets
 
@@ -14,13 +12,12 @@ from models.user import (
     UserRole, AuthProvider, UserProfile, OAuthData
 )
 from utils.database import get_db
+from utils.rate_limit import limiter
+from utils.auth import (  # noqa: F401 — get_current_user реэкспортируется для старых импортов
+    create_token, verify_token, verify_token_with_grace, get_current_user, extract_bearer_token,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-# JWT settings
-JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(32))
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
 # OAuth settings
 VK_CLIENT_ID = os.environ.get("VK_CLIENT_ID", "")
@@ -30,56 +27,6 @@ VK_REDIRECT_URI = os.environ.get("VK_REDIRECT_URI", "")
 YANDEX_CLIENT_ID = os.environ.get("YANDEX_CLIENT_ID", "")
 YANDEX_CLIENT_SECRET = os.environ.get("YANDEX_CLIENT_SECRET", "")
 YANDEX_REDIRECT_URI = os.environ.get("YANDEX_REDIRECT_URI", "")
-
-
-def create_token(user_id: str, role: str) -> tuple[str, int]:
-    """Create JWT token"""
-    expires = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
-    payload = {
-        "sub": user_id,
-        "role": role,
-        "exp": expires
-    }
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return token, int(JWT_EXPIRATION_HOURS * 3600)
-
-
-def verify_token(token: str) -> Optional[dict]:
-    """Verify JWT token"""
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
-        return None
-
-
-# Grace period: allow refresh for tokens expired within this window
-REFRESH_GRACE_HOURS = 24 * 30  # 30 days
-
-
-def verify_token_with_grace(token: str) -> Optional[dict]:
-    """Verify JWT token, allowing recently expired tokens within grace period."""
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        # Decode without verifying expiration to check grace period
-        try:
-            payload = jwt.decode(
-                token, JWT_SECRET, algorithms=[JWT_ALGORITHM],
-                options={"verify_exp": False}
-            )
-            exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-            now = datetime.now(timezone.utc)
-            if (now - exp) < timedelta(hours=REFRESH_GRACE_HOURS):
-                return payload  # Within grace period
-        except Exception:
-            pass
-        return None
-    except jwt.InvalidTokenError:
-        return None
 
 
 def hash_password(password: str) -> str:
@@ -92,30 +39,20 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
-async def get_current_user(request: Request) -> Optional[dict]:
-    """Get current user from token"""
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
-    
-    token = auth_header.split(" ")[1]
-    payload = verify_token(token)
-    
-    if not payload:
-        return None
-    
-    db = await get_db()
-    user = await db.users.find_one({"_id": payload["sub"]})
-    return user
-
-
 # === EMAIL REGISTRATION ===
 
+MIN_PASSWORD_LENGTH = 8
+
+
 @router.post("/register", response_model=TokenResponse)
-async def register(data: UserCreate):
+@limiter.limit("10/hour")
+async def register(request: Request, data: UserCreate):
     """Register new user with email"""
+    if len(data.password) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(status_code=400, detail=f"Пароль должен быть не короче {MIN_PASSWORD_LENGTH} символов")
+
     db = await get_db()
-    
+
     # Check if email exists
     existing = await db.users.find_one({"email": data.email})
     if existing:
@@ -158,7 +95,8 @@ async def register(data: UserCreate):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: UserLogin):
+@limiter.limit("20/minute")
+async def login(request: Request, data: UserLogin):
     """Login with email and password"""
     db = await get_db()
     
@@ -219,11 +157,10 @@ async def get_me(request: Request):
 @router.post("/refresh")
 async def refresh_token(request: Request):
     """Refresh JWT token. Accepts valid or recently expired tokens (within 30-day grace period)."""
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+    old_token = extract_bearer_token(request)
+    if not old_token:
         raise HTTPException(status_code=401, detail="Токен не предоставлен")
 
-    old_token = auth_header.split(" ")[1]
     payload = verify_token_with_grace(old_token)
 
     if not payload:

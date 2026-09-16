@@ -1,5 +1,6 @@
 """KVN routes — CRUD + hierarchy + seasons + jury stats."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
 import re
@@ -23,7 +24,7 @@ from services.views_counter import views_counter
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/content", tags=["kvn"])
+router = APIRouter(prefix="/content", tags=["kvn"], dependencies=[Depends(require_editor_on_write)])
 
 
 # ---------------------------------------------------------------------------
@@ -576,7 +577,9 @@ async def get_kvn_by_path(path: str):
     # ─── Кэш: проверяем ───────────────────────────────────────────────
     cached = cache_service.get_kvn(path_clean)
     if cached is not None:
-        return cached
+        doc_id, response = cached
+        views_counter.increment("kvn", doc_id)
+        return response
 
     db = await get_db()
     
@@ -717,12 +720,11 @@ async def get_kvn_by_path(path: str):
     kvn["team_data"] = team_data
     kvn["team_data_version"] = datetime.now(timezone.utc).isoformat()
     
-    # Remove MongoDB _id from response
-    if "_id" in kvn:
-        del kvn["_id"]
-    
+    # Remove MongoDB _id from response (в кэше храним отдельно — для счётчика просмотров)
+    doc_id = kvn.pop("_id", None)
+
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
-    cache_service.set_kvn(path_clean, kvn)
+    cache_service.set_kvn(path_clean, (doc_id, kvn))
 
     return kvn
 

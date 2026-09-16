@@ -1,5 +1,6 @@
 """Cities API routes - CRUD for geography/cities"""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
+from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
 import logging
@@ -11,7 +12,7 @@ from models.city import City, CityCreate, CityUpdate
 from utils.database import get_db
 from services.tags import tag_service
 
-router = APIRouter(prefix="/cities", tags=["cities"])
+router = APIRouter(prefix="/cities", tags=["cities"], dependencies=[Depends(require_editor_on_write)])
 
 
 # === HELPER FUNCTIONS ===
@@ -29,6 +30,7 @@ async def check_slug_unique(slug: str, exclude_id: str = None):
 
 # === CRUD ENDPOINTS ===
 
+@router.post("", response_model=dict, include_in_schema=False)
 @router.post("/", response_model=dict)
 async def create_city(data: CityCreate, request: Request):
     """Create a new city"""
@@ -68,6 +70,7 @@ async def create_city(data: CityCreate, request: Request):
     return {"id": doc["_id"], "slug": doc["slug"]}
 
 
+@router.get("", response_model=dict, include_in_schema=False)
 @router.get("/", response_model=dict)
 async def list_cities(
     request: Request,

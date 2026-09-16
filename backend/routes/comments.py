@@ -1,16 +1,16 @@
 """Comments management routes"""
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from typing import Optional
 from datetime import datetime, timezone
 
 from models.user import Comment, CommentCreate, CommentUpdate
 from utils.database import get_db
-from routes.auth import get_current_user
+from utils.auth import get_current_user, require_user, require_moderator
 
 router = APIRouter(prefix="/comments", tags=["comments"])
 
 
-@router.post("", response_model=dict)
+@router.post("", response_model=dict, dependencies=[Depends(require_user)])
 async def create_comment(data: CommentCreate, request: Request):
     """Create a new comment"""
     user = await get_current_user(request)
@@ -114,7 +114,7 @@ async def recent_comments(limit: int = Query(10, ge=1, le=50)):
     return await cursor.to_list(limit)
 
 
-@router.put("/{comment_id}", response_model=dict)
+@router.put("/{comment_id}", response_model=dict, dependencies=[Depends(require_user)])
 async def update_comment(comment_id: str, data: CommentUpdate, request: Request):
     """Update own comment"""
     user = await get_current_user(request)
@@ -144,7 +144,7 @@ async def update_comment(comment_id: str, data: CommentUpdate, request: Request)
     return {"id": comment_id, "updated": True}
 
 
-@router.delete("/{comment_id}")
+@router.delete("/{comment_id}", dependencies=[Depends(require_user)])
 async def delete_comment(comment_id: str, request: Request):
     """Delete own comment (soft delete)"""
     user = await get_current_user(request)
@@ -187,7 +187,7 @@ async def delete_comment(comment_id: str, request: Request):
     return {"id": comment_id, "deleted": True}
 
 
-@router.post("/{comment_id}/like")
+@router.post("/{comment_id}/like", dependencies=[Depends(require_user)])
 async def like_comment(comment_id: str, request: Request):
     """Like a comment"""
     user = await get_current_user(request)
@@ -209,7 +209,7 @@ async def like_comment(comment_id: str, request: Request):
 
 # === MODERATION ===
 
-@router.get("/pending", response_model=dict)
+@router.get("/pending", response_model=dict, dependencies=[Depends(require_moderator)])
 async def list_pending_comments(
     request: Request,
     skip: int = Query(0, ge=0),
@@ -236,7 +236,7 @@ async def list_pending_comments(
     }
 
 
-@router.post("/{comment_id}/approve")
+@router.post("/{comment_id}/approve", dependencies=[Depends(require_moderator)])
 async def approve_comment(comment_id: str, request: Request):
     """Approve a comment"""
     user = await get_current_user(request)
@@ -256,7 +256,7 @@ async def approve_comment(comment_id: str, request: Request):
     return {"id": comment_id, "approved": True}
 
 
-@router.post("/{comment_id}/reject")
+@router.post("/{comment_id}/reject", dependencies=[Depends(require_moderator)])
 async def reject_comment(comment_id: str, request: Request):
     """Reject and delete a comment"""
     user = await get_current_user(request)

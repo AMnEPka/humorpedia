@@ -8,10 +8,10 @@ TTL-кэш с инвалидацией при записи — оптималь�
     from services.cache import cache_service
     
     # Чтение
-    cached = cache_service.get_kvn("kvn/vl-kvn")
+    cached = cache_service.get_kvn("kvn/vl-kvn")  # (doc_id, response)
     
     # Запись
-    cache_service.set_kvn("kvn/vl-kvn", data)
+    cache_service.set_kvn("kvn/vl-kvn", (doc_id, data))
     
     # Инвалидация
     cache_service.invalidate_kvn("kvn/vl-kvn")
@@ -20,9 +20,14 @@ TTL-кэш с инвалидацией при записи — оптималь�
 
 import hashlib
 import logging
+import time
 from cachetools import TTLCache
+from pymongo import ReturnDocument
 
 logger = logging.getLogger("cache")
+
+SYNC_INTERVAL = 2.0              # секунд между сверками поколения кэша с БД
+CACHE_VERSION_ID = "version"
 
 
 class CacheService:
@@ -57,6 +62,10 @@ class CacheService:
 
         self._stats = {"hits": 0, "misses": 0}
 
+        # Поколение кэша, известное этому процессу (None — ещё не синхронизировались)
+        self._version: int | None = None
+        self._last_sync = 0.0
+
     # ─── KVN pages ─────────────────────────────────────────────────────
 
     def get_kvn(self, full_path: str):
@@ -67,7 +76,8 @@ class CacheService:
         self._stats["misses"] += 1
         return None
 
-    def set_kvn(self, full_path: str, data: dict):
+    def set_kvn(self, full_path: str, data: tuple):
+        """data = (mongo _id документа, ответ API без _id)"""
         self.kvn_pages[full_path] = data
 
     def invalidate_kvn(self, full_path: str = None):
@@ -188,10 +198,54 @@ class CacheService:
     def set_breadcrumbs(self, page_id: str, data: list):
         self.breadcrumbs[page_id] = data
 
+    # ─── Синхронизация между процессами ───────────────────────────────
+    #
+    # Кэш живёт в памяти каждого воркера (gunicorn ×N). Чтобы запись в одном
+    # воркере сбрасывала кэш во всех, в MongoDB хранится номер «поколения» кэша
+    # (cache_meta: {_id: "version", v: int}). Любая успешная запись увеличивает его,
+    # а воркеры перед чтением (не чаще раза в SYNC_INTERVAL секунд) сверяют номер
+    # и при расхождении сбрасывают свой кэш. Подключено middleware в server.py.
+
+    async def sync_with_peers(self, db) -> None:
+        now = time.monotonic()
+        if now - self._last_sync < SYNC_INTERVAL:
+            return
+        self._last_sync = now
+        try:
+            doc = await db.cache_meta.find_one({"_id": CACHE_VERSION_ID})
+        except Exception as e:  # БД недоступна — работаем со своим кэшем
+            logger.warning(f"Cache sync failed: {e}")
+            return
+        version = (doc or {}).get("v", 0)
+        if self._version is not None and version != self._version:
+            self._clear_local()
+            logger.info(f"Cache invalidated by another worker (version {self._version} → {version})")
+        self._version = version
+
+    async def invalidate_everywhere(self, db) -> None:
+        """Сбросить кэш во всех воркерах (вызывается после любой записи)."""
+        self._clear_local()
+        try:
+            doc = await db.cache_meta.find_one_and_update(
+                {"_id": CACHE_VERSION_ID},
+                {"$inc": {"v": 1}},
+                upsert=True,
+                return_document=ReturnDocument.AFTER,
+            )
+            self._version = doc["v"]
+            self._last_sync = time.monotonic()
+        except Exception as e:
+            logger.warning(f"Cache version bump failed: {e}")
+
     # ─── Общее ─────────────────────────────────────────────────────────
 
     def flush_all(self):
-        """Полный сброс всех кэшей."""
+        """Полный сброс кэшей этого процесса (для всех воркеров — invalidate_everywhere)."""
+        self._clear_local()
+        self._stats = {"hits": 0, "misses": 0}
+        logger.info("All caches flushed")
+
+    def _clear_local(self):
         self.kvn_pages.clear()
         self.kvn_children.clear()
         self.teams.clear()
@@ -200,8 +254,6 @@ class CacheService:
         self.search.clear()
         self.resolved_links.clear()
         self.breadcrumbs.clear()
-        self._stats = {"hits": 0, "misses": 0}
-        logger.info("All caches flushed")
 
     def stats(self) -> dict:
         """Статистика кэша."""

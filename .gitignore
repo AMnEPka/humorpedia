@@ -116,3 +116,6 @@ credentials.json
 *.key
 .credentials
 
+
+# Шаблон переменных окружения — коммитим
+!.env.example
