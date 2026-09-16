@@ -1,0 +1,135 @@
+# Модель данных Humorpedia (MongoDB `humorpedia`)
+
+Pydantic-модели — `backend/models/`. Они используются для **валидации входящих запросов**, а в БД документы пишутся как `dict`
+и читаются без модели — поэтому в реальных документах бывают поля, которых нет в моделях (`old_urls`, `season_data`, `jury_cards`,
+`allow_empty_modules`, `id` у KVN и т.п.), и наоборот. Истину о структуре смотреть в коде роутов + в данных.
+
+## Коллекции
+
+| Коллекция | Модель | Роуты | Особенности |
+|---|---|---|---|
+| `people` | `Person` | content_people | `full_name`, `photo`, `bio`, `facts{}`+`facts_order[]`, `primary_tag`, связи `team_ids/show_ids/article_ids` |
+| `teams` | `Team` | content_teams | `team_type` (kvn/liga_smeha/improv/comedy_club/other), `name`, `logo`, `aliases[]` (для сопоставления названий), `member_ids`, `old_urls[]` |
+| `kvn` | `KVN` | content_kvn | иерархия: `id` (UUID, **отдельно от `_id`**), `parent_id`, `level` 0–4, `full_path`; `season_data`, `jury_cards`, `old_urls` |
+| `shows` | `Show` | content_shows | иерархия `parent_id`/`child_show_ids`; `facts` = `ShowFacts` (годы, канал, ведущие…) |
+| `articles` | `Article` | content_articles | `excerpt`, `cover_image`, `author_*`, `featured`, `related_*_ids` |
+| `news` | `News` | content_news | `content` (HTML), `important`, `related_*_ids` |
+| `quizzes` | `Quiz` | content_quizzes | вопросы и результаты — в модулях `quiz_questions` / `quiz_results` |
+| `wiki` | `Wiki` | content_wiki | `content` (HTML), `has_header`, `header_facts` |
+| `sections` | `Section` | sections | иерархические разделы: `full_path` (уникален), `parent_id`, `parent_path`, `level`, `order`, `in_main_menu`, `child_types` |
+| `cities` | `City` | cities | `content_type="page"`, `related_person_ids/related_team_ids` (заполняются city_linking) |
+| `users` | `User` | auth, users | `username`, `email`, `password_hash` (bcrypt), `role`, `permissions[]`, `oauth{vk_id, yandex_id}`, `banned` |
+| `comments` | — | comments | `resource_type`+`resource_id`, `user_id`, `parent_id`, `deleted`, модерация |
+| `tags` | — | tags | `name` и `slug` уникальны, `usage_count`, `type` |
+| `media` | — | media | `url`, `uploaded_at`, `status` (soft delete) |
+| `templates` | `PageTemplate` | templates | `name` уникально, `content_type`, `modules[]`, `is_default` |
+
+Индексы создаются при каждом старте в `server.py:create_indexes` — при добавлении полей для фильтрации добавлять индекс туда.
+
+## Общие поля контента (`BaseContent`, models/base.py)
+
+```
+_id: str (UUID)            created_at / updated_at      created_by / updated_by
+title, slug, content_type  status: draft | published | archived
+old_id: int (ID ресурса MODX)                          seo: {meta_title, meta_description, keywords[], og_image}
+tags: [str]                views, rating, votes_count, comments_count
+published_at, featured
+```
+Даты при записи через crud обычно сохраняются ISO-строками.
+`MediaFile` = `{url, alt, caption, thumbnail}`; `SocialLinks` = `{vk, telegram, youtube, instagram, website}`.
+
+## Модули страниц (models/modules.py)
+
+Страница = список модулей:
+```json
+{ "id": "uuid", "type": "text_block", "order": 0, "title": null, "visible": true, "data": { ... } }
+```
+`data` — произвольный dict (схемы `*Data` в modules.py — документация, строго не валидируются).
+
+`ModuleType` (бэкенд enum — значения, не входящие в него, отклоняются при сохранении):
+- универсальные: `hero_card`, `text_block {title, content(HTML)}`, `timeline {title, items[{year, month, title, description, image, link, type}]}`, `tags`, `table {columns[], rows[]}`, `gallery {items[{url, thumbnail, alt, caption}]}`, `video {url}`, `quote {text, author, source}`
+- системные (сайдбар): `poster_photo`, `facts_table`, `tags_cloud`, `social_links`, `rating_widget`
+- команды: `team_members`, `tv_appearances`, `games_list`
+- шоу: `episodes_list`, `participants`
+- статьи: `best_articles`, `interesting`, `random_page`
+- квизы: `quiz_questions {questions[{id, question, image, options[{id,text,correct}], explanation}]}`, `quiz_results {results[{min_score, max_score, title, description, image}]}`
+- люди: `humor_chronicles` (данные подтягиваются динамически из `/people/{id}/linked-content`)
+- лиги КВН: `first_league_champions`, `vl_league_champions` (таблицы чемпионов строятся из дочерних сезонов)
+
+Публичный `ModuleRenderer.jsx` дополнительно умеет `image`, `image_gallery`, `video_embed`, `person_card`, `related_links`, `table_of_contents`, `html`, `divider` — часть этих типов бэкенд enum не знает (расхождение). Системные модули рендерит `components/SystemModules.jsx`.
+
+Внутренние ссылки в HTML модулей при выдаче переписываются `services/link_resolver.py` (актуальные slug/пути).
+
+## Иерархия КВН
+
+```
+kvn                                   level 0, full_path "kvn"
+├── vl-kvn        Высшая лига          full_path "kvn/vl-kvn"
+│   ├── vl-2009   сезон (season_data)  "kvn/vl-kvn/vl-2009"
+│   └── (публичный маршрут /kvn/vl-kvn/vl-jury → JuryStatsPage, данные из /content/kvn/jury-stats)
+├── premier-liga  Премьер-лига         сезоны pl-YYYY
+├── 1l-kvn        Первая лига
+├── ml-kvn        Международная (с 2014; сезоны ранее — ошибка данных, фильтруются)
+├── vul
+└── league        обзор центральных лиг "kvn/league"
+    └── lampa, asia, povolzhye, neva, ural, msl, start, trempel, southwest, tikhookeanskaya, krasnodarskaya-liga
+                  "kvn/league/lampa" … — тексты в content/leagues/*.md
+```
+- `parent_id` в новых документах = `id` родителя (UUID); у старых может совпадать с `_id`. Всегда искать обоими способами.
+- `full_path` — **источник истины для лиги** (в коде `season_data.league_slug` перепроверяется по `full_path`).
+- Команды КВН живут в отдельной коллекции `teams`, публичный URL `/kvn/teams/{slug}`.
+
+## `season_data` (документ сезона в `kvn`)
+
+Формируется `migration/kvn/process_seasons.py` (парсинг HTML MODX) и редактируется в `SeasonDataEditor.jsx`.
+Подробная схема парсера — `migration/kvn/README_SEASONS.md`.
+
+```jsonc
+{
+  "league_slug": "vl-kvn",          // может отсутствовать у старых сезонов → берётся из full_path
+  "league_name": "Высшая лига",
+  "year": 2009,                     // бывает строкой — приводить int()
+  "season_number": 0,
+  "intro_html": "", "description": "",
+  "winners":   [{ "slug": "...", "name": "...", "city": "..." }],   // или старый формат: ["slug"]
+  "all_teams": [ ... ],
+  "prev_season": "vl-2008", "next_season": "vl-2010",              // дописываются при выдаче by-path
+  "metadata": { ... },              // редакторы, ведущий и т.п.
+  "stages": [
+    {
+      "name": "1/8 финала", "order": 1,
+      "additional_teams": ["slug"], "additional_notes": "", "notes": "",
+      "games": [
+        {
+          "id": "...", "name": "Первая 1/8 финала", "order": 1,
+          "date": "2009-02-15", "host": "...", "jury": ["Имя", ...],
+          "contests": ["Приветствие", "Разминка", "СТЭМ"],
+          "teams": [
+            { "team_slug": "...", "team_name": "...", "place": 1,
+              "scores": { "Приветствие": 5.0, ... }, "total": 14.5,
+              "passed": true, "is_winner": false, "is_additional": false }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+Кто читает `season_data`:
+- `content_teams._get_team_league_results / _get_team_all_results` → авто-модуль «Список игр команды» (и таблица результатов в Высшей лиге);
+- `content_kvn.get_kvn_jury_stats` → статистика жюри;
+- `content_kvn.find_adjacent_seasons` → навигация prev/next;
+- `update_team_slug_in_seasons / update_team_name_in_seasons` → при переименовании команды правят `team_slug`/`team_name` во всех сезонах;
+- `routes/redirects.auto_populate_old_urls`.
+
+`jury_cards` (на странице сезона/лиги): `{ "<Имя члена жюри>": { "photo": MediaFile, "text": "..." } }`.
+
+## Пользователи и роли
+
+`UserRole`: `user`, `editor`, `moderator`, `admin` (см. models/user.py). `AuthProvider`: `email`, `vk`, `yandex`.
+Проверки ролей разбросаны по роутам (см. API.md). Админ по умолчанию создаётся при старте: `admin` / `admin@humorpedia.local` / `admin`.
+
+## Кэш и счётчики (in-memory, на процесс)
+
+`services/cache.py` — TTL: kvn_pages 5 мин (500), kvn_children 5 мин, teams 5 мин, team_lists 2 мин, redirects 30 мин (2000), search 1 мин, плюс resolved_html и breadcrumbs.
+`services/views_counter.py` — просмотры копятся в памяти и раз в 30 с пишутся `$inc views`.
