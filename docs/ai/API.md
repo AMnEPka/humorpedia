@@ -79,7 +79,7 @@
 | DELETE | `/kvn/{id}` ✏️ | удалить |
 
 ### Шоу (`content_shows.py`, коллекция `shows`)
-POST `/shows` ✏️ · GET `/shows` · GET `/shows/by-path/{path}` · GET `/shows/{parent_slug}/children` · GET `/shows/{id_or_slug}?raw=` (ссылки проверяются, `raw=true` — для админки) · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
+POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`) · GET `/shows` (только корневые, `include_children=true` — все) · GET `/shows/by-path/{path}` (+ `children`, `breadcrumbs`, ссылки проверяются) · GET `/shows/{_id|full_path}/children` · GET `/shows/{id_or_slug}?raw=` (ссылки проверяются, `raw=true` — для админки) · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
 
 ### Статьи / Новости / Квизы / Вики
 Одинаковый CRUD через `services/crud.py`:

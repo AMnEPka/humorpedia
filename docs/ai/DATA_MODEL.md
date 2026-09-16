@@ -11,7 +11,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `people` | `Person` | content_people | `full_name`, `photo`, `bio`, `facts{}`+`facts_order[]`, `primary_tag`, связи `team_ids/show_ids/article_ids` |
 | `teams` | `Team` | content_teams | `team_type` (kvn/liga_smeha/improv/comedy_club/other), `name`, `logo`, `aliases[]` (для сопоставления названий), `member_ids`, `old_urls[]` |
 | `kvn` | `KVN` | content_kvn | иерархия: `id` (UUID, **отдельно от `_id`**), `parent_id`, `level` 0–4, `full_path`; `season_data`, `jury_cards`, `old_urls` |
-| `shows` | `Show` | content_shows | иерархия `parent_id`/`child_show_ids`; `facts` = `ShowFacts` (годы, канал, ведущие…) |
+| `shows` | `Show` | content_shows | `facts{}`+`facts_order[]`, `social_links`, `poster` (MediaFile); иерархия: `parent_id` (= `_id` родителя), `full_path` (уникален), `level`, `order` — см. «Шоу» |
 | `articles` | `Article` | content_articles | `excerpt`, `cover_image`, `author_*`, `featured`, `related_*_ids` |
 | `news` | `News` | content_news | `content` (HTML), `important`, `related_*_ids` |
 | `quizzes` | `Quiz` | content_quizzes | вопросы и результаты — в модулях `quiz_questions` / `quiz_results` |
@@ -123,6 +123,36 @@ published_at, featured
 
 `pagetitle` → `title`, `longtitle` → `full_name`, `alias` → `slug`, `description` → `seo.meta_description`, `keywords` → `seo.keywords`, `rating`/`votes` → рейтинг.
 HTML: сущности раскрываются (кроме `&lt; &gt; &amp; &quot;`), пустые абзацы в конце убираются, ссылки переводятся на новый сайт (`services/modx_content.LinkMapper`): ресурс MODX по uri/`[[~id]]` → адрес уже перенесённой страницы по `old_id` (любая коллекция), иначе `/people/{alias}` (шаблон 20), `/kvn/teams/{alias}` (21); иначе паттерны `routes/redirects._try_pattern_redirect`; иначе абсолютный старый путь (его разрешит поиск редиректов, когда страница появится). Картинки `images/...` → `/media/imported/images/...`.
+
+## Шоу
+
+Документ — как сохраняет `ShowEditPage` (модель `Show`): `title`, `name`, `slug`, `poster` {url, alt, caption, thumbnail},
+`facts` (свободные «Статус шоу», «Дата премьеры», … — HTML в значениях допустим) + `facts_order`, `social_links`,
+`description`, `tags`, `seo`, модули: 5 системных (как у людей) + `text_block` / `timeline` / `participants`.
+Поля импорта: `old_id`, `old_urls`, `rating {average, count}`, `votes_count`, даты.
+
+**Иерархия**: сезон, подпроект или раздел — дочернее шоу. `parent_id` = `_id` родителя, `full_path` = путь родителя + "/" + slug,
+адрес `/shows/{full_path}`, `order` — порядок среди соседей. slug уникален среди соседей (у разных шоу бывает `season1`),
+уникален `full_path` (индекс). При смене slug/родителя пути потомков пересчитываются; шоу с дочерними страницами не удаляется.
+`GET /content/shows/by-path/{path}` отдаёт шоу с `children` (опубликованные, по `order`) и `breadcrumbs`.
+
+Модуль `participants`: `{title, items: [{name, person_slug, photo (URL), facts: [{title, value}]}]}` — карточки участников
+(на старом сайте `people_cards`), редактор в админке, рендер на странице шоу.
+
+### Импорт шоу со старого сайта
+
+`scripts/import_shows_modx.py` (+ `services/modx_shows.py`): раздел «Шоу» MODX (uri `show/`, 439 страниц) — шаблоны «Шоу» и «Вики»,
+в т.ч. вики-страницы верхнего уровня («Большое шоу», «Что было дальше?», Comedy Баттл, Medium Quality). Команды шоу
+(шаблон «Команда» и страницы внутри «Команды …») — не шоу, переносятся в `teams` вместе со своим шоу.
+- slug = последний сегмент **старого адреса** (не alias: `improv-teams/` при alias `improv-kom`); путь — по цепочке родителей.
+- заголовок = `longtitle` или `pagetitle` («ИК» → «Импровизация. Команды»).
+- секции: `info` (факты, соцсети, subtitle/content), `text` (заголовок = название страницы не повторяется; блок «Заголовок + ...»
+  отдаёт заголовок следующему блоку), `table` → text_block, `timeline`, `people_cards` → `participants`;
+  строка навигации «< пред. сезон … след. >» в начале текста убирается.
+- существующее шоу находится по `old_id`, затем по адресу, у корневых — по slug/alias старого импорта; `--update` пересоздаёт с тем же `_id`.
+- `--tree` — вместе с подстраницами (родитель раньше детей), `--publish ID` — опубликовать неопубликованное на старом сайте.
+
+Статус переноса и решения владельца — память проекта / KNOWN_ISSUES.
 
 ## Иерархия КВН
 
