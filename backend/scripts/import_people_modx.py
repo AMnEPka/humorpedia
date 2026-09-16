@@ -148,9 +148,15 @@ async def import_one(db, site, people, rid, existing, known_urls, args, verbose)
         return "failed"
     update = {"$set": extra}
     if exists:
-        legacy = [k for k in await db.people.find_one({"_id": person_id}) if k not in PERSON_FIELDS]
+        current = await db.people.find_one({"_id": person_id})
+        legacy = [k for k in current if k not in PERSON_FIELDS]
         if legacy:
             update["$unset"] = {k: "" for k in legacy}
+        # поля, которые админка заполняет значениями по умолчанию при создании (bio, team_ids, …)
+        defaults = Person(title=payload["title"], slug=slug, full_name=payload["full_name"]).model_dump(by_alias=True)
+        for key, value in defaults.items():
+            if key not in current and key not in extra:
+                extra[key] = value.isoformat() if hasattr(value, "isoformat") else value
     await db.people.update_one({"_id": person_id}, update)
     existing[slug] = {"_id": person_id, "slug": slug}
     known_urls[rid] = f"/people/{slug}"

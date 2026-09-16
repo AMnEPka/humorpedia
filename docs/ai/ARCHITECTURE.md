@@ -103,7 +103,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
 │   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)
 │   │   ├── views_counter.py      батч-счётчик просмотров
-│   │   ├── link_resolver.py      резолв внутренних ссылок в HTML модулей при выдаче
+│   │   ├── link_resolver.py      ссылки при выдаче: актуальные адреса (slug, old_id, old_urls, паттерны), отсутствующие страницы — текстом; load_old_id_urls
 │   │   ├── linking.py            related_person_ids → страницы людей, модуль humor_chronicles
 │   │   ├── tags.py               TagService.sync_tags / get_all / search
 │   │   └── city_linking.py       сопоставление городов по фактам людей/команд
@@ -116,7 +116,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations), test_memberships.py (разбор составов, роли), test_modx_import.py (дамп MODX, конвертация человека)
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
-│       ├── import_people_modx.py      люди из SQL-дампа MODX партиями через create_person (как админка): --ids/--slugs, --list, --show, --apply, --update
+│       ├── import_people_modx.py      люди из SQL-дампа MODX через create_person (как админка): --ids/--slugs, --all (--batch 75), --list, --show, --apply, --update
+│       ├── fix_legacy_links.py        ссылки MODX в перенесённом контенте (teams/kvn/shows/people) → адреса нового сайта (--apply)
 │       ├── restore_backup.py / restore_specific_backup.py   восстановление из backups/*.tar.gz
 │       ├── migrate_urls.py            обновление старых URL в контенте, поиск битых ссылок
 │       ├── auto_linker.py             автопроставление ссылок по текстовым совпадениям

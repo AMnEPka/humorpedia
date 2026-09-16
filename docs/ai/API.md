@@ -47,7 +47,7 @@
 | GET | `/people` | список, фильтры `status, tag, search, letter`, сортировка по title |
 | GET | `/people/search?q=` | быстрый поиск для селекторов `[{id, name, slug}]` |
 | GET | `/people/{id_or_slug}/linked-content?types=news,article,show` | контент для модуля humor_chronicles |
-| GET | `/people/{id_or_slug}` | документ, ссылки в модулях резолвятся |
+| GET | `/people/{id_or_slug}?raw=` | документ; ссылки в модулях и фактах проверяются (отсутствующие страницы — текстом), `raw=true` — как в данных (админка) |
 | PUT | `/people/{id}` ✏️ | обновить (services/crud.update_content) |
 | DELETE | `/people/{id}` ✏️ | удалить |
 
@@ -59,7 +59,7 @@
 | POST | `/teams/restore-logos` 🛡 | восстановить логотипы из старых полей |
 | POST | `/teams` ✏️ | создать |
 | GET | `/teams` | список (кэш 2 мин), фильтры `status, team_type, tag, search, letter`; `team_type=kvn` включает команды без `team_type` |
-| GET | `/teams/{id_or_slug}` | документ (кэш 5 мин), без записи при чтении |
+| GET | `/teams/{id_or_slug}?raw=` | документ (кэш 5 мин), без записи при чтении; ссылки проверяются, `raw=true` — без обработки и кэша (админка) |
 | POST | `/teams/{id_or_slug}/refresh` ✏️ | self-healing: scaffold фактов/модулей, авто-модуль «Список игр команды» из season_data, логотип, primary_tag |
 | POST | `/teams-refresh-all` ✏️ | self-healing всех команд |
 | PUT | `/teams/{id}` ✏️ | обновить; при смене slug — обновляет ссылки во всех `kvn.season_data` и пересобирает сезоны (исторические названия не меняются) |
@@ -73,13 +73,13 @@
 | GET | `/kvn` | список |
 | GET | `/kvn/by-path/{path}` | страница по `full_path` + `children` + `breadcrumbs` + prev/next сезон (кэш) |
 | GET | `/kvn/{parent_slug}/children` | дочерние страницы |
-| GET | `/kvn/{id_or_slug}` | документ |
+| GET | `/kvn/{id_or_slug}?raw=` | документ; ссылки проверяются (как и в `by-path`), `raw=true` — как в данных (админка) |
 | GET | `/kvn-hierarchy` | дерево |
 | PUT | `/kvn/{id}` ✏️ | обновить (включая `season_data`, `jury_cards`); пересчёт full_path, очистка данных, инвалидация кэша |
 | DELETE | `/kvn/{id}` ✏️ | удалить |
 
 ### Шоу (`content_shows.py`, коллекция `shows`)
-POST `/shows` ✏️ · GET `/shows` · GET `/shows/by-path/{path}` · GET `/shows/{parent_slug}/children` · GET `/shows/{id_or_slug}` · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
+POST `/shows` ✏️ · GET `/shows` · GET `/shows/by-path/{path}` · GET `/shows/{parent_slug}/children` · GET `/shows/{id_or_slug}?raw=` (ссылки проверяются, `raw=true` — для админки) · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
 
 ### Статьи / Новости / Квизы / Вики
 Одинаковый CRUD через `services/crud.py`:
