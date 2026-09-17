@@ -4,6 +4,7 @@ import json
 import pytest
 
 from models.content import Person, PersonCreate
+from models.city import City, CityCreate
 from routes.redirects import _try_pattern_redirect
 from services.link_resolver import collect_keys, direct_query, link_key, replace_links
 from services.modx_content import (
@@ -11,6 +12,8 @@ from services.modx_content import (
 )
 from services.modx_dump import ModxSite, iter_table_rows, parse_values, unescape_mysql
 from services.modx_people import build_person, swap_name_order
+from services.modx_cities import build_city, city_resources, extract_team_mentions, strip_relation_sections
+from services.city_linking import city_matches, split_city_names
 
 
 # ─── SQL-дамп ────────────────────────────────────────────────────────────────
@@ -207,6 +210,133 @@ def test_build_person_status_and_missing_photo(published, deleted, status):
     assert payload["full_name"] == "Антон Андреевич Шастун" and payload["primary_tag"] == "Антон Шастун"
     # дата публикации не заполнена в MODX → дата создания
     assert extra.get("published_at") == (extra["created_at"] if status == "published" else None)
+
+
+# ─── Города ─────────────────────────────────────────────────────────────────
+
+def city_site():
+    site = site_with_resources()
+    site.resources[2072] = {
+        "id": 2072, "template": 19, "parent": 34, "alias": "voronezh", "uri": "city/voronezh.html",
+        "pagetitle": "Воронеж", "published": 1, "deleted": 0, "description": "Столица импровизации.",
+        "keywords": "Воронеж, юмор", "rating": 9.5, "votes": 2, "createdon": 1713441486,
+        "publishedon": 0,
+    }
+    site.resources[117] = {
+        "id": 117, "template": 20, "alias": "dmitry-pozov", "uri": "people/dmitry-pozov.html",
+        "pagetitle": "Позов Дмитрий",
+    }
+    site.resources[118] = {
+        "id": 118, "template": 20, "alias": "ruslan-belyi", "uri": "people/ruslan-belyi.html",
+        "pagetitle": "Белый Руслан",
+    }
+    for rid in (2072, 117, 118):
+        site.by_uri[site.resources[rid]["uri"].strip("/")] = rid
+    info = {
+        "MIGX_formname": "info",
+        "subtitle": "<p>Воронеж — город юмора.</p>",
+        "content": ('<h3>Известные комики</h3><p><a href="people/dmitry-pozov.html">Дмитрий Позов</a>, '
+                    '<a href="people/ruslan-belyi.html">Руслан Белый*</a>.</p>'),
+        "table": "<table><tr><td>Высшая лига КВН</td><td>Финал</td></tr></table>",
+    }
+    text = {
+        "MIGX_formname": "text", "title": "Воронеж",
+        "content": ('<h3>Команды</h3><ul><li><a href="kvn/team/dals.html">ДАЛС</a></li></ul>'
+                    '<p><a href="people/anton-shastun.html">Антон Шастун</a></p>'),
+    }
+    site.tv_values[2072] = {
+        "config": json.dumps([info, {"MIGX_formname": "ad_250"}, text]),
+        "img": "images/city/voronezh.jpg", "tags": "15",
+    }
+    site.tags = {15: "Воронеж"}
+    site.tag_resources = {2072: [15]}
+    return site
+
+
+def test_build_city_uses_editorial_people_shortlist():
+    site = city_site()
+    payload, extra, relations, warnings = build_city(site, 2072, LinkMapper(site, _try_pattern_redirect))
+
+    assert payload["title"] == payload["name"] == "Воронеж"
+    assert payload["slug"] == "voronezh" and payload["status"] == "published"
+    assert payload["description"] == "Столица импровизации."
+    assert payload["facts"] == {"Высшая лига КВН": "Финал"}
+    assert payload["facts_order"] == ["Высшая лига КВН"]
+    assert payload["poster"]["url"] == "/media/imported/images/city/voronezh.jpg"
+    assert [module["type"] for module in payload["modules"]] == ["text_block"]
+    assert "Воронеж — город юмора" in payload["modules"][0]["data"]["content"]
+    assert all("Известные комики" not in module["data"]["content"] for module in payload["modules"])
+    assert all("Команды" not in module["data"]["content"] for module in payload["modules"])
+    # The info block is the editorial shortlist; Anton appears only in the long article and is not auto-selected.
+    assert [item["old_id"] for item in relations["people"]] == [117, 118]
+    assert [item["old_id"] for item in relations["teams"]] == [500]
+    assert payload["related_team_mentions"] == [{"name": "ДАЛС", "context": "Команды"}]
+    assert extra["old_id"] == 2072 and extra["old_urls"] == ["/city/voronezh.html"]
+    assert extra["rating"] == 9.5 and extra["votes_count"] == 2
+    assert warnings == []
+
+    create = CityCreate(**payload)
+    city = City(**create.model_dump())
+    assert city.poster.url == payload["poster"]["url"]
+    assert city.related_person_ids == []
+
+
+def test_strip_city_relation_sections_keeps_regular_article_text():
+    html = (
+        "<p>Вводный текст.</p>"
+        "<h2>Известные комики</h2><ul><li>Комик</li></ul>"
+        "<h2>История юмора</h2><p>Энциклопедический текст.</p>"
+        "<h3>Импровизация. Команды</h3><ul><li>Команда</li></ul>"
+        "<h2>Фестивали</h2><p>Ежегодный фестиваль.</p>"
+    )
+
+    cleaned = strip_relation_sections(html)
+
+    assert "Вводный текст" in cleaned
+    assert "История юмора" in cleaned and "Энциклопедический текст" in cleaned
+    assert "Фестивали" in cleaned and "Ежегодный фестиваль" in cleaned
+    assert "Известные комики" not in cleaned
+    assert "Импровизация. Команды" not in cleaned
+
+
+def test_strip_city_relation_sections_recognizes_bold_paragraph_headings():
+    html = (
+        '<p><strong><span style="font-size: 1em;">Команды КВН</span></strong></p>'
+        '<ul><li>Команда</li></ul>'
+        '<p><strong>Комики из Воронежа</strong></p><ul><li>Комик</li></ul>'
+        '<p><strong>История</strong></p><p>Обычный текст.</p>'
+    )
+
+    cleaned = strip_relation_sections(html)
+
+    assert "Команды КВН" not in cleaned and "Комики из Воронежа" not in cleaned
+    assert "История" in cleaned and "Обычный текст" in cleaned
+
+
+def test_city_team_mentions_include_unlinked_show_teams():
+    html = (
+        "<p><strong>Лига Смеха</strong></p><ul>"
+        "<li>Луганская сборная – полуфиналисты четвёртого сезона</li>"
+        '<li><a href="/shows/liga-gorodov/teams/staro">СтаРо</a> — участники</li>'
+        "</ul>"
+    )
+
+    assert extract_team_mentions(html) == [
+        {"name": "Луганская сборная", "context": "Лига Смеха"},
+        {"name": "СтаРо", "context": "Лига Смеха"},
+    ]
+
+
+def test_city_resources_and_exact_city_matching():
+    site = city_site()
+    assert [resource["id"] for resource in city_resources(site)] == [2072]
+    assert split_city_names("Челябинск / Тюмень") == ["челябинск", "тюмень"]
+    assert split_city_names("Ровеньки, Орёл (с 2021)") == ["ровеньки", "орел"]
+    assert city_matches("Томск", "г. Томск")
+    assert not city_matches("Омск", "г. Томск")
+    assert not city_matches("Киров", "Кирово-Чепецк")
+    assert not city_matches("Белгород", "п. Борисовка, Белгородская область")
+    assert city_matches("Санкт-Петербург", "г. Ленинград", ["Ленинград"])
 
 
 # ─── Ссылки: перевод сохранённого контента и выдача на сайт ──────────────────

@@ -1,5 +1,6 @@
 """Person routes — CRUD + search + linked content."""
 from fastapi import APIRouter, HTTPException, Query, Depends
+import re
 from utils.auth import require_editor_on_write
 from typing import Optional
 
@@ -12,9 +13,14 @@ from services.crud import (
 )
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
+from services.foreign_agent_notices import decorate_document
 from services.memberships import link_person, unlink_person
 
 router = APIRouter(prefix="/content", tags=["people"], dependencies=[Depends(require_editor_on_write)])
+
+
+def _without_legacy_marker(value: Optional[str]) -> Optional[str]:
+    return re.sub(r"\s*\*+\s*", " ", value).strip() if value else value
 
 
 @router.post("/people", response_model=dict)
@@ -30,12 +36,15 @@ async def create_person(data: PersonCreate):
             return f"{parts[1]} {parts[0]}"
         return name
 
-    primary_tag = data.primary_tag
+    title = _without_legacy_marker(data.title) if data.foreign_agent else data.title
+    full_name = _without_legacy_marker(data.full_name) if data.foreign_agent else data.full_name
+    primary_tag = _without_legacy_marker(data.primary_tag) if data.foreign_agent else data.primary_tag
     if not primary_tag:
-        primary_tag = swap_name_order(data.title) or swap_name_order(data.full_name)
+        primary_tag = swap_name_order(title) or swap_name_order(full_name)
 
     person = Person(
-        title=data.title, slug=data.slug, full_name=data.full_name,
+        title=title, slug=data.slug, full_name=full_name,
+        foreign_agent=data.foreign_agent,
         photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
         facts=data.facts or {}, facts_order=data.facts_order or [], primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
@@ -99,12 +108,19 @@ async def get_person(id_or_slug: str, raw: bool = Query(False, description="бе
     person = await get_by_id_or_slug("people", id_or_slug, "Person not found")
     if not raw:
         await LinkResolver.resolve_document(person)
+        await decorate_document(person)
     return person
 
 
 @router.put("/people/{id}", response_model=dict)
 async def update_person(id: str, data: PersonUpdate):
     """Update person."""
+    if data.foreign_agent:
+        data = data.model_copy(update={
+            key: _without_legacy_marker(getattr(data, key))
+            for key in ("title", "full_name", "primary_tag")
+            if getattr(data, key) is not None
+        })
     result = await update_content("people", id, data, "Person not found")
     await _link_person_everywhere(id)
     return result
@@ -115,6 +131,8 @@ async def delete_person(id: str):
     """Delete person."""
     result = await delete_content("people", id, "Person not found")
     await unlink_person(await get_db(), id)
+    await (await get_db()).show_appearances.update_many(
+        {"person_id": id}, {"$set": {"person_id": None}, "$unset": {"manual_person_id": ""}})
     return result
 
 
@@ -124,3 +142,5 @@ async def _link_person_everywhere(person_id: str) -> None:
     person = await db.people.find_one({"_id": person_id})
     if person:
         await link_person(db, person)
+        from services.show_appearances import link_new_person
+        await link_new_person(db, person)

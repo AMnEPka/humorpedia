@@ -9,6 +9,8 @@ from services.crud import (
     check_slug_unique, create_content, update_content,
     delete_content, get_by_id_or_slug, list_content, build_query,
 )
+from services.link_resolver import LinkResolver
+from services.foreign_agent_notices import decorate_document
 
 router = APIRouter(prefix="/content", tags=["news"], dependencies=[Depends(require_editor_on_write)])
 
@@ -45,9 +47,13 @@ async def list_news(
 
 
 @router.get("/news/{id_or_slug}", response_model=dict)
-async def get_news_item(id_or_slug: str):
+async def get_news_item(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)")):
     """Get news by ID or slug."""
-    return await get_by_id_or_slug("news", id_or_slug, "News not found")
+    news = await get_by_id_or_slug("news", id_or_slug, "News not found")
+    if not raw:
+        await LinkResolver.resolve_document(news)
+        await decorate_document(news)
+    return news
 
 
 @router.put("/news/{id}", response_model=dict)

@@ -12,6 +12,8 @@ from models.city import City, CityCreate, CityUpdate
 from utils.database import get_db
 from services.tags import tag_service
 from services.show_teams import attach_show_info
+from services.link_resolver import LinkResolver
+from services.foreign_agent_notices import decorate_document
 
 router = APIRouter(prefix="/cities", tags=["cities"], dependencies=[Depends(require_editor_on_write)])
 
@@ -48,6 +50,7 @@ async def create_city(data: CityCreate, request: Request):
         name=data.name,
         poster=data.poster,
         description=data.description,
+        aliases=data.aliases,
         facts=data.facts or {},
         facts_order=data.facts_order or [],
         modules=data.modules,
@@ -55,7 +58,8 @@ async def create_city(data: CityCreate, request: Request):
         seo=data.seo or {},
         status=data.status,
         related_person_ids=data.related_person_ids or [],
-        related_team_ids=data.related_team_ids or []
+        related_team_ids=data.related_team_ids or [],
+        related_team_mentions=data.related_team_mentions or [],
     )
     
     doc = city.model_dump(by_alias=True)
@@ -118,7 +122,12 @@ async def list_cities(
 
 
 @router.get("/{id_or_slug}", response_model=dict)
-async def get_city(id_or_slug: str, request: Request, increment_views: bool = True):
+async def get_city(
+    id_or_slug: str,
+    request: Request,
+    increment_views: bool = True,
+    raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)"),
+):
     """Get city by ID or slug"""
     db = await get_db()
     
@@ -134,6 +143,10 @@ async def get_city(id_or_slug: str, request: Request, increment_views: bool = Tr
     if increment_views:
         from services.views_counter import views_counter
         views_counter.increment("cities", city["_id"])
+
+    if not raw:
+        await LinkResolver.resolve_document(city)
+        await decorate_document(city)
     
     return city
 
@@ -186,7 +199,7 @@ async def delete_city(id: str, request: Request):
 async def get_city_related_people(
     city_id: str,
     request: Request,
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(100, ge=1, le=1000)
 ):
     """Get people related to a city"""
     db = await get_db()
@@ -211,7 +224,7 @@ async def get_city_related_people(
 async def get_city_related_teams(
     city_id: str,
     request: Request,
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(500, ge=1, le=1000)
 ):
     """Get teams related to a city"""
     db = await get_db()
@@ -221,16 +234,29 @@ async def get_city_related_teams(
         raise HTTPException(status_code=404, detail="City not found")
     
     team_ids = city.get("related_team_ids", [])
-    if not team_ids:
-        return {"items": [], "total": 0}
-    
-    teams = await db.teams.find(
-        {"_id": {"$in": team_ids}},
-        {"modules": 0}
-    ).limit(limit).to_list(limit)
-    await attach_show_info(db, teams)
-    
-    return {"items": teams, "total": len(teams)}
+    teams = []
+    if team_ids:
+        teams = await db.teams.find(
+            {"_id": {"$in": team_ids}},
+            {"modules": 0}
+        ).limit(limit).to_list(limit)
+        await attach_show_info(db, teams)
+
+    mentions = city.get("related_team_mentions") or []
+    remaining = max(0, limit - len(teams))
+    virtual_teams = [
+        {
+            "_id": f"city-mention-{city_id}-{index}",
+            "name": mention.get("name"),
+            "title": mention.get("name"),
+            "context": mention.get("context"),
+            "is_reference": True,
+        }
+        for index, mention in enumerate(mentions[:remaining])
+        if mention.get("name")
+    ]
+
+    return {"items": teams + virtual_teams, "total": len(teams) + len(mentions)}
 
 
 
@@ -239,9 +265,10 @@ async def get_city_related_teams(
 @router.post("/link-all", response_model=dict)
 async def link_all_cities_endpoint(request: Request):
     """
-    Связывает все города с людьми и командами на основе:
-    - Люди: facts["Место рождения"] совпадает с названием города
-    - Команды: facts["Город"] совпадает с названием города
+    Обновляет связи городов с командами по полю facts["Город"].
+
+    Список известных людей остаётся редакционным: импортируется из старых городских страниц
+    и редактируется вручную. Место рождения не является критерием известности.
     
     Рекомендуется запускать после импорта данных или периодически.
     """

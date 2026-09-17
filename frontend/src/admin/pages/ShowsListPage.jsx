@@ -191,7 +191,10 @@ export default function ShowsListPage() {
           <h1 className="text-3xl font-bold">Шоу</h1>
           <p className="text-muted-foreground">Управление шоу и проектами ({total} всего)</p>
         </div>
-        <Button asChild><Link to="/admin/shows/new"><Plus className="mr-2 h-4 w-4" /> Добавить</Link></Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline"><Link to="/admin/show-appearances">Участники шоу</Link></Button>
+          <Button asChild><Link to="/admin/shows/new"><Plus className="mr-2 h-4 w-4" /> Добавить</Link></Button>
+        </div>
       </div>
 
       <Card>

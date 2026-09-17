@@ -4,13 +4,17 @@ import { Loader2, ChevronLeft, ChevronRight, Tv } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import publicApi from '../utils/api';
-import { mediaUrl } from '@/utils/media';
+import { contentImageUrl } from '@/utils/media';
+import FittedImage from '@/components/FittedImage';
+import ListPageHeader from '../components/ListPageHeader';
 
 export default function ShowsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shows, setShows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState(searchParams.get('q') || '');
+  const query = searchParams.get('q') || '';
   
   const page = parseInt(searchParams.get('page') || '1');
   const limit = 12;
@@ -22,6 +26,7 @@ export default function ShowsListPage() {
         const res = await publicApi.getShows({ 
           skip: (page - 1) * limit,
           limit,
+          search: query || undefined,
           sort: 'title' 
         });
         setShows(res.data.items || []);
@@ -33,9 +38,20 @@ export default function ShowsListPage() {
       }
     };
     fetchShows();
-  }, [page]);
+  }, [page, query]);
+
+  useEffect(() => setSearch(query), [query]);
 
   const totalPages = Math.ceil(total / limit);
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const params = new URLSearchParams(searchParams);
+    if (search.trim()) params.set('q', search.trim());
+    else params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -48,7 +64,14 @@ export default function ShowsListPage() {
         </ol>
       </nav>
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Шоу и проекты</h1>
+      <ListPageHeader
+        title="Шоу и проекты"
+        search={search}
+        onSearchChange={setSearch}
+        onSearch={handleSearch}
+        placeholder="Поиск шоу..."
+        searchId="shows-search"
+      />
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">
@@ -65,19 +88,12 @@ export default function ShowsListPage() {
             {shows.map((show) => (
               <Link key={show.id} to={`/shows/${show.full_path || show.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
-                  <div className="aspect-video bg-gray-100 overflow-hidden">
-                    {mediaUrl(show.poster) ? (
-                      <img
-                        src={mediaUrl(show.poster)}  
-                        alt={show.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-                        <Tv className="h-16 w-16 text-blue-300" />
-                      </div>
-                    )}
-                  </div>
+                  <FittedImage
+                    src={contentImageUrl(show, show.poster)}
+                    fallbackKey={show}
+                    alt={show.title}
+                    className="aspect-video"
+                  />
                   <CardContent className="p-5">
                     <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                       {show.title}

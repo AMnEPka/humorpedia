@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 import os
 import logging
+import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
 from pymongo.errors import OperationFailure
@@ -38,6 +39,28 @@ from utils.auth import require_admin, SAFE_METHODS
 from services.admin_bootstrap import ensure_admin_from_env
 from services.competitions import ensure_competitions_synced, create_competition_indexes
 from services.memberships import ensure_rosters_imported, create_membership_indexes
+from services.show_appearances import ensure_show_appearances, create_show_appearance_indexes
+
+
+def ensure_placeholder_images() -> int:
+    """Copy the four legacy Humorpedia patterns into the persistent public media volume."""
+    source_dir = Path(os.environ.get("BACKUP_DIR", "/app/backups")) / "images" / "pattern"
+    target_dir = Path("/app/media/imported/images/pattern")
+    if not source_dir.is_dir():
+        logger.warning("Placeholder image source is missing: %s", source_dir)
+        return 0
+    target_dir.mkdir(parents=True, exist_ok=True)
+    copied = 0
+    for index in range(1, 5):
+        source = source_dir / f"{index}.jpg"
+        target = target_dir / source.name
+        if not source.is_file():
+            logger.warning("Placeholder image is missing: %s", source)
+            continue
+        if not target.exists() or source.stat().st_size != target.stat().st_size:
+            shutil.copy2(source, target)
+            copied += 1
+    return copied
 
 
 @asynccontextmanager
@@ -45,6 +68,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown"""
     # Startup
     logger.info("Starting Humorpedia API server...")
+    copied_patterns = ensure_placeholder_images()
+    logger.info("Humorpedia placeholder images ready%s", f" ({copied_patterns} copied)" if copied_patterns else "")
 
     # Single DB connection via get_db() — shared with all routes and services
     db = await get_db()
@@ -59,6 +84,7 @@ async def lifespan(app: FastAPI):
     # Модель соревнований: первичная синхронизация из страниц КВН, если сезонов ещё нет
     await ensure_competitions_synced(db)
     await ensure_rosters_imported(db)
+    await ensure_show_appearances(db)
     
     # Запускаем батчевый счётчик просмотров
     from services.views_counter import views_counter
@@ -115,6 +141,7 @@ async def create_indexes(db):
         await _ensure_index(db.people, "full_name")
         await _ensure_index(db.people, "tags")
         await _ensure_index(db.people, "status")
+        await _ensure_index(db.people, "foreign_agent")
         await _ensure_index(db.people, [("title", "text"), ("full_name", "text")])
         await _ensure_index(db.people, "old_urls")
         
@@ -237,6 +264,7 @@ async def create_indexes(db):
         # Соревнования: турниры, сезоны, перекрёстные ссылки
         await create_competition_indexes(_ensure_index, db)
         await create_membership_indexes(_ensure_index, db)
+        await create_show_appearance_indexes(_ensure_index, db)
         
         if _index_failures:
             logger.warning(f"MongoDB indexes: {len(_index_failures)} not created: {_index_failures}")
@@ -295,6 +323,7 @@ from routes.cities import router as cities_router
 from routes.redirects import router as redirects_router
 from routes.competitions import router as competitions_router
 from routes.memberships import router as memberships_router
+from routes.show_appearances import router as show_appearances_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -319,6 +348,7 @@ api_router.include_router(cities_router)
 api_router.include_router(redirects_router)
 api_router.include_router(competitions_router)
 api_router.include_router(memberships_router)
+api_router.include_router(show_appearances_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
@@ -354,15 +384,15 @@ async def get_stats(request: Request):
     db = await get_db()
     
     stats = {
-        "people": await db.people.count_documents({"status": "published"}),
-        "teams": await db.teams.count_documents({"status": "published"}),
-        "shows": await db.shows.count_documents({"status": "published"}),
-        "articles": await db.articles.count_documents({"status": "published"}),
-        "news": await db.news.count_documents({"status": "published"}),
-        "quizzes": await db.quizzes.count_documents({"status": "published"}),
-        "wiki": await db.wiki.count_documents({"status": "published"}),
-        "sections": await db.sections.count_documents({"status": "published"}),
-        "cities": await db.cities.count_documents({"status": "published"}),
+        "people": await db.people.count_documents({"status": {"$ne": "archived"}}),
+        "teams": await db.teams.count_documents({"status": {"$ne": "archived"}}),
+        "shows": await db.shows.count_documents({"status": {"$ne": "archived"}}),
+        "articles": await db.articles.count_documents({"status": {"$ne": "archived"}}),
+        "news": await db.news.count_documents({"status": {"$ne": "archived"}}),
+        "quizzes": await db.quizzes.count_documents({"status": {"$ne": "archived"}}),
+        "wiki": await db.wiki.count_documents({"status": {"$ne": "archived"}}),
+        "sections": await db.sections.count_documents({"status": {"$ne": "archived"}}),
+        "cities": await db.cities.count_documents({"status": {"$ne": "archived"}}),
         "users": await db.users.count_documents({"active": True}),
         "comments": await db.comments.count_documents({"deleted": False}),
         "tags": await db.tags.count_documents({})
@@ -394,7 +424,7 @@ async def get_random_content(content_type: str, request: Request):
     
     # Get random document
     pipeline = [
-        {"$match": {"status": "published"}},
+        {"$match": {"status": {"$ne": "archived"}}},
         {"$sample": {"size": 1}},
         {"$project": {"_id": 1, "title": 1, "slug": 1, "content_type": 1}}
     ]

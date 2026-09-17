@@ -18,13 +18,15 @@ from services.tags import tag_service
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.show_teams import move_show_teams
+from services.show_appearances import link_participant_cards
+from services.foreign_agent_notices import decorate_document
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/content", tags=["shows"], dependencies=[Depends(require_editor_on_write)])
 
 ROOT_QUERY = {"$or": [{"parent_id": None}, {"parent_id": ""}, {"parent_id": {"$exists": False}}]}
-PUBLIC_STATUS = {"status": {"$nin": ["draft", "archived"]}}
+PUBLIC_STATUS = {"status": {"$ne": "archived"}}
 LINK_FIELDS = ("modules", "facts", "description")
 
 
@@ -61,7 +63,7 @@ async def _move_descendants(db, show_id: str, full_path: str, level: int) -> Non
 
 
 async def _add_hierarchy(db, show: dict) -> dict:
-    """Дочерние страницы (опубликованные, по order) и хлебные крошки для публичной страницы."""
+    """Дочерние неархивные страницы (по order) и хлебные крошки для публичной страницы."""
     children = await db.shows.find(
         {"parent_id": show["_id"], **PUBLIC_STATUS},
         {"title": 1, "name": 1, "slug": 1, "full_path": 1, "poster": 1, "order": 1, "description": 1},
@@ -132,7 +134,9 @@ async def get_show_by_path(path: str):
     if not show:
         raise HTTPException(status_code=404, detail="Show not found")
     await _add_hierarchy(db, show)
-    return await LinkResolver.resolve_document(show, LINK_FIELDS)
+    await link_participant_cards(db, show)
+    await LinkResolver.resolve_document(show, LINK_FIELDS)
+    return await decorate_document(show)
 
 
 @router.get("/shows/{parent_slug}/children", response_model=dict)
@@ -151,7 +155,9 @@ async def get_show(id_or_slug: str, raw: bool = Query(False, description="без
     """Get show by ID or slug."""
     show = await get_by_id_or_slug("shows", id_or_slug, "Show not found")
     if not raw:
+        await link_participant_cards(await get_db(), show)
         await LinkResolver.resolve_document(show, LINK_FIELDS)
+        await decorate_document(show)
     return show
 
 

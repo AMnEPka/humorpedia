@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import publicApi from '../utils/api';
 import { cn } from '@/lib/utils';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 
 const LETTERS = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ'.split('');
 
@@ -145,17 +147,13 @@ export default function CitiesListPage() {
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
                 {/* Poster */}
                 <div className="aspect-video bg-gradient-to-br from-blue-500 to-blue-700 relative overflow-hidden">
-                  {city.poster?.url ? (
-                    <img
-                      src={city.poster.url}
-                      alt={city.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <MapPin className="h-12 w-12 text-white/50" />
-                    </div>
-                  )}
+                  <FittedImage
+                    src={contentImageUrl(city, city.poster)}
+                    fallbackKey={city}
+                    alt={city.name}
+                    className="h-full w-full"
+                    imageClassName="group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
 
                 {/* Info */}

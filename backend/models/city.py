@@ -14,6 +14,7 @@ class City(BaseContent):
     name: str
     poster: Optional[MediaFile] = None
     description: Optional[str] = None  # Short description/intro
+    aliases: List[str] = Field(default_factory=list)  # Historical/alternative names for exact matching
     facts: Dict[str, str] = Field(default_factory=dict)  # Key-value facts
     facts_order: List[str] = Field(default_factory=list)  # Stable order of facts keys
     
@@ -23,6 +24,7 @@ class City(BaseContent):
     # Relations
     related_person_ids: List[str] = Field(default_factory=list)  # Famous people from this city
     related_team_ids: List[str] = Field(default_factory=list)  # Teams from this city
+    related_team_mentions: List[Dict[str, str]] = Field(default_factory=list)  # Legacy teams without a page
     
     # Legacy
     old_id: Optional[int] = None  # MODX resource ID
@@ -35,6 +37,7 @@ class CityCreate(BaseModel):
     name: str
     poster: Optional[MediaFile] = None
     description: Optional[str] = None
+    aliases: List[str] = Field(default_factory=list)
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None
     modules: List[PageModule] = Field(default_factory=list)
@@ -43,6 +46,7 @@ class CityCreate(BaseModel):
     status: ContentStatus = ContentStatus.DRAFT
     related_person_ids: Optional[List[str]] = None
     related_team_ids: Optional[List[str]] = None
+    related_team_mentions: List[Dict[str, str]] = Field(default_factory=list)
 
 
 class CityUpdate(BaseModel):
@@ -52,6 +56,7 @@ class CityUpdate(BaseModel):
     name: Optional[str] = None
     poster: Optional[MediaFile] = None
     description: Optional[str] = None
+    aliases: Optional[List[str]] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None
     modules: Optional[List[PageModule]] = None
@@ -60,5 +65,6 @@ class CityUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     related_person_ids: Optional[List[str]] = None
     related_team_ids: Optional[List[str]] = None
+    related_team_mentions: Optional[List[Dict[str, str]]] = None
     rating: Optional[float] = None
     votes_count: Optional[int] = None

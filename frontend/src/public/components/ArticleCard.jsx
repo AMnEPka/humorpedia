@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { Star, MessageCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 
 export default function ArticleCard({ article, featured = false }) {
   const formattedDate = article.published_at 
@@ -12,15 +14,15 @@ export default function ArticleCard({ article, featured = false }) {
     return (
       <article className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-lg transition-all group">
         <div className="md:flex">
-          {article.image && (
-            <Link to={`/articles/${article.slug}`} className="md:w-2/5 flex-shrink-0">
-              <img 
-                src={article.image} 
+          <Link to={`/articles/${article.slug}`} className="md:w-2/5 flex-shrink-0">
+              <FittedImage
+                src={contentImageUrl(article, article.image, article.cover_image, article.poster)}
+                fallbackKey={article}
                 alt={article.title}
-                className="w-full h-56 md:h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-56 md:h-full"
+                imageClassName="group-hover:scale-105 transition-transform duration-300"
               />
-            </Link>
-          )}
+          </Link>
           <div className="p-6 flex flex-col justify-center">
             <Link to={`/articles/${article.slug}`}>
               <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
@@ -54,15 +56,15 @@ export default function ArticleCard({ article, featured = false }) {
 
   return (
     <article className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow group">
-      {article.image && (
-        <Link to={`/articles/${article.slug}`} className="block overflow-hidden">
-          <img 
-            src={article.image} 
+      <Link to={`/articles/${article.slug}`} className="block overflow-hidden">
+          <FittedImage
+            src={contentImageUrl(article, article.image, article.cover_image, article.poster)}
+            fallbackKey={article}
             alt={article.title}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-48"
+            imageClassName="group-hover:scale-105 transition-transform duration-300"
           />
-        </Link>
-      )}
+      </Link>
       <div className="p-5">
         <Link to={`/articles/${article.slug}`}>
           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">

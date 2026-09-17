@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Loader2, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import publicApi from '../utils/api';
 import { personPhotoUrl } from '@/utils/media';
+import FittedImage from '@/components/FittedImage';
+import ListPageHeader from '../components/ListPageHeader';
 
 export default function PeopleListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +14,7 @@ export default function PeopleListPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('q') || '');
+  const query = searchParams.get('q') || '';
   
   const page = parseInt(searchParams.get('page') || '1');
   const limit = 24;
@@ -24,7 +26,7 @@ export default function PeopleListPage() {
         const res = await publicApi.getPeople({ 
           skip: (page - 1) * limit,
           limit,
-          search: search || undefined,
+          search: query || undefined,
           sort: 'title' 
         });
         setPeople(res.data.items || []);
@@ -36,14 +38,17 @@ export default function PeopleListPage() {
       }
     };
     fetchPeople();
-  }, [page, search]);
+  }, [page, query]);
+
+  useEffect(() => setSearch(query), [query]);
 
   const totalPages = Math.ceil(total / limit);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (search) params.set('q', search);
+    const params = new URLSearchParams(searchParams);
+    if (search.trim()) params.set('q', search.trim());
+    else params.delete('q');
     params.set('page', '1');
     setSearchParams(params);
   };
@@ -59,23 +64,14 @@ export default function PeopleListPage() {
         </ol>
       </nav>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Люди</h1>
-        
-        {/* Search */}
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            type="search"
-            placeholder="Поиск..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64"
-          />
-          <Button type="submit" size="icon">
-            <Search className="h-4 w-4" />
-          </Button>
-        </form>
-      </div>
+      <ListPageHeader
+        title="Люди"
+        search={search}
+        onSearchChange={setSearch}
+        onSearch={handleSearch}
+        placeholder="Поиск человека..."
+        searchId="people-search"
+      />
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">
@@ -91,21 +87,12 @@ export default function PeopleListPage() {
             {people.map((person) => (
               <Link key={person.id} to={`/people/${person.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
-                  <div className="aspect-square bg-gray-100 overflow-hidden">
-                    {personPhotoUrl(person) ? (
-                      <img
-                        src={personPhotoUrl(person)}
-                        alt={person.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <span className="text-4xl font-bold">
-                          {person.title?.charAt(0)?.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  <FittedImage
+                    src={personPhotoUrl(person)}
+                    fallbackKey={person}
+                    alt={person.title}
+                    className="aspect-square"
+                  />
                   <CardContent className="p-3">
                     <h3 className="font-medium text-sm text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
                       {person.title}

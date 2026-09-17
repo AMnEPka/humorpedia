@@ -87,7 +87,7 @@ async def team_members(id_or_slug: str):
     people = {p["_id"]: p for p in await db.people.find({"_id": {"$in": person_ids}}, _PERSON_FIELDS).to_list(None)}
     for member in members:
         person = people.get(member.get("person_id"))
-        member["person"] = _person_card(person) if person and person.get("status") != "draft" else None
+        member["person"] = _person_card(person) if person and person.get("status") != "archived" else None
 
     return {
         "team": _team_card(team),
@@ -194,7 +194,7 @@ async def person_career(id_or_slug: str):
     team_items = []
     for membership in memberships:
         team = teams.get(membership["team_id"])
-        if not team or team.get("status") == "draft":
+        if not team or team.get("status") == "archived":
             continue
         seasons = [
             {**row, "tournament": tournaments.get(row["tournament_id"])}

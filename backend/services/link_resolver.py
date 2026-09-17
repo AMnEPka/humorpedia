@@ -1,9 +1,9 @@
 """
 Ссылки в HTML контента при выдаче на публичный сайт.
 
-- ссылка на существующую опубликованную страницу → её актуальный адрес (в том числе по старому URL MODX
+- ссылка на существующую неархивную страницу → её актуальный адрес (в том числе по старому URL MODX
   из `old_urls`, по `[[~id]]` через `old_id` и по известным паттернам старых адресов);
-- ссылка на страницу, которой пока нет или которая не опубликована → обычный текст. В данных ссылка
+- ссылка на страницу, которой пока нет или которая архивирована → обычный текст. В данных ссылка
   остаётся и «оживёт», когда страница появится (кэш сбрасывается при любой записи);
 - внешние ссылки, якоря, файлы и служебные разделы сайта не трогаются.
 
@@ -35,7 +35,7 @@ STATIC_PATHS = {
 }
 PASS_PREFIXES = ("tags/", "admin", "media/", "images/", "uploads/", "api/", "static/", "assets/")
 
-PUBLISHED = {"status": {"$nin": ["draft", "archived"]}}
+AVAILABLE = {"status": {"$ne": "archived"}}
 
 # Коллекция → адрес документа на сайте
 URL_BUILDERS: Dict[str, Callable[[dict], str]] = {
@@ -48,7 +48,7 @@ URL_BUILDERS: Dict[str, Callable[[dict], str]] = {
     "quizzes": lambda d: f"/quizzes/{d['slug']}",
     "cities": lambda d: f"/city/{d['slug']}",
 }
-OLD_URL_COLLECTIONS = ("people", "teams", "kvn", "shows", "articles", "news")
+OLD_URL_COLLECTIONS = ("people", "teams", "kvn", "shows", "articles", "news", "cities")
 
 
 def link_key(href: str) -> Optional[str]:
@@ -151,13 +151,13 @@ def _replace_strings(value: Any, resolved: Dict[str, str]) -> Any:
 
 
 async def _find_urls(db, queries: Dict[str, Tuple[str, str, str]]) -> Dict[str, str]:
-    """{ключ: (коллекция, поле, значение)} → {ключ: адрес} для найденных опубликованных документов."""
+    """{ключ: (коллекция, поле, значение)} → {ключ: адрес} для найденных неархивных документов."""
     grouped: Dict[Tuple[str, str], Dict[Any, List[str]]] = defaultdict(lambda: defaultdict(list))
     for key, (coll, field, value) in queries.items():
         grouped[(coll, field)][value].append(key)
     found: Dict[str, str] = {}
     for (coll, field), values in grouped.items():
-        query = {field: {"$in": list(values)}, **PUBLISHED}
+        query = {field: {"$in": list(values)}, **AVAILABLE}
         if coll == "teams" and field == "slug":  # /kvn/teams/{slug} — только команды КВН
             query.update(KVN_ONLY)
         async for doc in db[coll].find(query, {"slug": 1, "full_path": 1, "show_id": 1, field: 1}):
@@ -188,7 +188,7 @@ async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
         for coll in URL_BUILDERS:
             if not old_ids:
                 break
-            async for doc in db[coll].find({"old_id": {"$in": list(old_ids.values())}, **PUBLISHED},
+            async for doc in db[coll].find({"old_id": {"$in": list(old_ids.values())}, **AVAILABLE},
                                            {"slug": 1, "full_path": 1, "show_id": 1, "old_id": 1}):
                 for k in [k for k, v in old_ids.items() if v == doc.get("old_id")]:
                     result[k] = URL_BUILDERS[coll](doc)
@@ -202,7 +202,7 @@ async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
                 old_paths.setdefault("/" + k + ".html", k)
     if old_paths:
         for coll in OLD_URL_COLLECTIONS:
-            async for doc in db[coll].find({"old_urls": {"$in": list(old_paths)}, **PUBLISHED},
+            async for doc in db[coll].find({"old_urls": {"$in": list(old_paths)}, **AVAILABLE},
                                            {"slug": 1, "full_path": 1, "show_id": 1, "old_urls": 1}):
                 for url in doc.get("old_urls") or []:
                     if url in old_paths and old_paths[url] not in result:

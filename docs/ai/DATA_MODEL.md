@@ -8,7 +8,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 
 | Коллекция | Модель | Роуты | Особенности |
 |---|---|---|---|
-| `people` | `Person` | content_people | `full_name`, `photo`, `bio`, `facts{}`+`facts_order[]`, `primary_tag`, связи `team_ids/show_ids/article_ids` |
+| `people` | `Person` | content_people | `full_name`, `photo`, `bio`, `facts{}`+`facts_order[]`, `primary_tag`, `foreign_agent`, связи `team_ids/show_ids/article_ids` |
 | `teams` | `Team` | content_teams | команды КВН и команды шоу: `show_id` (пусто у КВН), `full_path` (адрес команды шоу), `team_type` («kvn» или slug корневого шоу), `name`, `logo`, `aliases[]` (для сопоставления названий), `member_ids`, `old_urls[]` — см. «Команды шоу» |
 | `kvn` | `KVN` | content_kvn | иерархия: `id` (UUID, **отдельно от `_id`**), `parent_id`, `level` 0–4, `full_path`; `season_data`, `jury_cards`, `old_urls` |
 | `shows` | `Show` | content_shows | `facts{}`+`facts_order[]`, `social_links`, `poster` (MediaFile); иерархия: `parent_id` (= `_id` родителя), `full_path` (уникален), `level`, `order` — см. «Шоу» |
@@ -17,7 +17,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `quizzes` | `Quiz` | content_quizzes | вопросы и результаты — в модулях `quiz_questions` / `quiz_results` |
 | `wiki` | `Wiki` | content_wiki | `content` (HTML), `has_header`, `header_facts` |
 | `sections` | `Section` | sections | иерархические разделы: `full_path` (уникален), `parent_id`, `parent_path`, `level`, `order`, `in_main_menu`, `child_types` |
-| `cities` | `City` | cities | `content_type="page"`, `related_person_ids/related_team_ids` (заполняются city_linking) |
+| `cities` | `City` | cities | `content_type="page"`, `aliases[]`; `related_person_ids` — редакционная подборка известных людей, `related_team_ids` — команды со страницами, `related_team_mentions` — команды из дампа без страницы |
 | `users` | `User` | auth, users | `username`, `email`, `password_hash` (bcrypt), `role`, `permissions[]`, `oauth{vk_id, yandex_id}`, `banned` |
 | `comments` | — | comments | `resource_type`+`resource_id`, `user_id`, `parent_id`, `deleted`, модерация |
 | `tags` | — | tags | `name` и `slug` уникальны, `usage_count`, `type` |
@@ -28,6 +28,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `seasons` | `SeasonUpdate` | competitions | сезон: список участников, победители, этапы → игры → результаты (ссылки на `teams._id`) — источник истины вместо `kvn.season_data` |
 | `participations` | — | competitions | производная: участие в сезоне (`kind=season`), в игре (`kind=game`), роли жюри/ведущего/редактора (`kind=role`) |
 | `memberships` | — | memberships | составы команд: человек (или имя + slug старого сайта) — команда — роли — годы — статус |
+| `show_appearances` | — | show_appearances | варианты участия человека в согласованных шоу: `person_id/show_id`, состав, достижение, источник и ручные решения — см. SHOW_APPEARANCES.md |
 
 Индексы создаются при каждом старте в `server.py:create_indexes` — при добавлении полей для фильтрации добавлять индекс туда.
 
@@ -42,6 +43,8 @@ published_at, featured
 ```
 Даты при записи через crud обычно сохраняются ISO-строками.
 `MediaFile` = `{url, alt, caption, thumbnail}`; `SocialLinks` = `{vk, telegram, youtube, instagram, website}`.
+На публичном сайте `draft` используется наравне с `published`; статус сохраняется как редакционная метка.
+Из ссылок, поиска и связанных блоков исключается только `archived`.
 
 ## Модули страниц (models/modules.py)
 
@@ -70,15 +73,34 @@ published_at, featured
 Ссылка может указывать на страницу, которой ещё нет, — это нормально. Для разделов без новой структуры (`proekty/…`) хранится
 старый путь (`/proekty/standup`); когда страница появится со старым адресом в `old_urls`, ссылка заработает.
 
-**При выдаче на сайт** (`services/link_resolver.py`, публичные GET людей/команд/шоу/КВН и `by-path`) все ссылки ответа
+**При выдаче на сайт** (`services/link_resolver.py`, публичные GET людей/команд/шоу/КВН, статей, новостей и `by-path`) все ссылки ответа
 проверяются пачкой: адрес нового сайта → документ по slug/full_path; `[[~id]]` → `old_id`; старый путь → `old_urls`;
-затем паттерны `routes/redirects._try_pattern_redirect`. Найдена опубликованная страница — актуальный адрес; нет
-(или черновик) — **ссылка выводится текстом** и оживёт сама, когда страница появится (кэш сбрасывается при записи).
+затем паттерны `routes/redirects._try_pattern_redirect`. Найдена неархивная страница — актуальный адрес; нет
+(или страница архивирована) — **ссылка выводится текстом** и оживёт сама, когда страница появится (кэш сбрасывается при записи).
 Обрабатываются все строки в `modules`, `facts`, `season_data`, `jury_cards`.
 
-**Админка читает документы с `?raw=true`** (`frontend/src/admin/utils/api.js`: getPerson/getTeam/getShow/getKvn) — иначе
+**Админка читает документы с `?raw=true`** (`frontend/src/admin/utils/api.js`: getPerson/getTeam/getShow/getKvn/getArticle/getNews/getCity) — иначе
 при сохранении ссылки на отсутствующие страницы превратились бы в текст навсегда. Новый эндпоинт чтения документа
 для редактирования — тоже с `raw`.
+
+## Город
+
+Импорт — `scripts/import_cities_modx.py` (`--list`, `--ids`, `--slugs`, `--all`, dry-run по умолчанию,
+`--apply`, `--update`). `services/modx_cities.py` переносит описание, постер, факты с порядком, текстовые модули,
+теги, рейтинг, `old_id/old_urls` и даты. `related_person_ids` не строится по месту рождения: импортёр берёт
+редакционный список ссылок из блока «Известные комики» старой страницы и оставляет только существующие
+неархивные страницы людей. После импорта список редактируется вручную в админке города. Повторный
+`--update` сохраняет ручную подборку людей; заменить её данными дампа можно только с `--update-relations`.
+Старые текстовые разделы со списками людей и команд при импорте удаляются: эти сущности показываются один
+раз карточками в основном потоке городской страницы. `related_team_ids` при каждом импорте полностью
+пересобирается из всех неархивных команд КВН и шоу с подходящим полем `facts["Город"]`, прямых ссылок
+старой городской статьи и однозначных совпадений старого названия с `name/title/aliases`. Упомянутые в старых списках команды без страницы сохраняются в
+`related_team_mentions` и показываются карточками без ссылки, поэтому при очистке текста названия не теряются.
+Каждая карточка подписана «Команда КВН» или «Команда шоу «…»»; статус `draft` не мешает ссылке.
+
+`city_linking.py` автоматически обновляет только команды. Составные значения поля «Город» разбираются на
+отдельные точные названия; поиск по подстроке запрещён (`Омск` не совпадает с `Томск`, `Киров` — с
+`Кирово-Чепецк`). Исторические названия задаются в `aliases[]`, например Ленинград у Санкт-Петербурга.
 
 Перенесённый раньше контент (команды, КВН, шоу) переведён на новые адреса `scripts/fix_legacy_links.py`
 (переписывает только href/src, повторный запуск безопасен).
@@ -90,6 +112,7 @@ published_at, featured
 ```jsonc
 {
   "title": "Шастун Антон", "slug": "anton-shastun", "full_name": "Антон Андреевич Шастун", "status": "published",
+  "foreign_agent": false, // при true звёздочка и стандартное пояснение добавляются только в публичном ответе
   "photo": {"url": "/media/imported/images/people/…jpg", "alt": "…", "caption": "", "thumbnail": "…тот же url"},
   "facts": {"Полное имя": "…", "Дата рождения": "19 апреля 1991 года", "Дата смерти": "… (82 года)"}, "facts_order": ["Полное имя", …],
   "social_links": {"vk", "telegram", "youtube", "instagram", "website"},
@@ -103,6 +126,11 @@ published_at, featured
   ]
 }
 ```
+
+`foreign_agent` — центральный признак статуса. В сохранённых `title`, `full_name` и HTML звёздочку не добавляют.
+`services/foreign_agent_notices.py` помечает ссылки `/people/{slug}` при публичной выдаче человека, статьи или новости и
+возвращает `foreign_agent_notice=true`; фронтенд выводит одно стандартное пояснение. `?raw=true` возвращает исходные данные
+без маркеров, поэтому админка не сохраняет сгенерированную разметку обратно.
 - Публичная страница берёт фото из `photo.url` (затем устаревшие `cover_image`/`image`/`poster` — хелпер `frontend/src/utils/media.js`), факты — в порядке `facts_order`; возраст к дате рождения не добавляется, если есть факт «Дата смерти».
 - Все люди старого сайта (1039 опубликованных) перенесены 2026-09-16 этим форматом; при `--update` у существующих записей удаляются поля вне модели `Person` и дописываются её значения по умолчанию.
 - Базовый тег — «Имя Фамилия»; если занят тёзкой — полное имя, затем «Имя Фамилия (slug)» (так у двух тёзок).
@@ -134,10 +162,16 @@ HTML: сущности раскрываются (кроме `&lt; &gt; &amp; &qu
 **Иерархия**: сезон, подпроект или раздел — дочернее шоу. `parent_id` = `_id` родителя, `full_path` = путь родителя + "/" + slug,
 адрес `/shows/{full_path}`, `order` — порядок среди соседей. slug уникален среди соседей (у разных шоу бывает `season1`),
 уникален `full_path` (индекс). При смене slug/родителя пути потомков пересчитываются; шоу с дочерними страницами не удаляется.
-`GET /content/shows/by-path/{path}` отдаёт шоу с `children` (опубликованные, по `order`) и `breadcrumbs`.
+`GET /content/shows/by-path/{path}` отдаёт шоу с `children` (неархивные, по `order`) и `breadcrumbs`.
 
 Модуль `participants`: `{title, items: [{name, person_slug, photo (URL), facts: [{title, value}]}]}` — карточки участников
 (на старом сайте `people_cards`), редактор в админке, рендер на странице шоу.
+
+Связи «человек ↔ шоу» не записываются в модули страниц. Их строит коллекция
+`show_appearances`: автоматический вариант хранит источник и доказательство, редактор может
+связать существующего человека, выбрать основной состав, исправить достижение или исключить
+вариант. При публичной выдаче на странице человека остаётся одна подпись на шоу без перечисления
+сезонов; на странице шоу ссылка встраивается только в уже существующую карточку участника.
 
 ### Импорт шоу со старого сайта
 

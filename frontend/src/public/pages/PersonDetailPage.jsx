@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import EmojiRating from '@/components/EmojiRating';
 import publicApi from '../utils/api';
 import PersonCareer from '../components/competitions/PersonCareer';
+import ShowAppearances from '../components/ShowAppearances';
 import { 
   PosterPhotoModule, 
   FactsTableModule, 
@@ -17,8 +18,10 @@ import {
   addAgeToDate
 } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
+import ForeignAgentNotice, { ForeignAgentMarker } from '../components/ForeignAgentNotice';
 import { teamUrl } from '@/utils/teams';
 import { orderedFacts, personPhotoUrl } from '@/utils/media';
+import FittedImage from '@/components/FittedImage';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
@@ -127,6 +130,9 @@ export default function PersonDetailPage() {
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [person?.modules]);
 
+  const timelineModuleIndex = contentModules.findIndex(module => module.type === 'timeline');
+  const careerInsertIndex = timelineModuleIndex === -1 ? contentModules.length : timelineModuleIndex;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -167,25 +173,19 @@ export default function PersonDetailPage() {
             <CardContent className="p-6">
               {/* Poster Photo Module */}
               {sidebarModules.find(m => m.type === 'poster_photo') && (
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                  {personPhotoUrl(person) ? (
-                    <img
-                      src={personPhotoUrl(person)}
-                      alt={person.photo?.alt || person.cover_image?.alt || person.full_name || person.title}
-                      className="w-full h-full object-cover object-top"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <span className="text-6xl font-bold">
-                        {person.full_name?.charAt(0)?.toUpperCase() || person.title?.charAt(0)?.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <FittedImage
+                  src={personPhotoUrl(person)}
+                  fallbackKey={person}
+                  alt={person.photo?.alt || person.cover_image?.alt || person.full_name || person.title}
+                  className="aspect-square rounded-lg mb-4"
+                  loading="eager"
+                />
               )}
               
               {/* Name */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-3">{person.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-3">
+                {person.title}{person.foreign_agent && <ForeignAgentMarker />}
+              </h1>
               
               {/* Social links */}
               {sidebarModules.find(m => m.type === 'social_links') && person.social_links && Object.keys(person.social_links).length > 0 && (
@@ -387,12 +387,24 @@ export default function PersonDetailPage() {
           )}
 
           {/* Content Modules */}
-          {contentModules.map((module, i) => (
+          {contentModules.slice(0, careerInsertIndex).map((module, i) => (
             <ModuleRenderer key={module.id || i} module={module} index={i} personId={person._id || person.id} />
           ))}
 
           {/* Команды, сезоны и роли в турнирах (из составов и participations) */}
           <PersonCareer personSlug={person.slug || person._id} />
+          <ShowAppearances personId={person._id || person.id} />
+
+          {contentModules.slice(careerInsertIndex).map((module, i) => (
+            <ModuleRenderer
+              key={module.id || careerInsertIndex + i}
+              module={module}
+              index={careerInsertIndex + i}
+              personId={person._id || person.id}
+            />
+          ))}
+
+          <ForeignAgentNotice visible={person.foreign_agent_notice} />
         </div>
       </div>
     </div>

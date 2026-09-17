@@ -14,7 +14,7 @@ utils/
   pageTitle.js                 usePageTitle / buildPageTitle (обёртка <WithTitle> в App.js)
   number.js                    formatDecimalTrim, roundTo (баллы КВН)
   team.js                      cleanTeamName
-  media.js                     mediaUrl (строка или MediaFile), personPhotoUrl (сначала photo из админки), orderedFacts (по facts_order)
+  media.js                     URL медиа, personPhotoUrl/teamLogoUrl/contentImageUrl, стабильный выбор одной из 4 фирменных заглушек, orderedFacts
   (public/components/ContentTable.jsx — таблица модуля `table`: пояснение, сортировка по столбцам)
 components/
   ui/*                         shadcn/ui (Radix) — генерированные, не трогать без нужды
@@ -28,9 +28,12 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     Layout.jsx                 Header + <Outlet/> + Footer
     Header.jsx                 меню из /sections (in_main_menu), автокомплит поиска
     Footer.jsx
+    ListPageHeader.jsx         единая панель заголовка и поиска для списков людей, команд и шоу
+    ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
     ModuleRenderer.jsx         рендер контентных модулей (text_block, image, image_gallery, video_embed, quote, timeline, person_card, related_links, table_of_contents, table, html, divider, humor_chronicles)
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
+    ShowAppearances.jsx        блок участия в шоу только на странице человека
     ArticleCard.jsx, NewsCard.jsx, MultiSelectWithSearch.jsx
     competitions/              TeamParticipations (участие команды в турнирах), TeamRoster (состав), PersonCareer (команды и роли человека), labels.js
   pages/
@@ -40,9 +43,9 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     JuryStatsPage.jsx          статистика жюри Высшей лиги
     TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН и команды шоу (TeamDetailPage: структурированный состав + «Участие в турнирах»; для команды шоу — showTeamPath, подпись «Команда шоу «…»»)
     PersonDetailPage.jsx / PeopleListPage.jsx
-    ShowDetailPage.jsx / ShowsListPage.jsx      шоу до 4 уровней вложенности
+    ShowDetailPage.jsx / ShowsListPage.jsx      шоу до 4 уровней вложенности; проверенные ссылки встроены в существующие карточки участников
     ArticleDetailPage / ArticlesListPage, NewsDetailPage / NewsListPage, QuizDetailPage / QuizzesListPage
-    CityDetailPage / CitiesListPage             география
+    CityDetailPage / CitiesListPage             география; люди и все команды города — карточки в основном потоке, у каждой команды указано КВН или название шоу
     SearchPage, TagSearchPage, ContactsPage, PolicyPage
 
 admin/                         АДМИНКА
@@ -59,7 +62,8 @@ admin/                         АДМИНКА
     TeamSelector.jsx, GameTeamSelector.jsx, PersonSelector.jsx, TagSelector.jsx, FactsEditor.jsx
     TeamMembershipsEditor.jsx  вкладка «Состав» в редактировании команды
   pages/                       *ListPage + *EditPage для: people, teams, shows, kvn, articles, news, quizzes, wiki, cities, sections, templates;
-                               DashboardPage, LoginPage, MediaPage, TagsPage, CommentsPage, UsersPage, MongoAdminPage (сырой доступ к коллекциям)
+                               DashboardPage, LoginPage, MediaPage, TagsPage, CommentsPage, UsersPage, MongoAdminPage (сырой доступ к коллекциям),
+                               ShowAppearancesPage (проверка участников шоу и точечное создание черновиков людей)
 ```
 
 ## Маршруты (App.js)
@@ -82,7 +86,7 @@ admin/                         АДМИНКА
 | `/*` | **SectionDetailPage** (КВН, разделы, редиректы старых URL) |
 
 Админка (`ProtectedRoute` — пользователь залогинен И роль admin/editor/moderator; внутри `AdminLayout`):
-`/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/users`, `/admin/database`.
+`/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/show-appearances`, `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/users`, `/admin/database`.
 
 HomePage, SectionDetailPage и PublicLayout грузятся синхронно; остальное — `React.lazy`, админка — отдельным чанком.
 
@@ -93,11 +97,14 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 2. иначе `window.__BACKEND_URL__` (ставит `public/config.js` для localhost) → `REACT_APP_BACKEND_URL` → `${protocol}//${hostname}:8001`.
 
 Картинки: `/media/imported/...`, `/images/...`, `/uploads/...` — отдаёт бэкенд (в dev — через прокси CRA).
+Если ожидаемого изображения нет или файл не загрузился, `FittedImage` и функции `utils/media.js` показывают один из
+`/media/imported/images/pattern/{1..4}.jpg`; вариант стабильно выбирается по slug/id страницы.
 `SectionDetailPage` делает `fetch(\`${BACKEND_URL}/api/redirects/lookup\`)` напрямую, минуя `API_BASE`.
 
 ## Конвенции
 
 - Все тексты интерфейса на русском.
+- Статус иностранного агента задаётся переключателем в `PersonEditPage`; звёздочку и поясняющий блок в HTML вручную не добавлять.
 - HTML из БД выводить только через `sanitizeHTML` (DOMPurify).
 - Заголовок вкладки — через `<WithTitle title="...">` в App.js или `usePageTitle`.
 - В Docker hot reload отключён (`DOCKER_ENV=true`) — после правок обновлять страницу вручную; для HMR запускать фронт локально (`yarn start` в `frontend/`, бэкенд на :8001).

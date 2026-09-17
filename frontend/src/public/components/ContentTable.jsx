@@ -13,6 +13,14 @@ function formatCell(value) {
   return n !== null && Number.isInteger(n) && Math.abs(n) >= 10000 ? n.toLocaleString('ru-RU') : value;
 }
 
+function CellValue({ value }) {
+  const formatted = formatCell(value);
+  if (typeof formatted === 'string' && formatted.includes('<')) {
+    return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
+  }
+  return formatted;
+}
+
 /**
  * Таблица модуля `table` ({headers, rows, hasHeaders, sortable, description}).
  * При sortable — сортировка по клику на заголовок (числа сравниваются как числа).
@@ -76,7 +84,7 @@ export default function ContentTable({ data }) {
               <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 {row.map((cell, cellIdx) => (
                   <td key={cellIdx} className={`border border-gray-200 px-3 py-2 ${toNumber(cell) !== null ? 'whitespace-nowrap text-right' : ''}`}>
-                    {formatCell(cell)}
+                    <CellValue value={cell} />
                   </td>
                 ))}
               </tr>

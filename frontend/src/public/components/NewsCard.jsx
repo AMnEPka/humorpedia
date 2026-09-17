@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { MessageCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 
 export default function NewsCard({ news, compact = false }) {
   const formattedDate = news.published_at 
@@ -37,15 +39,14 @@ export default function NewsCard({ news, compact = false }) {
 
   return (
     <article className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-      {news.image && (
-        <Link to={`/news/${news.slug}`}>
-          <img 
-            src={news.image} 
+      <Link to={`/news/${news.slug}`}>
+          <FittedImage
+            src={contentImageUrl(news, news.image, news.cover_image, news.poster)}
+            fallbackKey={news}
             alt={news.title}
-            className="w-full h-48 object-cover"
+            className="w-full h-48"
           />
-        </Link>
-      )}
+      </Link>
       <div className="p-5">
         <Link to={`/news/${news.slug}`}>
           <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2">

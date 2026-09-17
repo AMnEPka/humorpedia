@@ -12,6 +12,8 @@ import { usePageTitle } from '@/utils/pageTitle';
 import TeamParticipations from '../components/competitions/TeamParticipations';
 import TeamRoster from '../components/competitions/TeamRoster';
 import { teamPageTitle, teamSubtitle } from '@/utils/teams';
+import FittedImage from '@/components/FittedImage';
+import { teamLogoUrl } from '@/utils/media';
 
 // Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
@@ -215,30 +217,13 @@ export default function TeamDetailPage({ showTeamPath = null }) {
           {/* Logo/Photo - рендерится если есть модуль poster_photo */}
           {sidebarModules.find(m => m.type === 'poster_photo') && (
             <div className="w-32 h-32 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
-              {(() => {
-                // Получаем URL логотипа из различных полей
-                let logoUrl = null;
-                const logo = team.logo || team.poster || team.photo || team.image || team.cover_image;
-                
-                if (logo) {
-                  if (typeof logo === 'string') {
-                    logoUrl = logo.startsWith('/') || logo.startsWith('http') ? logo : `/${logo}`;
-                  } else if (typeof logo === 'object' && logo !== null) {
-                    logoUrl = logo.url || logo.thumbnail || logo.cover_image;
-                    if (logoUrl && !logoUrl.startsWith('/') && !logoUrl.startsWith('http')) {
-                      logoUrl = `/${logoUrl}`;
-                    }
-                  }
-                }
-                
-                return logoUrl ? (
-                  <img src={logoUrl} alt={team.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
-                    {team.title?.charAt(0)?.toUpperCase()}
-                  </div>
-                );
-              })()}
+              <FittedImage
+                src={teamLogoUrl(team)}
+                fallbackKey={team}
+                alt={team.title}
+                className="w-full h-full bg-white/95"
+                loading="eager"
+              />
             </div>
           )}
           <div className="text-center md:text-left">
