@@ -113,3 +113,36 @@ async def move_show_teams(db, show_id: str, show_full_path: str) -> None:
             {"_id": team["_id"]},
             {"$set": {"full_path": f"{show_full_path.strip('/')}/{TEAMS_SEGMENT}/{team['slug']}"}},
         )
+
+
+# ─── Та же команда в других шоу (related_team_ids) ────────────────────────────
+
+async def sync_related_teams(db, team_id: str, new_ids, old_ids=()) -> list:
+    """Связь двусторонняя: добавленным командам дописать team_id, у убранных — удалить. Возвращает очищенный список."""
+    new_ids = [i for i in dict.fromkeys(new_ids or []) if i and i != team_id]
+    existing = {t["_id"] async for t in db.teams.find({"_id": {"$in": new_ids}}, {"_id": 1})}
+    new_ids = [i for i in new_ids if i in existing]
+    added = set(new_ids) - set(old_ids or [])
+    removed = set(old_ids or []) - set(new_ids)
+    if added:
+        await db.teams.update_many({"_id": {"$in": list(added)}}, {"$addToSet": {"related_team_ids": team_id}})
+    if removed:
+        await db.teams.update_many({"_id": {"$in": list(removed)}}, {"$pull": {"related_team_ids": team_id}})
+    return new_ids
+
+
+async def attach_related_teams(db, team: dict, public: bool = True) -> None:
+    """`related_teams`: [{id, name, url, show, status}] для страницы команды (на сайте — только опубликованные)."""
+    ids = team.get("related_team_ids") or []
+    query = {"_id": {"$in": ids}}
+    if public:
+        query["status"] = {"$nin": ["draft", "archived"]}
+    items = await db.teams.find(query, {"name": 1, "title": 1, "slug": 1, "show_id": 1, "full_path": 1, "status": 1,
+                                        "facts": 1}).to_list(None)
+    await attach_show_info(db, items)
+    order = {i: n for n, i in enumerate(ids)}
+    team["related_teams"] = [
+        {"id": t["_id"], "name": t.get("name") or t.get("title"), "url": t["url"], "show": t.get("show"),
+         "status": t.get("status"), "city": (t.get("facts") or {}).get("Город")}
+        for t in sorted(items, key=lambda t: order.get(t["_id"], 0))
+    ]

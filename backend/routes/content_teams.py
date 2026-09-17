@@ -26,8 +26,8 @@ from services.views_counter import views_counter
 from services.competitions import sync_kvn_pages
 from services.memberships import import_team_rosters
 from services.show_teams import (
-    KVN_ONLY, attach_show_info, check_team_slug_free, get_team_show, kvn_team_query,
-    split_team_path, team_id_or_kvn_slug_query, team_placement,
+    KVN_ONLY, attach_related_teams, attach_show_info, check_team_slug_free, get_team_show, kvn_team_query,
+    split_team_path, sync_related_teams, team_id_or_kvn_slug_query, team_placement,
 )
 from utils.auth import get_current_user, require_admin
 
@@ -708,6 +708,7 @@ async def create_team(data: TeamCreate):
         team_type=placement.get("team_type") or data.team_type,
         show_id=placement["show_id"], full_path=placement["full_path"],
         logo=logo,
+        related_team_ids=[],
         facts=scaffold_facts,
         facts_order=scaffold_order,
         social_links=data.social_links or {},
@@ -718,6 +719,10 @@ async def create_team(data: TeamCreate):
         status=data.status
     )
     result = await create_content("teams", team, data.tags)
+
+    if data.related_team_ids:
+        related = await sync_related_teams(db, result["id"], data.related_team_ids)
+        await db.teams.update_one({"_id": result["id"]}, {"$set": {"related_team_ids": related}})
 
     # Составы: текстовый блок «Состав команды» → записи «человек — команда»
     created = await db.teams.find_one({"_id": result["id"]})
@@ -846,6 +851,7 @@ async def get_team_by_path(path: str):
         raise HTTPException(status_code=404, detail="Team not found")
     views_counter.increment("teams", team["_id"])
     await _add_show_context(db, team)
+    await attach_related_teams(db, team)
     await LinkResolver.resolve_document(team)
     cache_service.set_team(cache_key, team)
     return team
@@ -858,6 +864,7 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
     if raw:
         team = await _find_team(db, id_or_slug)
         await attach_show_info(db, [team])
+        await attach_related_teams(db, team, public=False)
         return team
 
     # ─── Кэш: проверяем ──────────────────────────────────────────────
@@ -869,6 +876,7 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
     team = await _find_team(db, id_or_slug)
     views_counter.increment("teams", team["_id"])
     await _add_show_context(db, team)
+    await attach_related_teams(db, team)
 
     # Ссылки в тексте: актуальные адреса, на отсутствующие страницы — текстом
     await LinkResolver.resolve_document(team)
@@ -1197,6 +1205,9 @@ async def update_team(id: str, data: TeamUpdate):
         if not show and not was_kvn:
             placement["team_type"] = "kvn"
         await db.teams.update_one({"_id": id}, {"$set": placement})
+    if data.related_team_ids is not None:
+        changes["related_team_ids"] = await sync_related_teams(
+            db, id, data.related_team_ids, current_team.get("related_team_ids") or [])
     data = data.model_copy(update=changes)
 
     # Выполняем обновление
@@ -1244,6 +1255,7 @@ async def delete_team(id: str):
     team = await db.teams.find_one({"_id": id}, {"slug": 1})
     result = await delete_content("teams", id, "Team not found")
     await db.memberships.delete_many({"team_id": id})
+    await db.teams.update_many({"related_team_ids": id}, {"$pull": {"related_team_ids": id}})
     # Модель соревнований: ссылки на удалённую команду в сезонах становятся непривязанными
     if team and team.get("slug"):
         await sync_kvn_pages(db, _pages_with_team_query(team["slug"]))

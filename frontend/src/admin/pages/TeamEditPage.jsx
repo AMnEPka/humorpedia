@@ -17,6 +17,7 @@ import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
 import FactsEditor from '../components/FactsEditor';
 import TeamMembershipsEditor from '../components/TeamMembershipsEditor';
+import RelatedTeamsEditor from '../components/RelatedTeamsEditor';
 import { teamUrl } from '@/utils/teams';
 
 const emptyTeam = {
@@ -25,6 +26,8 @@ const emptyTeam = {
   name: '',
   team_type: 'kvn',
   show_id: null,  // команда шоу (_id корневого шоу); пусто — команда КВН
+  related_team_ids: [],  // та же команда в других шоу (связь двусторонняя)
+  related_teams: [],     // карточки для показа (от API, не сохраняются)
   status: 'draft',
   logo: null,
   facts: {},  // Гибкая таблица фактов (ключ-значение)
@@ -303,6 +306,7 @@ export default function TeamEditPage() {
       delete teamToSave.show;
       delete teamToSave.url;
       delete teamToSave.full_path;
+      delete teamToSave.related_teams;
 
       // facts_order: фильтруем и дополняем по текущим ключам
       const keys = Object.keys(validFacts);
@@ -480,6 +484,15 @@ export default function TeamEditPage() {
                     Команда КВН — /kvn/teams/{'{slug}'}; команда шоу — /shows/{'{шоу}'}/teams/{'{slug}'}, под названием подпись «Команда шоу «…»».
                     Одна и та же команда в разных шоу — разные страницы.
                   </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Эта команда в КВН и других шоу</Label>
+                  <RelatedTeamsEditor
+                    teamId={isNew ? null : id}
+                    ids={team.related_team_ids || []}
+                    teams={team.related_teams || []}
+                    onChange={(ids, teams) => setTeam(prev => ({ ...prev, related_team_ids: ids, related_teams: teams }))}
+                  />
                 </div>
 
                 {isNew && (

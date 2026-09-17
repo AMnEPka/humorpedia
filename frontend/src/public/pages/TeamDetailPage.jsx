@@ -296,6 +296,25 @@ export default function TeamDetailPage({ showTeamPath = null }) {
             </Card>
           )}
 
+          {/* Та же команда в других шоу (related_team_ids) */}
+          {team.related_teams?.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" /> {team.show_id ? 'Команда в КВН и других шоу' : 'Команда в других шоу'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-1">
+                {team.related_teams.map(rt => (
+                  <Link key={rt.id} to={rt.url} className="block p-2 rounded hover:bg-gray-100 transition-colors">
+                    <div className="font-medium text-sm text-blue-700">{rt.name}</div>
+                    <div className="text-xs text-gray-500">{[teamSubtitle(rt), rt.city].filter(Boolean).join(' · ')}</div>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Team Members */}
           {team.members?.length > 0 && (
             <Card>

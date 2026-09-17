@@ -579,3 +579,15 @@ def test_build_show_team_roster_from_facts_and_leading_names():
                                                    "<h4>История команды</h4><p>Текст.</p>"}])}
     payload, _, _ = build_show_team(site, 2000)
     assert [m["title"] for m in payload["modules"][5:]] == ["Состав команды", "История команды"]
+
+
+def test_same_name_team_matching():
+    from scripts.link_same_name_teams import name_key, pair_evidence
+    assert name_key("Два Капитана - 1955") == name_key("Два капитана-1955")
+    assert name_key("Поживём-увидим!") == name_key("Поживем увидим")
+    assert name_key("Сборная Москвы (МАМИ)") != name_key("Сборная Москвы")
+    show = {"full_path": "liga-gorodov/teams/eto-oni", "facts": {"Город": "Тамбов"},
+            "modules": [{"data": {"content": '<a href="/kvn/teams/eto-oni">КВН</a>'}}]}
+    kvn = {"slug": "eto-oni", "facts": {"Город": "Москва"}, "modules": []}
+    assert pair_evidence(show, kvn) == (["ссылка со страницы шоу"], True)
+    assert pair_evidence({**show, "modules": []}, {**kvn, "facts": {"Город": "Москва, Тамбов"}}) == (["город"], False)

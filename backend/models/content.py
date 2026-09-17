@@ -110,7 +110,7 @@ class Team(BaseContent):
     member_ids: List[str] = Field(default_factory=list)  # Team members (persons)
     show_ids: List[str] = Field(default_factory=list)  # Related shows
     article_ids: List[str] = Field(default_factory=list)  # Related articles
-    related_team_ids: List[str] = Field(default_factory=list)  # Similar teams
+    related_team_ids: List[str] = Field(default_factory=list)  # та же команда в других шоу (КВН ↔ шоу), связь двусторонняя
 
 
 class TeamCreate(BaseModel):
@@ -120,6 +120,7 @@ class TeamCreate(BaseModel):
     name: str
     team_type: str = TeamType.KVN.value
     show_id: Optional[str] = None  # команда шоу; пусто — команда КВН
+    related_team_ids: List[str] = Field(default_factory=list)  # та же команда в других шоу (связь двусторонняя)
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None
@@ -140,6 +141,7 @@ class TeamUpdate(BaseModel):
     name: Optional[str] = None
     team_type: Optional[str] = None
     show_id: Optional[str] = None  # "" — сделать командой КВН
+    related_team_ids: Optional[List[str]] = None  # та же команда в других шоу (связь двусторонняя)
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None
