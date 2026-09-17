@@ -17,6 +17,7 @@ from services.crud import create_content, delete_content, get_by_id_or_slug, lis
 from services.tags import tag_service
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
+from services.show_teams import move_show_teams
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +47,13 @@ async def _check_path_free(db, full_path: str, exclude_id: Optional[str] = None)
     query = {"full_path": full_path}
     if exclude_id:
         query["_id"] = {"$ne": exclude_id}
-    if await db.shows.find_one(query, {"_id": 1}):
+    if await db.shows.find_one(query, {"_id": 1}) or await db.teams.find_one({"full_path": full_path}, {"_id": 1}):
         raise HTTPException(status_code=400, detail=f"Адрес /shows/{full_path} уже занят")
 
 
 async def _move_descendants(db, show_id: str, full_path: str, level: int) -> None:
-    """Пересчитать full_path и level у всех потомков после смены slug или родителя."""
+    """Пересчитать full_path и level у всех потомков (и адреса команд шоу) после смены slug или родителя."""
+    await move_show_teams(db, show_id, full_path)
     async for child in db.shows.find({"parent_id": show_id}, {"slug": 1}):
         child_path = f"{full_path}/{child['slug']}"
         await db.shows.update_one({"_id": child["_id"]}, {"$set": {"full_path": child_path, "level": level + 1}})
@@ -229,4 +231,6 @@ async def delete_show(id: str):
     db = await get_db()
     if await db.shows.find_one({"parent_id": id}, {"_id": 1}):
         raise HTTPException(status_code=400, detail="У шоу есть дочерние страницы — сначала удалите или перенесите их")
+    if await db.teams.find_one({"show_id": id}, {"_id": 1}):
+        raise HTTPException(status_code=400, detail="У шоу есть команды — сначала удалите их или перенесите в другое шоу")
     return await delete_content("shows", id, "Show not found")

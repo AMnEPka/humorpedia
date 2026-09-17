@@ -24,6 +24,9 @@ _MODX_LINK_RE = re.compile(r"^\[\[~(\d+)[^\]]*\]\]$")
 _TAG_RE = re.compile(r"<[^>]+>")
 _EMPTY_TAIL_RE = re.compile(r"(?:\s*<p[^>]*>(?:\s|&nbsp;| |<br\s*/?>)*</p>)+\s*$", re.I)
 _SITE_HOSTS = {"humorpedia.ru", "www.humorpedia.ru", "dev.humorpedia.ru"}
+# вызовы чанков MODX ([[$yandexAds_adder? &num=16]]) и пустые блоки рекламы Яндекса
+_MODX_CHUNK_RE = re.compile(r"<p[^>]*>(?:\s|&nbsp;)*\[\[\$[^\]]*\]\](?:\s|&nbsp;)*</p>\s*|\[\[\$[^\]]*\]\]")
+_AD_DIV_RE = re.compile(r'<div\b[^>]*\bid="yandex_rtb_[^"]*"[^>]*>\s*</div>\s*', re.I)
 
 # Шаблоны MODX → адрес страницы на новом сайте (slug = alias ресурса)
 TEMPLATE_URLS = {
@@ -74,33 +77,37 @@ def image_url(path: str) -> Optional[str]:
 class LinkMapper:
     """Переводит ссылки старого сайта в адреса нового.
 
-    Порядок: ресурс MODX по uri (или `[[~id]]`) → адрес по шаблону (люди, команды);
-    иначе известный паттерн старых URL (routes/redirects.py); иначе абсолютный старый путь —
+    Порядок: ресурс MODX по uri (или `[[~id]]`) → адрес уже перенесённой страницы → адрес по разделу
+    (url_builders: шоу, команды шоу) → адрес по шаблону (люди, команды КВН); ресурса нет — path_builders
+    (переехавшие страницы), известный паттерн старых URL (routes/redirects.py), иначе абсолютный старый путь —
     его разрешит поиск редиректов, когда страница появится.
     """
 
     def __init__(self, site: ModxSite, pattern_redirect: Optional[Callable[[str], Optional[str]]] = None,
                  known_urls: Optional[Dict[int, str]] = None,
-                 url_builders: Optional[List[Callable[[dict], Optional[str]]]] = None):
+                 url_builders: Optional[List[Callable[[dict], Optional[str]]]] = None,
+                 path_builders: Optional[List[Callable[[str], Optional[str]]]] = None):
         self.site = site
         self.pattern_redirect = pattern_redirect
         # id ресурса MODX → адрес уже перенесённой страницы (документы с old_id)
         self.known_urls = known_urls or {}
         # адреса по разделам старого сайта для ещё не перенесённых страниц (например, шоу)
         self.url_builders = url_builders or []
+        # адрес по старому пути, которого нет среди ресурсов дампа (страница переехала)
+        self.path_builders = path_builders or []
         self.unresolved: List[str] = []
 
     def resource_url(self, resource: dict) -> Optional[str]:
         known = self.known_urls.get(resource.get("id"))
         if known:
             return known
-        template_url = TEMPLATE_URLS.get(resource.get("template"))
-        if template_url and resource.get("alias"):
-            return template_url.format(alias=resource["alias"])
-        for build in self.url_builders:
+        for build in self.url_builders:  # раньше шаблонов: у команд шоу шаблон тоже «Команда»
             url = build(resource)
             if url:
                 return url
+        template_url = TEMPLATE_URLS.get(resource.get("template"))
+        if template_url and resource.get("alias"):
+            return template_url.format(alias=resource["alias"])
         return None
 
     def map(self, href: str) -> str:
@@ -132,6 +139,11 @@ class LinkMapper:
             if url:
                 return url + suffix
         old_path = "/" + path.rstrip("/")
+        if not resource:
+            for build in self.path_builders:
+                url = build(path)
+                if url:
+                    return url + suffix
         if self.pattern_redirect:
             new_path = self.pattern_redirect(old_path)
             if new_path:
@@ -158,8 +170,24 @@ def clean_html(value: str, mapper: Optional[LinkMapper] = None) -> str:
     text = decode_entities(text)
     if mapper is not None:
         text = _ATTR_RE.sub(lambda m: m.group(1) + m.group(2) + mapper.map(html_lib.unescape(m.group(3))) + m.group(2), text)
+    text = _AD_DIV_RE.sub("", _MODX_CHUNK_RE.sub("", text))
     text = _EMPTY_TAIL_RE.sub("", text)
     return text.strip()
+
+
+_BR = "\x00br\x00"
+
+
+def _join_lines(cell: str) -> str:
+    """Строки клетки таблицы (через <br>) → одна строка через запятую («Победа (2019в)<br>Победа (2019о)»,
+    «Москва, Курск<br>Омск»). Перенос внутри фразы — пробел: следующая строка с маленькой буквы или цифры
+    («19 апреля<br>1991 года») или предыдущая кончается знаком препинания."""
+    lines = [plain_text(part) for part in cell.split(_BR)]
+    out = ""
+    for line in (l for l in lines if l):
+        joined_phrase = not line[0].isupper() or out[-1:] in (",", ";", ":", "—", "–", "-")
+        out += line if not out else (" " if joined_phrase else ", ") + line
+    return out
 
 
 class _TableParser(HTMLParser):
@@ -174,8 +202,9 @@ class _TableParser(HTMLParser):
             self._row = []
         elif tag in ("td", "th") and self._row is not None:
             self._cell = []
-        elif tag == "br" and self._cell is not None:
-            self._cell.append(" ")
+        elif tag in ("br", "p", "div", "li") and self._cell is not None:
+            # новая строка клетки: <br> или следующий абзац
+            self._cell.append(_BR)
 
     def handle_endtag(self, tag):
         if tag in ("td", "th") and self._row is not None and self._cell is not None:
@@ -208,7 +237,7 @@ def parse_facts_table(value: str) -> List[Tuple[str, str]]:
     facts: List[Tuple[str, str]] = []
     seen = set()
     for row in parser.rows:
-        cells = [plain_text(c) for c in row]
+        cells = [_join_lines(c) for c in row]
         if len(cells) < 2 or not cells[0] or not cells[1] or cells[0] in seen:
             continue
         seen.add(cells[0])
@@ -219,21 +248,86 @@ def parse_facts_table(value: str) -> List[Tuple[str, str]]:
 # ─── Разбор длинных страниц: разделы, спойлеры, таблицы ─────────────────────
 
 _DETAILS_RE = re.compile(r"<details\b[^>]*>\s*(?:<summary\b[^>]*>(.*?)</summary>)?(.*?)</details>", re.I | re.S)
-_HEADING_RE = re.compile(r"<h3\b[^>]*>(.*?)</h3>", re.I | re.S)
 _TABLE_RE = re.compile(r"<table\b.*?</table>", re.I | re.S)
+_VOID_TAGS = {"br", "img", "hr", "input", "meta", "link", "col", "source", "wbr", "area", "base", "embed", "param", "track"}
 
 
-def split_by_headings(html: str) -> List[Tuple[str, str]]:
-    """HTML → [(заголовок h3, содержимое до следующего h3)]; текст до первого заголовка — с пустым заголовком."""
+def split_by_headings(html: str, tag: str = "h3") -> List[Tuple[str, str]]:
+    """HTML → [(заголовок, содержимое до следующего заголовка того же уровня)]; текст до первого — с пустым заголовком.
+    Заголовок бывает внутри обёртки <div> — части выравниваются balance_html."""
+    heading_re = re.compile(rf"<{tag}\b[^>]*>(.*?)</{tag}>", re.I | re.S)
     parts: List[Tuple[str, str]] = []
-    matches = list(_HEADING_RE.finditer(html or ""))
+    matches = list(heading_re.finditer(html or ""))
     intro = (html or "")[:matches[0].start()] if matches else (html or "")
     if not is_blank_html(intro):
-        parts.append(("", intro.strip()))
+        parts.append(("", balance_html(intro.strip())))
     for i, m in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else len(html)
-        parts.append((plain_text(m.group(1)), html[m.end():end].strip()))
+        parts.append((plain_text(m.group(1)), balance_html(html[m.end():end].strip())))
     return parts
+
+
+def first_heading(html: str) -> Optional[Tuple[str, str]]:
+    """Если HTML начинается с заголовка h2–h4 — (тег, текст заголовка)."""
+    m = re.match(r"\s*(?:<div[^>]*>\s*)?<(h[234])\b[^>]*>(.*?)</\1>", html or "", re.I | re.S)
+    return (m.group(1).lower(), plain_text(m.group(2))) if m else None
+
+
+class _Balancer(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self.out: List[str] = []
+        self.stack: List[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        self.out.append(self.get_starttag_text())
+        if tag not in _VOID_TAGS:
+            self.stack.append(tag)
+
+    def handle_startendtag(self, tag, attrs):
+        self.out.append(self.get_starttag_text())
+
+    def handle_endtag(self, tag):
+        if tag in self.stack:  # закрыть и незакрытые вложенные
+            while self.stack:
+                open_tag = self.stack.pop()
+                self.out.append(f"</{open_tag}>")
+                if open_tag == tag:
+                    break
+        # закрывающий тег без открывающего — отбросить
+
+    def handle_data(self, data):
+        self.out.append(data)
+
+    def handle_entityref(self, name):
+        self.out.append(f"&{name};")
+
+    def handle_charref(self, name):
+        self.out.append(f"&#{name};")
+
+    def handle_comment(self, data):
+        pass
+
+
+def balance_html(html: str) -> str:
+    """Фрагмент HTML после разрезания: убрать лишние закрывающие теги, закрыть незакрытые."""
+    if not html or ("<" not in html):
+        return html or ""
+    parser = _Balancer()
+    parser.feed(html)
+    parser.close()
+    out = "".join(parser.out) + "".join(f"</{t}>" for t in reversed(parser.stack))
+    out = re.sub(r"<(div|p|span)\b[^>]*>(?:\s|&nbsp;)*</\1>", "", out, flags=re.I)
+    return out.strip()
+
+
+def fact_cell_html(table_html: str, key: str) -> Optional[str]:
+    """HTML значения факта (второй клетки строки с ключом key) — например, список «Состав» со ссылками."""
+    for row in re.findall(r"<tr\b[^>]*>(.*?)</tr>", table_html or "", re.I | re.S):
+        cells = re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", row, re.I | re.S)
+        if len(cells) >= 2 and plain_text(cells[0]) == key:
+            return cells[1].strip()
+    return None
 
 
 def extract_details(html: str) -> Tuple[str, List[Tuple[str, str]]]:
@@ -247,7 +341,7 @@ def table_rows(table_html: str) -> Tuple[List[str], List[List[str]]]:
     parser = _TableParser()
     parser.feed(table_html)
     parser.close()
-    rows = [[plain_text(c) for c in row] for row in parser.rows]
+    rows = [[plain_text(c.replace(_BR, " ")) for c in row] for row in parser.rows]
     headers: List[str] = []
     if rows and re.search(r"<th\b", table_html, re.I):
         headers = rows.pop(0)

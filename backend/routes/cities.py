@@ -11,6 +11,7 @@ from models.base import ContentStatus
 from models.city import City, CityCreate, CityUpdate
 from utils.database import get_db
 from services.tags import tag_service
+from services.show_teams import attach_show_info
 
 router = APIRouter(prefix="/cities", tags=["cities"], dependencies=[Depends(require_editor_on_write)])
 
@@ -227,6 +228,7 @@ async def get_city_related_teams(
         {"_id": {"$in": team_ids}},
         {"modules": 0}
     ).limit(limit).to_list(limit)
+    await attach_show_info(db, teams)
     
     return {"items": teams, "total": len(teams)}
 

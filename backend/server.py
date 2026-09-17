@@ -119,7 +119,12 @@ async def create_indexes(db):
         await _ensure_index(db.people, "old_urls")
         
         # Teams indexes
-        await _ensure_index(db.teams, "slug", unique=True)
+        # slug уникален в пределах шоу (у команд КВН show_id пустой); адрес команды шоу — full_path
+        await _drop_unique_index(db.teams, "slug_1")
+        await _ensure_index(db.teams, "slug")
+        await _ensure_index(db.teams, [("show_id", 1), ("slug", 1)], unique=True, name="show_id_1_slug_1")
+        await _ensure_index(db.teams, "full_path", unique=True,
+                            partialFilterExpression={"full_path": {"$type": "string"}})
         await _ensure_index(db.teams, "id", unique=True, sparse=True)
         await _ensure_index(db.teams, "name")
         await _ensure_index(db.teams, "team_type")

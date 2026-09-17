@@ -1,3 +1,5 @@
+import { teamUrl } from '@/utils/teams';
+
 // Общие подписи для турниров, сезонов и составов (перекрёстные ссылки).
 
 const STAGE_RESULT = {
@@ -49,11 +51,9 @@ export function pagePath(path) {
   return path.startsWith('/') ? path : `/${path}`;
 }
 
-// Страница команды. Сейчас публичный маршрут есть только у команд КВН;
-// для команд других шоу маршрут появится вместе с их разделами.
+// Страница команды: КВН — /kvn/teams/{slug}, команда шоу — /shows/{путь шоу}/teams/{slug}
 export function teamHref(team) {
-  if (!team?.slug) return null;
-  return `/kvn/teams/${team.slug}`;
+  return teamUrl(team);
 }
 
 export function personHref(person) {

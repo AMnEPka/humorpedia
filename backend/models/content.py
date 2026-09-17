@@ -81,11 +81,14 @@ class PersonUpdate(BaseModel):
 # === TEAM ===
 
 class Team(BaseContent):
-    """Team page (universal for KVN, Liga Smeha, Improv, etc.)"""
+    """Команда: КВН (адрес /kvn/teams/{slug}) или команда шоу (адрес /shows/{full_path}, см. services/show_teams.py)"""
     content_type: ContentType = ContentType.TEAM
-    
-    # Team type for filtering
-    team_type: TeamType = TeamType.KVN
+
+    # «kvn» или slug корневого шоу — для фильтров; у команды шоу вычисляется по show_id
+    team_type: str = TeamType.KVN.value
+    # Команда шоу: _id шоу и адрес «{путь шоу}/teams/{slug}»; у команд КВН — пусто
+    show_id: Optional[str] = None
+    full_path: Optional[str] = None
     
     # Basic info
     name: str
@@ -115,7 +118,8 @@ class TeamCreate(BaseModel):
     title: str
     slug: str
     name: str
-    team_type: TeamType = TeamType.KVN
+    team_type: str = TeamType.KVN.value
+    show_id: Optional[str] = None  # команда шоу; пусто — команда КВН
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None
@@ -134,7 +138,8 @@ class TeamUpdate(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
     name: Optional[str] = None
-    team_type: Optional[TeamType] = None
+    team_type: Optional[str] = None
+    show_id: Optional[str] = None  # "" — сделать командой КВН
     logo: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None

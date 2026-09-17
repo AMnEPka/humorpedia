@@ -17,6 +17,7 @@ import {
   addAgeToDate
 } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
+import { teamUrl } from '@/utils/teams';
 import { orderedFacts, personPhotoUrl } from '@/utils/media';
 
 // Table of Contents component
@@ -355,7 +356,7 @@ export default function PersonDetailPage() {
                   {person.teams.map((team, i) => (
                     <Link 
                       key={i} 
-                      to={`/kvn/teams/${team.slug}`}
+                      to={teamUrl(team)}
                       className="block p-2 rounded hover:bg-gray-100 transition-colors"
                     >
                       {team.title || team.name}

@@ -9,12 +9,14 @@ from services.memberships import (
     SOURCE_MANUAL, STATUS_CURRENT, STATUS_FORMER, import_all_rosters, import_team_rosters,
     load_person_lookup, name_key, now_iso, person_keys,
 )
+from services.show_teams import attach_show_info, team_id_or_kvn_slug_query, team_url
 from utils.auth import require_admin, require_editor_on_write
 from utils.database import get_db
 
 router = APIRouter(prefix="/competitions", tags=["memberships"], dependencies=[Depends(require_editor_on_write)])
 
-_TEAM_FIELDS = {"_id": 1, "slug": 1, "name": 1, "title": 1, "team_type": 1, "logo": 1, "status": 1}
+_TEAM_FIELDS = {"_id": 1, "slug": 1, "name": 1, "title": 1, "team_type": 1, "logo": 1, "status": 1,
+                "show_id": 1, "full_path": 1}
 _PERSON_FIELDS = {"_id": 1, "slug": 1, "title": 1, "full_name": 1, "photo": 1, "status": 1}
 
 
@@ -35,7 +37,7 @@ class MembershipIn(BaseModel):
 
 
 async def _find_team(db, id_or_slug: str) -> dict:
-    team = await db.teams.find_one({"$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]}, {**_TEAM_FIELDS, "roster_import": 1})
+    team = await db.teams.find_one(team_id_or_kvn_slug_query(id_or_slug), {**_TEAM_FIELDS, "roster_import": 1})
     if not team:
         raise HTTPException(status_code=404, detail="Команда не найдена")
     return team
@@ -54,6 +56,7 @@ def _team_card(team: dict) -> dict:
     return {
         "id": team["_id"], "slug": team.get("slug"), "name": team.get("name") or team.get("title"),
         "team_type": team.get("team_type"), "logo": team.get("logo"), "status": team.get("status"),
+        "url": team_url(team), "show": team.get("show"),
     }
 
 
@@ -151,7 +154,7 @@ async def import_rosters(team: Optional[str] = Query(None, description="id ил�
     """Разобрать текстовые блоки «Состав команды» (всех команд или одной) в записи составов."""
     db = await get_db()
     if team:
-        found = await db.teams.find_one({"$or": [{"_id": team}, {"slug": team}]})
+        found = await db.teams.find_one(team_id_or_kvn_slug_query(team))
         if not found:
             raise HTTPException(status_code=404, detail="Команда не найдена")
         return await import_team_rosters(db, found)
@@ -182,6 +185,7 @@ async def person_career(id_or_slug: str):
     teams = {t["_id"]: t for t in await db.teams.find(
         {"_id": {"$in": list({m["team_id"] for m in memberships})}}, _TEAM_FIELDS
     ).to_list(None)}
+    await attach_show_info(db, teams.values())
     team_seasons = await db.participations.find(
         {"team_id": {"$in": list(teams)}, "kind": "season", "season_status": {"$ne": "draft"}}
     ).sort([("season_year", -1)]).to_list(None)

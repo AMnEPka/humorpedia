@@ -26,6 +26,7 @@ from typing import Any, Iterable, Optional
 from bson import ObjectId
 
 from services.memberships import PersonLookup, load_person_lookup, name_key
+from services.show_teams import KVN_ONLY
 
 logger = logging.getLogger(__name__)
 
@@ -605,7 +606,7 @@ def page_filter(page_id: str) -> dict:
 
 
 async def load_team_lookup(db) -> TeamLookup:
-    teams = await db.teams.find({}, {"_id": 1, "slug": 1}).to_list(None)
+    teams = await db.teams.find(KVN_ONLY, {"_id": 1, "slug": 1}).to_list(None)  # сезоны КВН ссылаются на команды КВН
     return TeamLookup(teams)
 
 

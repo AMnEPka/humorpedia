@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import publicApi from '../utils/api';
 import { usePageTitle } from '@/utils/pageTitle';
+import { teamUrl } from '@/utils/teams';
 
 const contentTypeLabels = {
   person: 'Люди',
@@ -21,7 +22,7 @@ const contentTypeLabels = {
 const getItemPath = (item, type) => {
   if (type === 'section') return item.full_path;
   if (type === 'person') return `/people/${item.slug || item._id}`;
-  if (type === 'team') return `/kvn/teams/${item.slug || item._id}`;
+  if (type === 'team') return teamUrl(item) || `/kvn/teams/${item._id}`;
   if (type === 'show') return `/shows/${item.slug || item._id}`;
   if (type === 'article') return `/articles/${item.slug || item._id}`;
   if (type === 'news') return `/news/${item.slug || item._id}`;

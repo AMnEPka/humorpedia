@@ -7,6 +7,7 @@ from models.competition import SeasonUpdate
 from services.competitions import (
     SHOW_KVN, apply_season_update, load_team_lookup, save_season, sync_kvn_pages, unresolved_participants,
 )
+from services.show_teams import team_id_or_kvn_slug_query
 from utils.auth import require_admin, require_editor_on_write
 from utils.database import get_db
 
@@ -132,7 +133,7 @@ async def team_participations(id_or_slug: str, games: bool = Query(False, descri
     при games=true — ещё и результаты по играм.
     """
     db = await get_db()
-    team = await db.teams.find_one({"$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]}, {"_id": 1, "slug": 1, "name": 1, "title": 1})
+    team = await db.teams.find_one(team_id_or_kvn_slug_query(id_or_slug), {"_id": 1, "slug": 1, "name": 1, "title": 1})
     if not team:
         raise HTTPException(status_code=404, detail="Команда не найдена")
 

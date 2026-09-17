@@ -11,6 +11,8 @@ import { usePageTitle } from '@/utils/pageTitle';
 import { mediaUrl, orderedFacts } from '@/utils/media';
 import ContentTable from '../components/ContentTable';
 import CollapsibleCard from '../components/CollapsibleCard';
+import TeamDetailPage from './TeamDetailPage';
+import { isShowTeamPath } from '@/utils/teams';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
@@ -236,17 +238,25 @@ function ModuleRenderer({ module }) {
 
 export default function ShowDetailPage() {
   const { slug, parentSlug, childSlug, grandchildSlug, greatGrandchildSlug } = useParams();
+  // Собираем полный путь из всех параметров
+  // Если есть parentSlug, значит это вложенный путь
+  const fullPath = parentSlug
+    ? [parentSlug, childSlug, grandchildSlug, greatGrandchildSlug].filter(Boolean).join('/')
+    : slug;
+
+  // /shows/{шоу}/teams/{slug} — страница команды шоу
+  if (isShowTeamPath(fullPath)) {
+    return <TeamDetailPage showTeamPath={fullPath} />;
+  }
+  return <ShowPage fullPath={fullPath} />;
+}
+
+function ShowPage({ fullPath }) {
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   usePageTitle(show?.title || (loading ? 'Шоу' : (error ? 'Шоу не найдено' : 'Шоу')));
-
-  // Собираем полный путь из всех параметров
-  // Если есть parentSlug, значит это вложенный путь
-  const fullPath = parentSlug 
-    ? [parentSlug, childSlug, grandchildSlug, greatGrandchildSlug].filter(Boolean).join('/')
-    : slug;
 
   useEffect(() => {
     if (!fullPath) {

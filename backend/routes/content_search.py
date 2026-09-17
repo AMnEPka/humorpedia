@@ -13,6 +13,7 @@ from services.crud import (
     generate_unique_slug, convert_objectids_to_strings,
 )
 from services.tags import tag_service
+from services.show_teams import attach_show_info, team_id_or_kvn_slug_query, team_url
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +49,9 @@ async def search_content_for_links(
         'team': {
             'collection': db.teams,
             'search_fields': ["name", "title", "slug"],
-            'projection': {"name": 1, "title": 1, "slug": 1},
+            'projection': {"name": 1, "title": 1, "slug": 1, "full_path": 1},
             'title_fn': lambda d: d.get("name") or d.get("title"),
-            'url_fn': lambda d: f"/kvn/teams/{d.get('slug')}",
+            'url_fn': team_url,
         },
         'show': {
             'collection': db.shows,
@@ -110,7 +111,10 @@ async def resolve_content_link(content_type: str, id_or_slug: str):
         raise HTTPException(status_code=404, detail="Unknown content type")
 
     collection, url_prefix = collection_map[content_type]
-    query = {"$or": [{"_id": id_or_slug}, {"id": id_or_slug}, {"slug": id_or_slug}]}
+    if content_type == 'team':
+        query = team_id_or_kvn_slug_query(id_or_slug)
+    else:
+        query = {"$or": [{"_id": id_or_slug}, {"id": id_or_slug}, {"slug": id_or_slug}]}
     doc = await collection.find_one(query)
 
     if not doc:
@@ -121,6 +125,8 @@ async def resolve_content_link(content_type: str, id_or_slug: str):
         url = f"/{full_path.lstrip('/')}" if full_path else f"{url_prefix}{doc.get('slug')}"
     elif content_type == 'show':
         url = f"{url_prefix}{doc.get('full_path') or doc.get('slug')}"
+    elif content_type == 'team':
+        url = team_url(doc)
     else:
         url = f"{url_prefix}{doc.get('slug')}"
 
@@ -176,6 +182,8 @@ async def search_all(
         
         cursor = collection.find(query, {"modules": 0}).limit(limit)
         items = await cursor.to_list(limit)
+        if content_type == "team":
+            await attach_show_info(db, items)
         if items:
             results[content_type] = items
 
@@ -211,16 +219,29 @@ async def search_autocomplete(
             "$text": {"$search": q}
         }
         
-        cursor = collection.find(query, {"_id": 1, field: 1, "slug": 1, "full_path": 1}).limit(limit)
+        cursor = collection.find(query, {"_id": 1, field: 1, "slug": 1, "full_path": 1, "show_id": 1}).limit(limit)
         items = await cursor.to_list(limit)
 
+        if content_type == "team":
+            await attach_show_info(db, items)
         for item in items:
+            if content_type == "section":
+                path = item.get("full_path")
+            elif content_type == "team":
+                path = item["url"]
+            elif content_type == "person":
+                path = f"/people/{item.get('slug', item['_id'])}"
+            elif content_type == "show":
+                path = f"/shows/{item.get('full_path') or item.get('slug', item['_id'])}"
+            else:
+                path = f"/{content_type}s/{item.get('slug', item['_id'])}"
             suggestions.append({
                 "id": item["_id"],
                 "title": item.get(field, item.get("title", "")),
                 "type": content_type,
                 "slug": item.get("slug"),
-                "path": item.get("full_path") if content_type == "section" else f"/{content_type}s/{item.get('slug', item['_id'])}"
+                "path": path,
+                **({"show": item["show"]} if item.get("show") else {}),
             })
 
         if len(suggestions) >= limit:
@@ -260,6 +281,8 @@ async def search_by_tag(
         if count > 0:
             cursor = collection.find(query, {"modules": 0}).sort("created_at", -1).limit(limit)
             items = await cursor.to_list(limit)
+            if content_type == "team":
+                await attach_show_info(db, items)
             results[content_type] = {"count": count, "items": items}
 
     return {"tag": tag, "total": total_count, "results": results, "skip": skip, "limit": limit}

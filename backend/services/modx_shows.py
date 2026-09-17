@@ -3,7 +3,8 @@
 
 Страницы раздела — шаблоны «Шоу» и «Вики»; вложенные (сезоны, подпроекты, разделы) становятся дочерними
 шоу с адресом /shows/{путь из alias}. Команды шоу (шаблон «Команда» и страницы внутри «Команды …»)
-сюда не входят — это отдельные сущности коллекции teams.
+сюда не входят — это отдельные сущности коллекции teams (services/modx_show_teams.py); страница-список
+«Команды …» получает адрес /shows/{шоу}/teams, команды — /shows/{шоу}/teams/{slug}.
 
 `build_show(site, resource_id, mapper)` → (payload для POST /api/content/shows, extra, warnings).
 
@@ -27,6 +28,7 @@ from services.modx_content import (
 )
 from services.modx_dump import ModxSite, json_list
 from services.modx_people import SOCIAL_FIELDS, TEMPLATE_PERSON, _module, _timeline_events, _timestamp, sidebar_modules
+from services.show_teams import TEAMS_SEGMENT
 
 SECTION_URI = "show/"
 TEMPLATE_TEAM = 21
@@ -95,9 +97,31 @@ def page_slug(resource: dict) -> str:
     return last or (resource.get("alias") or "").strip("/")
 
 
+def is_show_team_page(site: ModxSite, resource: dict, root_id: int) -> bool:
+    """Страница команды шоу: внутри раздела «Шоу», но не страница шоу."""
+    return (not resource.get("deleted") and show_chain(site, resource, root_id) is not None
+            and not is_show_page(site, resource, root_id))
+
+
+def is_teams_list_page(site: ModxSite, resource: dict, root_id: int) -> bool:
+    """Страница-список «Команды …», внутри которой лежат страницы команд."""
+    if not plain_text(resource.get("pagetitle") or "").startswith("Команды"):
+        return False
+    cache = site.__dict__.setdefault("_children_cache", {})
+    if not cache:
+        for r in site.resources.values():
+            cache.setdefault(r.get("parent"), []).append(r)
+    return any(is_show_team_page(site, child, root_id) for child in cache.get(resource["id"], []))
+
+
+def show_slug(site: ModxSite, resource: dict, root_id: int) -> str:
+    """slug страницы шоу на новом сайте: у списка «Команды …» — «teams» (как у команд КВН), иначе page_slug."""
+    return TEAMS_SEGMENT if is_teams_list_page(site, resource, root_id) else page_slug(resource)
+
+
 def show_path(site: ModxSite, resource: dict, root_id: int) -> Optional[str]:
     chain = show_chain(site, resource, root_id)
-    return "/".join(page_slug(r) for r in chain) if chain else None
+    return "/".join(show_slug(site, r, root_id) for r in chain) if chain else None
 
 
 def show_url_builder(site: ModxSite):
@@ -330,7 +354,7 @@ def build_show(site: ModxSite, resource_id: int, mapper: Optional[LinkMapper] = 
     payload = {
         "title": title,
         "name": title,
-        "slug": page_slug(resource),
+        "slug": show_slug(site, resource, section_id(site)),
         "status": "published" if published else "draft",
         "poster": poster,
         "facts": facts,

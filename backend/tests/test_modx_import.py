@@ -449,3 +449,132 @@ def test_team_like_wiki_pages_are_not_shows():
     site.tv_values[1659] = {"config": json.dumps([{"MIGX_formname": "info",
                                                    "table": "<table><tr><td>Год основания</td><td>2003</td></tr></table>"}])}
     assert is_show_page(site, site.resources[1659], 33)
+
+
+# ─── Команды шоу ─────────────────────────────────────────────────────────────
+
+from models.content import TeamCreate  # noqa: E402
+from services.modx_content import balance_html, fact_cell_html, first_heading  # noqa: E402
+from services.modx_show_teams import (  # noqa: E402
+    build_show_team, link_builders, misplaced_show_team_builder, show_team_pages, split_leading_roster, team_name,
+)
+from services.show_teams import split_team_path, team_url  # noqa: E402
+
+
+def show_teams_site():
+    site = shows_site()
+    rows = [
+        (1663, 25, 33, "zvezdy-ntv", "zvezdy-ntv/", "Звёзды на НТВ", ""),
+        (1775, 19, 1663, "team", "zvezdy-ntv/team/", "Команды шоу «Звёзды»", ""),
+        (2005, 21, 1775, "soyuz", "zvezdy-ntv/team/soyuz.html", "Союз (Звёзды)", ""),
+        (1072, 21, 77, "soyuz", "kvn/team/soyuz.html", "Союз", ""),
+        (2434, 19, 1771, "shablon", "liga-gorodov/team/shablon.html", "Шаблон команды Лиги Городов", ""),
+    ]
+    for rid, template, parent, alias, uri, title, longtitle in rows:
+        site.resources[rid] = {"id": rid, "template": template, "parent": parent, "alias": alias, "uri": uri,
+                               "pagetitle": title, "longtitle": longtitle, "published": 1, "deleted": 0,
+                               "menuindex": 1, "description": "", "keywords": "", "rating": 0, "votes": 0,
+                               "createdon": 1713441486, "publishedon": 0}
+        site.by_uri[uri.strip("/")] = rid
+    site.resources[1905]["published"] = 0
+    return site
+
+
+def test_team_urls_and_paths():
+    assert team_url({"slug": "dals"}) == "/kvn/teams/dals"
+    assert team_url({"slug": "soyuz", "full_path": "zvezdy-ntv/teams/soyuz"}) == "/shows/zvezdy-ntv/teams/soyuz"
+    assert split_team_path("liga-gorodov/teams/eto-oni") == ("liga-gorodov", "eto-oni")
+    assert split_team_path("improv-teams/league/teams") is None
+    assert direct_query("shows/zvezdy-ntv/teams/soyuz") == ("teams", "full_path", "zvezdy-ntv/teams/soyuz")
+    assert direct_query("shows/zvezdy-ntv/teams") == ("shows", "full_path", "zvezdy-ntv/teams")
+
+
+def test_show_team_pages_names_and_links():
+    site = show_teams_site()
+    assert set(show_team_pages(site)) == {1905, 2000, 2005}          # «Шаблон команды …» — не команда
+    assert team_name(site, site.resources[2005]) == "Союз"            # пометка «(Звёзды)» из «Команды шоу «Звёзды»»
+    assert team_name(site, site.resources[2000]) == "Это они"         # «(ЛГ)» из «Команды ЛГ»
+    # страница-список «Команды …» — /teams внутри шоу
+    assert show_path(site, site.resources[1775], 33) == "zvezdy-ntv/teams"
+    mapper = LinkMapper(site, _try_pattern_redirect, {}, *link_builders(site))
+    assert mapper.map("zvezdy-ntv/team/soyuz.html") == "/shows/zvezdy-ntv/teams/soyuz"
+    assert mapper.map("kvn/team/soyuz.html") == "/kvn/teams/soyuz"                     # команда КВН — по шаблону
+    assert mapper.map("improv-teams/baikalskiye.html") == "/shows/improv-teams/teams/baikalskiye"
+    assert mapper.map("zvezdy-ntv/team/") == "/shows/zvezdy-ntv/teams"
+    assert mapper.map("igra/team/soyuz.html") == "/igra/team/soyuz"         # раздела igra среди команд нет
+    assert mapper.map("liga-gorodov/team/soyuz.html") == "/shows/zvezdy-ntv/teams/soyuz"   # переехавшая страница
+    fixer = misplaced_show_team_builder(site, kvn_team_slugs={"soyuz"})
+    assert fixer("kvn/teams/eto-oni-lg") == "/shows/improv-teams/teams/eto-oni-lg"
+    assert fixer("kvn/teams/soyuz") is None                                 # есть команда КВН — ссылка верная
+
+
+def test_html_helpers_for_teams():
+    assert balance_html("<p>a</p></div><div><h4>x</h4>") == "<p>a</p><div><h4>x</h4></div>"
+    assert first_heading('<div><h4 class="a">История</h4></div>') == ("h4", "История")
+    assert first_heading("<p>Текст</p><h3>А</h3>") is None
+    table = "<table><tr><td>Город</td><td>Москва</td></tr><tr><td>Состав</td><td><ul><li>А</li></ul></td></tr></table>"
+    assert fact_cell_html(table, "Состав") == "<ul><li>А</li></ul>"
+    facts = parse_facts_table("<table><tr><td>Сцена</td><td>Победа (2019в)<br />Победа (2019о)</td></tr>"
+                              "<tr><td>Наставники</td><td><p>Светлаков (1)</p><p>Кравец (3)</p></td></tr>"
+                              "<tr><td>Дата</td><td>19 апреля<br />1991 года</td></tr></table>")
+    assert facts == [("Сцена", "Победа (2019в), Победа (2019о)"), ("Наставники", "Светлаков (1), Кравец (3)"),
+                     ("Дата", "19 апреля 1991 года")]
+    roster, rest = split_leading_roster('<div><a href="/people/a">Анна Аа</a></div><p>Борис Бб<br />Вера Вв</p>'
+                                        "<h4>История команды</h4><p>Текст. 2021 год.</p>")
+    assert roster == '<ul>\n<li><a href="/people/a">Анна Аа</a></li>\n<li>Борис Бб</li>\n<li>Вера Вв</li>\n</ul>'
+    assert rest.startswith("<h4>История")
+    assert split_leading_roster("<p>Анна Аа</p><p>Длинный текст о команде.</p>")[0] is None
+
+
+def test_build_show_team_matches_admin_format():
+    site = show_teams_site()
+    info = {"MIGX_formname": "info", "subtitle": "<p>Команда «Союз» – участники шоу.</p>", "content": "",
+            "list_social": json.dumps([{"link": "https://vk.com/soyuz", "name": "vk"}]),
+            "table": "<table><tr><td>Звёзды</td><td>Джиган (1 сезон)<br>Костомаров (2 сезон)</td></tr></table>"}
+    sections = [
+        info,
+        {"MIGX_formname": "timeline", "hide_section": "1", "list_triple": ""},
+        {"MIGX_formname": "text", "title": "Состав",
+         "content": '<ul><li><a href="people/natalya-andreevna.html">Наталья</a></li></ul>'},
+        {"MIGX_formname": "text", "title": "История команды",
+         "content": "<p>Начало.</p><h3>Шоу «Звёзды»</h3><p>Первый сезон.</p><p>[[$yandexAds_adder? &num=16]]</p>"},
+        {"MIGX_formname": "table", "content": "<table><tr><td>Сезон</td></tr></table>"},
+        {"MIGX_formname": "text", "title": "", "content": "<h3>Второй сезон</h3><p>Продолжение.</p>"},
+        {"MIGX_formname": "text", "title": "Союз (Звёзды)", "content": "<h3>Эфиры</h3><p>Выпуски.</p>"},
+    ]
+    site.tv_values[2005] = {"config": json.dumps(sections), "img": "images/igra/soyuz1.jpg"}
+    mapper = LinkMapper(site, _try_pattern_redirect, {}, *link_builders(site))
+    payload, extra, warnings = build_show_team(site, 2005, mapper)
+    TeamCreate(**payload, show_id="show-id")   # формат запроса админки
+    assert payload["title"] == payload["name"] == "Союз" and payload["slug"] == "soyuz"
+    assert payload["facts"] == {"Звёзды": "Джиган (1 сезон), Костомаров (2 сезон)"}
+    assert payload["social_links"] == {"vk": "https://vk.com/soyuz"}
+    assert payload["logo"]["url"] == "/media/imported/images/igra/soyuz1.jpg"
+    assert payload["seo"]["meta_title"] == "Союз — команда шоу «Звёзды на НТВ»"
+    content = [(m["type"], m["title"]) for m in payload["modules"][5:]]
+    assert content == [("text_block", ""), ("text_block", "Состав команды"), ("text_block", "История команды")]
+    history = payload["modules"][7]["data"]["content"]
+    # продолжения раздела: таблица, «Второй сезон» (в разделе уже есть h3), секция с заголовком-названием команды
+    assert "Второй сезон" in history and "<table>" in history and "Эфиры" in history and "yandexAds" not in history
+    assert payload["modules"][6]["data"]["content"] == '<ul><li><a href="/people/natalya-andreevna">Наталья</a></li></ul>'
+    assert extra["old_id"] == 2005 and extra["old_urls"] == ["/zvezdy-ntv/team/soyuz.html"]
+    assert warnings == []
+
+
+def test_build_show_team_roster_from_facts_and_leading_names():
+    site = show_teams_site()
+    site.tv_values[1905] = {"config": json.dumps([
+        {"MIGX_formname": "info", "table": "<table><tr><td>Город</td><td>Иркутск</td></tr>"
+                                           "<tr><td>Состав</td><td><ul><li>Анна Аа</li></ul></td></tr></table>"},
+        {"MIGX_formname": "text", "title": "",
+         "content": "<h3>История команды</h3><p>И.</p><h3>Официальные игры</h3><p>О.</p>"},
+    ])}
+    payload, _, warnings = build_show_team(site, 1905)
+    assert payload["facts"] == {"Город": "Иркутск"} and payload["status"] == "draft"
+    assert [m["title"] for m in payload["modules"][5:]] == ["Состав команды", "История команды", "Официальные игры"]
+    assert "нет фото" in warnings
+    site.tv_values[2000] = {"config": json.dumps([{"MIGX_formname": "text", "title": "Это они (ЛГ)", "content":
+                                                   "<div>Анна Аа</div><div>Борис Бб</div><div>Вера Вв</div>"
+                                                   "<h4>История команды</h4><p>Текст.</p>"}])}
+    payload, _, _ = build_show_team(site, 2000)
+    assert [m["title"] for m in payload["modules"][5:]] == ["Состав команды", "История команды"]

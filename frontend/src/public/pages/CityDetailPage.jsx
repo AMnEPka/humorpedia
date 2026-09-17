@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import ModuleRenderer from '../components/ModuleRenderer';
 import publicApi from '../utils/api';
 import { usePageTitle } from '@/utils/pageTitle';
+import { teamUrl } from '@/utils/teams';
 
 export default function CityDetailPage() {
   const { slug } = useParams();
@@ -225,7 +226,7 @@ export default function CityDetailPage() {
                 {relatedTeams.slice(0, 10).map((team) => (
                   <Link
                     key={team._id}
-                    to={`/kvn/teams/${team.slug}`}
+                    to={teamUrl(team)}
                     className="flex items-center gap-3 hover:bg-gray-50 -mx-2 px-2 py-1 rounded"
                   >
                     {team.logo?.thumbnail ? (

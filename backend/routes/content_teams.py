@@ -15,8 +15,8 @@ from utils.database import get_db
 from utils.slugify import generate_slug
 from utils.team_matcher import normalize_team_name
 from services.crud import (
-    check_slug_unique, create_content, update_content,
-    delete_content, get_by_id_or_slug,
+    create_content, update_content,
+    delete_content,
     check_primary_tag_duplicate,
 )
 from services.tags import tag_service
@@ -25,6 +25,10 @@ from services.cache import cache_service
 from services.views_counter import views_counter
 from services.competitions import sync_kvn_pages
 from services.memberships import import_team_rosters
+from services.show_teams import (
+    KVN_ONLY, attach_show_info, check_team_slug_free, get_team_show, kvn_team_query,
+    split_team_path, team_id_or_kvn_slug_query, team_placement,
+)
 from utils.auth import get_current_user, require_admin
 
 logger = logging.getLogger(__name__)
@@ -53,14 +57,14 @@ async def generate_unique_team_slug(base_slug: str) -> str:
     collection = db.teams
 
     slug = base_slug
-    existing = await collection.find_one({"slug": slug})
+    existing = await collection.find_one(kvn_team_query(slug))
     if not existing:
         return slug
 
     counter = 2
     while True:
         slug = f"{base_slug}-{counter}"
-        existing = await collection.find_one({"slug": slug})
+        existing = await collection.find_one(kvn_team_query(slug))
         if not existing:
             return slug
         counter += 1
@@ -302,9 +306,12 @@ def _clone_modules_with_new_ids(modules: list) -> list:
     return cloned
 
 
-def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -> tuple[dict, list[str], list[dict]]:
+def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str],
+                                 kvn: bool = True) -> tuple[dict, list[str], list[dict]]:
     """
     Ensure KVN team has baseline facts + modules scaffold.
+    У команды шоу (kvn=False) — только системные модули: факты «Год основания»/«Капитан», вступление
+    и пустые разделы не добавляются (у команд шоу капитана может не быть).
     Returns: (facts, facts_order, modules_as_dicts)
     """
     facts = dict(doc.get("facts") or {})
@@ -319,14 +326,14 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
         del facts["city"]
 
     # Required visible facts with placeholders
-    if "Год основания" not in facts or not str(facts.get("Год основания") or "").strip():
+    if kvn and ("Год основания" not in facts or not str(facts.get("Год основания") or "").strip()):
         facts["Год основания"] = "—"
-    if "Капитан" not in facts or not str(facts.get("Капитан") or "").strip():
+    if kvn and ("Капитан" not in facts or not str(facts.get("Капитан") or "").strip()):
         facts["Капитан"] = "—"
 
     # Facts order: prefer explicit order if present, otherwise seed with desired keys
     current_order = list(doc.get("facts_order") or [])
-    desired_prefix = ["Город", "Год основания", "Капитан"]
+    desired_prefix = ["Город", "Год основания", "Капитан"] if kvn else []
     ordered = [k for k in desired_prefix if k in facts]
     # Keep any existing order items that still exist and aren't already included
     for k in current_order:
@@ -371,6 +378,9 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
         add_module(PageModule(type=ModuleType.SOCIAL_LINKS, order=4, visible=True, data={"title": "Ссылки"}))
 
     # Content modules
+    if not kvn:
+        return facts, ordered, _normalized_orders(modules)
+
     # Intro paragraph text block (no title)
     has_intro = any(
         isinstance(m, dict)
@@ -397,15 +407,18 @@ def _ensure_team_scaffold_fields(doc: dict, *, name: str, city: Optional[str]) -
         if text_block_sig not in existing_signatures:
             add_module(PageModule(type=ModuleType.TEXT_BLOCK, order=base_order + idx, visible=True, data={"title": title, "content": ""}))
 
-    # Normalize orders to be stable
+    return facts, ordered, _normalized_orders(modules)
+
+
+def _normalized_orders(modules: list) -> list[dict]:
+    """Normalize orders to be stable"""
     modules_sorted = sorted(
         [m for m in modules if isinstance(m, dict)],
         key=lambda x: (x.get("order") or 0)
     )
     for i, m in enumerate(modules_sorted):
         m["order"] = i
-
-    return facts, ordered, modules_sorted
+    return modules_sorted
 
 # ---------------------------------------------------------------------------
 #  Bulk operations routes
@@ -419,8 +432,8 @@ async def bulk_check_teams(data: BulkTeamCheckRequest):
     """
     db = await get_db()
 
-    # Load only fields needed for matching
-    cursor = db.teams.find({}, {"_id": 1, "slug": 1, "name": 1, "title": 1, "aliases": 1})
+    # Load only fields needed for matching (массовое добавление — для сезонов КВН, команды шоу не участвуют)
+    cursor = db.teams.find(KVN_ONLY, {"_id": 1, "slug": 1, "name": 1, "title": 1, "aliases": 1})
     existing_teams = await cursor.to_list(length=None)
 
     # Build lookup: normalized_name -> team doc (first wins)
@@ -652,8 +665,11 @@ async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
 
 @router.post("/teams", response_model=dict)
 async def create_team(data: TeamCreate):
-    """Create a new team"""
-    await check_slug_unique("teams", data.slug)
+    """Create a new team (команда шоу — с show_id, адрес /shows/{путь шоу}/teams/{slug})"""
+    db = await get_db()
+    show = await get_team_show(db, data.show_id)
+    await check_team_slug_free(db, data.slug, show)
+    placement = await team_placement(db, show, data.slug)
     
     # Устанавливаем primary_tag по умолчанию, если не задан
     primary_tag = data.primary_tag or data.name or data.title
@@ -683,11 +699,14 @@ async def create_team(data: TeamCreate):
     scaffold_facts, scaffold_order, scaffold_modules = _ensure_team_scaffold_fields(
         {"facts": data.facts or {}, "facts_order": data.facts_order or [], "modules": base_modules_input},
         name=data.name,
-        city=city
+        city=city,
+        kvn=show is None,
     )
-    
+
     team = Team(
-        title=data.title, slug=data.slug, name=data.name, team_type=data.team_type,
+        title=data.title, slug=data.slug, name=data.name,
+        team_type=placement.get("team_type") or data.team_type,
+        show_id=placement["show_id"], full_path=placement["full_path"],
         logo=logo,
         facts=scaffold_facts,
         facts_order=scaffold_order,
@@ -699,7 +718,12 @@ async def create_team(data: TeamCreate):
         status=data.status
     )
     result = await create_content("teams", team, data.tags)
-    
+
+    # Составы: текстовый блок «Состав команды» → записи «человек — команда»
+    created = await db.teams.find_one({"_id": result["id"]})
+    if created:
+        await import_team_rosters(db, created)
+
     # ─── Инвалидация кэша ─────────────────────────────────────────────
     cache_service.invalidate_team(data.slug)
     cache_service.invalidate_team_lists()
@@ -715,11 +739,12 @@ async def list_teams(
     team_type: Optional[str] = None,
     tag: Optional[str] = None,
     search: Optional[str] = None,
-    letter: Optional[str] = None
+    letter: Optional[str] = None,
+    show_id: Optional[str] = Query(None, description="команды шоу (_id шоу)"),
 ):
     """List teams with pagination and filters"""
     # ─── Кэш: проверяем ──────────────────────────────────────────────
-    cache_key = f"tl:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}"
+    cache_key = f"tl:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}:{show_id}"
     cached = cache_service.get_team_list(cache_key)
     if cached is not None:
         return cached
@@ -734,8 +759,11 @@ async def list_teams(
     if team_type == "kvn":
         # Исторически у части команд КВН team_type не заполнен
         conditions.append({"team_type": {"$in": ["kvn", None]}})
+        conditions.append(KVN_ONLY)
     elif team_type:
         conditions.append({"team_type": team_type})
+    if show_id:
+        conditions.append({"show_id": show_id})
 
     # Поиск подстроки (без учёта регистра) по name, title, slug и aliases
     if search and search.strip():
@@ -756,7 +784,8 @@ async def list_teams(
     total = await db.teams.count_documents(query)
     cursor = db.teams.find(query, {"modules": 0}).skip(skip).limit(limit).sort("name", 1)
     items = await cursor.to_list(limit)
-    
+    await attach_show_info(db, items)
+
     result = {
         "items": items,
         "total": total,
@@ -770,11 +799,66 @@ async def list_teams(
     return result
 
 
+async def _find_team(db, id_or_slug: str) -> dict:
+    """По _id (любая команда) или по slug (только команды КВН — slug команд шоу уникален лишь внутри шоу)."""
+    team = await db.teams.find_one(team_id_or_kvn_slug_query(id_or_slug))
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return team
+
+
+async def _add_show_context(db, team: dict) -> dict:
+    """Шоу команды и хлебные крошки (шоу → страница-список «Команды …», если есть)."""
+    await attach_show_info(db, [team])
+    if not team.get("show"):
+        return team
+    crumbs = []
+    fields = {"title": 1, "full_path": 1, "slug": 1, "parent_id": 1}
+    current = await db.shows.find_one({"_id": team["show_id"]}, fields)
+    while current and len(crumbs) < 10:
+        crumbs.insert(0, {"title": current.get("title"), "path": "/shows/" + (current.get("full_path") or current["slug"])})
+        parent_id = current.get("parent_id")
+        current = await db.shows.find_one({"_id": parent_id}, fields) if parent_id else None
+    teams_page = await db.shows.find_one(
+        {"full_path": f"{team['show']['full_path']}/teams", "status": {"$nin": ["draft", "archived"]}},
+        {"title": 1, "full_path": 1},
+    )
+    if teams_page:
+        crumbs.append({"title": teams_page.get("title"), "path": "/shows/" + teams_page["full_path"]})
+    team["breadcrumbs"] = crumbs
+    return team
+
+
+@router.get("/teams/by-path/{path:path}", response_model=dict)
+async def get_team_by_path(path: str):
+    """Команда шоу по адресу: «liga-gorodov/teams/eto-oni» (публичная страница /shows/liga-gorodov/teams/eto-oni)."""
+    path = path.strip("/")
+    if not split_team_path(path):
+        raise HTTPException(status_code=404, detail="Team not found")
+    cache_key = "path:" + path
+    cached = cache_service.get_team(cache_key)
+    if cached is not None:
+        views_counter.increment("teams", cached["_id"])
+        return cached
+    db = await get_db()
+    team = await db.teams.find_one({"full_path": path})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    views_counter.increment("teams", team["_id"])
+    await _add_show_context(db, team)
+    await LinkResolver.resolve_document(team)
+    cache_service.set_team(cache_key, team)
+    return team
+
+
 @router.get("/teams/{id_or_slug}", response_model=dict)
 async def get_team(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get team by ID or slug — чистое чтение, без write-on-read."""
+    db = await get_db()
     if raw:
-        return await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+        team = await _find_team(db, id_or_slug)
+        await attach_show_info(db, [team])
+        return team
 
     # ─── Кэш: проверяем ──────────────────────────────────────────────
     cached = cache_service.get_team(id_or_slug)
@@ -782,7 +866,9 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
         views_counter.increment("teams", cached["_id"])
         return cached
 
-    team = await get_by_id_or_slug("teams", id_or_slug, "Team not found")
+    team = await _find_team(db, id_or_slug)
+    views_counter.increment("teams", team["_id"])
+    await _add_show_context(db, team)
 
     # Ссылки в тексте: актуальные адреса, на отсутствующие страницы — текстом
     await LinkResolver.resolve_document(team)
@@ -807,14 +893,17 @@ async def _run_team_self_healing(team_doc: dict, db) -> dict:
     facts = team_doc.get("facts") if isinstance(team_doc.get("facts"), dict) else {}
     city = facts.get("Город") or facts.get("city")
 
+    is_kvn = not team_doc.get("show_id")
     new_facts, new_order, new_modules = _ensure_team_scaffold_fields(
         {"facts": facts, "facts_order": team_doc.get("facts_order") or [], "modules": team_doc.get("modules") or []},
         name=name or (team_doc.get("title") or ""),
-        city=city
+        city=city,
+        kvn=is_kvn,
     )
 
     # Старые HTML-таблицы «Список игр команды» удаляются: игры показываются из participations
-    new_modules = _remove_team_games_tables(new_modules)
+    if is_kvn:
+        new_modules = _remove_team_games_tables(new_modules)
 
     if not team_doc.get("allow_empty_modules"):
         new_modules = _prune_empty_modules(new_modules)
@@ -865,13 +954,12 @@ async def refresh_team(id_or_slug: str):
     Пересчитывает scaffold, «Список игр», лого, теги.
     """
     db = await get_db()
-    team_doc = await db.teams.find_one({"$or": [{"slug": id_or_slug}, {"id": id_or_slug}]})
+    team_doc = await db.teams.find_one({"$or": [kvn_team_query(id_or_slug), {"id": id_or_slug}, {"_id": id_or_slug}]})
     if not team_doc:
         raise HTTPException(status_code=404, detail="Team not found")
 
     changes = await _run_team_self_healing(team_doc, db)
-    cache_service.invalidate_team(team_doc.get("slug"))
-    cache_service.invalidate_team(id_or_slug)
+    cache_service.invalidate_team()
 
     return {"success": True, "slug": team_doc.get("slug"), "changes_count": len(changes)}
 
@@ -1094,10 +1182,26 @@ async def update_team(id: str, data: TeamUpdate):
         raise HTTPException(status_code=404, detail="Team not found")
     
     old_slug = current_team.get("slug")
-    
+    was_kvn = not current_team.get("show_id")
+
+    # Привязка к шоу и адрес: slug уникален в пределах шоу (у КВН — среди команд КВН)
+    new_show_id = (data.show_id or None) if data.show_id is not None else current_team.get("show_id")
+    new_slug_value = data.slug or old_slug
+    # show_id, адрес и тип команды шоу пишутся здесь, а не через update_content (None там — «не менять»)
+    changes = {"show_id": None} if not new_show_id else {"show_id": None, "team_type": None}
+    if (new_show_id != current_team.get("show_id") or new_slug_value != old_slug
+            or (new_show_id and not current_team.get("full_path"))):
+        show = await get_team_show(db, new_show_id)
+        await check_team_slug_free(db, new_slug_value, show, exclude_id=id)
+        placement = await team_placement(db, show, new_slug_value)
+        if not show and not was_kvn:
+            placement["team_type"] = "kvn"
+        await db.teams.update_one({"_id": id}, {"$set": placement})
+    data = data.model_copy(update=changes)
+
     # Выполняем обновление
     result = await update_content("teams", id, data, "Team not found")
-    
+
     # Получаем обновленную команду, чтобы узнать финальные значения
     updated_team = await db.teams.find_one({"_id": id})
     if not updated_team:
@@ -1109,9 +1213,9 @@ async def update_team(id: str, data: TeamUpdate):
     if data.modules is not None:
         await import_team_rosters(db, updated_team)
 
-    # Если изменился slug команды — обновляем ссылки во всех сезонах.
+    # Если изменился slug команды КВН — обновляем ссылки во всех сезонах.
     # Названия в сезонах НЕ трогаем: там хранится название, под которым команда играла в том сезоне.
-    if old_slug and new_slug and old_slug != new_slug:
+    if was_kvn and not updated_team.get("show_id") and old_slug and new_slug and old_slug != new_slug:
         logger.info(f"Team slug changed: '{old_slug}' -> '{new_slug}', updating in all seasons...")
         team_id = updated_team.get("_id") or updated_team.get("id")
         await update_team_slug_in_seasons(old_slug, new_slug, None, team_id, db)
@@ -1127,8 +1231,7 @@ async def update_team(id: str, data: TeamUpdate):
         logger.warning(f"Self-healing after update failed for {id}: {e}")
 
     # ─── Инвалидация кэша ─────────────────────────────────────────────
-    cache_service.invalidate_team(old_slug)
-    cache_service.invalidate_team(new_slug)
+    cache_service.invalidate_team()
     cache_service.invalidate_team_lists()
 
     return result

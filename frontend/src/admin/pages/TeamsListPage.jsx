@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { contentApi } from '../utils/api';
+import { teamUrl } from '@/utils/teams';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,12 +41,9 @@ const statusLabels = {
   archived: { label: 'В архиве', variant: 'outline' }
 };
 
+// Тип команды: «kvn» или slug шоу (у команды шоу подпись — название шоу из show.title)
 const teamTypeLabels = {
   kvn: 'КВН',
-  liga_smeha: 'Лига Смеха',
-  improv: 'Импровизация',
-  comedy_club: 'Comedy Club',
-  other: 'Другое'
 };
 
 const stripOuterQuotes = (s) => {
@@ -97,6 +95,14 @@ export default function TeamsListPage() {
   const status = searchParams.get('status') || '';
   const teamType = searchParams.get('team_type') || '';
   const limit = 20;
+
+  // Шоу для фильтра (team_type команды шоу = slug шоу)
+  const [teamShows, setTeamShows] = useState([]);
+  useEffect(() => {
+    contentApi.listShows({ limit: 100 })
+      .then(res => setTeamShows(res.data?.items || []))
+      .catch(() => setTeamShows([]));
+  }, []);
 
   // Bulk import state
   const [bulkText, setBulkText] = useState('');
@@ -366,14 +372,14 @@ export default function TeamsListPage() {
                   }}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Тип команды" />
+                    <SelectValue placeholder="Шоу" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все типы</SelectItem>
+                    <SelectItem value="all">Все шоу</SelectItem>
                     <SelectItem value="kvn">КВН</SelectItem>
-                    <SelectItem value="liga_smeha">Лига Смеха</SelectItem>
-                    <SelectItem value="improv">Импровизация</SelectItem>
-                    <SelectItem value="other">Другое</SelectItem>
+                    {teamShows.map(show => (
+                      <SelectItem key={show._id} value={show.slug}>{show.title || show.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Select 
@@ -473,12 +479,12 @@ export default function TeamsListPage() {
                             {team.name || team.title}
                           </Link>
                           <div className="text-sm text-muted-foreground">
-                            /{team.slug}
+                            {teamUrl(team)}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {teamTypeLabels[team.team_type] || team.team_type}
+                            {team.show?.title || teamTypeLabels[team.team_type] || team.team_type || 'КВН'}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -492,7 +498,7 @@ export default function TeamsListPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
+                              onClick={() => window.open(teamUrl(team), '_blank')}
                               className="h-8"
                             >
                               <Eye className="h-4 w-4" />
@@ -514,7 +520,7 @@ export default function TeamsListPage() {
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
+                                onClick={() => window.open(teamUrl(team), '_blank')}
                               >
                                 <Eye className="mr-2 h-4 w-4" /> Просмотр
                               </DropdownMenuItem>

@@ -8,6 +8,7 @@ import re
 from fastapi import APIRouter, Query, Depends
 from utils.auth import require_editor_on_write
 from services.cache import cache_service
+from services.show_teams import team_url
 from utils.database import get_db
 
 router = APIRouter(prefix="/redirects", tags=["redirects"], dependencies=[Depends(require_editor_on_write)])
@@ -39,7 +40,7 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
     # Поиск по коллекциям: (collection_name, new_path_builder)
     search_targets = [
         ("kvn",      lambda doc: "/" + doc.get("full_path", doc.get("slug", ""))),
-        ("teams",    lambda doc: "/kvn/teams/" + doc.get("slug", "")),
+        ("teams",    team_url),
         ("people",   lambda doc: "/people/" + doc.get("slug", "")),
         ("shows",    lambda doc: "/shows/" + (doc.get("full_path") or doc.get("slug", ""))),
         ("articles", lambda doc: "/articles/" + doc.get("slug", "")),

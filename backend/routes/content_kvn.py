@@ -17,6 +17,7 @@ from services.crud import (
     get_by_id_or_slug, convert_objectids_to_strings,
 )
 from services.tags import tag_service
+from services.show_teams import KVN_ONLY
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
@@ -269,7 +270,7 @@ async def get_kvn_jury_stats(
     db = await get_db()
     
     # Get all teams from teams collection (without filtering by team_type)
-    all_teams_from_db = await db.teams.find({}, {"slug": 1, "name": 1, "title": 1}).to_list(1000)
+    all_teams_from_db = await db.teams.find(KVN_ONLY, {"slug": 1, "name": 1, "title": 1}).to_list(None)
     team_slug_to_name = {}
     all_team_slugs = set()
     for team in all_teams_from_db:
@@ -697,7 +698,7 @@ async def get_kvn_by_path(path: str):
         # Загружаем данные команд одним запросом
         if team_slugs:
             teams_cursor = db.teams.find(
-                {"slug": {"$in": list(team_slugs)}},
+                {"slug": {"$in": list(team_slugs)}, **KVN_ONLY},
                 {
                     "slug": 1,
                     "name": 1,

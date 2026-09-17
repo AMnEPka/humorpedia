@@ -11,6 +11,7 @@ import {
 import { usePageTitle } from '@/utils/pageTitle';
 import TeamParticipations from '../components/competitions/TeamParticipations';
 import TeamRoster from '../components/competitions/TeamRoster';
+import { teamPageTitle, teamSubtitle } from '@/utils/teams';
 
 // Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
@@ -72,39 +73,44 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
   );
 }
 
-export default function TeamDetailPage() {
+// Команда КВН (/kvn/teams/:slug) или команда шоу (/shows/{шоу}/teams/{slug} — showTeamPath из ShowDetailPage)
+export default function TeamDetailPage({ showTeamPath = null }) {
   const { slug } = useParams();
-  const category = 'kvn';
   const [team, setTeam] = useState(null);
   const [members, setMembers] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  usePageTitle(team?.title || (loading ? 'Команда' : (error ? 'Команда не найдена' : 'Команда')));
+  usePageTitle(teamPageTitle(team) || (loading ? 'Команда' : (error ? 'Команда не найдена' : 'Команда')));
 
   useEffect(() => {
     const fetchTeam = async () => {
       setLoading(true);
+      setError('');
       try {
-        const res = await publicApi.getTeam(slug);
+        const res = showTeamPath ? await publicApi.getTeamByPath(showTeamPath) : await publicApi.getTeam(slug);
         setTeam(res.data);
       } catch (err) {
+        setTeam(null);
         setError('Команда не найдена');
       } finally {
         setLoading(false);
       }
     };
     fetchTeam();
-  }, [slug]);
+  }, [slug, showTeamPath]);
 
+  // Составы и турниры — по _id: slug команды шоу уникален только внутри шоу
+  const teamKey = team?._id;
   useEffect(() => {
+    if (!teamKey) return undefined;
     let cancelled = false;
     setMembers(null);
-    publicApi.getTeamMembers(slug)
+    publicApi.getTeamMembers(teamKey)
       .then(res => { if (!cancelled) setMembers(res.data); })
       .catch(() => { if (!cancelled) setMembers(null); });
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [teamKey]);
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
@@ -175,22 +181,29 @@ export default function TeamDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
         <p className="text-gray-500 mb-4">{error || 'Команда не найдена'}</p>
         <Button asChild>
-          <Link to="/kvn/teams">Вернуться к списку</Link>
+          <Link to={showTeamPath ? '/shows' : '/kvn/teams'}>Вернуться к списку</Link>
         </Button>
       </div>
     );
   }
 
-  const categoryNames = { kvn: 'КВН', lg: 'Лига смеха', improv: 'Импровизация' };
+  // Хлебные крошки: у команды шоу — шоу и страница «Команды …» (от API), у команды КВН — список команд КВН
+  const crumbs = team.show_id
+    ? [{ title: 'Шоу', path: '/shows' }, ...(team.breadcrumbs || [])]
+    : [{ title: 'КВН', path: '/kvn/teams' }];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <nav className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-gray-500">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
           <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
-          <li>/</li>
-          <li><Link to="/kvn/teams" className="hover:text-blue-600">КВН</Link></li>
+          {crumbs.map((crumb) => (
+            <li key={crumb.path} className="flex items-center gap-2">
+              <span>/</span>
+              <Link to={crumb.path} className="hover:text-blue-600">{crumb.title}</Link>
+            </li>
+          ))}
           <li>/</li>
           <li className="text-gray-900 truncate max-w-[200px]">{team.title}</li>
         </ol>
@@ -230,6 +243,13 @@ export default function TeamDetailPage() {
           )}
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{team.title}</h1>
+            {team.show_id && (
+              <div className="text-blue-100 mb-2">
+                {team.show?.full_path
+                  ? <Link to={`/shows/${team.show.full_path}`} className="hover:underline">{teamSubtitle(team)}</Link>
+                  : teamSubtitle(team)}
+              </div>
+            )}
             {cityValue && (
               <div className="flex items-center justify-center md:justify-start gap-2 text-blue-100">
                 <MapPin className="h-4 w-4" />
@@ -428,7 +448,7 @@ export default function TeamDetailPage() {
             return <ModuleRenderer key={module.id || i} module={module} />;
           })}
 
-          <TeamParticipations teamSlug={team.slug} teamName={team.name || team.title} />
+          <TeamParticipations teamSlug={team._id} teamName={team.name || team.title} />
         </div>
       </div>
     </div>

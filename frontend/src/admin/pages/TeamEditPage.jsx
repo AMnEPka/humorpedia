@@ -17,12 +17,14 @@ import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
 import FactsEditor from '../components/FactsEditor';
 import TeamMembershipsEditor from '../components/TeamMembershipsEditor';
+import { teamUrl } from '@/utils/teams';
 
 const emptyTeam = {
   title: '',
   slug: '',
   name: '',
   team_type: 'kvn',
+  show_id: null,  // команда шоу (_id корневого шоу); пусто — команда КВН
   status: 'draft',
   logo: null,
   facts: {},  // Гибкая таблица фактов (ключ-значение)
@@ -60,6 +62,14 @@ export default function TeamEditPage() {
   const [teamTemplates, setTeamTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [shows, setShows] = useState([]);
+
+  // Шоу для привязки команды (корневые)
+  useEffect(() => {
+    contentApi.listShows({ limit: 100 })
+      .then(res => setShows(res.data?.items || []))
+      .catch(() => setShows([]));
+  }, []);
 
   // Функция для получения случайного паттерна
   const getRandomPattern = () => {
@@ -286,8 +296,13 @@ export default function TeamEditPage() {
       const teamToSave = {
         ...team,
         facts: validFacts,
-        primary_tag: primaryTag
+        primary_tag: primaryTag,
+        // "" — перевести в команды КВН (адрес и тип вычисляет сервер)
+        show_id: team.show_id || '',
       };
+      delete teamToSave.show;
+      delete teamToSave.url;
+      delete teamToSave.full_path;
 
       // facts_order: фильтруем и дополняем по текущим ключам
       const keys = Object.keys(validFacts);
@@ -302,6 +317,8 @@ export default function TeamEditPage() {
         navigate(`/admin/teams/${response.data.id}`, { replace: true });
       } else {
         await contentApi.updateTeam(id, teamToSave);
+        const fresh = await contentApi.getTeam(id);
+        setTeam(prev => ({ ...prev, full_path: fresh.data.full_path, team_type: fresh.data.team_type, url: fresh.data.url }));
         setSuccess('Сохранено!');
       }
       } catch (err) {
@@ -350,14 +367,14 @@ export default function TeamEditPage() {
             <h1 className="text-2xl font-bold">
               {isNew ? 'Новая команда' : team.name || 'Редактирование'}
             </h1>
-            {!isNew && <p className="text-sm text-muted-foreground">/{team.slug}</p>}
+            {!isNew && <p className="text-sm text-muted-foreground">{teamUrl(team)}</p>}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {!isNew && team.slug && (
             <Button 
               variant="outline" 
-              onClick={() => window.open(`/kvn/teams/${team.slug}`, '_blank')}
+              onClick={() => window.open(teamUrl(team), '_blank')}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               Предпросмотр
@@ -441,22 +458,28 @@ export default function TeamEditPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Тип команды</Label>
-                  <Select 
-                    value={team.team_type} 
-                    onValueChange={(v) => setTeam(prev => ({ ...prev, team_type: v }))}
+                  <Label>Шоу</Label>
+                  <Select
+                    value={team.show_id || 'kvn'}
+                    onValueChange={(v) => setTeam(prev => ({ ...prev, show_id: v === 'kvn' ? null : v }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="kvn">КВН</SelectItem>
-                      <SelectItem value="liga_smeha">Лига Смеха</SelectItem>
-                      <SelectItem value="improv">Импровизация</SelectItem>
-                      <SelectItem value="comedy_club">Comedy Club</SelectItem>
-                      <SelectItem value="other">Другое</SelectItem>
+                      <SelectItem value="kvn">КВН (команда КВН)</SelectItem>
+                      {shows.map(show => (
+                        <SelectItem key={show._id} value={show._id}>{show.title || show.name}</SelectItem>
+                      ))}
+                      {team.show_id && team.show && !shows.some(s => s._id === team.show_id) && (
+                        <SelectItem value={team.show_id}>{team.show.title}</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Команда КВН — /kvn/teams/{'{slug}'}; команда шоу — /shows/{'{шоу}'}/teams/{'{slug}'}, под названием подпись «Команда шоу «…»».
+                    Одна и та же команда в разных шоу — разные страницы.
+                  </p>
                 </div>
 
                 {isNew && (

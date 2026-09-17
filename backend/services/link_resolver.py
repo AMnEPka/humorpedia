@@ -20,6 +20,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.parse import urlsplit
 
 from services.cache import cache_service
+from services.show_teams import KVN_ONLY, split_team_path, team_url
 from utils.database import get_db
 
 _A_RE = re.compile(r"<a\b([^>]*)>(.*?)</a\s*>", re.I | re.S)
@@ -39,7 +40,7 @@ PUBLISHED = {"status": {"$nin": ["draft", "archived"]}}
 # Коллекция → адрес документа на сайте
 URL_BUILDERS: Dict[str, Callable[[dict], str]] = {
     "people": lambda d: f"/people/{d['slug']}",
-    "teams": lambda d: f"/kvn/teams/{d['slug']}",
+    "teams": team_url,
     "kvn": lambda d: "/" + (d.get("full_path") or f"kvn/{d['slug']}").strip("/"),
     "shows": lambda d: "/shows/" + (d.get("full_path") or d["slug"]).strip("/"),
     "articles": lambda d: f"/articles/{d['slug']}",
@@ -81,6 +82,8 @@ def direct_query(path: str) -> Optional[Tuple[str, str, str]]:
         return "teams", "slug", parts[2]
     if parts[0] == "kvn":
         return "kvn", "full_path", path
+    if parts[0] == "shows" and split_team_path("/".join(parts[1:])):
+        return "teams", "full_path", "/".join(parts[1:])
     if parts[0] == "shows" and len(parts) >= 2:
         return "shows", "full_path", "/".join(parts[1:])
     if parts[0] in ("news", "articles", "quizzes") and len(parts) == 2:
@@ -155,6 +158,8 @@ async def _find_urls(db, queries: Dict[str, Tuple[str, str, str]]) -> Dict[str, 
     found: Dict[str, str] = {}
     for (coll, field), values in grouped.items():
         query = {field: {"$in": list(values)}, **PUBLISHED}
+        if coll == "teams" and field == "slug":  # /kvn/teams/{slug} — только команды КВН
+            query.update(KVN_ONLY)
         async for doc in db[coll].find(query, {"slug": 1, "full_path": 1, field: 1}):
             for key in values.get(doc.get(field), []):
                 found[key] = URL_BUILDERS[coll](doc)
@@ -173,7 +178,7 @@ async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
     result.update(await _find_urls(db, queries))
     # у части шоу нет full_path — ищем по slug последнего сегмента
     show_slugs = {k: ("shows", "slug", k.split("/")[-1]) for k in pending
-                  if k.startswith("shows/") and k not in result}
+                  if k.startswith("shows/") and k not in result and not split_team_path(k[len("shows/"):])}
     result.update(await _find_urls(db, show_slugs))
     pending -= result.keys()
 

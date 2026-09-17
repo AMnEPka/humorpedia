@@ -36,7 +36,8 @@ from services.cache import cache_service  # noqa: E402
 from services.link_resolver import load_old_id_urls  # noqa: E402
 from services.modx_content import LinkMapper  # noqa: E402
 from services.modx_dump import load_modx_site  # noqa: E402
-from services.modx_shows import build_show, is_show_page, section_id, show_chain, show_path, show_url_builder  # noqa: E402
+from services.modx_show_teams import link_builders  # noqa: E402
+from services.modx_shows import build_show, is_show_page, section_id, show_chain, show_path  # noqa: E402
 from utils.database import close_db, get_db  # noqa: E402
 
 DEFAULT_DUMP = "/app/backups/idemsku8_modx2.sql"
@@ -105,7 +106,7 @@ async def run(args) -> None:
         raise SystemExit("Укажите --ids или --all (или --list)")
 
     known_urls = await load_old_id_urls(db)
-    builders = [show_url_builder(site)]
+    builders = link_builders(site)
     publish = set(args.publish or [])
     totals = defaultdict(int)
     for rid in ids:
@@ -118,7 +119,7 @@ async def run(args) -> None:
 
 async def import_one(db, site, resource, root_id, known_urls, builders, publish, args) -> str:
     rid = resource["id"]
-    mapper = LinkMapper(site, _try_pattern_redirect, known_urls, builders)
+    mapper = LinkMapper(site, _try_pattern_redirect, known_urls, *builders)
     payload, extra, warnings = build_show(site, rid, mapper)
     if publish and payload["status"] != "published":
         payload["status"] = "published"

@@ -38,7 +38,7 @@ from services.link_resolver import load_old_id_urls  # noqa: E402
 from services.modx_content import IMPORTED_IMAGES_PREFIX, LinkMapper  # noqa: E402
 from services.modx_dump import load_modx_site  # noqa: E402
 from services.modx_people import TEMPLATE_PERSON, build_person, person_resources  # noqa: E402
-from services.modx_shows import show_url_builder  # noqa: E402
+from services.modx_show_teams import link_builders  # noqa: E402
 from utils.database import close_db, get_db  # noqa: E402
 
 DEFAULT_DUMP = "/app/backups/idemsku8_modx2.sql"
@@ -113,7 +113,7 @@ async def run(args) -> None:
 
 
 async def import_one(db, site, people, rid, existing, known_urls, args, verbose) -> str:
-    mapper = LinkMapper(site, _try_pattern_redirect, known_urls, [show_url_builder(site)])
+    mapper = LinkMapper(site, _try_pattern_redirect, known_urls, *link_builders(site))
     payload, extra, warnings = build_person(site, rid, mapper)
     slug = payload["slug"]
     photo = payload.get("photo") or {}
