@@ -65,6 +65,11 @@ def test_nickname_in_parentheses_stays_in_name():
     assert entry["name_key"] == name_key("Климентьева Ольга")
 
 
+def test_name_key_strips_aliases_without_regex_backtracking():
+    assert name_key('Иван «Грозный» Петров (капитан) "Ваня"') == "иван петров"
+    assert name_key("(" * 10_000 + "Иван") == "иван"
+
+
 def test_divs_and_br_lines():
     parsed = parse_roster_html("<div>Александра Михайлова</div> <div>Регина Рудченко</div> <p>Иван Исаков<br>Пётр Петров – автор</p>")
     assert [e["person_name"] for e in parsed["entries"]] == ["Александра Михайлова", "Регина Рудченко", "Иван Исаков", "Пётр Петров"]

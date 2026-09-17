@@ -38,10 +38,34 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _strip_aliases(text: str) -> str:
+    """Линейно удалить прозвища в (), «» и "", сохранив незакрытый фрагмент."""
+    closers = {"(": ")", "«": "»", '"': '"'}
+    result: list[str] = []
+    buffered: list[str] = []
+    closing: str | None = None
+    for char in text:
+        if closing is None:
+            if char in closers:
+                closing = closers[char]
+                buffered = [char]
+            else:
+                result.append(char)
+            continue
+        buffered.append(char)
+        if char == closing:
+            result.append(" ")
+            buffered = []
+            closing = None
+    if buffered:
+        result.extend(buffered)
+    return "".join(result)
+
+
 def name_key(name: str) -> str:
     """Ключ имени без учёта порядка слов, регистра и ё: «Шастун Антон» == «Антон Шастун»."""
     text = (name or "").lower().replace("ё", "е")
-    text = re.sub(r"\([^)]*\)|«[^»]*»|\"[^\"]*\"", " ", text)  # прозвища в скобках/кавычках
+    text = _strip_aliases(text)
     tokens = re.findall(r"[a-zа-я0-9-]+", text)
     return " ".join(sorted(t for t in tokens if t))
 
