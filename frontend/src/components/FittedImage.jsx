@@ -1,7 +1,7 @@
 /**
  * Показывает изображение целиком, не обрезая его под пропорции контейнера.
- * Для фотографий свободное место заполняется мягким фоном из того же изображения,
- * для логотипов остаётся нейтральный фон с внутренним отступом.
+ * Свободное место остаётся нейтральным фоном: дублирующий `object-cover`
+ * недопустим, потому что визуально снова обрезает фотографию.
  */
 export default function FittedImage({
   src,
@@ -27,17 +27,6 @@ export default function FittedImage({
     <div
       className={`relative isolate overflow-hidden ${isLogo ? 'bg-white' : 'bg-slate-100'} ${className}`}
     >
-      {!isLogo && (
-        <>
-          <img
-            src={displaySrc}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full scale-150 object-cover blur-3xl opacity-55 saturate-50"
-          />
-          <div className="absolute inset-0 bg-white/35" aria-hidden="true" />
-        </>
-      )}
       <img
         src={displaySrc}
         alt={alt}
