@@ -133,10 +133,10 @@ def _try_pattern_redirect(path: str) -> str | None:
     if m:
         return f"/articles/{m.group(1)}"
 
-    # /novosti/{slug}.html → /novosti/{slug}
+    # /novosti/{slug}.html → /news/{slug}
     m = re.match(r"^/novosti/([\w-]+)\.html$", path)
     if m:
-        return f"/novosti/{m.group(1)}"
+        return f"/news/{m.group(1)}"
 
     # /kvn/{slug}.html → /kvn/{slug}
     m = re.match(r"^/kvn/([\w-]+)\.html$", path)

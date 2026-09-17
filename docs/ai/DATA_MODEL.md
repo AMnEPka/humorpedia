@@ -55,7 +55,7 @@ published_at, featured
 `data` — произвольный dict (схемы `*Data` в modules.py — документация, строго не валидируются).
 
 `ModuleType` (бэкенд enum — значения, не входящие в него, отклоняются при сохранении):
-- универсальные: `hero_card`, `text_block {title, content(HTML), collapsed?}`, `timeline {title, events[{year, date, title, description}]}`, `tags`, `table {title, description?, headers[], rows[][], hasHeaders, sortable?, collapsed?}`, `gallery {items[{url, thumbnail, alt, caption}]}`, `video {url}`, `quote {text, author, source}`
+- универсальные: `hero_card`, `text_block {title, content(HTML), collapsed?}`, `timeline {title, events[{year, date, title, description}]}`, `tags`, `table {title, description?, headers[], rows[][], hasHeaders, sortable?, collapsed?}`, `gallery {items[{url, thumbnail, alt, caption}]}`, `image {url, caption?}`, `video {url}`, `quote {text, author, source}`
 - системные (сайдбар): `poster_photo`, `facts_table`, `tags_cloud`, `social_links`, `rating_widget`
 - команды: `team_members`, `tv_appearances`, `games_list`
 - шоу: `episodes_list`, `participants`
@@ -64,7 +64,7 @@ published_at, featured
 - люди: `humor_chronicles` (данные подтягиваются динамически из `/people/{id}/linked-content`)
 - лиги КВН: `first_league_champions`, `vl_league_champions` (таблицы чемпионов строятся из дочерних сезонов)
 
-Публичный `ModuleRenderer.jsx` дополнительно умеет `image`, `image_gallery`, `video_embed`, `person_card`, `related_links`, `table_of_contents`, `html`, `divider` — часть этих типов бэкенд enum не знает (расхождение). Системные модули рендерит `components/SystemModules.jsx`.
+Публичный `ModuleRenderer.jsx` дополнительно умеет `image_gallery`, `video_embed`, `person_card`, `related_links`, `table_of_contents`, `html`, `divider` — часть этих типов бэкенд enum не знает (расхождение). Системные модули рендерит `components/SystemModules.jsx`.
 
 ### Ссылки в контенте
 
@@ -151,6 +151,31 @@ published_at, featured
 
 `pagetitle` → `title`, `longtitle` → `full_name`, `alias` → `slug`, `description` → `seo.meta_description`, `keywords` → `seo.keywords`, `rating`/`votes` → рейтинг.
 HTML: сущности раскрываются (кроме `&lt; &gt; &amp; &quot;`), пустые абзацы в конце убираются, ссылки переводятся на новый сайт (`services/modx_content.LinkMapper`): ресурс MODX по uri/`[[~id]]` → адрес уже перенесённой страницы по `old_id` (любая коллекция), иначе `/people/{alias}` (шаблон 20), `/kvn/teams/{alias}` (21); иначе паттерны `routes/redirects._try_pattern_redirect`; иначе абсолютный старый путь (его разрешит поиск редиректов, когда страница появится). Картинки `images/...` → `/media/imported/images/...`.
+
+## Статьи и новости
+
+Источник — прямые дочерние ресурсы разделов MODX: статьи `parent=29`, `template=13`; новости `parent=14`, `template=7`.
+Импорт выполняет `backend/scripts/import_articles_news_modx.py` через обычные `create_*` / `update_*` роуты. По умолчанию
+берутся только опубликованные записи; `--include-unpublished` включает черновики, `--update` повторно синхронизирует уже
+перенесённые записи. `old_id` имеет sparse unique index, старые адреса сохраняются в `old_urls`.
+
+- `pagetitle` → `title`, `longtitle` → `seo.meta_title`, `description` → `excerpt` и `seo.meta_description`, `popular` →
+  `featured` у статьи / `important` у новости, `rating` и `votes` сохраняются.
+- MIGX-секции `text`/`table` → `text_block`, `quote` → `quote`; служебные рекламные, навигационные и автоматически
+  строящиеся блоки не переносятся. У новости поле `content` собирается из текстовых модулей для совместимости с текущей моделью.
+- У статьи `preview` — обложка карточки, `img` — верхнее изображение материала; если они различаются, `img` становится
+  первым модулем `image`. Детальная страница использует этот первый модуль как шапку и не выводит его повторно; карточка читает
+  `cover_image.url`. Значение без расширения изображения не считается путём к файлу.
+- Ссылки переводятся на новые адреса; ссылки `/people/{slug}` и однозначные теги заполняют `related_person_ids`.
+  `createdby` — технический пользователь MODX, а не публичное авторство, поэтому `author_name` по нему не заполняется.
+
+На 2026-09-17 перенесены все опубликованные материалы: 66 статей и 1008 новостей. Два черновика статей (`old_id` 2634,
+2963) и один черновик новости (`old_id` 3750) оставлены в дампе. Старые комментарии не переносились: 195 комментариев к
+опубликованным статьям и 859 к новостям требуют отдельного решения по пользователям, приватности и цепочкам ответов.
+Все 25 отсутствовавших файлов статей и новостей восстановлены 2026-09-17 скриптом
+`backend/scripts/restore_article_media_modx.py`: 12 загружены со старого сайта, 12 скопированы из media-volume под исправленными
+кириллическими именами, один phpThumb-кэш заменён на уже имевшийся исходный JPEG. Повторная проверка article+news даёт 0
+отсутствующих файлов. Четыре старых внутренних адреса без целевой страницы импорт сообщает в dry-run и не подменяет.
 
 ## Шоу
 

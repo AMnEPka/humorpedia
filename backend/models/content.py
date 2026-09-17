@@ -274,6 +274,9 @@ class ArticleUpdate(BaseModel):
     slug: Optional[str] = None
     excerpt: Optional[str] = None
     cover_image: Optional[MediaFile] = None
+    author_id: Optional[str] = None
+    author_name: Optional[str] = None
+    featured: Optional[bool] = None
     modules: Optional[List[PageModule]] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None

@@ -181,6 +181,8 @@ async def create_indexes(db):
         await _ensure_index(db.articles, "status")
         await _ensure_index(db.articles, "published_at")
         await _ensure_index(db.articles, "featured")
+        await _ensure_index(db.articles, "old_id", unique=True, sparse=True)
+        await _ensure_index(db.articles, "old_urls")
         await _ensure_index(db.articles, [("title", "text")])
         
         # News indexes
@@ -188,6 +190,8 @@ async def create_indexes(db):
         await _ensure_index(db.news, "tags")
         await _ensure_index(db.news, "status")
         await _ensure_index(db.news, "published_at")
+        await _ensure_index(db.news, "old_id", unique=True, sparse=True)
+        await _ensure_index(db.news, "old_urls")
         await _ensure_index(db.news, [("title", "text")])
         
         # Quizzes indexes

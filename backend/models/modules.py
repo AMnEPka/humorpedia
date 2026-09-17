@@ -8,6 +8,7 @@ class ModuleType(str, Enum):
     """Available module types"""
     # Universal modules
     HERO_CARD = "hero_card"           # Photo with facts
+    IMAGE = "image"                   # Standalone image
     TEXT_BLOCK = "text_block"         # Text with optional title
     TIMELINE = "timeline"             # Timeline of events
     TAGS = "tags"                     # Tags display
