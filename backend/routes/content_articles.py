@@ -36,6 +36,7 @@ async def create_article(data: ArticleCreate):
     await check_slug_unique("articles", data.slug)
     article = Article(
         title=data.title, slug=data.slug, excerpt=data.excerpt, cover_image=data.cover_image,
+        author_id=data.author_id, author_name=data.author_name,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         featured=data.featured, related_person_ids=data.related_person_ids or []
     )

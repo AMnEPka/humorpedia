@@ -56,6 +56,12 @@ export default function ArticleDetailPage() {
   const formattedDate = article.published_at 
     ? formatDistanceToNow(new Date(article.published_at), { addSuffix: true, locale: ru })
     : '';
+  const visibleModules = [...(article.modules || [])]
+    .filter(module => module.visible !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+  const headerImageModule = visibleModules[0]?.type === 'image' ? visibleModules[0] : null;
+  const featuredImageUrl = headerImageModule?.data?.url || article.cover_image?.url || article.image;
+  const contentModules = headerImageModule ? visibleModules.slice(1) : article.modules;
 
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -77,10 +83,10 @@ export default function ArticleDetailPage() {
         </h1>
         
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-          {article.author && (
+          {(article.author_name || article.author) && (
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span>{article.author}</span>
+              <span>{article.author_name || article.author}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
@@ -113,10 +119,10 @@ export default function ArticleDetailPage() {
       </header>
 
       {/* Featured Image */}
-      {article.image && (
+      {featuredImageUrl && (
         <div className="mb-8 rounded-xl overflow-hidden">
           <img 
-            src={article.image} 
+            src={featuredImageUrl}
             alt={article.title}
             className="w-full h-auto"
           />
@@ -131,8 +137,8 @@ export default function ArticleDetailPage() {
       )}
 
       {/* Modules */}
-      {article.modules && article.modules.length > 0 ? (
-        <ModuleList modules={article.modules} />
+      {contentModules && contentModules.length > 0 ? (
+        <ModuleList modules={contentModules} />
       ) : article.content ? (
         <div 
           className="prose prose-lg prose-blue max-w-none"

@@ -32,7 +32,7 @@ class LinkingService:
         }
         
         collection = collection_map.get(content_type)
-        if not collection:
+        if collection is None:
             return
         
         # Update content document with person_ids
@@ -76,7 +76,7 @@ class LinkingService:
         
         for content_type in content_types:
             collection = collection_map.get(content_type)
-            if not collection:
+            if collection is None:
                 continue
             
             # Draft pages are usable on the public site; only archived content is hidden.
