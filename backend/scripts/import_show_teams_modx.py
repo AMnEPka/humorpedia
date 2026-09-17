@@ -119,7 +119,7 @@ async def import_one(db, site, resource, show_resource, known_urls, publish, arg
     existing = await db.teams.find_one({"old_id": rid}) \
         or await db.teams.find_one({"show_id": show["_id"], "slug": payload["slug"]})
     payload["primary_tag"] = await free_primary_tag(db, payload["name"], show.get("title") or "", existing and existing["_id"])
-    url = team_url({"full_path": f"{show['full_path']}/teams/{payload['slug']}"})
+    url = team_url({"show_id": show["_id"], "full_path": f"{show['full_path']}/teams/{payload['slug']}"})
 
     modules = [m["type"] + (f"«{m['title']}»" if m["title"] else "") for m in payload["modules"][5:]]
     print(f"\n{rid} {resource['pagetitle']} → «{payload['title']}» {url} [{'существует' if existing else 'новая'}, {payload['status']}]")

@@ -33,8 +33,9 @@ def team_full_path(show: dict, slug: str) -> str:
 
 
 def team_url(doc: dict) -> str:
-    """Адрес страницы команды на сайте."""
-    if doc.get("full_path"):
+    """Адрес страницы команды на сайте. Нужны поля slug, show_id, full_path
+    (у части старых команд КВН full_path = slug — это не адрес шоу)."""
+    if doc.get("show_id") and doc.get("full_path"):
         return "/shows/" + doc["full_path"].strip("/")
     return f"/kvn/teams/{doc.get('slug', '')}"
 
@@ -45,10 +46,6 @@ def split_team_path(path: str) -> Optional[tuple]:
     if len(parts) >= 3 and parts[-2] == TEAMS_SEGMENT and parts[-1]:
         return "/".join(parts[:-2]), parts[-1]
     return None
-
-
-def show_subtitle(show_title: Optional[str]) -> str:
-    return f"Команда шоу «{show_title}»" if show_title else "Команда КВН"
 
 
 async def root_show(db, show: dict) -> dict:

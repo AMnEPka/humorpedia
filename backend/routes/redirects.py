@@ -50,7 +50,7 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
     for coll_name, path_builder in search_targets:
         doc = await db[coll_name].find_one(
             {"old_urls": clean},
-            {"slug": 1, "full_path": 1}
+            {"slug": 1, "full_path": 1, "show_id": 1}
         )
         if doc:
             new_path = path_builder(doc)

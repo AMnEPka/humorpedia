@@ -4,7 +4,8 @@
 export function teamUrl(team) {
   if (!team) return null;
   if (team.url) return team.url;
-  if (team.full_path) return `/shows/${team.full_path.replace(/^\/+/, '')}`;
+  // у части старых команд КВН full_path = slug — адрес шоу только при show_id
+  if (team.show_id && team.full_path) return `/shows/${team.full_path.replace(/^\/+/, '')}`;
   return team.slug ? `/kvn/teams/${team.slug}` : null;
 }
 

@@ -49,7 +49,7 @@ async def search_content_for_links(
         'team': {
             'collection': db.teams,
             'search_fields': ["name", "title", "slug"],
-            'projection': {"name": 1, "title": 1, "slug": 1, "full_path": 1},
+            'projection': {"name": 1, "title": 1, "slug": 1, "full_path": 1, "show_id": 1},
             'title_fn': lambda d: d.get("name") or d.get("title"),
             'url_fn': team_url,
         },

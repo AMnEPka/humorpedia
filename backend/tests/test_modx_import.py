@@ -482,7 +482,8 @@ def show_teams_site():
 
 def test_team_urls_and_paths():
     assert team_url({"slug": "dals"}) == "/kvn/teams/dals"
-    assert team_url({"slug": "soyuz", "full_path": "zvezdy-ntv/teams/soyuz"}) == "/shows/zvezdy-ntv/teams/soyuz"
+    assert team_url({"slug": "soyuz", "show_id": "s1", "full_path": "zvezdy-ntv/teams/soyuz"}) == "/shows/zvezdy-ntv/teams/soyuz"
+    assert team_url({"slug": "soyuz", "full_path": "soyuz"}) == "/kvn/teams/soyuz"   # старое поле у команд КВН
     assert split_team_path("liga-gorodov/teams/eto-oni") == ("liga-gorodov", "eto-oni")
     assert split_team_path("improv-teams/league/teams") is None
     assert direct_query("shows/zvezdy-ntv/teams/soyuz") == ("teams", "full_path", "zvezdy-ntv/teams/soyuz")

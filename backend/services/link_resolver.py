@@ -160,7 +160,7 @@ async def _find_urls(db, queries: Dict[str, Tuple[str, str, str]]) -> Dict[str, 
         query = {field: {"$in": list(values)}, **PUBLISHED}
         if coll == "teams" and field == "slug":  # /kvn/teams/{slug} — только команды КВН
             query.update(KVN_ONLY)
-        async for doc in db[coll].find(query, {"slug": 1, "full_path": 1, field: 1}):
+        async for doc in db[coll].find(query, {"slug": 1, "full_path": 1, "show_id": 1, field: 1}):
             for key in values.get(doc.get(field), []):
                 found[key] = URL_BUILDERS[coll](doc)
     return found
@@ -189,7 +189,7 @@ async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
             if not old_ids:
                 break
             async for doc in db[coll].find({"old_id": {"$in": list(old_ids.values())}, **PUBLISHED},
-                                           {"slug": 1, "full_path": 1, "old_id": 1}):
+                                           {"slug": 1, "full_path": 1, "show_id": 1, "old_id": 1}):
                 for k in [k for k, v in old_ids.items() if v == doc.get("old_id")]:
                     result[k] = URL_BUILDERS[coll](doc)
                     old_ids.pop(k)
@@ -203,7 +203,7 @@ async def resolve_targets(db, keys: Set[str]) -> Dict[str, Optional[str]]:
     if old_paths:
         for coll in OLD_URL_COLLECTIONS:
             async for doc in db[coll].find({"old_urls": {"$in": list(old_paths)}, **PUBLISHED},
-                                           {"slug": 1, "full_path": 1, "old_urls": 1}):
+                                           {"slug": 1, "full_path": 1, "show_id": 1, "old_urls": 1}):
                 for url in doc.get("old_urls") or []:
                     if url in old_paths and old_paths[url] not in result:
                         result[old_paths[url]] = URL_BUILDERS[coll](doc)
@@ -233,7 +233,7 @@ async def load_old_id_urls(db) -> Dict[int, str]:
     """id ресурса старого сайта (old_id) → адрес перенесённой страницы. Для перевода ссылок при импорте."""
     urls: Dict[int, str] = {}
     for coll, build in URL_BUILDERS.items():
-        async for doc in db[coll].find({"old_id": {"$ne": None}}, {"slug": 1, "full_path": 1, "old_id": 1}):
+        async for doc in db[coll].find({"old_id": {"$ne": None}}, {"slug": 1, "full_path": 1, "show_id": 1, "old_id": 1}):
             try:
                 urls.setdefault(int(doc["old_id"]), build(doc))
             except (TypeError, ValueError, KeyError):
