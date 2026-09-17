@@ -20,6 +20,7 @@ import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import MediaSelector from '../components/MediaSelector';
 import FactsEditor from '../components/FactsEditor';
+import PersonSelector from '../components/PersonSelector';
 
 const emptyCity = {
   title: '',
@@ -28,6 +29,7 @@ const emptyCity = {
   status: 'draft',
   poster: null,
   description: '',
+  aliases: [],
   facts: {},
   facts_order: [],
   modules: [],
@@ -152,6 +154,7 @@ export default function CityEditPage() {
         name: city.name,
         poster: city.poster,
         description: city.description,
+        aliases: city.aliases || [],
         facts: city.facts,
         facts_order: city.facts_order,
         modules: city.modules,
@@ -240,6 +243,7 @@ export default function CityEditPage() {
             <TabsTrigger value="main">Основное</TabsTrigger>
             <TabsTrigger value="content">Контент</TabsTrigger>
             <TabsTrigger value="facts">Факты</TabsTrigger>
+            <TabsTrigger value="relations">Известные люди</TabsTrigger>
             <TabsTrigger value="seo">SEO</TabsTrigger>
           </TabsList>
 
@@ -300,6 +304,19 @@ export default function CityEditPage() {
                         onChange={(e) => handleChange('description', e.target.value)}
                         placeholder="Краткое описание города и его связи с юмором..."
                         rows={4}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="aliases">Другие названия</Label>
+                      <Input
+                        id="aliases"
+                        value={(city.aliases || []).join(', ')}
+                        onChange={(e) => handleChange(
+                          'aliases',
+                          e.target.value.split(',').map((value) => value.trim()).filter(Boolean)
+                        )}
+                        placeholder="Например: Ленинград"
                       />
                     </div>
 
@@ -416,6 +433,24 @@ export default function CityEditPage() {
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="relations">
+            <Card>
+              <CardHeader>
+                <CardTitle>Известные люди города</CardTitle>
+                <CardDescription>
+                  Редакционный список самых заметных комиков. Место рождения само по себе не добавляет человека сюда.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PersonSelector
+                  value={city.related_person_ids || []}
+                  onChange={(ids) => handleChange('related_person_ids', ids)}
+                  placeholder="Добавить известного человека..."
+                />
               </CardContent>
             </Card>
           </TabsContent>

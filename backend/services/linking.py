@@ -79,10 +79,10 @@ class LinkingService:
             if not collection:
                 continue
             
-            # Find published content linked to this person
+            # Draft pages are usable on the public site; only archived content is hidden.
             query = {
                 "related_person_ids": person_id,
-                "status": "published"
+                "status": {"$ne": "archived"}
             }
             
             cursor = collection.find(

@@ -10,21 +10,23 @@ from services.crud import (
     check_slug_unique, create_content, update_content,
     delete_content, get_by_id_or_slug, list_content, build_query,
 )
+from services.link_resolver import LinkResolver
+from services.foreign_agent_notices import decorate_document
 
 router = APIRouter(prefix="/content", tags=["articles"], dependencies=[Depends(require_editor_on_write)])
 
 
 @router.get("/articles/random", response_model=dict)
 async def get_random_article(request: Request):
-    """Return a random published article."""
+    """Return a random non-archived article."""
     db = await get_db()
     pipeline = [
-        {"$match": {"status": "published"}},
+        {"$match": {"status": {"$ne": "archived"}}},
         {"$sample": {"size": 1}},
     ]
     result = await db.articles.aggregate(pipeline).to_list(1)
     if not result:
-        raise HTTPException(status_code=404, detail="No published articles found")
+        raise HTTPException(status_code=404, detail="No articles found")
     return result[0]
 
 
@@ -61,9 +63,13 @@ async def list_articles(
 
 
 @router.get("/articles/{id_or_slug}", response_model=dict)
-async def get_article(id_or_slug: str):
+async def get_article(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)")):
     """Get article by ID or slug."""
-    return await get_by_id_or_slug("articles", id_or_slug, "Article not found")
+    article = await get_by_id_or_slug("articles", id_or_slug, "Article not found")
+    if not raw:
+        await LinkResolver.resolve_document(article)
+        await decorate_document(article)
+    return article
 
 
 @router.put("/articles/{id}", response_model=dict)

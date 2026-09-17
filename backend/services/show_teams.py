@@ -132,11 +132,11 @@ async def sync_related_teams(db, team_id: str, new_ids, old_ids=()) -> list:
 
 
 async def attach_related_teams(db, team: dict, public: bool = True) -> None:
-    """`related_teams`: [{id, name, url, show, status}] для страницы команды (на сайте — только опубликованные)."""
+    """`related_teams`: [{id, name, url, show, status}] для страницы команды (кроме архивных)."""
     ids = team.get("related_team_ids") or []
     query = {"_id": {"$in": ids}}
     if public:
-        query["status"] = {"$nin": ["draft", "archived"]}
+        query["status"] = {"$ne": "archived"}
     items = await db.teams.find(query, {"name": 1, "title": 1, "slug": 1, "show_id": 1, "full_path": 1, "status": 1,
                                         "facts": 1}).to_list(None)
     await attach_show_info(db, items)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Скрипт для периодического связывания городов с людьми и командами.
+Скрипт для периодического связывания городов с командами.
+
+Редакционный список известных людей сохраняется без изменений.
 
 Использование:
     # Разовый запуск
@@ -39,12 +41,12 @@ async def main():
         
         print(f"[{datetime.now()}] Linking complete:")
         print(f"  Cities processed: {result['cities_processed']}")
-        print(f"  Total people linked: {result['total_people_linked']}")
+        print(f"  Editorial people preserved: {result['editorial_people_preserved']}")
         print(f"  Total teams linked: {result['total_teams_linked']}")
         
         for detail in result['details']:
             if detail.get('people_count', 0) > 0 or detail.get('teams_count', 0) > 0:
-                print(f"  {detail['city_name']}: {detail['people_count']} people, {detail['teams_count']} teams")
+                print(f"  {detail['city_name']}: {detail['people_count']} editorial people, {detail['teams_count']} teams")
         
     finally:
         client.close()

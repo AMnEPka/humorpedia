@@ -4,6 +4,7 @@ import { contentApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +26,7 @@ const emptyPerson = {
   title: '',
   slug: '',
   full_name: '',
+  foreign_agent: false,
   status: 'draft',
   photo: null,
   bio: {
@@ -71,9 +73,10 @@ export default function PersonEditPage() {
   // Функция для получения случайного паттерна
   const getRandomPattern = () => {
     const patterns = [
-      '/media/imported/images/pattern-1.jpeg',
-      '/media/imported/images/pattern-2.jpeg',
-      '/media/imported/images/pattern-3.jpeg'
+      '/media/imported/images/pattern/1.jpg',
+      '/media/imported/images/pattern/2.jpg',
+      '/media/imported/images/pattern/3.jpg',
+      '/media/imported/images/pattern/4.jpg'
     ];
     const randomIndex = Math.floor(Math.random() * patterns.length);
     return {
@@ -446,6 +449,20 @@ export default function PersonEditPage() {
                   onChange={(photo) => setPerson(prev => ({ ...prev, photo }))}
                   label="Основная фотография"
                 />
+
+                <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="foreign-agent">Признан иностранным агентом</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Звёздочка у имени и пояснение на публичных страницах добавляются автоматически.
+                    </p>
+                  </div>
+                  <Switch
+                    id="foreign-agent"
+                    checked={Boolean(person.foreign_agent)}
+                    onCheckedChange={(foreign_agent) => setPerson(prev => ({ ...prev, foreign_agent }))}
+                  />
+                </div>
               </CardContent>
             </Card>
 

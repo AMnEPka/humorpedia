@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import EmojiRating from '@/components/EmojiRating';
 import { ExternalLink } from 'lucide-react';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 
 /**
  * Модуль фото/постера
@@ -44,24 +46,14 @@ export function PosterPhotoModule({ data, moduleData, className = '' }) {
     circle: 'rounded-full'
   };
 
-  if (!imageUrl) {
-    return (
-      <div className={`${sizeClasses[size]} ${shapeClasses[shape]} bg-muted flex items-center justify-center ${className}`}>
-        <span className="text-4xl font-bold text-muted-foreground">
-          {(data.title || data.full_name || data.name || '?').charAt(0).toUpperCase()}
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <div className={`${sizeClasses[size]} ${shapeClasses[shape]} overflow-hidden bg-muted shadow-lg ${className}`}>
-      <img 
-        src={imageUrl} 
-        alt={altText}
-        className="w-full h-full object-cover object-top"
-      />
-    </div>
+    <FittedImage
+      src={imageUrl || contentImageUrl(data)}
+      fallbackKey={data}
+      alt={altText}
+      className={`${sizeClasses[size]} ${shapeClasses[shape]} shadow-lg ${className}`}
+      loading="eager"
+    />
   );
 }
 

@@ -28,8 +28,9 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 1. `get_db()` → `app.state.db`
 2. `create_indexes(db)` — все индексы (уникальные `slug`/`id`, text-индексы, `kvn.full_path`, `season_data.league_slug+year` и т.д.)
 3. `ensure_admin_from_env(db)` (`services/admin_bootstrap.py`) — создаёт админа из `ADMIN_EMAIL`/`ADMIN_PASSWORD`, только если в БД нет ни одного admin
-4. `views_counter.start(db)` — фоновая задача, раз в 30 с сбрасывает накопленные просмотры `$inc` в БД
-5. на shutdown — flush счётчика, `close_db()`
+4. `ensure_competitions_synced`, `ensure_rosters_imported`, `ensure_show_appearances` — однократное построение производных данных, если соответствующие коллекции пусты
+5. `views_counter.start(db)` — фоновая задача, раз в 30 с сбрасывает накопленные просмотры `$inc` в БД
+6. на shutdown — flush счётчика, `close_db()`
 
 ## 2. Дерево репозитория
 
@@ -64,7 +65,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── Dockerfile-cloud          без mongo tools, gunicorn
 │   ├── requirements.txt          прямые runtime-зависимости (pinned); requirements-dev.txt — pytest
 │   ├── init_admin.py             CLI: создать админа / сбросить пароль (--email, --username, --reset; пароль из ADMIN_PASSWORD или ввод)
-│   ├── link_cities.py            cron-скрипт: связать города с людьми/командами
+│   ├── link_cities.py            cron-скрипт: обновить команды городов, не меняя редакционный список людей
 │   ├── models/
 │   │   ├── base.py               ContentType, TeamType, ContentStatus, SEOData, MediaFile, SocialLinks, BaseDocument, BaseContent
 │   │   ├── competition.py        SeasonUpdate / Stage / Game / GameResult / ParticipantRef — валидация правки сезона
@@ -84,7 +85,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── content_articles.py / content_news.py / content_quizzes.py / content_wiki.py   простой CRUD через services/crud.py
 │   │   ├── content_search.py     поиск, автокомплит, по тегу, search-for-links, resolve-link, duplicate
 │   │   ├── sections.py           иерархические разделы (full_path, дерево, каскадное удаление)
-│   │   ├── cities.py             города + авто-связывание
+│   │   ├── cities.py             города; люди — редакционная подборка, команды — точное связывание по городу
 │   │   ├── tags.py               теги, популярные, пересчёт usage_count
 │   │   ├── comments.py           комментарии, лайки, модерация
 │   │   ├── media.py              загрузка файлов, браузер volume-папок, rename/delete в источнике
@@ -99,6 +100,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── modx_dump.py          потоковое чтение SQL-дампа MODX без MySQL (site_content, TV, теги) → ModxSite
 │   │   ├── modx_content.py       импорт со старого сайта: HTML (сущности, пустые абзацы), ссылки старых URL → новые (LinkMapper), картинки, таблица фактов
 │   │   ├── modx_people.py        страница «Человек» MODX → тело POST /content/people в формате админки + old_id/old_urls/рейтинг
+│   │   ├── modx_cities.py        город MODX → POST /cities; редакционная подборка людей, очистка старых списков людей/команд
 │   │   ├── modx_shows.py         раздел «Шоу» MODX → тело POST /content/shows; дерево раздела, адреса /shows/<путь> для LinkMapper; SPECIAL_PAGES — страницы с уникальной структурой
 │   │   ├── modx_show_teams.py    страницы команд шоу MODX → тело POST /content/teams (show_id); составы, адреса команд для LinkMapper (link_builders)
 │   │   ├── show_teams.py         команды шоу: team_url, show_id/full_path, slug в пределах шоу, kvn_team_query, attach_show_info
@@ -109,7 +111,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── link_resolver.py      ссылки при выдаче: актуальные адреса (slug, old_id, old_urls, паттерны), отсутствующие страницы — текстом; load_old_id_urls
 │   │   ├── linking.py            related_person_ids → страницы людей, модуль humor_chronicles
 │   │   ├── tags.py               TagService.sync_tags / get_all / search
-│   │   └── city_linking.py       сопоставление городов по фактам людей/команд
+│   │   └── city_linking.py       точное сопоставление команд; список людей не строится по месту рождения
 │   ├── utils/
 │   │   ├── database.py           get_db()/close_db(): MONGO_URL или MONGO_HOST/PORT/USER/PASSWORD/AUTH_SOURCE, pool 10–50
 │   │   ├── auth.py               JWT (create/verify/grace), get_current_user, require_user/staff/editor/moderator/admin, require_editor_on_write
@@ -120,6 +122,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
 │       ├── import_people_modx.py      люди из SQL-дампа MODX через create_person (как админка): --ids/--slugs, --all (--batch 75), --list, --show, --apply, --update
+│       ├── import_cities_modx.py      города из дампа: dry-run, --ids/--slugs/--all, --apply/--update; ручные связи сохраняются
 │       ├── import_shows_modx.py       шоу из дампа MODX через create_show/update_show: --list, --ids, --tree, --publish, --show, --apply, --update
 │       ├── import_show_teams_modx.py  команды шоу из дампа MODX через create_team/update_team: --list, --ids, --shows, --all, --publish, --show, --apply, --update
 │       ├── fix_legacy_links.py        ссылки MODX в перенесённом контенте (teams/kvn/shows/people) → адреса нового сайта (--apply)
@@ -182,7 +185,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 
 - `mongo_data` — данные Mongo
 - `images_volume` → `/app/images` → URL `/images/*`
-- `imported_images_volume` → `/app/media/imported/images` → URL `/media/imported/images/*` (server.py монтирует `/app/media`, запасной путь — `/app/frontend/public/media`)
+- `imported_images_volume` → `/app/media/imported/images` → URL `/media/imported/images/*` (server.py монтирует `/app/media`, запасной путь — `/app/frontend/public/media`). При старте четыре фирменных заглушки копируются из `backups/images/pattern/` в `pattern/` этого volume.
   Наполнение: папка `images/` старого сайта копируется в корень volume (`images/people/x.jpg` → URL `/media/imported/images/people/x.jpg`). Источники на машине владельца: `backups/images` (сентябрь 2026, 2359 файлов) и более полная `Downloads/images` (декабрь 2025, 3116 файлов; общие файлы совпадают побайтно) — залиты обе, 3128 файлов.
 - `frontend_node_modules`, `frontend_media` (пустой, чтобы webpack не сканировал 3000+ картинок)
 - prod: `uploads_data`, `backups_data`

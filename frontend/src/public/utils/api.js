@@ -17,6 +17,7 @@ const api = axios.create({
 
 // Public API - no auth required
 export const publicApi = {
+  getPersonShows: (id) => api.get(`/show-appearances/people/${id}`),
   // News
   getNews: (params) => api.get('/content/news', { params }),
   getNewsItem: (slug) => api.get(`/content/news/${slug}`),
@@ -81,8 +82,8 @@ export const publicApi = {
   // Cities (Geography)
   getCities: (params) => api.get('/cities/', { params }),
   getCity: (slug) => api.get(`/cities/${slug}`),
-  getCityRelatedPeople: (cityId, limit = 20) => api.get(`/cities/${cityId}/related-people`, { params: { limit } }),
-  getCityRelatedTeams: (cityId, limit = 20) => api.get(`/cities/${cityId}/related-teams`, { params: { limit } }),
+  getCityRelatedPeople: (cityId, limit = 100) => api.get(`/cities/${cityId}/related-people`, { params: { limit } }),
+  getCityRelatedTeams: (cityId, limit = 500) => api.get(`/cities/${cityId}/related-teams`, { params: { limit } }),
   
   // Search
   search: (query, params) => api.get('/content/search', { params: { q: query, ...params } }),

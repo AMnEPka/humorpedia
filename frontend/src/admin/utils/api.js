@@ -186,14 +186,14 @@ export const contentApi = {
 
   // Articles
   listArticles: (params) => api.get('/content/articles', { params }),
-  getArticle: (id) => api.get(`/content/articles/${id}`),
+  getArticle: (id) => api.get(`/content/articles/${id}`, { params: { raw: true } }),
   createArticle: (data) => api.post('/content/articles', data),
   updateArticle: (id, data) => api.put(`/content/articles/${id}`, data),
   deleteArticle: (id) => api.delete(`/content/articles/${id}`),
 
   // News
   listNews: (params) => api.get('/content/news', { params }),
-  getNews: (id) => api.get(`/content/news/${id}`),
+  getNews: (id) => api.get(`/content/news/${id}`, { params: { raw: true } }),
   createNews: (data) => api.post('/content/news', data),
   updateNews: (id, data) => api.put(`/content/news/${id}`, data),
   deleteNews: (id) => api.delete(`/content/news/${id}`),
@@ -214,7 +214,7 @@ export const contentApi = {
 
   // Cities (Geography)
   listCities: (params) => api.get('/cities/', { params }),
-  getCity: (id) => api.get(`/cities/${id}`),
+  getCity: (id) => api.get(`/cities/${id}`, { params: { raw: true } }),
   createCity: (data) => api.post('/cities/', data),
   updateCity: (id, data) => api.put(`/cities/${id}`, data),
   deleteCity: (id) => api.delete(`/cities/${id}`),

@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { publicApi } from '../utils/api';
 import ContentTable from './ContentTable';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 
 /**
  * Renders a single content module based on its type
@@ -119,7 +121,14 @@ export default function ModuleRenderer({ module, personId }) {
                   <div className="text-sm font-medium text-blue-600">{event.date || event.year}</div>
                   <div className="font-medium">{event.title}</div>
                   {event.description && (
-                    <p className="text-gray-600 text-sm mt-1">{event.description}</p>
+                    /<\s*\/?\s*[a-zA-Z][^>]*>/.test(event.description) ? (
+                      <div
+                        className="prose prose-sm max-w-none text-gray-600 mt-1"
+                        dangerouslySetInnerHTML={{ __html: event.description }}
+                      />
+                    ) : (
+                      <p className="text-gray-600 text-sm mt-1">{event.description}</p>
+                    )
                   )}
                 </div>
               </div>
@@ -296,20 +305,20 @@ function HumorChroniclesModule({ module, personId }) {
     };
     const slug = item.slug || item._id || item.id;
     const url = `${typeRoutes[type]}/${slug}`;
-    const coverImage = item.cover_image?.url || item.poster?.url || item.cover_image || item.poster;
+    const coverImage = contentImageUrl(item, item.cover_image, item.poster, item.image);
 
     return (
       <Link to={url} className="block">
         <div className="flex gap-3 p-2 hover:bg-gray-50 rounded transition-colors">
-          {coverImage && (
-            <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-gray-100">
-              <img
-                src={coverImage}
-                alt={item.title || item.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+          <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-gray-100">
+            <FittedImage
+              src={coverImage}
+              fallbackKey={item}
+              alt={item.title || item.name}
+              className="w-full h-full"
+              fit="cover"
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
               <span className="text-xs text-muted-foreground uppercase">{typeLabels[type]}</span>

@@ -440,3 +440,20 @@ code {
 .prose.max-w-none {
     max-width: none;
 }
+
+.foreign-agent-marker {
+    margin-left: 0.08em;
+    color: #4b5563;
+    font-size: 0.65em;
+    line-height: 0;
+    vertical-align: super;
+}
+
+.foreign-agent-notice {
+    margin-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+    color: #4b5563;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}

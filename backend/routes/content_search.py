@@ -172,10 +172,10 @@ async def search_all(
         coll_name, fields = collection_map[content_type]
         collection = getattr(db, coll_name)
         
-        # Use MongoDB text search for published content
+        # Draft pages are valid public results; only archived content is hidden.
         query = {
             "$and": [
-                {"status": "published"},
+                {"status": {"$ne": "archived"}},
                 {"$text": {"$search": q}}
             ]
         }
@@ -215,7 +215,7 @@ async def search_autocomplete(
         
         # Use MongoDB text search for autocomplete
         query = {
-            "status": "published",
+            "status": {"$ne": "archived"},
             "$text": {"$search": q}
         }
         
@@ -275,7 +275,7 @@ async def search_by_tag(
 
     for coll_name, content_type in collection_map.items():
         collection = getattr(db, coll_name)
-        query = {"status": "published", "tags": tag}
+        query = {"status": {"$ne": "archived"}, "tags": tag}
         count = await collection.count_documents(query)
         total_count += count
         if count > 0:

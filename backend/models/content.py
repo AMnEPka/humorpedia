@@ -24,6 +24,7 @@ class Person(BaseContent):
     
     # Basic info
     full_name: str
+    foreign_agent: bool = False
     photo: Optional[MediaFile] = None
     bio: PersonBio = Field(default_factory=PersonBio)
     social_links: SocialLinks = Field(default_factory=SocialLinks)
@@ -47,6 +48,7 @@ class PersonCreate(BaseModel):
     title: str
     slug: str
     full_name: str
+    foreign_agent: bool = False
     photo: Optional[MediaFile] = None
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None
@@ -64,6 +66,7 @@ class PersonUpdate(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
     full_name: Optional[str] = None
+    foreign_agent: Optional[bool] = None
     photo: Optional[MediaFile] = None
     bio: Optional[PersonBio] = None
     social_links: Optional[SocialLinks] = None

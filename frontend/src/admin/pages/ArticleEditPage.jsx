@@ -32,9 +32,10 @@ export default function ArticleEditPage() {
   // Функция для получения случайного паттерна
   const getRandomPattern = () => {
     const patterns = [
-      '/media/imported/images/pattern-1.jpeg',
-      '/media/imported/images/pattern-2.jpeg',
-      '/media/imported/images/pattern-3.jpeg'
+      '/media/imported/images/pattern/1.jpg',
+      '/media/imported/images/pattern/2.jpg',
+      '/media/imported/images/pattern/3.jpg',
+      '/media/imported/images/pattern/4.jpg'
     ];
     const randomIndex = Math.floor(Math.random() * patterns.length);
     return {

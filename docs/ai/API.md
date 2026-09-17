@@ -47,7 +47,7 @@
 | GET | `/people` | список, фильтры `status, tag, search, letter`, сортировка по title |
 | GET | `/people/search?q=` | быстрый поиск для селекторов `[{id, name, slug}]` |
 | GET | `/people/{id_or_slug}/linked-content?types=news,article,show` | контент для модуля humor_chronicles |
-| GET | `/people/{id_or_slug}?raw=` | документ; ссылки в модулях и фактах проверяются (отсутствующие страницы — текстом), `raw=true` — как в данных (админка) |
+| GET | `/people/{id_or_slug}?raw=` | документ; ссылки проверяются, ссылки на людей с `foreign_agent=true` получают динамическую звёздочку и `foreign_agent_notice`; `raw=true` — как в данных (админка) |
 | PUT | `/people/{id}` ✏️ | обновить (services/crud.update_content) |
 | DELETE | `/people/{id}` ✏️ | удалить |
 
@@ -84,12 +84,14 @@ POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`
 
 ### Статьи / Новости / Квизы / Вики
 Одинаковый CRUD через `services/crud.py`:
-- `articles`: POST `/articles` · GET `/articles` · GET `/articles/random` · GET `/articles/{id_or_slug}` · PUT `/articles/{id}` · DELETE `/articles/{id}`
-- `news`: POST/GET `/news`, GET `/news/{id_or_slug}`, PUT/DELETE `/news/{id}`
+- `articles`: POST `/articles` · GET `/articles` · GET `/articles/random` · GET `/articles/{id_or_slug}?raw=` · PUT `/articles/{id}` · DELETE `/articles/{id}`
+- `news`: POST/GET `/news`, GET `/news/{id_or_slug}?raw=`, PUT/DELETE `/news/{id}`
 - `quizzes`: POST/GET `/quizzes`, GET `/quizzes/{id_or_slug}`, PUT/DELETE `/quizzes/{id}`
 - `wiki`: POST/GET `/wiki`, GET `/wiki/{id_or_slug}`, PUT/DELETE `/wiki/{id}`
 
 Все write — ✏️. При сохранении `related_person_ids` обновляются связи с людьми (`services/linking.py`).
+Публичные GET статьи и новости проверяют внутренние ссылки и динамически добавляют пометку иностранного агента;
+админка использует `raw=true`, чтобы не записывать сгенерированную разметку.
 
 ### Поиск (`content_search.py`)
 | Метод | Путь | Описание |
@@ -108,6 +110,10 @@ POST `/` ✏️ · GET `/` · GET `/tree` · GET `/{id_or_slug}` · GET `/{secti
 ## cities.py — `/cities` (коллекция `cities`)
 POST `/` ✏️ · GET `/` · GET `/{id_or_slug}` · PUT `/{id}` ✏️ · DELETE `/{id}` ✏️ · GET `/{city_id}/related-people` · GET `/{city_id}/related-teams` · POST `/link-all` ✏️ · POST `/{city_id}/link` ✏️
 (Корень — со слэшем и без.)
+
+`GET /{id_or_slug}?raw=true` возвращает документ без обработки ссылок и динамических пометок для админки.
+`POST /link-all` и `POST /{city_id}/link` пересчитывают команды по точному значению города, сохраняя
+редакционный `related_person_ids` без изменений.
 
 ## tags.py — `/tags`
 POST `` ✏️ · GET `` · GET `/popular` · GET `/{id_or_slug}` · PUT `/{id}` ✏️ · DELETE `/{id}` ✏️ · POST `/update-counts` ✏️
@@ -146,3 +152,7 @@ GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + с�
 
 ## memberships.py — `/competitions` (составы, карьера человека)
 GET `/teams/{id_or_slug}/members` · POST `/memberships` ✏️ · PUT `/memberships/{id}` ✏️ · DELETE `/memberships/{id}` ✏️ · POST `/memberships/import-rosters?team=` 🛡 · GET `/people/{id_or_slug}/career`
+
+## show_appearances.py — `/show-appearances` (участие людей в шоу)
+GET `/people/{person_id}` 🔓 · GET `/review` ✏️ · POST `/sync` ✏️ · PATCH `/review/{id}` ✏️ · POST `/review/{id}/create-person` ✏️.
+Публичный метод отдаёт участие для страницы человека; в существующие карточки участников шоу проверенные ссылки добавляет `content_shows.py`. Проверка, ручная привязка и создание одного черновика доступны редактору. Подробно — [SHOW_APPEARANCES.md](SHOW_APPEARANCES.md).

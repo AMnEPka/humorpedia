@@ -8,11 +8,13 @@ import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react
 import EmojiRating from '@/components/EmojiRating';
 import { isSystemModule } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
-import { mediaUrl, orderedFacts } from '@/utils/media';
+import { contentImageUrl, orderedFacts } from '@/utils/media';
+import FittedImage from '@/components/FittedImage';
 import ContentTable from '../components/ContentTable';
 import CollapsibleCard from '../components/CollapsibleCard';
 import TeamDetailPage from './TeamDetailPage';
 import { isShowTeamPath } from '@/utils/teams';
+import ForeignAgentNotice from '../components/ForeignAgentNotice';
 
 // Module renderer component
 function ModuleRenderer({ module }) {
@@ -111,13 +113,13 @@ function ModuleRenderer({ module }) {
                 className="text-center group"
               >
                 <div className="aspect-square rounded-full overflow-hidden bg-muted mb-2 mx-auto w-20 h-20">
-                  {person.photo ? (
-                    <img src={person.photo} alt={person.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                      {person.name?.[0]}
-                    </div>
-                  )}
+                  <FittedImage
+                    src={contentImageUrl(person, person.photo)}
+                    fallbackKey={person.slug || person.name}
+                    alt={person.name}
+                    className="w-full h-full"
+                    fit="cover"
+                  />
                 </div>
                 <div className="font-medium text-sm group-hover:text-primary transition-colors">
                   {person.name}
@@ -174,30 +176,35 @@ function ModuleRenderer({ module }) {
           <CardContent>
             <div className="grid sm:grid-cols-2 gap-4">
               {module.data.items.map((item, i) => {
-                const photo = mediaUrl(item.photo);
-                const name = item.person_slug
-                  ? <Link to={`/people/${item.person_slug}`} className="hover:text-blue-600">{item.name}</Link>
-                  : item.name;
-                return (
-                  <div key={i} className="flex gap-3 p-3 rounded-lg border bg-white min-w-0">
+                const photo = contentImageUrl(item.person_slug || item.name, item.photo);
+                const card = (
+                  <>
                     <div className="w-20 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                      {photo ? (
-                        <img src={photo} alt={item.name} className="w-full h-full object-cover object-top" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                          {item.name?.[0]}
-                        </div>
-                      )}
+                      <FittedImage
+                        src={photo}
+                        fallbackKey={item.person_slug || item.name}
+                        alt={item.name}
+                        className="w-full h-full"
+                        imageClassName="object-top"
+                        fit="cover"
+                      />
                     </div>
                     <div className="min-w-0 text-sm">
-                      <div className="font-semibold text-base mb-1">{name}</div>
+                      <div className="font-semibold text-base mb-1">{item.name}</div>
                       {(item.facts || []).map((fact, j) => (
                         <div key={j} className="text-gray-600">
                           <span className="text-gray-500">{fact.title}:</span> {fact.value}
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </>
+                );
+                return item.person_url ? (
+                  <Link key={i} to={item.person_url} className="flex gap-3 p-3 rounded-lg border bg-white min-w-0 hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={i} className="flex gap-3 p-3 rounded-lg border bg-white min-w-0">{card}</div>
                 );
               })}
             </div>
@@ -348,15 +355,15 @@ function ShowPage({ fullPath }) {
       <div className="mb-8">
         <div className="flex items-start gap-6">
           {/* Poster - рендерится если есть модуль poster_photo */}
-          {sidebarModules.find(m => m.type === 'poster_photo') && mediaUrl(show.poster) && (
+          {sidebarModules.find(m => m.type === 'poster_photo') && (
             <div className="w-32 sm:w-48 flex-shrink-0">
-              <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg">
-                <img
-                  src={mediaUrl(show.poster)}
-                  alt={show.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <FittedImage
+                src={contentImageUrl(show, show.poster)}
+                fallbackKey={show}
+                alt={show.title}
+                className="aspect-[2/3] rounded-xl shadow-lg"
+                loading="eager"
+              />
             </div>
           )}
 
@@ -510,6 +517,10 @@ function ShowPage({ fullPath }) {
           {contentModules.map((module) => (
             <ModuleRenderer key={module.id} module={module} />
           ))}
+          <ForeignAgentNotice
+            visible={show.foreign_agent_notice}
+            notices={show.foreign_agent_notices}
+          />
         </div>
       </div>
     </div>

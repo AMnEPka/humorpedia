@@ -119,12 +119,16 @@ class RestoreTeamLogosRequest(BaseModel):
 #  Team helper functions
 # ---------------------------------------------------------------------------
 
-def _team_placeholder_logo() -> dict:
+def _team_placeholder_logo(key: str = "team") -> dict:
     """
     Default placeholder logo used when a team has no logo yet.
     Must exist in frontend static/media.
     """
-    url = "/media/imported/images/pattern-1.jpeg"
+    value = str(key or "team")
+    hash_value = 0
+    for char in value:
+        hash_value = ((hash_value * 31) + ord(char)) & 0xFFFFFFFF
+    url = f"/media/imported/images/pattern/{hash_value % 4 + 1}.jpg"
     return {"url": url, "alt": "", "caption": "", "thumbnail": url}
 
 
@@ -136,9 +140,12 @@ def _is_placeholder_logo(logo: any) -> bool:
         return True
     if isinstance(logo, dict):
         url = logo.get("url") or logo.get("thumbnail") or ""
-        return bool(url and "/media/imported/images/pattern-" in url)
+        return bool(url and (
+            "/media/imported/images/pattern-" in url
+            or "/media/imported/images/pattern/" in url
+        ))
     if isinstance(logo, str):
-        return "/media/imported/images/pattern-" in logo
+        return "/media/imported/images/pattern-" in logo or "/media/imported/images/pattern/" in logo
     return False
 
 
@@ -212,7 +219,7 @@ def _pick_team_logo(doc: dict) -> dict:
             return normalized
     
     # Fallback to placeholder
-    return _team_placeholder_logo()
+    return _team_placeholder_logo(doc.get("slug") or doc.get("name") or doc.get("title"))
 
 
 def _is_empty_text_block(m: dict) -> bool:
@@ -534,7 +541,7 @@ async def bulk_create_teams(data: BulkTeamCreateRequest):
             slug=slug,
             name=name,
             team_type="kvn",
-            logo=_team_placeholder_logo(),
+            logo=_team_placeholder_logo(slug),
             facts=scaffold_facts,
             facts_order=scaffold_order,
             social_links={},
@@ -675,7 +682,7 @@ async def create_team(data: TeamCreate):
     primary_tag = data.primary_tag or data.name or data.title
 
     # Default placeholder logo when none provided
-    logo = data.logo if data.logo is not None else _team_placeholder_logo()
+    logo = data.logo if data.logo is not None else _team_placeholder_logo(data.slug)
 
     # If modules are not provided, try to use default team template (if configured)
     base_modules_input = [m.model_dump() if hasattr(m, "model_dump") else m for m in (data.modules or [])]
@@ -825,7 +832,7 @@ async def _add_show_context(db, team: dict) -> dict:
         parent_id = current.get("parent_id")
         current = await db.shows.find_one({"_id": parent_id}, fields) if parent_id else None
     teams_page = await db.shows.find_one(
-        {"full_path": f"{team['show']['full_path']}/teams", "status": {"$nin": ["draft", "archived"]}},
+        {"full_path": f"{team['show']['full_path']}/teams", "status": {"$ne": "archived"}},
         {"title": 1, "full_path": 1},
     )
     if teams_page:

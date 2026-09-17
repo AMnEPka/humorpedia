@@ -9,6 +9,7 @@ import { ru } from 'date-fns/locale';
 import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
 import { usePageTitle } from '@/utils/pageTitle';
+import ForeignAgentNotice from '../components/ForeignAgentNotice';
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
@@ -138,6 +139,8 @@ export default function ArticleDetailPage() {
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
       ) : null}
+
+      <ForeignAgentNotice visible={article.foreign_agent_notice} />
 
       {/* Share */}
       <div className="mt-12 pt-8 border-t">

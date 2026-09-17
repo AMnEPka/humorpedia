@@ -3,10 +3,22 @@ import { useParams, Link } from 'react-router-dom';
 import { MapPin, Loader2, ArrowLeft, Users, UsersRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import ModuleRenderer from '../components/ModuleRenderer';
+import { ModuleList } from '../components/ModuleRenderer';
 import publicApi from '../utils/api';
 import { usePageTitle } from '@/utils/pageTitle';
-import { teamUrl } from '@/utils/teams';
+import { teamSubtitle, teamUrl } from '@/utils/teams';
+import { contentImageUrl, orderedFacts, personPhotoUrl, teamLogoUrl } from '@/utils/media';
+import FittedImage from '@/components/FittedImage';
+import ForeignAgentNotice from '../components/ForeignAgentNotice';
+
+function cityTeamSubtitle(team) {
+  if (!team?.is_reference) return teamSubtitle(team);
+  const context = (team.context || '').trim();
+  if (!context) return 'Команда';
+  if (/квн/i.test(context) || /^команд/i.test(context)) return 'Команда КВН';
+  const show = context.replace(/^шоу\s+/i, '').replace(/^[«»"']+|[«»"']+$/g, '');
+  return `Команда шоу «${show}»`;
+}
 
 export default function CityDetailPage() {
   const { slug } = useParams();
@@ -126,30 +138,116 @@ export default function CityDetailPage() {
           {/* Modules */}
           {city.modules?.length > 0 && (
             <div className="space-y-8">
-              <ModuleRenderer modules={city.modules} />
+              <ModuleList modules={city.modules} />
             </div>
           )}
+
+          {/* Editorial people shortlist */}
+          {relatedPeople.length > 0 && (
+            <section className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Известные люди
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[...relatedPeople]
+                  .sort((a, b) => (a.full_name || a.title || '').localeCompare(b.full_name || b.title || '', 'ru'))
+                  .map((person) => (
+                    <Link
+                      key={person._id}
+                      to={`/people/${person.slug}`}
+                      className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:border-blue-200 hover:bg-blue-50/40 transition-colors"
+                    >
+                      <FittedImage
+                        src={personPhotoUrl(person)}
+                        fallbackKey={person}
+                        alt={person.full_name || person.title}
+                        className="w-12 h-12 rounded-full shrink-0"
+                        fit="cover"
+                      />
+                      <span className="font-medium text-gray-900">
+                        {person.full_name || person.title}
+                      </span>
+                    </Link>
+                  ))}
+              </div>
+            </section>
+          )}
+
+          {/* All teams whose city field matches this city */}
+          {relatedTeams.length > 0 && (
+            <section className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <UsersRound className="h-5 w-5" />
+                Команды
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[...relatedTeams]
+                  .sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || '', 'ru'))
+                  .map((team) => {
+                    const subtitle = cityTeamSubtitle(team);
+                    const card = (
+                      <>
+                      <FittedImage
+                        src={teamLogoUrl(team)}
+                        fallbackKey={team}
+                        alt={team.name || team.title}
+                        className="w-12 h-12 rounded-full shrink-0"
+                        fit="cover"
+                      />
+                        <span>
+                          <span className="block font-medium text-gray-900">
+                            {team.name || team.title}
+                          </span>
+                          {subtitle && (
+                            <span className="block text-xs text-gray-500 mt-0.5">{subtitle}</span>
+                          )}
+                        </span>
+                      </>
+                    );
+                    const url = teamUrl(team);
+                    return url ? (
+                      <Link
+                        key={team._id}
+                        to={url}
+                        className="flex items-center gap-3 rounded-lg border border-gray-100 p-3 hover:border-blue-200 hover:bg-blue-50/40 transition-colors"
+                      >
+                        {card}
+                      </Link>
+                    ) : (
+                      <div
+                        key={team._id}
+                        className="flex items-center gap-3 rounded-lg border border-gray-100 p-3"
+                      >
+                        {card}
+                      </div>
+                    );
+                  })}
+              </div>
+            </section>
+          )}
+
+          <ForeignAgentNotice visible={city.foreign_agent_notice} />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Poster */}
-          {city.poster?.url && (
-            <div className="rounded-lg overflow-hidden shadow-sm">
-              <img
-                src={city.poster.url}
-                alt={city.name}
-                className="w-full aspect-video object-cover"
-              />
-            </div>
-          )}
+          <div className="rounded-lg overflow-hidden shadow-sm">
+            <FittedImage
+              src={contentImageUrl(city, city.poster)}
+              fallbackKey={city}
+              alt={city.name}
+              className="aspect-video"
+            />
+          </div>
 
           {/* Facts */}
           {city.facts && Object.keys(city.facts).length > 0 && (
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Факты</h3>
               <dl className="space-y-3">
-                {Object.entries(city.facts).map(([key, value]) => (
+                {orderedFacts(city.facts, city.facts_order).map(([key, value]) => (
                   <div key={key}>
                     <dt className="text-sm text-gray-500">{key}</dt>
                     <dd className="font-medium text-gray-900">{value}</dd>
@@ -181,73 +279,6 @@ export default function CityDetailPage() {
             );
           })()}
 
-          {/* Related People */}
-          {relatedPeople.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Известные люди
-              </h3>
-              <div className="space-y-3">
-                {relatedPeople.slice(0, 10).map((person) => (
-                  <Link
-                    key={person._id}
-                    to={`/people/${person.slug}`}
-                    className="flex items-center gap-3 hover:bg-gray-50 -mx-2 px-2 py-1 rounded"
-                  >
-                    {person.photo?.thumbnail ? (
-                      <img
-                        src={person.photo.thumbnail}
-                        alt={person.full_name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-gray-400" />
-                      </div>
-                    )}
-                    <span className="text-sm font-medium text-gray-900 hover:text-blue-600">
-                      {person.full_name || person.title}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Related Teams */}
-          {relatedTeams.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <UsersRound className="h-5 w-5" />
-                Команды
-              </h3>
-              <div className="space-y-3">
-                {relatedTeams.slice(0, 10).map((team) => (
-                  <Link
-                    key={team._id}
-                    to={teamUrl(team)}
-                    className="flex items-center gap-3 hover:bg-gray-50 -mx-2 px-2 py-1 rounded"
-                  >
-                    {team.logo?.thumbnail ? (
-                      <img
-                        src={team.logo.thumbnail}
-                        alt={team.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <UsersRound className="h-5 w-5 text-gray-400" />
-                      </div>
-                    )}
-                    <span className="text-sm font-medium text-gray-900 hover:text-blue-600">
-                      {team.name || team.title}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
