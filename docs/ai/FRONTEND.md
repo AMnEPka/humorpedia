@@ -38,7 +38,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     SectionDetailPage.jsx      CATCH-ALL `/*`: kvn/by-path → sections/path → redirects/lookup; при season_data отдаёт SeasonDetailPage; таблицы чемпионов лиг
     SeasonDetailPage.jsx       страница сезона КВН (стадии, игры, победители, жюри, prev/next)
     JuryStatsPage.jsx          статистика жюри Высшей лиги
-    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН (TeamDetailPage: структурированный состав + «Участие в турнирах»)
+    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН и команды шоу (TeamDetailPage: структурированный состав + «Участие в турнирах»; для команды шоу — showTeamPath, подпись «Команда шоу «…»»)
     PersonDetailPage.jsx / PeopleListPage.jsx
     ShowDetailPage.jsx / ShowsListPage.jsx      шоу до 4 уровней вложенности
     ArticleDetailPage / ArticlesListPage, NewsDetailPage / NewsListPage, QuizDetailPage / QuizzesListPage
@@ -73,6 +73,7 @@ admin/                         АДМИНКА
 | `/people`, `/people/:slug` | PeopleListPage, PersonDetailPage |
 | `/teams`, `/teams/:category` | редирект на `/kvn/teams` |
 | `/kvn/teams`, `/kvn/teams/:slug` | TeamsListPage, TeamDetailPage |
+| `/shows/{шоу}/teams/:slug` | ShowDetailPage → TeamDetailPage (адрес с предпоследним сегментом `teams` — команда шоу, `utils/teams.js`) |
 | `/shows[/:parentSlug[/:childSlug[/:grandchildSlug[/:greatGrandchildSlug]]]]` | ShowsListPage / ShowDetailPage |
 | `/quizzes`, `/quizzes/:slug` | QuizzesListPage, QuizDetailPage |
 | `/city`, `/city/:slug` | CitiesListPage, CityDetailPage |

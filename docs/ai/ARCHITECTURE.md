@@ -100,6 +100,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── modx_content.py       импорт со старого сайта: HTML (сущности, пустые абзацы), ссылки старых URL → новые (LinkMapper), картинки, таблица фактов
 │   │   ├── modx_people.py        страница «Человек» MODX → тело POST /content/people в формате админки + old_id/old_urls/рейтинг
 │   │   ├── modx_shows.py         раздел «Шоу» MODX → тело POST /content/shows; дерево раздела, адреса /shows/<путь> для LinkMapper; SPECIAL_PAGES — страницы с уникальной структурой
+│   │   ├── modx_show_teams.py    страницы команд шоу MODX → тело POST /content/teams (show_id); составы, адреса команд для LinkMapper (link_builders)
+│   │   ├── show_teams.py         команды шоу: team_url, show_id/full_path, slug в пределах шоу, kvn_team_query, attach_show_info
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
 │   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
 │   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)
@@ -119,6 +121,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
 │       ├── import_people_modx.py      люди из SQL-дампа MODX через create_person (как админка): --ids/--slugs, --all (--batch 75), --list, --show, --apply, --update
 │       ├── import_shows_modx.py       шоу из дампа MODX через create_show/update_show: --list, --ids, --tree, --publish, --show, --apply, --update
+│       ├── import_show_teams_modx.py  команды шоу из дампа MODX через create_team/update_team: --list, --ids, --shows, --all, --publish, --show, --apply, --update
 │       ├── fix_legacy_links.py        ссылки MODX в перенесённом контенте (teams/kvn/shows/people) → адреса нового сайта (--apply)
 │       ├── restore_backup.py / restore_specific_backup.py   восстановление из backups/*.tar.gz
 │       ├── migrate_urls.py            обновление старых URL в контенте, поиск битых ссылок

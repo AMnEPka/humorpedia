@@ -57,12 +57,13 @@
 | POST | `/teams/bulk-check` ✏️ | проверить список названий на существование |
 | POST | `/teams/bulk-create` ✏️ | массово создать команды (со scaffold модулей) |
 | POST | `/teams/restore-logos` 🛡 | восстановить логотипы из старых полей |
-| POST | `/teams` ✏️ | создать |
-| GET | `/teams` | список (кэш 2 мин), фильтры `status, team_type, tag, search, letter`; `team_type=kvn` включает команды без `team_type` |
-| GET | `/teams/{id_or_slug}?raw=` | документ (кэш 5 мин), без записи при чтении; ссылки проверяются, `raw=true` — без обработки и кэша (админка) |
+| POST | `/teams` ✏️ | создать; `show_id` — команда шоу (адрес и `team_type` вычисляются, заготовки КВН не добавляются) |
+| GET | `/teams` | список (кэш 2 мин), фильтры `status, team_type, tag, search, letter, show_id`; `team_type=kvn` — команды КВН (в т.ч. без `team_type`), `team_type={slug шоу}` — команды шоу; у элементов `url` и `show` |
+| GET | `/teams/by-path/{шоу}/teams/{slug}` | команда шоу по адресу (публичная страница `/shows/…/teams/{slug}`): + `show`, `breadcrumbs`, ссылки проверяются |
+| GET | `/teams/{id_or_slug}?raw=` | документ (кэш 5 мин), без записи при чтении; slug — только команды КВН (команду шоу — по `_id`); ссылки проверяются, `raw=true` — без обработки и кэша (админка); + `show`, `url` |
 | POST | `/teams/{id_or_slug}/refresh` ✏️ | self-healing: scaffold фактов/модулей, авто-модуль «Список игр команды» из season_data, логотип, primary_tag |
 | POST | `/teams-refresh-all` ✏️ | self-healing всех команд |
-| PUT | `/teams/{id}` ✏️ | обновить; при смене slug — обновляет ссылки во всех `kvn.season_data` и пересобирает сезоны (исторические названия не меняются) |
+| PUT | `/teams/{id}` ✏️ | обновить; `show_id` (`""` — сделать командой КВН) и slug пересчитывают адрес; при смене slug команды КВН — обновляет ссылки во всех `kvn.season_data` и пересобирает сезоны (исторические названия не меняются) |
 | DELETE | `/teams/{id}` ✏️ | удалить |
 
 ### КВН (`content_kvn.py`, коллекция `kvn`)
