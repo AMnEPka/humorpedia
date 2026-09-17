@@ -13,6 +13,7 @@ old_id, old_urls (для редиректов), рейтинг и даты.
     python scripts/import_people_modx.py --ids 117 --apply --update      # пересоздать содержимое существующих
     python scripts/import_people_modx.py --list                          # все люди дампа и статус импорта
     python scripts/import_people_modx.py --all --apply                   # всех опубликованных, кого ещё нет, группами по 75 (--batch N)
+    python scripts/import_people_modx.py --all --apply --update          # пересоздать всех (обновить ссылки)
 """
 import argparse
 import asyncio
@@ -84,7 +85,9 @@ async def run(args) -> None:
         ids.append(by_slug[slug])
     if args.all:
         skipped = [r for r in people.values() if not r.get("published")]
-        ids = sorted(rid for rid, r in people.items() if r.get("published") and r.get("alias") not in existing)
+        # с --update — и уже перенесённых (например, чтобы обновить ссылки после переноса новых разделов)
+        ids = sorted(rid for rid, r in people.items()
+                     if r.get("published") and (args.update or r.get("alias") not in existing))
         print(f"К импорту: {len(ids)} (неопубликованных на старом сайте пропущено: {len(skipped)})")
     if not ids:
         raise SystemExit("Укажите --ids, --slugs или --all (или --list)")
@@ -188,6 +191,6 @@ if __name__ == "__main__":
     parser.add_argument("--show", action="store_true", help="напечатать документ целиком")
     parser.add_argument("--apply", action="store_true", help="записать в базу")
     parser.add_argument("--update", action="store_true", help="перезаписать существующих (по slug)")
-    parser.add_argument("--all", action="store_true", help="всех опубликованных, кого ещё нет в базе")
+    parser.add_argument("--all", action="store_true", help="всех опубликованных, кого ещё нет в базе (с --update — всех)")
     parser.add_argument("--batch", type=int, default=75, help="размер группы (по умолчанию 75)")
     asyncio.run(main(parser.parse_args()))
