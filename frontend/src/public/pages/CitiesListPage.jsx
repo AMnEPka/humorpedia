@@ -6,6 +6,7 @@ import publicApi from '../utils/api';
 import FittedImage from '@/components/FittedImage';
 import { contentImageUrl } from '@/utils/media';
 import ListPageHeader from '../components/ListPageHeader';
+import AlphabetFilter from '../components/AlphabetFilter';
 
 export default function CitiesListPage() {
   const [cities, setCities] = useState([]);
@@ -15,6 +16,7 @@ export default function CitiesListPage() {
 
   const page = parseInt(searchParams.get('page') || '1');
   const query = searchParams.get('q') || searchParams.get('search') || '';
+  const letter = searchParams.get('letter') || '';
   const [search, setSearch] = useState(query);
   const limit = 24;
 
@@ -27,6 +29,7 @@ export default function CitiesListPage() {
           limit,
           status: 'published',
           ...(query && { search: query }),
+          ...(letter && { letter }),
         };
         const response = await publicApi.getCities(params);
         setCities(response.data.items || []);
@@ -38,7 +41,7 @@ export default function CitiesListPage() {
       }
     };
     fetchCities();
-  }, [page, query]);
+  }, [page, query, letter]);
 
   useEffect(() => setSearch(query), [query]);
 
@@ -46,9 +49,16 @@ export default function CitiesListPage() {
     event.preventDefault();
     const params = new URLSearchParams(searchParams);
     params.delete('search');
-    params.delete('letter');
     if (search.trim()) params.set('q', search.trim());
     else params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handleLetterClick = (nextLetter) => {
+    const params = new URLSearchParams(searchParams);
+    if (nextLetter) params.set('letter', nextLetter);
+    else params.delete('letter');
     params.set('page', '1');
     setSearchParams(params);
   };
@@ -65,7 +75,9 @@ export default function CitiesListPage() {
         onSearch={handleSearch}
         placeholder="Поиск города..."
         searchId="cities-search"
-      />
+      >
+        <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
+      </ListPageHeader>
 
       {/* Results count */}
       <p className="text-sm text-gray-500 mb-4">

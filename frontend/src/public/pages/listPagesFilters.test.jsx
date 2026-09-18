@@ -24,11 +24,11 @@ const renderPage = (Page, path) => renderToStaticMarkup(
   </MemoryRouter>
 );
 
-test('geography uses a text search without an alphabet filter', () => {
+test('geography provides both text and alphabet search', () => {
   const html = renderPage(CitiesListPage, '/city');
 
   expect(html).toContain('placeholder="Поиск города..."');
-  expect(html).not.toContain('aria-label="Фильтр по первой букве"');
+  expect(html).toContain('aria-label="Фильтр по первой букве"');
 });
 
 test('geography keeps legacy search URLs readable', () => {
@@ -38,14 +38,14 @@ test('geography keeps legacy search URLs readable', () => {
 });
 
 test.each([
-  ['people', PeopleListPage, '/people'],
-  ['KVN teams', TeamsListPage, '/kvn/teams'],
-  ['shows', ShowsListPage, '/shows'],
-])('%s use the common alphabet filter without a text search', (_name, Page, path) => {
+  ['people', PeopleListPage, '/people', 'Поиск человека...'],
+  ['KVN teams', TeamsListPage, '/kvn/teams', 'Поиск команды...'],
+  ['shows', ShowsListPage, '/shows', 'Поиск шоу...'],
+])('%s provide both text and alphabet search', (_name, Page, path, placeholder) => {
   const html = renderPage(Page, path);
 
   expect(html).toContain('aria-label="Фильтр по первой букве"');
-  expect(html).not.toContain('type="search"');
+  expect(html).toContain(`placeholder="${placeholder}"`);
 });
 
 test('KVN teams list has no unrelated category tabs', () => {
