@@ -22,7 +22,8 @@ components/
   SystemModules.jsx            рендер системных модулей сайдбара: PosterPhoto, FactsTable (addAgeToDate — возраст по дате), TagsCloud, SocialLinks, RatingWidget; isSystemModule(), renderSystemModule()
   EmojiRating.jsx              виджет оценки эмодзи
 public/                        ПУБЛИЧНЫЙ САЙТ
-  utils/api.js                 publicApi — публичные запросы; только методы polls при наличии добавляют существующий admin_token
+  utils/api.js                 publicApi — публичные запросы; ratings отправляет cookie, polls при наличии добавляет существующий admin_token
+  hooks/useRating.js           загрузка и замена анонимной оценки страницы
   utils/sanitize.js            sanitizeHTML (DOMPurify), containsHTML
   utils/teamStorage.js         localStorage-хранилище данных команд (ключ humorpedia_teams, обновление раз в 24 ч)
   components/
@@ -32,6 +33,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     ListPageHeader.jsx         единая панель заголовка и поиска для списков людей, команд и шоу
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
     ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
+    RatingCard.jsx             среднее, веха числа голосов и 10 кнопок-смайликов
     RelatedArticles.jsx        общий блок «Читайте также» для detail-страниц
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
@@ -112,6 +114,14 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 - Публичный модуль показывает результаты после голоса (либо заранее по настройке) и обрабатывает 401 сообщением о входе.
   Публичные страницы входа/регистрации не реализованы и остаются в бэклоге; обычный пользовательский путь голосования
   до этого недоступен, хотя backend-контракт полностью защищён и готов.
+
+### Рейтинги
+
+`RatingCard` встроен в страницы статьи, человека, команды и шоу независимо от старого системного модуля
+`rating_widget`. Карточка показывает среднее с одним знаком после запятой и в скобках только веху числа голосов,
+затем 10 кнопок-смайликов с доступными `aria-label` и `aria-pressed`. `useRating` получает и меняет оценку через
+`publicApi` с `withCredentials: true`; после перезагрузки страницы сервер узнаёт посетителя по подписанной HttpOnly-cookie
+и возвращает `my_score`. Новый выбор заменяет предыдущий.
 
 ## Конвенции
 
