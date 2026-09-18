@@ -68,6 +68,7 @@ backups/
 
 # Media files (stored in Docker volume)
 frontend/public/media/imported/images/
+backend/media/imported/
 
 # Archive files and large assets
 **/*.zip

@@ -4,6 +4,8 @@ import { Loader2, ChevronLeft, ChevronRight, HelpCircle, Play } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 import publicApi from '../utils/api';
 
 export default function QuizzesListPage() {
@@ -63,16 +65,16 @@ export default function QuizzesListPage() {
         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {quizzes.map((quiz) => (
-              <Link key={quiz.id} to={`/quizzes/${quiz.slug}`}>
+              <Link key={quiz._id || quiz.id} to={`/quizzes/${quiz.slug}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-all group h-full hover:-translate-y-1">
-                  <div className="aspect-video bg-gradient-to-br from-purple-500 to-blue-600 relative overflow-hidden">
-                    {quiz.image ? (
-                      <img 
-                        src={quiz.image} 
-                        alt={quiz.title}
-                        className="w-full h-full object-cover opacity-80"
-                      />
-                    ) : null}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-purple-500 to-blue-600">
+                    <FittedImage
+                      src={contentImageUrl(quiz, quiz.cover_image, quiz.image)}
+                      alt={quiz.title}
+                      fallbackKey={quiz}
+                      className="aspect-video w-full"
+                      imageClassName="opacity-80"
+                    />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Play className="h-8 w-8 text-white fill-white" />
@@ -83,8 +85,8 @@ export default function QuizzesListPage() {
                     <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">
                       {quiz.title}
                     </h3>
-                    {quiz.excerpt && (
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{quiz.excerpt}</p>
+                    {quiz.description && (
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{quiz.description}</p>
                     )}
                     <div className="flex items-center gap-2 mt-3">
                       {quiz.questions_count && (
@@ -92,9 +94,9 @@ export default function QuizzesListPage() {
                           {quiz.questions_count} вопросов
                         </Badge>
                       )}
-                      {quiz.plays_count > 0 && (
+                      {quiz.attempts_count > 0 && (
                         <span className="text-xs text-gray-500">
-                          Пройдено {quiz.plays_count} раз
+                          Пройдено {quiz.attempts_count} раз
                         </span>
                       )}
                     </div>
