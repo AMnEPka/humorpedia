@@ -38,7 +38,8 @@ async def create_article(data: ArticleCreate):
         title=data.title, slug=data.slug, excerpt=data.excerpt, cover_image=data.cover_image,
         author_id=data.author_id, author_name=data.author_name,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
-        featured=data.featured, related_person_ids=data.related_person_ids or []
+        featured=data.featured, related_person_ids=data.related_person_ids or [],
+        related_team_ids=data.related_team_ids or [], related_article_ids=data.related_article_ids or []
     )
     return await create_content(
         "articles", article, data.tags,

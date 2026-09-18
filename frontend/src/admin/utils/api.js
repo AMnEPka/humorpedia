@@ -198,6 +198,12 @@ export const contentApi = {
   updateNews: (id, data) => api.put(`/content/news/${id}`, data),
   deleteNews: (id) => api.delete(`/content/news/${id}`),
 
+  // Polls embedded as page modules
+  listPolls: (params) => api.get('/polls', { params }),
+  getPollForEdit: (id) => api.get(`/polls/${id}/edit`),
+  createPoll: (data) => api.post('/polls', data),
+  updatePoll: (id, data) => api.put(`/polls/${id}`, data),
+
   // Quizzes
   listQuizzes: (params) => api.get('/content/quizzes', { params }),
   getQuiz: (id) => api.get(`/content/quizzes/${id}`),

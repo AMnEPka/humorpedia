@@ -20,6 +20,8 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `cities` | `City` | cities | `content_type="page"`, `aliases[]`; `related_person_ids` — редакционная подборка известных людей, `related_team_ids` — команды со страницами, `related_team_mentions` — команды из дампа без страницы |
 | `users` | `User` | auth, users | `username`, `email`, `password_hash` (bcrypt), `role`, `permissions[]`, `oauth{vk_id, yandex_id}`, `banned` |
 | `comments` | — | comments | `resource_type`+`resource_id`, `user_id`, `parent_id`, `deleted`, модерация |
+| `polls` | `Poll` | polls | вопрос, 2–20 вариантов, `draft/published/archived`, анонимные `historical_votes`, политика показа результата |
+| `poll_votes` | — | polls | один новый голос на `(poll_id, user_id)`; детерминированный `_id`, индекс пары unique, результаты агрегируются при чтении |
 | `tags` | — | tags | `name` и `slug` уникальны, `usage_count`, `type` |
 | `media` | — | media | `url`, `uploaded_at`, `status` (soft delete) |
 | `templates` | `PageTemplate` | templates | `name` уникально, `content_type`, `modules[]`, `is_default` |
@@ -53,6 +55,7 @@ published_at, featured
 { "id": "uuid", "type": "text_block", "order": 0, "title": null, "visible": true, "data": { ... } }
 ```
 `data` — произвольный dict (схемы `*Data` в modules.py — документация, строго не валидируются).
+Исключение: у модуля `poll` канонически требуется `data.poll_id`, ссылающийся на `polls._id`.
 
 `ModuleType` (бэкенд enum — значения, не входящие в него, отклоняются при сохранении):
 - универсальные: `hero_card`, `text_block {title, content(HTML), collapsed?}`, `timeline {title, events[{year, date, title, description}]}`, `tags`, `table {title, description?, headers[], rows[][], hasHeaders, sortable?, collapsed?}`, `gallery {images[{url, thumbnail, alt, caption}]}`, `image {url, caption?}`, `video {url}`, `quote {text, author, source}`
@@ -69,6 +72,7 @@ published_at, featured
 Backend enum также принимает существующие `person_card`, `related_links`, `table_of_contents`, `html`, `divider`,
 `text`, `cast_list`, `seasons_list`. Общий renderer обслуживает контент; специальные страницы и sidebar-маркеры
 имеют явных владельцев. Неизвестный публичный тип даёт диагностический блок вместо молчаливого исчезновения.
+`poll` доступен в статьях и новостях; определение и голоса не дублируются внутри документа страницы.
 
 ### Ссылки в контенте
 
@@ -152,6 +156,8 @@ Backend enum также принимает существующие `person_card
 | `timeline.list_triple` (`title`, `subtitle` = годы, `content`) | timeline |
 | `text` | text_block без заголовка |
 | `tags`, `table_of_contents`, `popular_articles`, `ad_*` | не переносятся (выводятся автоматически / не нужны) |
+| `popular_articles`, `related_articles` | не создают модули: общий `/api/recommendations` строит «Читайте также» динамически |
+| `voting` | преобразуется в `poll` с детерминированным `legacy-poll-{old_id}`; определения импортирует отдельный dry-run/apply-скрипт |
 
 `pagetitle` → `title`, `longtitle` → `full_name`, `alias` → `slug`, `description` → `seo.meta_description`, `keywords` → `seo.keywords`, `rating`/`votes` → рейтинг.
 HTML: сущности раскрываются (кроме `&lt; &gt; &amp; &quot;`), пустые абзацы в конце убираются, ссылки переводятся на новый сайт (`services/modx_content.LinkMapper`): ресурс MODX по uri/`[[~id]]` → адрес уже перенесённой страницы по `old_id` (любая коллекция), иначе `/people/{alias}` (шаблон 20), `/kvn/teams/{alias}` (21); иначе паттерны `routes/redirects._try_pattern_redirect`; иначе абсолютный старый путь (его разрешит поиск редиректов, когда страница появится). Картинки `images/...` → `/media/imported/images/...`.

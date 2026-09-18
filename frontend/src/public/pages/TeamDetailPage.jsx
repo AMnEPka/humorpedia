@@ -15,6 +15,8 @@ import CommonModuleRenderer from '../components/ModuleRenderer';
 import { teamPageTitle, teamSubtitle } from '@/utils/teams';
 import FittedImage from '@/components/FittedImage';
 import { teamLogoUrl } from '@/utils/media';
+import RelatedArticles from '../components/RelatedArticles';
+import RatingCard from '../components/RatingCard';
 
 // Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
@@ -257,6 +259,8 @@ export default function TeamDetailPage({ showTeamPath = null }) {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6 min-w-0">
+          <RatingCard entityType="team" entityId={team._id || team.id} />
+
           {/* Facts Table - рендерится если есть модуль facts_table */}
           {sidebarModules.find(m => m.type === 'facts_table') && factEntries.length > 0 && (
             <Card>
@@ -454,6 +458,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
           })}
 
           <TeamParticipations teamSlug={team._id} teamName={team.name || team.title} />
+          <RelatedArticles contentType="team" contentId={team._id || team.id || team.slug} />
         </div>
       </div>
     </div>

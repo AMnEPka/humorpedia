@@ -15,6 +15,11 @@ const api = axios.create({
   },
 });
 
+const pollAuthConfig = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+  return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+};
+
 // Public API - no auth required
 export const publicApi = {
   getPersonShows: (id) => api.get(`/show-appearances/people/${id}`),
@@ -28,6 +33,9 @@ export const publicApi = {
   getPopularArticles: (limit = 5) => api.get('/content/articles', { params: { limit, sort: '-rating' } }),
   getRandomArticle: () => api.get('/content/articles/random'),
   getRandomContent: (type, params) => api.get(`/random/${type}`, { params }),
+  getRecommendations: (contentType, contentId, limit) => api.get('/recommendations', {
+    params: { content_type: contentType, content_id: contentId, ...(limit ? { limit } : {}) }
+  }),
   
   // People
   getPeople: (params) => api.get('/content/people', { params }),
@@ -93,6 +101,21 @@ export const publicApi = {
   
   // Stats
   getStats: () => api.get('/stats'),
+
+  // Рейтинг узнаёт анонимного посетителя по cookie, в том числе при cross-origin разработке.
+  getRating: (entityType, entityId) => api.get(
+    `/ratings/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+    { withCredentials: true }
+  ),
+  putRating: (entityType, entityId, score) => api.put(
+    `/ratings/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+    { score },
+    { withCredentials: true }
+  ),
+
+  // Polls use the existing JWT contract. Public login/registration UI is a separate backlog item.
+  getPoll: (id) => api.get(`/polls/${id}`, pollAuthConfig()),
+  votePoll: (id, optionId) => api.post(`/polls/${id}/vote`, { option_id: optionId }, pollAuthConfig()),
 };
 
 export default publicApi;

@@ -1,5 +1,5 @@
 """Module definitions for modular page builder"""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, List, Dict, Any, Union, Literal
 from enum import Enum
 
@@ -37,6 +37,7 @@ class ModuleType(str, Enum):
     BEST_ARTICLES = "best_articles"   # Best articles widget
     INTERESTING = "interesting"       # Interesting content
     RANDOM_PAGE = "random_page"       # Random page link
+    POLL = "poll"                     # Reference to a poll in the polls collection
     
     # Quiz modules
     QUIZ_QUESTIONS = "quiz_questions" # Quiz questions
@@ -295,6 +296,12 @@ class PageModule(BaseModel):
     title: Optional[str] = None  # Optional override title
     visible: bool = True
     data: Dict[str, Any]  # Module-specific data
+
+    @model_validator(mode="after")
+    def validate_module_data(self):
+        if self.type == ModuleType.POLL and not str(self.data.get("poll_id") or "").strip():
+            raise ValueError("Для модуля poll требуется poll_id")
+        return self
     
     class Config:
         use_enum_values = True

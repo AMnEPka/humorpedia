@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { publicApi } from '../utils/api';
@@ -222,6 +223,9 @@ export default function ModuleRenderer({ module, personId }) {
     case 'humor_chronicles':
       return <HumorChroniclesModule module={module} personId={personId} />;
 
+    case 'poll':
+      return <PollModule module={module} />;
+
     default:
       return (
         <div role="alert" className="my-6 rounded border p-4 text-sm">
@@ -229,6 +233,101 @@ export default function ModuleRenderer({ module, personId }) {
         </div>
       );
   }
+}
+
+function PollModule({ module }) {
+  const pollId = module?.data?.poll_id;
+  const [poll, setPoll] = useState(null);
+  const [selected, setSelected] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    if (!pollId) {
+      setLoading(false);
+      return undefined;
+    }
+    publicApi.getPoll(pollId)
+      .then((response) => {
+        if (!active) return;
+        setPoll(response.data);
+        setSelected(response.data.selected_option_id || '');
+      })
+      .catch((requestError) => {
+        if (active && requestError.response?.status !== 404) setError('Не удалось загрузить опрос');
+      })
+      .finally(() => active && setLoading(false));
+    return () => { active = false; };
+  }, [pollId]);
+
+  const submit = async () => {
+    if (!selected || submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const response = await publicApi.votePoll(pollId, selected);
+      setPoll(response.data);
+    } catch (requestError) {
+      const status = requestError.response?.status;
+      setError(status === 401
+        ? 'Чтобы проголосовать, войдите в личный кабинет.'
+        : (requestError.response?.data?.detail || 'Не удалось сохранить голос'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!pollId || (!loading && !poll && !error)) return null;
+  if (loading) return <div className="my-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-gray-400" /></div>;
+
+  return (
+    <Card className="my-8">
+      <CardContent className="p-5 sm:p-6">
+        {poll && (
+          <fieldset>
+            <legend className="text-xl font-bold text-gray-900">{poll.question}</legend>
+            <div className="mt-4 space-y-3">
+              {poll.options.map((option) => {
+                const checked = selected === option.id;
+                return (
+                  <label key={option.id} className={`block rounded-lg border p-3 ${checked ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                    {!poll.selected_option_id && (
+                      <input
+                        type="radio"
+                        name={`poll-${poll.id}`}
+                        value={option.id}
+                        checked={checked}
+                        onChange={() => setSelected(option.id)}
+                        className="mr-3"
+                      />
+                    )}
+                    <span className="font-medium">{option.text}</span>
+                    {poll.results_visible && (
+                      <div className="mt-2" aria-live="polite" aria-label={`${option.percent}% (${option.votes} голосов)`}>
+                        <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                          <div className="h-full rounded-full bg-blue-600" style={{ width: `${option.percent}%` }} />
+                        </div>
+                        <div className="mt-1 text-xs text-gray-600">{option.percent}% · {option.votes}</div>
+                      </div>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+            {!poll.selected_option_id && (
+              <Button type="button" className="mt-4" disabled={!selected || submitting} onClick={submit}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Проголосовать
+              </Button>
+            )}
+            {poll.results_visible && <p className="mt-4 text-sm text-gray-600">Всего голосов: {poll.total_votes}</p>}
+          </fieldset>
+        )}
+        {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
+      </CardContent>
+    </Card>
+  );
 }
 
 /**

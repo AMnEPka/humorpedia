@@ -10,6 +10,7 @@ import { teamSubtitle, teamUrl } from '@/utils/teams';
 import { contentImageUrl, orderedFacts, personPhotoUrl, teamLogoUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import ForeignAgentNotice from '../components/ForeignAgentNotice';
+import RelatedArticles from '../components/RelatedArticles';
 
 function cityTeamSubtitle(team) {
   if (!team?.is_reference) return teamSubtitle(team);
@@ -228,6 +229,7 @@ export default function CityDetailPage() {
           )}
 
           <ForeignAgentNotice visible={city.foreign_agent_notice} />
+          <RelatedArticles contentType="city" contentId={city._id || city.id || city.slug} />
         </div>
 
         {/* Sidebar */}

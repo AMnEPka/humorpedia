@@ -56,7 +56,7 @@ def template_client(monkeypatch):
 
 def test_registry_matches_enum_and_declares_working_editors_and_owners():
     names = [entry["type"] for entry in MODULE_CONTRACT]
-    assert len(names) == len(set(names)) == 35
+    assert len(names) == len(set(names)) == 36
     assert set(names) == {member.value for member in ModuleType}
     assert SELECTABLE
     for entry in SELECTABLE:
@@ -86,6 +86,7 @@ MODULE_DATA = {
     "text_block": {"content": "<p>Текст</p>", "collapsed": True, "anchor_id": "intro"},
     "quote": {"text": "Цитата", "author": "Автор"},
     "image": {"url": "/photo.jpg", "caption": "Фото"},
+    "poll": {"poll_id": "contract-poll"},
 }
 
 

@@ -182,6 +182,20 @@
     "schema": "PageModule"
   },
   {
+    "type": "poll",
+    "name": "Опрос",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "article",
+      "news"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
     "type": "poster_photo",
     "name": "Фото/Постер",
     "kind": "system",

@@ -15,8 +15,9 @@ import ModuleEditor from '../components/ModuleEditor';
 import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
 import MediaSelector from '../components/MediaSelector';
+import RelatedArticlesSelector from '../components/RelatedArticlesSelector';
 
-const emptyArticle = { title: '', slug: '', status: 'draft', excerpt: '', cover_image: null, author_name: '', featured: false, modules: [], tags: [], related_person_ids: [], seo: { meta_title: '', meta_description: '' } };
+const emptyArticle = { title: '', slug: '', status: 'draft', excerpt: '', cover_image: null, author_name: '', featured: false, modules: [], tags: [], related_person_ids: [], related_article_ids: [], seo: { meta_title: '', meta_description: '' } };
 
 export default function ArticleEditPage() {
   const { id } = useParams();
@@ -133,6 +134,9 @@ export default function ArticleEditPage() {
             </CardContent></Card>
             <Card><CardHeader><CardTitle>Связанные люди</CardTitle></CardHeader><CardContent>
               <PersonSelector value={article.related_person_ids || []} onChange={(ids) => setArticle(p => ({ ...p, related_person_ids: ids }))} placeholder="Выберите людей..." />
+            </CardContent></Card>
+            <Card><CardHeader><CardTitle>Читайте также</CardTitle></CardHeader><CardContent>
+              <RelatedArticlesSelector value={article.related_article_ids || []} currentId={article._id || article.id} onChange={(ids) => setArticle(p => ({ ...p, related_article_ids: ids }))} />
             </CardContent></Card>
           </div>
         </TabsContent>

@@ -22,7 +22,7 @@ CONTENT_CONFIG = {
 _IGNORED_SECTIONS = {
     "ad_250", "ad_block_120", "all_articles", "article_header", "comments",
     "news_header", "popular_articles", "post_footer", "related_articles",
-    "table_of_contents", "tags", "voting",
+    "table_of_contents", "tags",
 }
 _PERSON_LINK_RE = re.compile(r'href=["\']/people/([^"\'/#?]+)', re.I)
 _BLOB_IMAGE_RE = re.compile(r'<img\b[^>]*\bsrc=["\']blob:[^"\']*["\'][^>]*>', re.I)
@@ -113,6 +113,15 @@ def _content_modules(site: ModxSite, resource_id: int, mapper: Optional[LinkMapp
                 author = plain_text(section.get("title") or "") or None
                 modules.append(_module("quote", len(modules) + 1, "",
                                        {"text": text, "author": author, "source": None}))
+        elif form == "voting":
+            old_poll_id = str(section.get("vote") or "").strip()
+            if old_poll_id.isdigit():
+                modules.append(_module(
+                    "poll", len(modules) + 1, section.get("section_name") or "Опрос",
+                    {"poll_id": f"legacy-poll-{old_poll_id}"},
+                ))
+            else:
+                warnings.append("секция опроса не содержит корректный идентификатор")
         elif form not in _IGNORED_SECTIONS:
             warnings.append(f"секция «{form}» не перенесена")
 

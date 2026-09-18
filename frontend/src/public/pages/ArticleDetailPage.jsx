@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Clock, MessageCircle, Share2, Star, User } from 'lucide-react';
+import { Loader2, Clock, MessageCircle, Share2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,8 @@ import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
 import { usePageTitle } from '@/utils/pageTitle';
 import ForeignAgentNotice from '../components/ForeignAgentNotice';
+import RelatedArticles from '../components/RelatedArticles';
+import RatingCard from '../components/RatingCard';
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
@@ -93,12 +95,6 @@ export default function ArticleDetailPage() {
             <Clock className="h-4 w-4" />
             <span>{formattedDate}</span>
           </div>
-          {article.rating && (
-            <div className="flex items-center gap-1 text-amber-500">
-              <Star className="h-4 w-4 fill-current" />
-              <span>{article.rating.toFixed(1)}</span>
-            </div>
-          )}
           <div className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4" />
             <span>{article.comments_count || 0} комментариев</span>
@@ -147,6 +143,8 @@ export default function ArticleDetailPage() {
       ) : null}
 
       <ForeignAgentNotice visible={article.foreign_agent_notice} />
+      <RatingCard entityType="article" entityId={article._id || article.id} className="mt-8" />
+      <RelatedArticles contentType="article" contentId={article._id || article.id || article.slug} />
 
       {/* Share */}
       <div className="mt-12 pt-8 border-t">

@@ -22,7 +22,7 @@ components/
   SystemModules.jsx            рендер системных модулей сайдбара: PosterPhoto, FactsTable (addAgeToDate — возраст по дате), TagsCloud, SocialLinks, RatingWidget; isSystemModule(), renderSystemModule()
   EmojiRating.jsx              виджет оценки эмодзи
 public/                        ПУБЛИЧНЫЙ САЙТ
-  utils/api.js                 publicApi — axios без авторизации (news, articles, people, teams, shows, quizzes, sections, kvn, cities, search, stats)
+  utils/api.js                 publicApi — публичные запросы; только методы polls при наличии добавляют существующий admin_token
   utils/sanitize.js            sanitizeHTML (DOMPurify), containsHTML
   utils/teamStorage.js         localStorage-хранилище данных команд (ключ humorpedia_teams, обновление раз в 24 ч)
   components/
@@ -31,7 +31,8 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     Footer.jsx
     ListPageHeader.jsx         единая панель заголовка и поиска для списков людей, команд и шоу
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
-    ModuleRenderer.jsx         рендер контентных модулей (text_block, image, gallery, video, quote, timeline, person_card, related_links, table_of_contents, table, html, divider, humor_chronicles)
+    ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
+    RelatedArticles.jsx        общий блок «Читайте также» для detail-страниц
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
     ShowAppearances.jsx        блок участия в шоу только на странице человека
@@ -101,6 +102,16 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 Если ожидаемого изображения нет или файл не загрузился, `FittedImage` и функции `utils/media.js` показывают один из
 `/media/imported/images/pattern/{1..4}.jpg`; вариант стабильно выбирается по slug/id страницы.
 `SectionDetailPage` делает `fetch(\`${BACKEND_URL}/api/redirects/lookup\`)` напрямую, минуя `API_BASE`.
+
+### Рекомендации и опросы
+
+- `RelatedArticles` используется статьями, новостями, людьми, командами, городами, шоу и KVN-страницами; ручные связи
+  настраиваются `RelatedArticlesSelector` в редакторах статьи/новости.
+- `poll` можно добавить в `ModuleEditor` статьи или новости. В диалоге создаётся/редактируется определение опроса,
+  а модуль сохраняет только `poll_id`.
+- Публичный модуль показывает результаты после голоса (либо заранее по настройке) и обрабатывает 401 сообщением о входе.
+  Публичные страницы входа/регистрации не реализованы и остаются в бэклоге; обычный пользовательский путь голосования
+  до этого недоступен, хотя backend-контракт полностью защищён и готов.
 
 ## Конвенции
 

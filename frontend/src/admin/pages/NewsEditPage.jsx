@@ -15,6 +15,7 @@ import TagSelector from '../components/TagSelector';
 import PersonSelector from '../components/PersonSelector';
 import ModuleEditor from '../components/ModuleEditor';
 import MediaSelector from '../components/MediaSelector';
+import RelatedArticlesSelector from '../components/RelatedArticlesSelector';
 
 const emptyNews = {
   title: '',
@@ -26,6 +27,7 @@ const emptyNews = {
   modules: [],
   tags: [],
   related_person_ids: [],
+  related_article_ids: [],
   seo: { meta_title: '', meta_description: '' }
 };
 
@@ -228,6 +230,13 @@ export default function NewsEditPage() {
                   onChange={(cover_image) => setNews(p => ({ ...p, cover_image }))}
                   label="Обложка новости"
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Читайте также</CardTitle></CardHeader>
+              <CardContent>
+                <RelatedArticlesSelector value={news.related_article_ids || []} onChange={(ids) => setNews(p => ({ ...p, related_article_ids: ids }))} />
               </CardContent>
             </Card>
 

@@ -219,6 +219,34 @@ async def create_indexes(db):
         await _ensure_index(db.comments, "user_id")
         await _ensure_index(db.comments, "parent_id")
         await _ensure_index(db.comments, "created_at")
+
+        # Polls: one immutable vote per user and poll. Result counts are derived
+        # from this collection, so retries and concurrent requests stay safe.
+        await _ensure_index(db.polls, "old_id", unique=True, sparse=True)
+        await _ensure_index(db.polls, "status")
+        await _ensure_index(
+            db.poll_votes,
+            [("poll_id", 1), ("user_id", 1)],
+            unique=True,
+            name="poll_id_1_user_id_1",
+        )
+        await _ensure_index(db.poll_votes, [("poll_id", 1), ("option_id", 1)])
+
+        # Anonymous ratings. A deterministic _id in addition to the unique
+        # compound index keeps a retried/concurrent vote idempotent.
+        await _ensure_index(
+            db.rating_votes,
+            [("entity_type", 1), ("entity_id", 1), ("voter_hash", 1)],
+            unique=True,
+            name="entity_type_1_entity_id_1_voter_hash_1",
+        )
+        await _ensure_index(db.rating_votes, [("entity_type", 1), ("entity_id", 1)])
+        await _ensure_index(
+            db.rating_baselines,
+            [("entity_type", 1), ("entity_id", 1)],
+            unique=True,
+            name="entity_type_1_entity_id_1",
+        )
         
         # Tags indexes
         await _ensure_index(db.tags, "slug", unique=True)
@@ -331,6 +359,9 @@ from routes.redirects import router as redirects_router
 from routes.competitions import router as competitions_router
 from routes.memberships import router as memberships_router
 from routes.show_appearances import router as show_appearances_router
+from routes.recommendations import router as recommendations_router
+from routes.polls import router as polls_router
+from routes.ratings import router as ratings_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -356,6 +387,9 @@ api_router.include_router(redirects_router)
 api_router.include_router(competitions_router)
 api_router.include_router(memberships_router)
 api_router.include_router(show_appearances_router)
+api_router.include_router(recommendations_router)
+api_router.include_router(polls_router)
+api_router.include_router(ratings_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
@@ -487,14 +521,16 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         if request.method == "GET" and response.status_code == 200:
             path = request.url.path
-            if "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
+            if "cache-control" not in response.headers and "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
                 # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
                 response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
         return response
 
 
 # Записи, после которых не нужно сбрасывать кэш контента
-_CACHE_NEUTRAL_PREFIXES = ("/api/auth/", "/api/views/", "/api/cache/", "/api/comments")
+_CACHE_NEUTRAL_PREFIXES = (
+    "/api/auth/", "/api/views/", "/api/cache/", "/api/comments", "/api/polls", "/api/ratings/",
+)
 
 
 class CacheSyncMiddleware(BaseHTTPMiddleware):
@@ -527,8 +563,9 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
-# CORS. Авторизация идёт через заголовок Authorization, cookies не используются,
-# поэтому credentials не нужны (и несовместимы с "*").
+# CORS. Bearer-авторизация не требует cookies, но публичный рейтинг использует
+# HttpOnly cookie анонимного посетителя. Credentials включаем только для явно
+# перечисленных origin: сочетание credentials + "*" браузеры запрещают.
 cors_origins = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins == '*':
     allow_origins = ['*']
@@ -537,7 +574,7 @@ else:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=False,
+    allow_credentials=cors_origins != '*',
     allow_origins=allow_origins,
     allow_methods=["*"],
     allow_headers=["*"],

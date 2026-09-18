@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
+import RelatedArticles from '../components/RelatedArticles';
 import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
@@ -549,6 +550,7 @@ export default function SectionDetailPage() {
           )}
         </>
       )}
+      <RelatedArticles contentType="kvn" contentId={section._id || section.id || section.slug} />
     </div>
   );
 }

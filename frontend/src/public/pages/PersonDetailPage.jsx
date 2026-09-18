@@ -4,17 +4,11 @@ import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Trophy, Glob
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import EmojiRating from '@/components/EmojiRating';
 import publicApi from '../utils/api';
 import PersonCareer from '../components/competitions/PersonCareer';
 import ShowAppearances from '../components/ShowAppearances';
 import CommonModuleRenderer from '../components/ModuleRenderer';
 import { 
-  PosterPhotoModule, 
-  FactsTableModule, 
-  RatingWidgetModule, 
-  TagsCloudModule, 
-  SocialLinksModule,
   isSystemModule,
   addAgeToDate
 } from '@/components/SystemModules';
@@ -23,6 +17,8 @@ import ForeignAgentNotice, { ForeignAgentMarker } from '../components/ForeignAge
 import { teamUrl } from '@/utils/teams';
 import { orderedFacts, personPhotoUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
+import RelatedArticles from '../components/RelatedArticles';
+import RatingCard from '../components/RatingCard';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
@@ -240,21 +236,6 @@ export default function PersonDetailPage() {
                 </div>
               )}
               
-              {/* Rating Module */}
-              {sidebarModules.find(m => m.type === 'rating_widget') && person.rating && (
-                <div className="mb-4">
-                  <EmojiRating
-                    value={Math.min(10, Math.max(0, person.rating.average || 0))}
-                    readOnly
-                    count={person.rating.count}
-                    size={24}
-                    emojis={['😡', '😠', '😟', '😕', '😐', '🙂', '😊', '😃', '😄', '🤩']}
-                    showValue={true}
-                    valueFormat="fraction"
-                  />
-                </div>
-              )}
-
               {/* Share */}
               <Button variant="outline" className="w-full mb-4" onClick={() => navigator.share?.({ url: window.location.href, title: person.title })}>
                 <Share2 className="mr-2 h-4 w-4" /> Поделиться
@@ -344,6 +325,8 @@ export default function PersonDetailPage() {
             </CardContent>
           </Card>
 
+          <RatingCard entityType="person" entityId={person._id || person.id} />
+
           {/* Teams */}
           {person.teams?.length > 0 && (
             <Card>
@@ -406,6 +389,7 @@ export default function PersonDetailPage() {
           ))}
 
           <ForeignAgentNotice visible={person.foreign_agent_notice} />
+          <RelatedArticles contentType="person" contentId={person._id || person.id || person.slug} />
         </div>
       </div>
     </div>

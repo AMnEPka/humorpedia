@@ -266,6 +266,8 @@ class ArticleCreate(BaseModel):
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
     related_person_ids: Optional[List[str]] = None
+    related_team_ids: Optional[List[str]] = None
+    related_article_ids: Optional[List[str]] = None
 
 
 class ArticleUpdate(BaseModel):
@@ -283,6 +285,7 @@ class ArticleUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     related_person_ids: Optional[List[str]] = None
     related_team_ids: Optional[List[str]] = None
+    related_article_ids: Optional[List[str]] = None
 
 
 # === NEWS ===
@@ -319,6 +322,8 @@ class NewsCreate(BaseModel):
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
     related_person_ids: Optional[List[str]] = None
+    related_team_ids: Optional[List[str]] = None
+    related_article_ids: Optional[List[str]] = None
 
 
 class NewsUpdate(BaseModel):
@@ -335,6 +340,7 @@ class NewsUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     related_person_ids: Optional[List[str]] = None
     related_team_ids: Optional[List[str]] = None
+    related_article_ids: Optional[List[str]] = None
 
 
 # === QUIZ ===

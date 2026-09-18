@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
-import EmojiRating from '@/components/EmojiRating';
 import { isSystemModule } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
 import { contentImageUrl, orderedFacts } from '@/utils/media';
@@ -16,6 +15,8 @@ import CollapsibleCard from '../components/CollapsibleCard';
 import TeamDetailPage from './TeamDetailPage';
 import { isShowTeamPath } from '@/utils/teams';
 import ForeignAgentNotice from '../components/ForeignAgentNotice';
+import RelatedArticles from '../components/RelatedArticles';
+import RatingCard from '../components/RatingCard';
 
 // Module renderer component
 export function ModuleRenderer({ module }) {
@@ -461,31 +462,7 @@ function ShowPage({ fullPath }) {
             </Card>
           )}
 
-          {/* Rating Widget - рендерится если есть модуль rating_widget */}
-          {sidebarModules.find(m => m.type === 'rating_widget') && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Оценка</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EmojiRating 
-                  value={show.rating?.average || 0}
-                  max={10}
-                  readonly={false}
-                />
-                <div className="mt-2 text-sm text-gray-600 text-center">
-                  {show.rating?.average ? (
-                    <>
-                      {show.rating.average.toFixed(1)} / 10
-                      {show.rating.count > 0 && ` (${show.rating.count} ${show.rating.count === 1 ? 'голос' : 'голосов'})`}
-                    </>
-                  ) : (
-                    'Пока нет оценок'
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <RatingCard entityType="show" entityId={show._id || show.id} />
         </div>
 
         {/* Main content */}
@@ -497,6 +474,7 @@ function ShowPage({ fullPath }) {
             visible={show.foreign_agent_notice}
             notices={show.foreign_agent_notices}
           />
+          <RelatedArticles contentType="show" contentId={show._id || show.id || show.slug} />
         </div>
       </div>
     </div>

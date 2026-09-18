@@ -23,7 +23,8 @@ async def create_news(data: NewsCreate):
         title=data.title, slug=data.slug, excerpt=data.excerpt,
         cover_image=data.cover_image, content=data.content, important=data.important,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
-        related_person_ids=data.related_person_ids or []
+        related_person_ids=data.related_person_ids or [], related_team_ids=data.related_team_ids or [],
+        related_article_ids=data.related_article_ids or []
     )
     return await create_content(
         "news", news, data.tags,

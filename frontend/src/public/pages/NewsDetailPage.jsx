@@ -9,6 +9,7 @@ import publicApi from '../utils/api';
 import { ModuleList } from '../components/ModuleRenderer';
 import { usePageTitle } from '@/utils/pageTitle';
 import ForeignAgentNotice from '../components/ForeignAgentNotice';
+import RelatedArticles from '../components/RelatedArticles';
 
 export default function NewsDetailPage() {
   const { slug } = useParams();
@@ -135,6 +136,7 @@ export default function NewsDetailPage() {
       )}
 
       <ForeignAgentNotice visible={news.foreign_agent_notice} />
+      <RelatedArticles contentType="news" contentId={news._id || news.id || news.slug} />
 
       {/* Share */}
       <div className="mt-12 pt-8 border-t">
