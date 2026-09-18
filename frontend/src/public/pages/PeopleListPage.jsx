@@ -14,6 +14,8 @@ export default function PeopleListPage() {
   const [people, setPeople] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState(searchParams.get('q') || '');
+  const query = searchParams.get('q') || '';
   const letter = searchParams.get('letter') || '';
   
   const page = parseInt(searchParams.get('page') || '1');
@@ -26,6 +28,7 @@ export default function PeopleListPage() {
         const res = await publicApi.getPeople({ 
           skip: (page - 1) * limit,
           limit,
+          search: query || undefined,
           letter: letter || undefined,
         });
         setPeople(res.data.items || []);
@@ -37,13 +40,23 @@ export default function PeopleListPage() {
       }
     };
     fetchPeople();
-  }, [page, letter]);
+  }, [page, query, letter]);
+
+  useEffect(() => setSearch(query), [query]);
 
   const totalPages = Math.ceil(total / limit);
 
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const params = new URLSearchParams(searchParams);
+    if (search.trim()) params.set('q', search.trim());
+    else params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
   const handleLetterClick = (nextLetter) => {
     const params = new URLSearchParams(searchParams);
-    params.delete('q');
     if (nextLetter) params.set('letter', nextLetter);
     else params.delete('letter');
     params.set('page', '1');
@@ -63,6 +76,11 @@ export default function PeopleListPage() {
 
       <ListPageHeader
         title="Люди"
+        search={search}
+        onSearchChange={setSearch}
+        onSearch={handleSearch}
+        placeholder="Поиск человека..."
+        searchId="people-search"
       >
         <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
       </ListPageHeader>
