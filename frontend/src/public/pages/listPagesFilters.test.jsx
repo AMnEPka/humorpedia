@@ -27,6 +27,9 @@ const renderPage = (Page, path) => renderToStaticMarkup(
 test('geography provides both text and alphabet search', () => {
   const html = renderPage(CitiesListPage, '/city');
 
+  expect(html).toContain('href="/"');
+  expect(html).toContain('>Главная</a>');
+  expect(html).toContain('<li class="text-gray-900">География</li>');
   expect(html).toContain('placeholder="Поиск города..."');
   expect(html).toContain('aria-label="Фильтр по первой букве"');
 });
