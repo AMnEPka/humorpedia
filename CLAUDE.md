@@ -17,6 +17,7 @@
 | [docs/ai/FRONTEND.md](docs/ai/FRONTEND.md) | Маршруты React, страницы, ключевые компоненты, API-клиенты |
 | [docs/ai/MODULE_CONTRACT.md](docs/ai/MODULE_CONTRACT.md) | Реестр модулей, редакторы, владельцы публичного рендера и контрактные проверки |
 | [docs/ai/KNOWN_ISSUES.md](docs/ai/KNOWN_ISSUES.md) | Найденные баги, дыры безопасности, техдолг |
+| [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
 
 ## Стек
 
@@ -73,12 +74,13 @@ backup/               контейнер mongodump (подключён толь�
 - **Ссылки в контенте** хранятся адресами нового сайта (даже на ещё не созданные страницы); при выдаче `services/link_resolver.py` показывает ссылки на отсутствующие/архивные страницы текстом. Админка читает документы с `?raw=true` — иначе сохранение уничтожит такие ссылки. Подробно — DATA_MODEL.md «Ссылки в контенте». Картинки старого сайта (`images/...`) лежат в volume `imported_images_volume` → URL `/media/imported/images/...`.
 - **«Читайте также»** строится единым `/api/recommendations`: ручной порядок `related_article_ids` у статей/новостей имеет приоритет, затем идёт детерминированный fallback по связям/тегам/популярности. Цели — только опубликованные статьи; текущая страница, дубли и битые ID исключаются.
 - **Опросы**: определения в `polls`, новые голоса в `poll_votes` (детерминированный `_id=poll:user`, один голос). Модуль страницы `poll` хранит только `poll_id`; публичный результат складывает новые записи и анонимные `historical_votes`. Голос требует существующий JWT и permission `vote`; публичные login/register пока в бэклоге. Старый дамп проверяется/импортируется `scripts/import_polls_modx.py`, по умолчанию это dry-run.
+- **Рейтинги**: для статьи, человека, команды и шоу работают независимо от `rating_widget`. Старые агрегаты перенесены в `rating_baselines`, новые анонимные оценки — в `rating_votes`; один подписанный cookie-посетитель имеет один изменяемый голос на страницу. Публичный API отдаёт среднее и только веху количества, без точного счётчика.
 - **Изображения-заглушки** — четыре исходника `backups/images/pattern/{1..4}.jpg` при старте backend копируются в `imported_images_volume`. `frontend/src/utils/media.js` выбирает вариант стабильно по slug/id и использует его для отсутствующих или недоступных изображений карточек и страниц. Не сохранять букву/иконку как отдельную заглушку и не возвращать старые URL `pattern-N.jpeg`.
 - **Страницы команд** — `/kvn/teams/:slug`, коллекция `teams`. Команды шоу — там же, с `show_id`, адрес `/shows/{шоу}/teams/{slug}` (`services/show_teams.py`: адрес только через `team_url`, поиск по одному slug — только команды КВН). Модуль «Список игр команды» генерируется автоматически из `season_data` всех сезонов (`/content/teams/{slug}/refresh`, `teams-refresh-all`), вручную его не править.
 - Публичный catch-all `/*` → `SectionDetailPage`: пробует `kvn/by-path`, затем `sections/path`, затем `redirects/lookup` (старые URL MODX в поле `old_urls`).
 - Контент страниц собирается из **модулей** (`modules: [{id, type, order, title, visible, data}]`). Системные модули (sidebar): `poster_photo`, `facts_table`, `tags_cloud`, `social_links`, `rating_widget`. Шаблоны модулей — коллекция `templates`.
 - `primary_tag` — основной тег сущности; автоматически добавляется в `tags`, должен быть уникален.
-- Кэш: любая успешная запись в `/api` (кроме auth/comments/views/cache) сбрасывает кэш во всех воркерах (middleware `CacheSyncMiddleware`); после правок напрямую в БД — `POST /api/cache/flush` (admin).
+- Кэш: любая успешная запись в `/api` (кроме auth/comments/views/cache/polls/ratings) сбрасывает кэш во всех воркерах (middleware `CacheSyncMiddleware`); после правок напрямую в БД — `POST /api/cache/flush` (admin).
 
 ## Правила работы
 

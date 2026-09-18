@@ -19,6 +19,7 @@ const fixtures = {
   tv_appearances: { items: [{ show: 'Передача' }] },
   games_list: { games: [{ opponent: 'Команда' }] },
   episodes_list: { episodes: [{ title: 'Выпуск' }] },
+  poll: { poll_id: 'poll-1' },
   person_card: { name: 'Человек' }, related_links: { links: [{ title: 'Материал', url: '/articles/a' }] },
   html: { content: '<b>Материал</b>' }, divider: {},
 };

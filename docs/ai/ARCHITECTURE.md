@@ -21,7 +21,7 @@ FastAPI (backend/server.py) :8001
 MongoDB 6 (база humorpedia), один Motor-клиент из utils/database.py
 ```
 
-Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGINS`, по умолчанию `*`, без credentials) → `SlowAPIMiddleware` (default 1000/мин на IP; `/auth/login` 20/мин, `/auth/register` 10/час, поиск 60–120/мин) → `CacheSyncMiddleware` (сверка поколения кэша перед GET, сброс кэша во всех воркерах после успешной записи) → `CacheControlMiddleware` (GET 200 вне `/auth/`, `/admin/`, `/cache/` → `public, max-age=60, stale-while-revalidate=300`).
+Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGINS`; для точного списка origins разрешены credentials, при `*` — нет) → `SlowAPIMiddleware` (default 1000/мин на IP; `/auth/login` 20/мин, `/auth/register` 10/час, рейтинг 10/мин) → `CacheSyncMiddleware` (сверка поколения кэша перед GET, сброс кэша во всех воркерах после успешной записи; ratings — cache-neutral) → `CacheControlMiddleware` (обычные GET 200 → `public, max-age=60, stale-while-revalidate=300`; персонализированный рейтинг принудительно `private, no-store`).
 Обработчики ошибок: `RequestValidationError` → 422 с `detail` без входных данных (тело не логируется); любое `Exception` → 500 (в `ENVIRONMENT=production` без деталей) с CORS-заголовком.
 
 ### Жизненный цикл бэкенда (lifespan)
@@ -79,6 +79,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── cities.py             города; люди — редакционная подборка, команды — точное связывание по городу
 │   │   ├── tags.py               теги, популярные, пересчёт usage_count
 │   │   ├── comments.py           комментарии, лайки, модерация
+│   │   ├── ratings.py            анонимные оценки 1–10 для article/person/team/show
 │   │   ├── media.py              загрузка файлов, браузер volume-папок, rename/delete в источнике
 │   │   ├── templates.py          шаблоны модулей, default на тип, apply-to-teams (merge модулей)
 │   │   ├── redirects.py          старые URL MODX → новые (old_urls + паттерны), auto-populate (через get_db)
@@ -98,6 +99,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
 │   │   ├── admin_bootstrap.py    создание первого админа из env, build_admin_doc()
 │   │   ├── cache.py              CacheService на cachetools.TTLCache (kvn_pages, kvn_children, teams, team_lists, redirects, search, resolved_html, breadcrumbs) + синхронизация между воркерами (cache_meta)
+│   │   ├── ratings.py            cookie-подпись, legacy baseline, upsert голоса и расчёт среднего
 │   │   ├── views_counter.py      батч-счётчик просмотров
 │   │   ├── link_resolver.py      ссылки при выдаче: актуальные адреса (slug, old_id, old_urls, паттерны), отсутствующие страницы — текстом; load_old_id_urls
 │   │   ├── linking.py            related_person_ids → страницы людей, модуль humor_chronicles
@@ -112,6 +114,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations), test_memberships.py (разбор составов, роли), test_modx_import.py (дамп MODX, конвертация человека)
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
+│       ├── migrate_ratings.py        rating/votes_count → неизменяемые rating_baselines (dry-run; --apply — запись)
 │       ├── import_people_modx.py      люди из SQL-дампа MODX через create_person (как админка): --ids/--slugs, --all (--batch 75), --list, --show, --apply, --update
 │       ├── import_cities_modx.py      города из дампа: dry-run, --ids/--slugs/--all, --apply/--update; ручные связи сохраняются
 │       ├── import_shows_modx.py       шоу из дампа MODX через create_show/update_show: --list, --ids, --tree, --publish, --show, --apply, --update
