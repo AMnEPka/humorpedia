@@ -18,7 +18,7 @@
 | GET | `/` | версия API (лимит 100/мин) |
 | GET | `/health` | healthcheck |
 | GET | `/stats` | счётчики опубликованного контента, пользователей, комментариев, тегов |
-| GET | `/random/{content_type}` | случайный документ: person/team/show/article/news/quiz/wiki |
+| GET | `/random/{content_type}` | случайный документ: person/team/show/article/news/quiz/wiki/city; `exclude_slug` исключает текущий slug до выборки; сохраняет full_path/show_id/url для навигации |
 | GET | `/cache/stats` 🛡 | статистика кэшей и views_counter |
 | POST | `/cache/flush` 🛡 | сбросить все in-memory кэши |
 | POST | `/views/flush` 🛡 | принудительно записать просмотры в БД |
@@ -84,6 +84,7 @@ POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`
 
 ### Статьи / Новости / Квизы / Вики
 Одинаковый CRUD через `services/crud.py`:
+- Список статей: `sort=-created_at` (по умолчанию) или `-rating`; `exclude_archived=true` для публичных виджетов; `featured=true` для редакционной подборки.
 - `articles`: POST `/articles` · GET `/articles` · GET `/articles/random` · GET `/articles/{id_or_slug}?raw=` · PUT `/articles/{id}` · DELETE `/articles/{id}`
 - `news`: POST/GET `/news`, GET `/news/{id_or_slug}?raw=`, PUT/DELETE `/news/{id}`
 - `quizzes`: POST/GET `/quizzes`, GET `/quizzes/{id_or_slug}`, PUT/DELETE `/quizzes/{id}`

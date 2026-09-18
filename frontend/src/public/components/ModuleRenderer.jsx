@@ -6,6 +6,8 @@ import { publicApi } from '../utils/api';
 import ContentTable from './ContentTable';
 import FittedImage from '@/components/FittedImage';
 import { contentImageUrl } from '@/utils/media';
+import { moduleContract } from '@/moduleContract';
+import { ModuleFrame, StructuredListModule, ContentWidget, VideoModule } from './AdditionalModules';
 
 /**
  * Renders a single content module based on its type
@@ -14,8 +16,30 @@ export default function ModuleRenderer({ module, personId }) {
   if (!module || module.visible === false) return null;
 
   const { type, data } = module;
+  // Эти модули принадлежат sidebar, квизу, лиге или специализированной странице.
+  // Их отсутствие в общем потоке — явный контракт, а не неизвестный тип.
+  if (['system', 'special'].includes(moduleContract[type]?.kind)) return null;
 
   switch (type) {
+    case 'hero_card':
+      return <ModuleFrame module={module}>
+        {(data?.image || data?.photo) && <img src={data.image || data.photo} alt={data?.photo_alt || data?.caption || ''} className="max-w-full rounded-lg" />}
+        {data?.caption && <p>{data.caption}</p>}
+        {data?.facts?.map((fact, i) => <p key={i}><strong>{fact.label || fact.title}: </strong>{fact.value}</p>)}
+      </ModuleFrame>;
+    case 'tags':
+      return <ModuleFrame module={module}><div className="flex flex-wrap gap-2">
+        {(data?.tags || []).map((tag, i) => <Link key={i} to={`/tags/${encodeURIComponent(tag)}`} className="rounded bg-gray-100 px-2 py-1">{tag}</Link>)}
+      </div></ModuleFrame>;
+    case 'team_members':
+    case 'tv_appearances':
+    case 'games_list':
+    case 'episodes_list':
+      return <StructuredListModule module={module} />;
+    case 'best_articles':
+    case 'interesting':
+    case 'random_page':
+      return <ContentWidget module={module} />;
     case 'text_block':
       // Allow explicit anchor id (for custom TOC / SEO pages)
       // Falls back to a simple slug from title.
@@ -47,7 +71,7 @@ export default function ModuleRenderer({ module, personId }) {
           {data?.url && (
             <img
               src={data.url}
-              alt={data.caption || ''}
+              alt={data.alt || data.caption || ''}
               className="w-full rounded-lg"
             />
           )}
@@ -59,7 +83,7 @@ export default function ModuleRenderer({ module, personId }) {
         </figure>
       );
 
-    case 'image_gallery':
+    case 'gallery':
       return (
         <div className="my-6">
           {data?.title && <h3 className="text-lg font-bold mb-3">{data.title}</h3>}
@@ -68,7 +92,7 @@ export default function ModuleRenderer({ module, personId }) {
               <div key={i} className="aspect-video rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={img.url}
-                  alt={img.caption || ''}
+                  alt={img.alt || img.caption || ''}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -77,20 +101,8 @@ export default function ModuleRenderer({ module, personId }) {
         </div>
       );
 
-    case 'video_embed':
-      return (
-        <div className="my-6">
-          {data?.title && <h3 className="text-lg font-bold mb-3">{data.title}</h3>}
-          <div className="aspect-video rounded-lg overflow-hidden bg-black">
-            <iframe
-              src={data?.url}
-              className="w-full h-full"
-              allowFullScreen
-              title={data?.title || 'Video'}
-            />
-          </div>
-        </div>
-      );
+    case 'video':
+      return <VideoModule module={module} />;
 
     case 'quote':
       return (
@@ -189,11 +201,10 @@ export default function ModuleRenderer({ module, personId }) {
       return null;
 
     case 'table':
-      if (!data?.rows?.length) return null;
       return (
         <div className="my-6">
           {data?.title && <h3 className="text-lg font-bold mb-3">{data.title}</h3>}
-          <ContentTable data={data} />
+          {data?.rows?.length ? <ContentTable data={data} /> : <p className="text-muted-foreground">Пока нет строк таблицы.</p>}
         </div>
       );
 
@@ -212,16 +223,11 @@ export default function ModuleRenderer({ module, personId }) {
       return <HumorChroniclesModule module={module} personId={personId} />;
 
     default:
-      // For unknown module types, try to render content if available
-      if (data?.content) {
-        return (
-          <div className="prose prose-lg max-w-none my-6">
-            {data?.title && <h3 className="text-lg font-bold mb-3">{data.title}</h3>}
-            <div dangerouslySetInnerHTML={{ __html: data.content }} />
-          </div>
-        );
-      }
-      return null;
+      return (
+        <div role="alert" className="my-6 rounded border p-4 text-sm">
+          Не удалось отобразить блок «{type}». Сообщите редактору страницы.
+        </div>
+      );
   }
 }
 

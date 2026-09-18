@@ -688,7 +688,19 @@ function StageContent({
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Заметки к стадии (HTML)</Label>
+        <Label>Комментарий к стадии</Label>
+        <Textarea
+          value={stage.comment || ''}
+          onChange={(e) => updateStage({ comment: e.target.value })}
+          rows={3}
+          placeholder="Краткий текст перед сеткой игр этой стадии"
+        />
+        <p className="text-xs text-muted-foreground">
+          Обычный текст без HTML. Показывается под названием стадии перед играми.
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label>Старые заметки к стадии (HTML)</Label>
         <RichTextEditor
           content={stage.notes || ''}
           onChange={(html) => updateStage({ notes: html })}
@@ -1847,6 +1859,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
       name: `Стадия ${newData.stages.length + 1}`,
       order: maxOrder + 1,
       games: [],
+      comment: '',
       notes: '',
       additional_teams: [],
       additional_notes: ''

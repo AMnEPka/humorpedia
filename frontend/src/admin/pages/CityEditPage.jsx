@@ -380,7 +380,7 @@ export default function CityEditPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ModuleEditor
+                <ModuleEditor contentType="city"
                   modules={city.modules}
                   onChange={(modules) => handleChange('modules', modules)}
                 />

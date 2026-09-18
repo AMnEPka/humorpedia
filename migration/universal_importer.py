@@ -68,6 +68,7 @@ PARSER_MAP: Dict[str, Type[BaseParser]] = {
     'timeline': TimelineParser,
     'team_members': TeamMembersParser,
     'image_gallery': GalleryParser,
+    'gallery': GalleryParser,
     'rating_widget': RatingParser,
     'quiz_questions': QuizParser,
     'quiz_results': QuizResultsParser,

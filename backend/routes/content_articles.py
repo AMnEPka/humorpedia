@@ -1,7 +1,7 @@
 """Article routes — CRUD + random."""
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from utils.auth import require_editor_on_write
-from typing import Optional
+from typing import Optional, Literal
 
 from models.base import ContentStatus
 from models.content import Article, ArticleCreate, ArticleUpdate
@@ -55,12 +55,16 @@ async def list_articles(
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
     search: Optional[str] = None,
-    featured: Optional[bool] = None
+    featured: Optional[bool] = None,
+    sort: Literal['-created_at', '-rating'] = '-created_at',
+    exclude_archived: bool = False,
 ):
     """List articles with pagination."""
     extra = {"featured": featured} if featured is not None else None
     query = build_query(status, tag, search, ["title"], extra=extra)
-    return await list_content("articles", skip, limit, query)
+    if exclude_archived:
+        query = {"$and": [query, {"status": {"$ne": "archived"}}]}
+    return await list_content("articles", skip, limit, query, sort_field=sort[1:])
 
 
 @router.get("/articles/{id_or_slug}", response_model=dict)

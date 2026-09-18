@@ -11,14 +11,15 @@ import { usePageTitle } from '@/utils/pageTitle';
 import { contentImageUrl, orderedFacts } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import ContentTable from '../components/ContentTable';
+import CommonModuleRenderer from '../components/ModuleRenderer';
 import CollapsibleCard from '../components/CollapsibleCard';
 import TeamDetailPage from './TeamDetailPage';
 import { isShowTeamPath } from '@/utils/teams';
 import ForeignAgentNotice from '../components/ForeignAgentNotice';
 
 // Module renderer component
-function ModuleRenderer({ module }) {
-  if (!module?.visible) return null;
+export function ModuleRenderer({ module }) {
+  if (!module || module.visible === false) return null;
   
   // Add table styles
   const tableStyles = `
@@ -72,34 +73,9 @@ function ModuleRenderer({ module }) {
         </Card>
       );
     
-    case 'image_gallery':
-      return (
-        <div>
-          {module.data?.title && <h3 className="text-lg font-bold mb-3">{module.data.title}</h3>}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {module.data?.images?.map((img, i) => (
-              <div key={i} className="aspect-video rounded-lg overflow-hidden bg-muted">
-                <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    
-    case 'video_embed':
-      return (
-        <div>
-          {module.data?.title && <h3 className="text-lg font-bold mb-3">{module.data.title}</h3>}
-          <div className="aspect-video rounded-lg overflow-hidden bg-black">
-            <iframe
-              src={module.data?.url}
-              className="w-full h-full"
-              allowFullScreen
-              title={module.data?.title || 'Video'}
-            />
-          </div>
-        </div>
-      );
+    case 'gallery':
+    case 'video':
+      return <CommonModuleRenderer module={module} />;
     
     case 'cast_list':
       return (
@@ -239,7 +215,7 @@ function ModuleRenderer({ module }) {
       );
     
     default:
-      return null;
+      return <CommonModuleRenderer module={module} />;
   }
 }
 

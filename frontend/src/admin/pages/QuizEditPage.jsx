@@ -13,6 +13,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Save, ArrowLeft, Loader2, Plus, Trash2, ExternalLink, GripVertical } from 'lucide-react';
 import TagSelector from '../components/TagSelector';
+import ModuleEditor from '../components/ModuleEditor';
+
+const QUIZ_MODULE_TYPES = ['quiz_questions', 'quiz_results'];
+
+export function updateQuizModules(modules = [], questions, results) {
+  const updates = { quiz_questions: { questions }, quiz_results: { results } };
+  const nextModules = modules.map(module => updates[module.type]
+    ? { ...module, data: { ...module.data, ...updates[module.type] } }
+    : module);
+  QUIZ_MODULE_TYPES.forEach((type, index) => {
+    if (!nextModules.some(module => module.type === type)) {
+      nextModules.push({
+        id: type === 'quiz_questions' ? 'quiz-questions' : 'quiz-results',
+        type, order: index, visible: true, data: updates[type],
+      });
+    }
+  });
+  return nextModules;
+}
 
 const emptyQuiz = {
   title: '',
@@ -76,10 +95,7 @@ export default function QuizEditPage() {
     setSuccess('');
     setSaving(true);
     
-    const modules = [
-      { id: 'quiz-questions', type: 'quiz_questions', order: 0, visible: true, data: { questions } },
-      { id: 'quiz-results', type: 'quiz_results', order: 1, visible: true, data: { results } }
-    ];
+    const modules = updateQuizModules(quiz.modules || [], questions, results);
     
     const dataToSave = { ...quiz, modules };
     
@@ -232,6 +248,7 @@ export default function QuizEditPage() {
           <TabsTrigger value="main">Основное</TabsTrigger>
           <TabsTrigger value="questions">Вопросы ({questions.length})</TabsTrigger>
           <TabsTrigger value="results">Результаты ({results.length})</TabsTrigger>
+          <TabsTrigger value="modules">Дополнительные блоки</TabsTrigger>
         </TabsList>
 
         {/* Main Tab */}
@@ -278,6 +295,22 @@ export default function QuizEditPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="modules">
+          <p className="text-sm text-muted-foreground mb-4">Эти блоки отображаются под описанием квиза до начала прохождения.</p>
+          <ModuleEditor
+            modules={(quiz.modules || []).filter(module => !QUIZ_MODULE_TYPES.includes(module.type))}
+            onChange={(modules) => setQuiz(previous => ({
+              ...previous,
+              modules: [
+                ...(previous.modules || []).filter(module => QUIZ_MODULE_TYPES.includes(module.type)),
+                ...modules,
+              ],
+            }))}
+            contentType="quiz"
+            excludedTypes={QUIZ_MODULE_TYPES}
+          />
         </TabsContent>
 
         {/* Questions Tab */}

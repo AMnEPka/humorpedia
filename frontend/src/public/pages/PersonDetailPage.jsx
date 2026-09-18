@@ -8,6 +8,7 @@ import EmojiRating from '@/components/EmojiRating';
 import publicApi from '../utils/api';
 import PersonCareer from '../components/competitions/PersonCareer';
 import ShowAppearances from '../components/ShowAppearances';
+import CommonModuleRenderer from '../components/ModuleRenderer';
 import { 
   PosterPhotoModule, 
   FactsTableModule, 
@@ -412,7 +413,7 @@ export default function PersonDetailPage() {
 }
 
 // Module renderer component
-function ModuleRenderer({ module, index, personId }) {
+export function ModuleRenderer({ module, index, personId }) {
   const normalizeRichText = (value) => {
     if (typeof value !== 'string') return value || '';
     let v = value;
@@ -558,7 +559,7 @@ function ModuleRenderer({ module, index, personId }) {
       return <HumorChroniclesModule module={module} personId={personId} index={index} />;
     
     default:
-      return null;
+      return <CommonModuleRenderer module={module} personId={personId} />;
   }
 }
 

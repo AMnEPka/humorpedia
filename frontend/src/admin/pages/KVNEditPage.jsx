@@ -18,6 +18,7 @@ import MediaSelector from '../components/MediaSelector';
 import SeasonDataEditor from '../components/SeasonDataEditor';
 import FactsEditor from '../components/FactsEditor';
 import { cleanTeamName } from '@/utils/team';
+import SeasonModulesArchive from '../components/SeasonModulesArchive';
 
 const emptyKvn = {
   title: '', slug: '', name: '', status: 'draft',
@@ -473,7 +474,9 @@ export default function KVNEditPage() {
         <TabsList>
           <TabsTrigger value="main">Основное</TabsTrigger>
           <TabsTrigger value="facts">Факты</TabsTrigger>
-          <TabsTrigger value="modules">Модули ({kvn.modules.length})</TabsTrigger>
+          <TabsTrigger value="modules">
+            {kvn.season_data ? 'Архивные модули' : 'Модули'} ({kvn.modules.length})
+          </TabsTrigger>
           <TabsTrigger value="season">Сезон</TabsTrigger>
           {kvn.slug === 'vl-jury' && <TabsTrigger value="jury-cards">Карточки жюри</TabsTrigger>}
           <TabsTrigger value="seo">SEO</TabsTrigger>
@@ -637,7 +640,13 @@ export default function KVNEditPage() {
         </TabsContent>
 
         <TabsContent value="modules">
-          <ModuleEditor modules={kvn.modules} onChange={(m) => setKvn(p => ({ ...p, modules: m }))} contentType="kvn" />
+          {kvn.season_data ? (
+            <SeasonModulesArchive modules={kvn.modules} />
+          ) : (
+            <ModuleEditor modules={kvn.modules} onChange={(m) => setKvn(p => ({ ...p, modules: m }))} contentType="kvn"
+              excludedTypes={['1l-kvn', 'vl-kvn', 'premier-liga', 'ml-kvn', 'vul'].includes(kvn.slug)
+                ? [] : ['first_league_champions', 'vl_league_champions']} />
+          )}
         </TabsContent>
 
         <TabsContent value="season">

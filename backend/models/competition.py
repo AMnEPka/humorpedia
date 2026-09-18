@@ -50,6 +50,7 @@ class Stage(_Model):
     id: Optional[str] = None
     name: str = ""
     order: Optional[float] = None
+    comment: str = ""
     notes: str = ""
     additional_teams: List[str] = Field(default_factory=list)
     additional_notes: str = ""

@@ -49,7 +49,8 @@ memberships     — составы команд: человек — команд
   "extra_sections", "late_joined_teams",
   "teams":   [ { "team_id": "teams._id|null", "person_id": null, "slug", "name", "city", "had_city", "extra": {} } ],
   "winners": [ …то же… ],
-  "stages": [ { "id", "name": "1/2 финала", "code": "1/2", "order": 3 /* бывает 2.5 */, "notes",
+  "stages": [ { "id", "name": "1/2 финала", "code": "1/2", "order": 3 /* бывает 2.5 */,
+                "comment" /* обычный текст перед сеткой */, "notes" /* совместимый старый HTML */,
                 "additional_teams": ["…"], "additional_notes",
                 "games": [ { "id" /* уникален в сезоне */, "legacy_id", "had_legacy_id", "name", "order", "date", "date_raw",
                              "host", "jury": ["Имя"], "contests": ["Приветствие"], "notes", "is_cancelled",
@@ -89,6 +90,8 @@ memberships     — составы команд: человек — команд
 ## Синхронизация (переходный период, до этапа 3)
 
 Публичные страницы (`SeasonDetailPage`) и старый редактор (`SeasonDataEditor`) работают с `kvn.season_data`.
+Обычные `kvn.modules` у таких страниц считаются архивными: публично не выводятся и в KVNEditor доступны read-only.
+`extra_modules` для сезонов не используются. Для редакционного текста конкретной стадии служит `stages[].comment`.
 
 | Событие | Что происходит |
 |---|---|

@@ -11,6 +11,7 @@ import {
 import { usePageTitle } from '@/utils/pageTitle';
 import TeamParticipations from '../components/competitions/TeamParticipations';
 import TeamRoster from '../components/competitions/TeamRoster';
+import CommonModuleRenderer from '../components/ModuleRenderer';
 import { teamPageTitle, teamSubtitle } from '@/utils/teams';
 import FittedImage from '@/components/FittedImage';
 import { teamLogoUrl } from '@/utils/media';
@@ -460,7 +461,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
 }
 
 // Module renderer component (same as PersonDetailPage)
-function ModuleRenderer({ module }) {
+export function ModuleRenderer({ module }) {
   // Add table and heading styles
   const contentStyles = `
     /* Таблицы */
@@ -574,26 +575,9 @@ function ModuleRenderer({ module }) {
       );
 
     case 'tv_appearances':
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle>{module.data?.title || 'ТВ эфиры'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {module.data?.items?.map((item, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="font-medium">{item.show}</div>
-                  {item.date && <div className="text-sm text-gray-500">{item.date}</div>}
-                  {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      );
+      return <CommonModuleRenderer module={module} />;
     
     default:
-      return null;
+      return <CommonModuleRenderer module={module} />;
   }
 }
