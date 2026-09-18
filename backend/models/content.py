@@ -351,6 +351,7 @@ class Quiz(BaseContent):
     modules: List[PageModule] = Field(default_factory=list)
     
     # Statistics
+    questions_count: int = 0
     attempts_count: int = 0
     avg_score: Optional[float] = None
     completion_rate: Optional[float] = None
@@ -363,6 +364,7 @@ class QuizCreate(BaseModel):
     description: Optional[str] = None
     cover_image: Optional[MediaFile] = None
     modules: List[PageModule] = Field(default_factory=list)
+    questions_count: int = 0
     tags: List[str] = Field(default_factory=list)
     seo: Optional[SEOData] = None
     status: ContentStatus = ContentStatus.DRAFT
@@ -375,6 +377,7 @@ class QuizUpdate(BaseModel):
     description: Optional[str] = None
     cover_image: Optional[MediaFile] = None
     modules: Optional[List[PageModule]] = None
+    questions_count: Optional[int] = None
     tags: Optional[List[str]] = None
     seo: Optional[SEOData] = None
     status: Optional[ContentStatus] = None

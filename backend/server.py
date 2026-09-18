@@ -198,6 +198,9 @@ async def create_indexes(db):
         await _ensure_index(db.quizzes, "slug", unique=True)
         await _ensure_index(db.quizzes, "tags")
         await _ensure_index(db.quizzes, "status")
+        await _ensure_index(db.quizzes, "published_at")
+        await _ensure_index(db.quizzes, "old_id", unique=True, sparse=True)
+        await _ensure_index(db.quizzes, "old_urls")
         
         # Wiki indexes
         await _ensure_index(db.wiki, "slug", unique=True)

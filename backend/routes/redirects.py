@@ -19,7 +19,7 @@ router = APIRouter(prefix="/redirects", tags=["redirects"], dependencies=[Depend
 @router.get("/lookup")
 async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g. /kvn/team/negoden.html)")):
     """
-    Ищет old_url в коллекциях kvn, teams, people, shows, articles, news.
+    Ищет old_url в коллекциях kvn, teams, people, shows, articles, news, quizzes.
     Возвращает { found: true, new_path: "/kvn/teams/negoden" } или { found: false }.
     """
     # Нормализуем путь
@@ -45,6 +45,7 @@ async def lookup_redirect(path: str = Query(..., description="Old URL path (e.g.
         ("shows",    lambda doc: "/shows/" + (doc.get("full_path") or doc.get("slug", ""))),
         ("articles", lambda doc: "/articles/" + doc.get("slug", "")),
         ("news",     lambda doc: "/news/" + doc.get("slug", "")),
+        ("quizzes",  lambda doc: "/quizzes/" + doc.get("slug", "")),
     ]
 
     for coll_name, path_builder in search_targets:
@@ -138,6 +139,11 @@ def _try_pattern_redirect(path: str) -> str | None:
     if m:
         return f"/news/{m.group(1)}"
 
+    # /quiz/{slug}.html → /quizzes/{slug}
+    m = re.match(r"^/quiz/([\w-]+)\.html$", path)
+    if m:
+        return f"/quizzes/{m.group(1)}"
+
     # /kvn/{slug}.html → /kvn/{slug}
     m = re.match(r"^/kvn/([\w-]+)\.html$", path)
     if m:
@@ -154,7 +160,7 @@ def _try_pattern_redirect(path: str) -> str | None:
 @router.put("/{collection}/{doc_id}/old-urls")
 async def update_old_urls(collection: str, doc_id: str, body: dict):
     """Обновляет old_urls для документа."""
-    allowed = {"kvn", "teams", "people", "shows", "articles", "news"}
+    allowed = {"kvn", "teams", "people", "shows", "articles", "news", "quizzes"}
     if collection not in allowed:
         return {"error": f"Collection {collection} not supported"}
 
@@ -276,7 +282,7 @@ async def auto_populate_old_urls():
         stats["people"] += 1
 
     # Создаём индексы для быстрого поиска
-    for coll_name in ["kvn", "teams", "people", "shows", "articles", "news"]:
+    for coll_name in ["kvn", "teams", "people", "shows", "articles", "news", "quizzes"]:
         await db[coll_name].create_index("old_urls")
 
     cache_service.invalidate_redirects()

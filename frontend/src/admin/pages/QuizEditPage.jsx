@@ -105,7 +105,9 @@ export default function QuizEditPage() {
       id: Date.now(),
       type,
       question: '',
-      explanation: ''
+      explanation: '',
+      success_explanation: '',
+      error_explanation: ''
     };
     
     if (type === QUESTION_TYPES.TEXT) {
@@ -373,6 +375,26 @@ export default function QuizEditPage() {
                     onChange={(e) => updateQuestion(qIdx, 'explanation', e.target.value)}
                     placeholder="Пояснение к правильному ответу..."
                   />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>После правильного ответа</Label>
+                    <Textarea
+                      value={q.success_explanation || ''}
+                      onChange={(e) => updateQuestion(qIdx, 'success_explanation', e.target.value)}
+                      placeholder="Отдельное пояснение для правильного ответа..."
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>После ошибки</Label>
+                    <Textarea
+                      value={q.error_explanation || ''}
+                      onChange={(e) => updateQuestion(qIdx, 'error_explanation', e.target.value)}
+                      placeholder="Отдельное пояснение для неправильного ответа..."
+                      rows={3}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

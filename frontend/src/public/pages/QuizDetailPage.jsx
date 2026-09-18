@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Share2, Trophy } from 'lucide-react';
 import { usePageTitle } from '@/utils/pageTitle';
+import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
+import { sanitizeHTML } from '../utils/sanitize';
 
 export default function QuizDetailPage() {
   const { slug } = useParams();
@@ -188,9 +191,12 @@ export default function QuizDetailPage() {
     return (
       <div className="container max-w-2xl mx-auto py-8 px-4">
         <Card className="overflow-hidden">
-          {quiz.cover_image?.url && (
-            <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url(${quiz.cover_image.url})` }} />
-          )}
+          <FittedImage
+            src={contentImageUrl(quiz, quiz.cover_image, quiz.image)}
+            alt={quiz.title}
+            fallbackKey={quiz}
+            className="h-48 w-full"
+          />
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{quiz.title}</CardTitle>
             {quiz.description && (
@@ -280,6 +286,9 @@ export default function QuizDetailPage() {
                     isCorrect = answer === correctIdx;
                   }
                 }
+                const explanation = isCorrect
+                  ? (q.success_explanation || q.explanation)
+                  : (q.error_explanation || q.explanation);
                 
                 return (
                   <div key={idx} className={`p-3 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
@@ -301,8 +310,11 @@ export default function QuizDetailPage() {
                             <span className="text-green-700">{correctAnswerText}</span>
                           </div>
                         )}
-                        {q.explanation && (
-                          <div className="text-xs text-muted-foreground mt-1 italic">{q.explanation}</div>
+                        {explanation && (
+                          <div
+                            className="prose prose-sm max-w-none text-xs text-muted-foreground mt-2"
+                            dangerouslySetInnerHTML={{ __html: sanitizeHTML(explanation) }}
+                          />
                         )}
                       </div>
                     </div>
