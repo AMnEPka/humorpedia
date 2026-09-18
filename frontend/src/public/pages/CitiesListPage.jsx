@@ -67,6 +67,14 @@ export default function CitiesListPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <nav className="mb-6">
+        <ol className="flex items-center gap-2 text-sm text-gray-500">
+          <li><Link to="/" className="hover:text-blue-600">Главная</Link></li>
+          <li>/</li>
+          <li className="text-gray-900">География</li>
+        </ol>
+      </nav>
+
       <ListPageHeader
         title="География"
         description="Города, подарившие миру звёзд юмора"
