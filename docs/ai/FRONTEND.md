@@ -30,7 +30,8 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     Layout.jsx                 Header + <Outlet/> + Footer
     Header.jsx                 меню из /sections (in_main_menu), автокомплит поиска
     Footer.jsx
-    ListPageHeader.jsx         единая панель заголовка и поиска для списков людей, команд и шоу
+    ListPageHeader.jsx         единая панель заголовка/поиска для общих списков
+    AlphabetFilter.jsx         единый полный русский алфавит для списков людей, команд и шоу
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
     ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
     RatingCard.jsx             среднее, веха числа голосов и 10 кнопок-смайликов

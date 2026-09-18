@@ -9,7 +9,7 @@ from models.content import Person, PersonCreate, PersonUpdate
 from utils.database import get_db
 from services.crud import (
     check_slug_unique, create_content, update_content,
-    delete_content, get_by_id_or_slug, list_content, build_query,
+    delete_content, get_by_id_or_slug, list_alphabetical_content, build_query,
 )
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
@@ -65,7 +65,9 @@ async def list_people(
 ):
     """List people with pagination and filters."""
     query = build_query(status, tag, search, ["title", "full_name"], letter)
-    return await list_content("people", skip, limit, query, "title", 1)
+    return await list_alphabetical_content(
+        "people", skip, limit, query, ["title", "full_name"]
+    )
 
 
 @router.get("/people/search", response_model=list)

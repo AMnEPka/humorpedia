@@ -202,9 +202,10 @@ def build_query(
     if tag:
         query["tags"] = tag
     if search and search_fields:
-        query["$or"] = [{f: {"$regex": search, "$options": "i"}} for f in search_fields]
+        search_pattern = re.escape(search)
+        query["$or"] = [{f: {"$regex": search_pattern, "$options": "i"}} for f in search_fields]
     if letter:
-        query[letter_field] = {"$regex": f"^{letter}", "$options": "i"}
+        query[letter_field] = {"$regex": f"^{re.escape(letter)}", "$options": "i"}
     if extra:
         query.update(extra)
     return query
@@ -448,4 +449,102 @@ async def list_content(
     cursor = collection.find(query, projection).skip(skip).limit(limit).sort(sort_field, sort_order)
     items = await cursor.to_list(limit)
 
+    return {"items": items, "total": total, "skip": skip, "limit": limit}
+
+
+def build_alphabetical_pipeline(
+    query: dict,
+    skip: int,
+    limit: int,
+    sort_fields: list[str],
+    exclude_modules: bool = True,
+) -> list[dict]:
+    """Build a stable Cyrillic -> Latin -> other-symbols list pipeline."""
+    if not sort_fields:
+        raise ValueError("sort_fields must not be empty")
+
+    sort_value = ""
+    for field in reversed(sort_fields):
+        field_value = {"$ifNull": [f"${field}", ""]}
+        sort_value = {
+            "$cond": [
+                {"$gt": [
+                    {"$strLenCP": {"$trim": {"input": field_value}}},
+                    0,
+                ]},
+                field_value,
+                sort_value,
+            ]
+        }
+
+    pipeline = [
+        {"$match": query or {}},
+        {"$set": {
+            "_alphabet_sort_value": {
+                "$trim": {"input": {"$ifNull": [sort_value, ""]}}
+            }
+        }},
+        {"$set": {
+            "_alphabet_sort_group": {
+                "$switch": {
+                    "branches": [
+                        {
+                            "case": {"$regexMatch": {
+                                "input": "$_alphabet_sort_value",
+                                "regex": "^[\u0400-\u052F\u2DE0-\u2DFF\uA640-\uA69F]",
+                            }},
+                            "then": 0,
+                        },
+                        {
+                            "case": {"$regexMatch": {
+                                "input": "$_alphabet_sort_value",
+                                "regex": "^[A-Za-z]",
+                            }},
+                            "then": 1,
+                        },
+                    ],
+                    "default": 2,
+                }
+            }
+        }},
+        {"$sort": {
+            "_alphabet_sort_group": 1,
+            "_alphabet_sort_value": 1,
+            "_id": 1,
+        }},
+        {"$skip": skip},
+        {"$limit": limit},
+    ]
+    projection = {"_alphabet_sort_value": 0, "_alphabet_sort_group": 0}
+    if exclude_modules:
+        projection["modules"] = 0
+    pipeline.append({"$project": projection})
+    return pipeline
+
+
+async def list_alphabetical_content(
+    collection_name: str,
+    skip: int,
+    limit: int,
+    query: dict = None,
+    sort_fields: list[str] = None,
+    exclude_modules: bool = True,
+):
+    """List content alphabetically before pagination using Russian collation."""
+    db = await get_db()
+    collection = getattr(db, collection_name)
+    query = query or {}
+    total = await collection.count_documents(query)
+    pipeline = build_alphabetical_pipeline(
+        query,
+        skip,
+        limit,
+        sort_fields or ["title", "name"],
+        exclude_modules,
+    )
+    cursor = collection.aggregate(
+        pipeline,
+        collation={"locale": "ru", "strength": 2},
+    )
+    items = await cursor.to_list(limit)
     return {"items": items, "total": total, "skip": skip, "limit": limit}

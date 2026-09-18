@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { MapPin, Loader2, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { MapPin, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import publicApi from '../utils/api';
-import { cn } from '@/lib/utils';
 import FittedImage from '@/components/FittedImage';
 import { contentImageUrl } from '@/utils/media';
-
-const LETTERS = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ'.split('');
+import ListPageHeader from '../components/ListPageHeader';
 
 export default function CitiesListPage() {
   const [cities, setCities] = useState([]);
@@ -17,8 +14,8 @@ export default function CitiesListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = parseInt(searchParams.get('page') || '1');
-  const search = searchParams.get('search') || '';
-  const letter = searchParams.get('letter') || '';
+  const query = searchParams.get('q') || searchParams.get('search') || '';
+  const [search, setSearch] = useState(query);
   const limit = 24;
 
   useEffect(() => {
@@ -29,8 +26,7 @@ export default function CitiesListPage() {
           skip: (page - 1) * limit,
           limit,
           status: 'published',
-          ...(search && { search }),
-          ...(letter && { letter })
+          ...(query && { search: query }),
         };
         const response = await publicApi.getCities(params);
         setCities(response.data.items || []);
@@ -42,26 +38,17 @@ export default function CitiesListPage() {
       }
     };
     fetchCities();
-  }, [page, search, letter]);
+  }, [page, query]);
 
-  const handleLetterClick = (l) => {
-    const params = new URLSearchParams(searchParams);
-    if (l === letter) {
-      params.delete('letter');
-    } else {
-      params.set('letter', l);
-    }
-    params.set('page', '1');
-    setSearchParams(params);
-  };
+  useEffect(() => setSearch(query), [query]);
 
-  const handleSearch = (value) => {
+  const handleSearch = (event) => {
+    event.preventDefault();
     const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set('search', value);
-    } else {
-      params.delete('search');
-    }
+    params.delete('search');
+    params.delete('letter');
+    if (search.trim()) params.set('q', search.trim());
+    else params.delete('q');
     params.set('page', '1');
     setSearchParams(params);
   };
@@ -70,56 +57,15 @@ export default function CitiesListPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <MapPin className="h-8 w-8 text-blue-600" />
-          География
-        </h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Города, подарившие миру звёзд юмора
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Поиск города..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Alphabet filter */}
-        <div className="flex flex-wrap gap-1">
-          {LETTERS.map((l) => (
-            <button
-              key={l}
-              onClick={() => handleLetterClick(l)}
-              className={cn(
-                'w-8 h-8 text-sm font-medium rounded transition-colors',
-                letter === l
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              )}
-            >
-              {l}
-            </button>
-          ))}
-          {letter && (
-            <button
-              onClick={() => handleLetterClick(letter)}
-              className="px-3 h-8 text-sm font-medium rounded bg-red-100 text-red-600 hover:bg-red-200"
-            >
-              Сбросить
-            </button>
-          )}
-        </div>
-      </div>
+      <ListPageHeader
+        title="География"
+        description="Города, подарившие миру звёзд юмора"
+        search={search}
+        onSearchChange={setSearch}
+        onSearch={handleSearch}
+        placeholder="Поиск города..."
+        searchId="cities-search"
+      />
 
       {/* Results count */}
       <p className="text-sm text-gray-500 mb-4">

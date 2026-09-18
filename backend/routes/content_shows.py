@@ -13,7 +13,7 @@ import logging
 from models.base import ContentStatus
 from models.content import Show, ShowCreate, ShowUpdate
 from utils.database import get_db
-from services.crud import create_content, delete_content, get_by_id_or_slug, list_content, build_query
+from services.crud import create_content, delete_content, get_by_id_or_slug, list_alphabetical_content, build_query
 from services.tags import tag_service
 from services.linking import linking_service
 from services.link_resolver import LinkResolver
@@ -114,13 +114,16 @@ async def list_shows(
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
     search: Optional[str] = None,
+    letter: Optional[str] = None,
     include_children: bool = Query(False, description="Include child shows")
 ):
     """List shows with pagination (excludes child shows by default)."""
-    query = build_query(status, tag, search, ["title", "name"])
+    query = build_query(status, tag, search, ["title", "name"], letter)
     if not include_children:
         query = {"$and": [query, ROOT_QUERY]} if query else ROOT_QUERY
-    return await list_content("shows", skip, limit, query, "name", 1)
+    return await list_alphabetical_content(
+        "shows", skip, limit, query, ["title", "name"]
+    )
 
 
 @router.get("/shows/by-path/{path:path}", response_model=dict)
