@@ -57,7 +57,7 @@ async def list_articles(
     tag: Optional[str] = None,
     search: Optional[str] = None,
     featured: Optional[bool] = None,
-    sort: Literal['-created_at', '-rating'] = '-created_at',
+    sort: Literal['-created_at', '-published_at', '-rating'] = '-created_at',
     exclude_archived: bool = False,
 ):
     """List articles with pagination."""
