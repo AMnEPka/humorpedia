@@ -47,16 +47,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 ├── PERFORMANCE_OPTIMIZATIONS.md  что сделано для нагрузки (lazy, text-индексы, rate limit, pool)
 ├── docker-compose.yml            dev: mongodb(--auth) + backend(uvicorn, без reload) + frontend(yarn start)
 ├── docker-compose-cloud.yml      prod: mongodb(--auth, порт не публикуется) + backend(gunicorn 4×UvicornWorker) + backup(раз в сутки) + frontend(nginx); требует .env
-├── .emergent/                    метаданные платформы Emergent (прежний AI-агент), summary.txt — отчёт о рефакторинге
-├── .cursor/plans/                план из Cursor (линковка контента к людям / humor_chronicles)
-├── .gitconfig                    user emergent-agent-e1 (артефакт Emergent)
-├── test_result.md                протокол тестирования Emergent (служебный)
-├── backend_test.py               смоук-тест живого API (берёт URL из frontend/.env)
-├── mongo_unification_test.py     смоук-тест единого подключения к Mongo
-├── mongo-dump.archive            12 МБ дамп Mongo (дубликат лежит в migration/)
-├── 1l_kvn_games_analysis*.csv/.xlsx   выгрузка анализа игр Первой лиги
 ├── uploads/2025/12, 2026/01      несколько загруженных картинок
-├── tests/__init__.py             пусто (тесты бэкенда — в backend/tests/)
 │
 ├── backend/
 │   ├── server.py                 приложение, индексы, первый админ из env, middleware, /api/stats, /api/random/{type}, /api/cache/stats|flush, /api/views/flush
@@ -142,7 +133,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── craco.config.js           алиас @, прокси dev-сервера, отключение watch в Docker, health-check плагин (ENABLE_HEALTH_CHECK)
 │   ├── nginx.conf                SPA fallback, кэш статики 1y, no-store для index.html и config.js
 │   ├── public/config.js          window.__BACKEND_URL__ = http://localhost:8001 для localhost
-│   ├── plugins/                  health-check и visual-edits (от Emergent)
+│   ├── plugins/health-check/     опциональный health-check для dev-сервера (`ENABLE_HEALTH_CHECK=true`)
 │   └── src/ …
 │
 ├── migration/                    СТАРЫЙ импорт из MODX (humorbd.sql). Новый импорт людей — backend/scripts/import_people_modx.py (см. DATA_MODEL.md «Импорт со старого сайта»)
@@ -204,8 +195,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 
 ## 6. История проекта (важно для понимания кода)
 
-- Изначально разработка шла через AI-платформу **Emergent** (коммиты `emergent-agent-e1`, `test_result.md`, `.emergent/`), частично через Cursor.
+- Изначально разработка шла через AI-платформу **Emergent**, частично через Cursor. Её служебные метаданные,
+  тестовый протокол, live-API смоук-скрипты и неиспользуемый visual-edits-плагин удалены из актуального дерева 18.09.2026.
 - Апрель 2026: рефакторинг Emergent — монолитный `routes/content.py` (~4300 строк) разбит на `content_*.py`, общий CRUD вынесен в `services/crud.py`, единое подключение к БД, refresh-токены, code splitting, text-индексы, rate limiting, in-memory кэш и батч-счётчик просмотров.
-- В `.emergent/summary.txt` упомянуты 5 md-файлов для агентов в корне — **в репозитории их нет**; их роль теперь выполняют `CLAUDE.md` + `docs/ai/`.
 - Все локальные и удалённые ветки (`debugs`, `geography`, `jury_stats`, `kvn_leagues`, `new_media`, `emergent_*`, `conflict_160426_1510`) полностью влиты в `main`.
 - Сентябрь 2026, этап 0 (Claude Code): авторизация через FastAPI-зависимости на всех операциях записи, `JWT_SECRET` из env, первый админ из env вместо `admin/admin`, Mongo с `--auth` в проде, синхронизация кэша между воркерами, устойчивое создание индексов, тесты + CI. Подробно — KNOWN_ISSUES.md, раздел «Исправлено».
