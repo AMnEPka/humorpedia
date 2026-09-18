@@ -7,14 +7,14 @@ import publicApi from '../utils/api';
 import { personPhotoUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import ListPageHeader from '../components/ListPageHeader';
+import AlphabetFilter from '../components/AlphabetFilter';
 
 export default function PeopleListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [people, setPeople] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState(searchParams.get('q') || '');
-  const query = searchParams.get('q') || '';
+  const letter = searchParams.get('letter') || '';
   
   const page = parseInt(searchParams.get('page') || '1');
   const limit = 24;
@@ -26,8 +26,7 @@ export default function PeopleListPage() {
         const res = await publicApi.getPeople({ 
           skip: (page - 1) * limit,
           limit,
-          search: query || undefined,
-          sort: 'title' 
+          letter: letter || undefined,
         });
         setPeople(res.data.items || []);
         setTotal(res.data.total || 0);
@@ -38,17 +37,15 @@ export default function PeopleListPage() {
       }
     };
     fetchPeople();
-  }, [page, query]);
-
-  useEffect(() => setSearch(query), [query]);
+  }, [page, letter]);
 
   const totalPages = Math.ceil(total / limit);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const handleLetterClick = (nextLetter) => {
     const params = new URLSearchParams(searchParams);
-    if (search.trim()) params.set('q', search.trim());
-    else params.delete('q');
+    params.delete('q');
+    if (nextLetter) params.set('letter', nextLetter);
+    else params.delete('letter');
     params.set('page', '1');
     setSearchParams(params);
   };
@@ -66,12 +63,9 @@ export default function PeopleListPage() {
 
       <ListPageHeader
         title="Люди"
-        search={search}
-        onSearchChange={setSearch}
-        onSearch={handleSearch}
-        placeholder="Поиск человека..."
-        searchId="people-search"
-      />
+      >
+        <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
+      </ListPageHeader>
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">

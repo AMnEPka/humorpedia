@@ -1,28 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import publicApi from '../utils/api';
 import FittedImage from '@/components/FittedImage';
 import { teamLogoUrl } from '@/utils/media';
 import ListPageHeader from '../components/ListPageHeader';
-
-const teamCategories = [
-  { id: 'kvn', name: 'КВН', path: '/kvn/teams' },
-  { id: 'lg', name: 'Лига смеха', path: '/kvn/teams' },
-  { id: 'improv', name: 'Импровизация', path: '/kvn/teams' },
-];
+import AlphabetFilter from '../components/AlphabetFilter';
 
 export default function TeamsListPage() {
-  const { category = 'kvn' } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [teams, setTeams] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState(searchParams.get('q') || '');
-  const query = searchParams.get('q') || '';
+  const letter = searchParams.get('letter') || '';
   
   const page = parseInt(searchParams.get('page') || '1');
   const limit = 24;
@@ -31,11 +23,10 @@ export default function TeamsListPage() {
     const fetchTeams = async () => {
       setLoading(true);
       try {
-        const res = await publicApi.getTeamsByCategory(category, { 
+        const res = await publicApi.getTeamsByCategory('kvn', {
           skip: (page - 1) * limit,
           limit,
-          search: query || undefined,
-          sort: 'title' 
+          letter: letter || undefined,
         });
         setTeams(res.data.items || []);
         setTotal(res.data.total || 0);
@@ -46,18 +37,14 @@ export default function TeamsListPage() {
       }
     };
     fetchTeams();
-  }, [page, query, category]);
-
-  useEffect(() => setSearch(query), [query]);
+  }, [page, letter]);
 
   const totalPages = Math.ceil(total / limit);
-  const currentCategory = teamCategories.find(c => c.id === category) || teamCategories[0];
-
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const handleLetterClick = (nextLetter) => {
     const params = new URLSearchParams(searchParams);
-    if (search.trim()) params.set('q', search.trim());
-    else params.delete('q');
+    params.delete('q');
+    if (nextLetter) params.set('letter', nextLetter);
+    else params.delete('letter');
     params.set('page', '1');
     setSearchParams(params);
   };
@@ -76,22 +63,9 @@ export default function TeamsListPage() {
       </nav>
 
       <ListPageHeader
-        title={`Команды ${currentCategory.name}`}
-        search={search}
-        onSearchChange={setSearch}
-        onSearch={handleSearch}
-        placeholder="Поиск команды..."
-        searchId="teams-search"
+        title="Команды КВН"
       >
-        <Tabs value={category} className="w-full">
-          <TabsList>
-            {teamCategories.map((cat) => (
-              <TabsTrigger key={cat.id} value={cat.id} asChild>
-                <Link to={cat.path}>{cat.name}</Link>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
       </ListPageHeader>
 
       {loading ? (

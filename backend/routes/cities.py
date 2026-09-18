@@ -4,6 +4,7 @@ from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ from models.city import City, CityCreate, CityUpdate
 from utils.database import get_db
 from services.tags import tag_service
 from services.show_teams import attach_show_info
+from services.crud import list_alphabetical_content
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
 
@@ -98,27 +100,26 @@ async def list_cities(
     if tag:
         query["tags"] = tag
     if search:
+        search_pattern = re.escape(search)
         query["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"name": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}}
+            {"title": {"$regex": search_pattern, "$options": "i"}},
+            {"name": {"$regex": search_pattern, "$options": "i"}},
+            {"description": {"$regex": search_pattern, "$options": "i"}}
         ]
     if letter:
-        query["title"] = {"$regex": f"^{letter}", "$options": "i"}
+        query["title"] = {"$regex": f"^{re.escape(letter)}", "$options": "i"}
     
-    total = await db.cities.count_documents(query)
-    
-    # Sort order
+    if sort_by == "title" and sort_order >= 0:
+        return await list_alphabetical_content(
+            "cities", skip, limit, query, ["name", "title"]
+        )
+
     sort_dir = 1 if sort_order >= 0 else -1
+    total = await db.cities.count_documents(query)
     cursor = db.cities.find(query, {"modules": 0}).skip(skip).limit(limit).sort(sort_by, sort_dir)
     items = await cursor.to_list(limit)
     
-    return {
-        "items": items,
-        "total": total,
-        "skip": skip,
-        "limit": limit
-    }
+    return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 
 @router.get("/{id_or_slug}", response_model=dict)

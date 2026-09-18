@@ -18,6 +18,7 @@ from services.crud import (
     create_content, update_content,
     delete_content,
     check_primary_tag_duplicate,
+    list_alphabetical_content,
 )
 from services.tags import tag_service
 from services.link_resolver import LinkResolver
@@ -789,21 +790,18 @@ async def list_teams(
 
     # Фильтр по первой букве
     if letter:
-        conditions.append({"name": {"$regex": f"^{re.escape(letter)}", "$options": "i"}})
+        letter_pattern = f"^{re.escape(letter)}"
+        conditions.append({"title": {"$regex": letter_pattern, "$options": "i"}})
 
     query = {"$and": conditions} if conditions else {}
     
-    total = await db.teams.count_documents(query)
-    cursor = db.teams.find(query, {"modules": 0}).skip(skip).limit(limit).sort("name", 1)
-    items = await cursor.to_list(limit)
+    result = await list_alphabetical_content(
+        "teams", skip, limit, query, ["title", "name"]
+    )
+    items = result["items"]
     await attach_show_info(db, items)
 
-    result = {
-        "items": items,
-        "total": total,
-        "skip": skip,
-        "limit": limit
-    }
+    result["items"] = items
 
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
     cache_service.set_team_list(cache_key, result)

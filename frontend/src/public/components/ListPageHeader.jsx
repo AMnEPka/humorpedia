@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 
 export default function ListPageHeader({
   title,
+  description,
   search,
   onSearchChange,
   onSearch,
@@ -14,8 +15,11 @@ export default function ListPageHeader({
   return (
     <div className="mb-8 space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-        <form onSubmit={onSearch} className="flex w-full gap-2 sm:w-80">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+          {description && <p className="mt-2 text-lg text-gray-600">{description}</p>}
+        </div>
+        {onSearch && <form onSubmit={onSearch} className="flex w-full gap-2 sm:w-80">
           <label htmlFor={searchId} className="sr-only">{placeholder}</label>
           <Input
             id={searchId}
@@ -28,7 +32,7 @@ export default function ListPageHeader({
           <Button type="submit" size="icon" aria-label="Найти">
             <Search className="h-4 w-4" />
           </Button>
-        </form>
+        </form>}
       </div>
       {children}
     </div>
