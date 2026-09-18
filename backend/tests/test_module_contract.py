@@ -160,7 +160,15 @@ def article_client(monkeypatch):
         yield client, calls
 
 
-@pytest.mark.parametrize("params,sort_field", [({}, "created_at"), ({"sort": "-created_at"}, "created_at"), ({"sort": "-rating"}, "rating")])
+@pytest.mark.parametrize(
+    "params,sort_field",
+    [
+        ({}, "created_at"),
+        ({"sort": "-created_at"}, "created_at"),
+        ({"sort": "-published_at"}, "published_at"),
+        ({"sort": "-rating"}, "rating"),
+    ],
+)
 @pytest.mark.parametrize("featured", [None, True, False])
 def test_article_recommendation_sort_and_featured_filter_reach_query(article_client, params, sort_field, featured):
     client, calls = article_client

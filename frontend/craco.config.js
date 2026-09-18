@@ -117,6 +117,12 @@ webpackConfig.devServer = (devServerConfig) => {
   const isDocker = process.env.DOCKER_ENV === 'true';
   devServerConfig.hot = !isDocker;
   devServerConfig.liveReload = !isDocker;
+  // React Router owns public routes such as /articles. Always return the SPA
+  // entry point when a route is opened directly or refreshed in development.
+  devServerConfig.historyApiFallback = {
+    disableDotRule: true,
+    index: '/index.html',
+  };
   devServerConfig.client = {
     ...devServerConfig.client,
     webSocketURL: {
