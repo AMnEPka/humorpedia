@@ -86,6 +86,4 @@ backup/               контейнер mongodump (подключён толь�
 - Новые роуты: брать `get_db()` из `utils.database`, CRUD — через `services/crud.py`, регистрировать роутер в `server.py` (порядок важен: специфичные пути раньше общих). Корневой маршрут роутера объявлять и как `""`, и как `"/"` (`redirect_slashes=False`).
 - **Авторизация — только через зависимости из `utils/auth.py`**: роутер с открытым чтением и защищённой записью — `APIRouter(..., dependencies=[Depends(require_editor_on_write)])`; отдельный эндпоинт — `@router.post(..., dependencies=[Depends(require_admin)])` или параметр `user: dict = Depends(require_user)`. Проверки внутри тела хендлера срабатывают ПОСЛЕ валидации тела — не использовать. Новый публичный write-эндпоинт добавить в `PUBLIC_WRITE_ROUTES` теста осознанно.
 - Роли: `admin` (всё), `editor` (контент), `moderator` (комментарии), `user` (комментарии/лайки). Доступ в админку — admin/editor/moderator.
-- `backend_test.py` / `mongo_unification_test.py` — старые смоук-скрипты Emergent против живого API; `test_result.md` — служебный файл Emergent.
-- Крупные бинарники в корне (`mongo-dump.archive`, `1l_kvn_games_analysis*.csv/xlsx`) — артефакты, не код.
 - После существенных изменений структуры обновлять этот файл и `docs/ai/*`.
