@@ -165,8 +165,8 @@
   hooks/Browserslist. Полный ручной UI и внешние iframe-провайдеры не проверялись.
   Реальным `BaseParser.build_module` проверены 3 случая: image_gallery → gallery, video_embed → video,
   неизменность text_block; записи в БД нет.
-- Незакоммиченные изменения этапа находятся в рабочей папке; существующие удаления `.emergent/emergent.yml`
-  и `.emergent/summary.txt` сохранены. Commit/push и изменения production не выполнялись.
+- Изменения этапа были закоммичены отдельно от удаления служебных метаданных Emergent (`9d23ad9`).
+  Изменения production не выполнялись.
 ### Этап 1. Исправление контактов
 
 **Рекомендуемая модель:** `gpt-5.6-luna`, reasoning `medium`.

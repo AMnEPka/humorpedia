@@ -4,6 +4,8 @@
 .idea/
 .vscode/
 .cursor/
+/.emergent/
+/.gitconfig
 
 # Dependencies
 node_modules/
@@ -65,6 +67,10 @@ chainlit.md
 # Data and databases
 agenthub/agents/youtube/db
 backups/
+/mongo-dump.archive
+/migration/mongo-dump.archive
+/1l_kvn_games_analysis*.csv
+/1l_kvn_games_analysis*.xlsx
 
 # Media files (stored in Docker volume)
 frontend/public/media/imported/images/

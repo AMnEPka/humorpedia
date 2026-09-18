@@ -130,4 +130,4 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 - HTML из БД выводить только через `sanitizeHTML` (DOMPurify).
 - Заголовок вкладки — через `<WithTitle title="...">` в App.js или `usePageTitle`.
 - В Docker hot reload отключён (`DOCKER_ENV=true`) — после правок обновлять страницу вручную; для HMR запускать фронт локально (`yarn start` в `frontend/`, бэкенд на :8001).
-- `plugins/visual-edits` и `plugins/health-check` — наследие Emergent; health-check включается `ENABLE_HEALTH_CHECK=true`.
+- `plugins/health-check` подключается только при `ENABLE_HEALTH_CHECK=true`; старый неиспользуемый `plugins/visual-edits` удалён.
