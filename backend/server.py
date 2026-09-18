@@ -410,7 +410,7 @@ async def get_stats(request: Request):
 
 # Random content endpoint
 @api_router.get("/random/{content_type}")
-async def get_random_content(content_type: str, request: Request):
+async def get_random_content(content_type: str, request: Request, exclude_slug: str | None = None):
     """Get random content item"""
     db = await get_db()
     
@@ -421,7 +421,8 @@ async def get_random_content(content_type: str, request: Request):
         "article": db.articles,
         "news": db.news,
         "quiz": db.quizzes,
-        "wiki": db.wiki
+        "wiki": db.wiki,
+        "city": db.cities
     }
     
     if content_type not in collection_map:
@@ -430,10 +431,14 @@ async def get_random_content(content_type: str, request: Request):
     collection = collection_map[content_type]
     
     # Get random document
+    match = {"status": {"$ne": "archived"}}
+    if exclude_slug:
+        match["slug"] = {"$ne": exclude_slug}
     pipeline = [
-        {"$match": {"status": {"$ne": "archived"}}},
+        {"$match": match},
         {"$sample": {"size": 1}},
-        {"$project": {"_id": 1, "title": 1, "slug": 1, "content_type": 1}}
+        {"$project": {"_id": 1, "title": 1, "name": 1, "slug": 1, "content_type": 1,
+                      "full_path": 1, "show_id": 1, "url": 1}}
     ]
     
     result = await collection.aggregate(pipeline).to_list(1)

@@ -709,7 +709,7 @@ function LeagueChampionsBlock({ normalizeSeasons, leagueSlug, title }) {
 }
 
 // Страница лиги с сезонами (все телевизионные лиги)
-function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
+export function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
   const normalizeSeasons = (seasons || [])
     .filter((s) => s && s.season_data)
     .map((s) => {
@@ -784,8 +784,9 @@ function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
       {/* Модули страницы (чемпионы лиги, текстовые блоки и т.д. — порядок в админке) */}
       {(() => {
         const sortedModules = (section.modules || [])
-          .slice()
+          .filter(module => module.visible !== false)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const hasChampionsMarker = (section.modules || []).some(isChampionsModule);
 
         // Отслеживаем, был ли уже отрисован динамический блок чемпионов
         let championsRendered = false;
@@ -854,7 +855,7 @@ function LeagueSeasonsPage({ section, seasons, leagueSlug }) {
             })}
 
             {/* Если ни один модуль-чемпион не нашёлся — всё равно показываем динамическую таблицу */}
-            {!championsRendered && normalizeSeasons.length > 0 && (
+            {!championsRendered && !hasChampionsMarker && normalizeSeasons.length > 0 && (
               <LeagueChampionsBlock
                 normalizeSeasons={normalizeSeasons}
                 leagueSlug={leagueSlug}

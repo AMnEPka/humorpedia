@@ -12,6 +12,20 @@ import { usePageTitle } from '@/utils/pageTitle';
 import FittedImage from '@/components/FittedImage';
 import { contentImageUrl } from '@/utils/media';
 import { sanitizeHTML } from '../utils/sanitize';
+import { ModuleList } from '../components/ModuleRenderer';
+
+export function getQuizModuleData(modules = []) {
+  const questionsModule = modules.find(module => module.type === 'quiz_questions' && module.visible !== false);
+  const resultsModule = modules.find(module => module.type === 'quiz_results' && module.visible !== false);
+  return {
+    questions: questionsModule?.data?.questions || [],
+    results: resultsModule?.data?.results || [],
+  };
+}
+
+export function QuizAdditionalModules({ modules = [] }) {
+  return <ModuleList modules={modules.filter(module => !['quiz_questions', 'quiz_results'].includes(module.type))} />;
+}
 
 export default function QuizDetailPage() {
   const { slug } = useParams();
@@ -36,10 +50,9 @@ export default function QuizDetailPage() {
     publicApi.getQuiz(slug)
       .then(res => {
         setQuiz(res.data);
-        const qModule = res.data.modules?.find(m => m.type === 'quiz_questions');
-        const rModule = res.data.modules?.find(m => m.type === 'quiz_results');
-        if (qModule?.data?.questions) setQuestions(qModule.data.questions);
-        if (rModule?.data?.results) setResults(rModule.data.results);
+        const moduleData = getQuizModuleData(res.data.modules || []);
+        setQuestions(moduleData.questions);
+        setResults(moduleData.results);
       })
       .catch(() => setError('Квиз не найден'))
       .finally(() => setLoading(false));
@@ -222,6 +235,9 @@ export default function QuizDetailPage() {
             </Button>
           </CardFooter>
         </Card>
+        <div className="mt-6">
+          <QuizAdditionalModules modules={quiz.modules || []} />
+        </div>
       </div>
     );
   }

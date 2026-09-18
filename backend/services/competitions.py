@@ -46,7 +46,7 @@ _SEASON_KNOWN = {
     "metadata", "hosts", "host", "editors", "jury", "extra_sections", "late_joined_teams",
     "all_teams", "winners", "stages",
 } | _LEGACY_COMPUTED_KEYS
-_STAGE_KNOWN = {"name", "order", "notes", "additional_teams", "additional_notes", "games"}
+_STAGE_KNOWN = {"name", "order", "comment", "notes", "additional_teams", "additional_notes", "games"}
 _GAME_KNOWN = {"id", "name", "order", "date", "date_raw", "host", "jury", "contests", "notes", "is_cancelled", "teams"}
 _RESULT_KNOWN = {"team_id", "team_slug", "team_name", "city", "place", "total", "scores", "passed", "is_winner", "is_additional"}
 _TEAM_REF_KNOWN = {"slug", "name", "city"}
@@ -211,6 +211,7 @@ def legacy_to_season(page: dict, tournament: dict, lookup: TeamLookup) -> dict:
             "code": stage_code(name),
             # order бывает дробным: 2.5 — утешительный этап между 1/4 и 1/2
             "order": to_number(raw_stage.get("order")) if raw_stage.get("order") is not None else stage_index + 1,
+            "comment": raw_stage.get("comment") or "",
             "notes": raw_stage.get("notes") or "",
             "additional_teams": list(raw_stage.get("additional_teams") or []),
             "additional_notes": raw_stage.get("additional_notes") or "",
@@ -326,6 +327,8 @@ def season_to_legacy(season: dict, tournament_slug: Optional[str] = None) -> dic
             "additional_notes": stage.get("additional_notes") or "",
             "games": games,
         }
+        if stage.get("comment"):
+            legacy_stage["comment"] = stage["comment"]
         legacy_stage.update(stage.get("extra") or {})
         stages.append(legacy_stage)
     sd["stages"] = stages

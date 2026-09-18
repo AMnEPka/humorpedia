@@ -1,0 +1,533 @@
+[
+  {
+    "type": "hero_card",
+    "name": "Карточка с фото",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "image",
+    "name": "Изображение",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show",
+      "article",
+      "news",
+      "page",
+      "section",
+      "city",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "text_block",
+    "name": "Текстовый блок",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show",
+      "article",
+      "news",
+      "page",
+      "section",
+      "city",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer",
+      "PersonDetailPage",
+      "TeamDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "timeline",
+    "name": "Хронология",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show"
+    ],
+    "owners": [
+      "ModuleRenderer",
+      "PersonDetailPage",
+      "TeamDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "tags",
+    "name": "Теги",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show",
+      "article",
+      "news",
+      "page",
+      "section",
+      "city",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "table",
+    "name": "Таблица",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show",
+      "article",
+      "page",
+      "section",
+      "city",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "gallery",
+    "name": "Галерея",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show",
+      "article",
+      "news",
+      "page",
+      "section",
+      "city",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer",
+      "TeamDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "video",
+    "name": "Видео",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show",
+      "article",
+      "news",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "quote",
+    "name": "Цитата",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "article",
+      "kvn",
+      "quiz"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "poster_photo",
+    "name": "Фото/Постер",
+    "kind": "system",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show"
+    ],
+    "owners": [
+      "PersonDetailPage",
+      "TeamDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "facts_table",
+    "name": "Таблица фактов",
+    "kind": "system",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show"
+    ],
+    "owners": [
+      "PersonDetailPage",
+      "TeamDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "tags_cloud",
+    "name": "Облако тегов",
+    "kind": "system",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show"
+    ],
+    "owners": [
+      "PersonDetailPage",
+      "TeamDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "social_links",
+    "name": "Социальные ссылки",
+    "kind": "system",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "team",
+      "show"
+    ],
+    "owners": [
+      "PersonDetailPage",
+      "TeamDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "rating_widget",
+    "name": "Рейтинг",
+    "kind": "system",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person",
+      "show"
+    ],
+    "owners": [
+      "PersonDetailPage",
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "team_members",
+    "name": "Состав команды",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "team"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "tv_appearances",
+    "name": "ТВ эфиры",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "team"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "games_list",
+    "name": "Список игр",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "team"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "episodes_list",
+    "name": "Список выпусков",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "show"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "participants",
+    "name": "Участники",
+    "kind": "special",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "show"
+    ],
+    "owners": [
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "best_articles",
+    "name": "Лучшие статьи",
+    "kind": "dynamic",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "page",
+      "section",
+      "city"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "interesting",
+    "name": "Интересное",
+    "kind": "dynamic",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "page",
+      "section",
+      "city"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "random_page",
+    "name": "Случайная страница",
+    "kind": "dynamic",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "page",
+      "section",
+      "city"
+    ],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "quiz_questions",
+    "name": "Вопросы квиза",
+    "kind": "special",
+    "editor": "QuizEditPage",
+    "for_types": [
+      "quiz"
+    ],
+    "owners": [
+      "QuizDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "quiz_results",
+    "name": "Результаты квиза",
+    "kind": "special",
+    "editor": "QuizEditPage",
+    "for_types": [
+      "quiz"
+    ],
+    "owners": [
+      "QuizDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "humor_chronicles",
+    "name": "Юмористические хроники",
+    "kind": "dynamic",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "person"
+    ],
+    "owners": [
+      "ModuleRenderer",
+      "PersonDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "first_league_champions",
+    "name": "Чемпионы Первой лиги КВН",
+    "kind": "special",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "kvn"
+    ],
+    "owners": [
+      "SectionDetailPage:LeagueSeasonsPage"
+    ],
+    "schema": "PageModule",
+    "page_scope": "league"
+  },
+  {
+    "type": "vl_league_champions",
+    "name": "Чемпионы Высшей лиги КВН",
+    "kind": "special",
+    "editor": "ModuleEditor",
+    "for_types": [
+      "kvn"
+    ],
+    "owners": [
+      "SectionDetailPage:LeagueSeasonsPage"
+    ],
+    "schema": "PageModule",
+    "page_scope": "league"
+  },
+  {
+    "type": "table_of_contents",
+    "name": "Оглавление (старый маркер)",
+    "kind": "system",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "Page-level TOC independent of marker"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "person_card",
+    "name": "Карточка человека",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "related_links",
+    "name": "Ссылки",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "html",
+    "name": "HTML",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "divider",
+    "name": "Разделитель",
+    "kind": "content",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "ModuleRenderer"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "text",
+    "name": "Старый текст",
+    "kind": "special",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "PersonDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "cast_list",
+    "name": "Состав шоу",
+    "kind": "special",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  },
+  {
+    "type": "seasons_list",
+    "name": "Сезоны шоу",
+    "kind": "special",
+    "editor": "ModuleEditor",
+    "for_types": [],
+    "owners": [
+      "ShowDetailPage"
+    ],
+    "schema": "PageModule"
+  }
+]

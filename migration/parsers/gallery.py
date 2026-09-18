@@ -1,4 +1,4 @@
-"""Парсер для модуля image_gallery."""
+"""Парсер старой галереи в канонический модуль gallery."""
 
 import re
 import json
@@ -15,7 +15,7 @@ class GalleryParser(BaseParser):
         max_images: Максимальное количество изображений
     """
     
-    module_type = "image_gallery"
+    module_type = "gallery"
     default_title = "Галерея"
     
     def parse(self, ctx: ParseContext) -> Optional[dict]:

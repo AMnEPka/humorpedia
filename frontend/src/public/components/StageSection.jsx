@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { GameTable } from './GameTable';
 
 export function StageSection({ stage }) {
-  const { name, games = [], additional_teams = [], additional_notes = '', notes = '' } = stage;
+  const { name, comment = '', games = [], additional_teams = [], additional_notes = '', notes = '' } = stage;
 
   // Проверяем, является ли notes HTML контентом (для Кубка мэра и т.п.)
   const isHtmlNotes = notes && notes.includes('<');
@@ -13,6 +13,9 @@ export function StageSection({ stage }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">{name}</CardTitle>
+          {comment.trim() && (
+            <p className="text-sm text-gray-700 whitespace-pre-line mt-2">{comment}</p>
+          )}
           {/* Показываем notes как текст только если это не HTML */}
           {notes && !isHtmlNotes && (
             <p className="text-sm text-gray-600 mt-2">{notes}</p>

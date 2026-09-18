@@ -44,7 +44,8 @@ def legacy_page():
             "custom_flag": True,
             "stages": [
                 {
-                    "name": "1/4 финала", "order": 1, "notes": "", "additional_teams": [], "additional_notes": "",
+                    "name": "1/4 финала", "order": 1, "comment": "Четвертьфиналы прошли в декабре.",
+                    "notes": "", "additional_teams": [], "additional_notes": "",
                     "games": [{
                         "name": "Первая 1/4 финала", "order": 1, "date": "1986-12-01", "contests": ["Приветствие"],
                         "jury": ["Юлий Гусман"], "host": "", "notes": "",
@@ -203,6 +204,7 @@ def test_apply_update_resolves_teams_and_assigns_ids(lookup):
         "teams": [{"slug": "visi", "name": "ВИСИ"}, {"team_id": "team-ermi", "name": "ЕрМИ"}, {"team_id": "ghost", "name": "Призрак"}],
         "stages": [{
             "name": "Финал",
+            "comment": "Решающая стадия сезона.",
             "games": [{"name": "Финал", "results": [
                 {"slug": "ermi", "name": "ЕрМИ", "place": 1, "total": 10},
                 {"team_id": "team-visi", "name": "ВИСИ", "place": 2},
@@ -218,11 +220,13 @@ def test_apply_update_resolves_teams_and_assigns_ids(lookup):
 
     stage = updated["stages"][0]
     assert stage["id"] and stage["code"] == "final" and stage["order"] == 1
+    assert stage["comment"] == "Решающая стадия сезона."
     game = stage["games"][0]
     assert game["id"] and game["order"] == 1
     assert [r["team_id"] for r in game["results"]] == ["team-ermi", "team-visi"]
 
     legacy = season_to_legacy(updated)
     assert legacy["year"] == 1988
+    assert legacy["stages"][0]["comment"] == "Решающая стадия сезона."
     assert legacy["stages"][0]["games"][0]["id"] == game["id"]
     assert legacy["stages"][0]["games"][0]["teams"][1]["team_slug"] == "visi"

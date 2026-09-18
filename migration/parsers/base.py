@@ -71,7 +71,8 @@ class BaseParser(ABC):
         
         return {
             'id': str(uuid4()),
-            'type': self.module_type,
+            # Старые имена допустимы только на входе миграции.
+            'type': {'image_gallery': 'gallery', 'video_embed': 'video'}.get(self.module_type, self.module_type),
             'order': order,
             'title': self.config.get('title', self.default_title),
             'visible': self.config.get('visible', True),

@@ -55,7 +55,7 @@ published_at, featured
 `data` — произвольный dict (схемы `*Data` в modules.py — документация, строго не валидируются).
 
 `ModuleType` (бэкенд enum — значения, не входящие в него, отклоняются при сохранении):
-- универсальные: `hero_card`, `text_block {title, content(HTML), collapsed?}`, `timeline {title, events[{year, date, title, description}]}`, `tags`, `table {title, description?, headers[], rows[][], hasHeaders, sortable?, collapsed?}`, `gallery {items[{url, thumbnail, alt, caption}]}`, `image {url, caption?}`, `video {url}`, `quote {text, author, source}`
+- универсальные: `hero_card`, `text_block {title, content(HTML), collapsed?}`, `timeline {title, events[{year, date, title, description}]}`, `tags`, `table {title, description?, headers[], rows[][], hasHeaders, sortable?, collapsed?}`, `gallery {images[{url, thumbnail, alt, caption}]}`, `image {url, caption?}`, `video {url}`, `quote {text, author, source}`
 - системные (сайдбар): `poster_photo`, `facts_table`, `tags_cloud`, `social_links`, `rating_widget`
 - команды: `team_members`, `tv_appearances`, `games_list`
 - шоу: `episodes_list`, `participants`
@@ -64,7 +64,11 @@ published_at, featured
 - люди: `humor_chronicles` (данные подтягиваются динамически из `/people/{id}/linked-content`)
 - лиги КВН: `first_league_champions`, `vl_league_champions` (таблицы чемпионов строятся из дочерних сезонов)
 
-Публичный `ModuleRenderer.jsx` дополнительно умеет `image_gallery`, `video_embed`, `person_card`, `related_links`, `table_of_contents`, `html`, `divider` — часть этих типов бэкенд enum не знает (расхождение). Системные модули рендерит `components/SystemModules.jsx`.
+Канонический реестр и полная таблица владельцев: [MODULE_CONTRACT.md](MODULE_CONTRACT.md).
+`gallery` хранит `images[]`, `video` — `url`; aliases `image_gallery/video_embed` принимаются только на входе миграции.
+Backend enum также принимает существующие `person_card`, `related_links`, `table_of_contents`, `html`, `divider`,
+`text`, `cast_list`, `seasons_list`. Общий renderer обслуживает контент; специальные страницы и sidebar-маркеры
+имеют явных владельцев. Неизвестный публичный тип даёт диагностический блок вместо молчаливого исчезновения.
 
 ### Ссылки в контенте
 
@@ -321,7 +325,8 @@ kvn                                   level 0, full_path "kvn"
   "stages": [
     {
       "name": "1/8 финала", "order": 1,
-      "additional_teams": ["slug"], "additional_notes": "", "notes": "",
+      "comment": "Обычный текст перед сеткой игр", // без HTML, необязательно
+      "additional_teams": ["slug"], "additional_notes": "", "notes": "", // notes — совместимый старый HTML
       "games": [
         {
           "id": "...", "name": "Первая 1/8 финала", "order": 1,
@@ -344,6 +349,10 @@ kvn                                   level 0, full_path "kvn"
 - `content_kvn.find_adjacent_seasons` → навигация prev/next;
 - `update_team_slug_in_seasons / update_team_name_in_seasons` → при переименовании команды правят `team_slug`/`team_name` во всех сезонах;
 - `routes/redirects.auto_populate_old_urls`.
+
+Страница с `season_data` — специальный шаблон: её старые `modules` не рендерятся публично и доступны в админке
+только как архивный список. Полноценные `extra_modules` не используются. Новый редакционный комментарий стадии
+хранится в `stages[].comment`; `stages[].notes` сохраняет прежнюю семантику HTML и не переиспользуется.
 
 `jury_cards` (на странице сезона/лиги): `{ "<Имя члена жюри>": { "photo": MediaFile, "text": "..." } }`.
 

@@ -1,7 +1,8 @@
 # Фронтенд Humorpedia (`frontend/`)
 
 React 19, Create React App через **CRACO** (`craco start|build`), React Router 7, Tailwind 3 + shadcn/ui (`src/components/ui`, конфиг `components.json`), иконки lucide-react, тосты sonner.
-Импорт через алиас `@/` = `src/`. Пакеты — **yarn** (`yarn.lock`). Тестов нет.
+Импорт через алиас `@/` = `src/`. Пакеты — **yarn** (`yarn.lock`). Тесты: `yarn test --watchAll=false --runInBand`
+(Jest/React DOM, также job frontend в CI). Контракт модулей, форматы и специальные владельцы — [MODULE_CONTRACT.md](MODULE_CONTRACT.md).
 
 ## Структура `src/`
 
@@ -30,7 +31,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     Footer.jsx
     ListPageHeader.jsx         единая панель заголовка и поиска для списков людей, команд и шоу
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
-    ModuleRenderer.jsx         рендер контентных модулей (text_block, image, image_gallery, video_embed, quote, timeline, person_card, related_links, table_of_contents, table, html, divider, humor_chronicles)
+    ModuleRenderer.jsx         рендер контентных модулей (text_block, image, gallery, video, quote, timeline, person_card, related_links, table_of_contents, table, html, divider, humor_chronicles)
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
     ShowAppearances.jsx        блок участия в шоу только на странице человека

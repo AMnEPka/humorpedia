@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { 
   DndContext, closestCenter, KeyboardSensor, 
-  PointerSensor, useSensor, useSensors, DragOverlay
+  PointerSensor, useSensor, useSensors
 } from '@dnd-kit/core';
 import {
   arrayMove, SortableContext, sortableKeyboardCoordinates,
@@ -12,24 +12,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Select, SelectContent, SelectItem, 
-  SelectTrigger, SelectValue
-} from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
 import { 
-  Plus, GripVertical, Trash2, Edit, ChevronDown, ChevronUp,
+  Plus, GripVertical, Trash2, Edit,
   FileText, Clock, Users, Tv, Table, Image, Play, Quote,
   HelpCircle, Award, Star, Zap, Shuffle, List, Film, Tag, X, Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RichTextEditor from './RichTextEditor';
+import ModuleDataFields from './ModuleDataFields';
+import { moduleNames, getAvailableModuleTypes } from '@/moduleContract';
 
 const moduleIcons = {
   hero_card: Users,
@@ -59,48 +57,6 @@ const moduleIcons = {
   social_links: Users,
   first_league_champions: Trophy,
   vl_league_champions: Trophy
-};
-
-const moduleNames = {
-  hero_card: 'Карточка с фото',
-  text_block: 'Текстовый блок',
-  timeline: 'Хронология',
-  tags: 'Теги',
-  table: 'Таблица',
-  gallery: 'Галерея',
-  video: 'Видео',
-  quote: 'Цитата',
-  team_members: 'Состав команды',
-  tv_appearances: 'ТВ эфиры',
-  games_list: 'Список игр',
-  episodes_list: 'Список выпусков',
-  participants: 'Участники',
-  quiz_questions: 'Вопросы квиза',
-  quiz_results: 'Результаты квиза',
-  best_articles: 'Лучшие статьи',
-  interesting: 'Интересное',
-  random_page: 'Случайная страница',
-  table_of_contents: 'Оглавление',
-  // Новые системные модули
-  poster_photo: 'Фото/Постер',
-  facts_table: 'Таблица фактов',
-  rating_widget: 'Рейтинг',
-  tags_cloud: 'Облако тегов',
-  social_links: 'Социальные ссылки',
-  first_league_champions: 'Чемпионы Первой лиги КВН',
-  vl_league_champions: 'Чемпионы Высшей лиги КВН'
-};
-
-const modulesByType = {
-  person: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'table_of_contents', 'hero_card', 'text_block', 'timeline', 'tags', 'table', 'gallery', 'video', 'quote'],
-  team: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'table_of_contents', 'hero_card', 'text_block', 'timeline', 'team_members', 'tv_appearances', 'games_list', 'tags', 'table', 'gallery', 'video'],
-  show: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'hero_card', 'text_block', 'timeline', 'episodes_list', 'participants', 'tags', 'table', 'gallery', 'video'],
-  article: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'quote', 'tags'],
-  news: ['poster_photo', 'text_block', 'gallery', 'video', 'tags'],
-  quiz: ['poster_photo', 'quiz_questions', 'quiz_results', 'text_block'],
-  wiki: ['poster_photo', 'tags_cloud', 'table_of_contents', 'text_block', 'table', 'gallery', 'video', 'tags'],
-  page: ['poster_photo', 'text_block', 'best_articles', 'interesting', 'random_page', 'table', 'gallery'],
-  kvn: ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links', 'first_league_champions', 'vl_league_champions', 'text_block', 'table', 'gallery', 'video', 'quote', 'table_of_contents']
 };
 
 function SortableModule({ module, onEdit, onDelete }) {
@@ -426,8 +382,9 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
             </div>
             <div className="space-y-3">
               {galleryItems.map((img, index) => (
-                <div key={index} className="flex gap-2 items-center">
+                <div key={index} className="border rounded-lg p-3 space-y-2">
                   <Input
+                    aria-label={`Изображение ${index + 1}: URL`}
                     value={img.url || ''}
                     onChange={(e) => {
                       const newImages = [...galleryItems];
@@ -437,7 +394,23 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                     placeholder="URL изображения"
                     className="flex-1"
                   />
+                  <Input
+                    aria-label={`Изображение ${index + 1}: подпись`}
+                    value={img.caption || ''}
+                    onChange={event => updateData({ ...data, images: galleryItems.map((item, i) =>
+                      i === index ? { ...item, caption: event.target.value } : item) })}
+                    placeholder="Подпись"
+                  />
+                  <Input
+                    aria-label={`Изображение ${index + 1}: описание`}
+                    value={img.alt || ''}
+                    onChange={event => updateData({ ...data, images: galleryItems.map((item, i) =>
+                      i === index ? { ...item, alt: event.target.value } : item) })}
+                    placeholder="Описание изображения (alt)"
+                  />
                   <Button 
+                    type="button"
+                    aria-label={`Удалить изображение ${index + 1}`}
                     variant="ghost" 
                     size="icon" 
                     onClick={() => updateData({ ...data, images: galleryItems.filter((_, i) => i !== index) })}
@@ -567,47 +540,10 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
         );
 
       case 'table_of_contents':
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Режим оглавления</Label>
-              <Select
-                value={data.mode || 'auto'}
-                onValueChange={(v) => updateData({ ...data, mode: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="auto">Автоматический</SelectItem>
-                  <SelectItem value="timeline">По хронологии (timeline)</SelectItem>
-                  <SelectItem value="sections">По разделам (текстовые блоки)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                <strong>Автоматический:</strong> определяет режим по типу контента<br/>
-                <strong>По хронологии:</strong> берёт заголовки из модуля timeline (для людей)<br/>
-                <strong>По разделам:</strong> берёт заголовки из текстовых блоков (для команд)
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Позиция на странице</Label>
-              <Select
-                value={data.position || 'sidebar'}
-                onValueChange={(v) => updateData({ ...data, position: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sidebar">В боковой панели</SelectItem>
-                  <SelectItem value="inline">В основном контенте</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-      
+        return <Alert><AlertDescription>
+          Маркер оглавления. Сейчас оглавление формируется шаблоном страницы там, где оно предусмотрено.
+          Сохранённые настройки режима и позиции не управляли отображением и остаются в данных для совместимости.
+        </AlertDescription></Alert>;
       case 'table':
         // Table editor
         const rows = data.rows || [['', '']];
@@ -806,187 +742,15 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
       // ===== СИСТЕМНЫЕ МОДУЛИ =====
       
       case 'poster_photo':
-        return (
-          <div className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Этот модуль автоматически отображает фото/постер из основных данных страницы.
-                Изменить фото можно во вкладке "Основное".
-              </AlertDescription>
-            </Alert>
-            <div className="space-y-2">
-              <Label>Размер</Label>
-              <Select 
-                value={data.size || 'medium'} 
-                onValueChange={(v) => updateData({ ...data, size: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Маленький</SelectItem>
-                  <SelectItem value="medium">Средний</SelectItem>
-                  <SelectItem value="large">Большой</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Форма</Label>
-              <Select 
-                value={data.shape || 'rounded'} 
-                onValueChange={(v) => updateData({ ...data, shape: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="square">Квадрат</SelectItem>
-                  <SelectItem value="rounded">Скруглённый</SelectItem>
-                  <SelectItem value="circle">Круг</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
       case 'facts_table':
-        return (
-          <div className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Этот модуль автоматически отображает таблицу фактов из основных данных страницы.
-                Редактировать факты можно во вкладке "Факты".
-              </AlertDescription>
-            </Alert>
-            <div className="space-y-2">
-              <Label>Заголовок</Label>
-              <Input
-                value={data.title || ''}
-                onChange={(e) => updateData({ ...data, title: e.target.value })}
-                placeholder="Информация"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Стиль</Label>
-              <Select 
-                value={data.style || 'card'} 
-                onValueChange={(v) => updateData({ ...data, style: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="card">Карточка</SelectItem>
-                  <SelectItem value="table">Таблица</SelectItem>
-                  <SelectItem value="list">Список</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
       case 'rating_widget':
-        return (
-          <div className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Этот модуль отображает виджет рейтинга. Оценки хранятся в основных данных страницы.
-              </AlertDescription>
-            </Alert>
-            <div className="space-y-2">
-              <Label>Заголовок</Label>
-              <Input
-                value={data.title || ''}
-                onChange={(e) => updateData({ ...data, title: e.target.value })}
-                placeholder="Оценка"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Стиль</Label>
-              <Select 
-                value={data.style || 'smileys'} 
-                onValueChange={(v) => updateData({ ...data, style: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="smileys">Смайлики</SelectItem>
-                  <SelectItem value="stars">Звёзды</SelectItem>
-                  <SelectItem value="numeric">Числовой</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
       case 'tags_cloud':
-        return (
-          <div className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Этот модуль отображает теги страницы. Редактировать теги можно во вкладке "Теги".
-              </AlertDescription>
-            </Alert>
-            <div className="space-y-2">
-              <Label>Заголовок</Label>
-              <Input
-                value={data.title || ''}
-                onChange={(e) => updateData({ ...data, title: e.target.value })}
-                placeholder="Теги"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Стиль</Label>
-              <Select 
-                value={data.style || 'badges'} 
-                onValueChange={(v) => updateData({ ...data, style: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="badges">Бейджи</SelectItem>
-                  <SelectItem value="links">Ссылки</SelectItem>
-                  <SelectItem value="cloud">Облако</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Максимум тегов (0 = все)</Label>
-              <Input
-                type="number"
-                value={data.max_tags || 0}
-                onChange={(e) => updateData({ ...data, max_tags: parseInt(e.target.value) || 0 })}
-                min={0}
-              />
-            </div>
-          </div>
-        );
-
       case 'social_links':
-        return (
-          <div className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Этот модуль отображает социальные ссылки. Редактировать ссылки можно во вкладке "Основное" или "Факты".
-              </AlertDescription>
-            </Alert>
-            <div className="space-y-2">
-              <Label>Заголовок</Label>
-              <Input
-                value={data.title || ''}
-                onChange={(e) => updateData({ ...data, title: e.target.value })}
-                placeholder="Ссылки"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Стиль</Label>
-              <Select 
-                value={data.style || 'icons'} 
-                onValueChange={(v) => updateData({ ...data, style: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="icons">Иконки</SelectItem>
-                  <SelectItem value="buttons">Кнопки</SelectItem>
-                  <SelectItem value="list">Список</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
+        return <Alert><AlertDescription>
+          Системный блок использует основные поля страницы: фото, факты, рейтинг, теги или социальные ссылки.
+          Редактируйте эти данные в соответствующих разделах карточки. Расположение и оформление задаёт шаблон страницы.
+          Сохранённые дополнительные настройки остаются в данных для совместимости.
+        </AlertDescription></Alert>;
       case 'first_league_champions':
         return (
           <div className="space-y-4">
@@ -1012,26 +776,7 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
         );
       
       default:
-        // Generic JSON editor for other types
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Данные модуля (JSON)</Label>
-              <Textarea
-                value={JSON.stringify(data, null, 2)}
-                onChange={(e) => {
-                  try {
-                    updateData(JSON.parse(e.target.value));
-                  } catch (err) {
-                    // Invalid JSON, ignore
-                  }
-                }}
-                rows={15}
-                className="font-mono text-sm"
-              />
-            </div>
-          </div>
-        );
+        return <ModuleDataFields type={localModule.type} data={data} onChange={updateData} />;
     }
   };
 
@@ -1053,6 +798,11 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
                 placeholder={moduleNames[localModule.type]}
               />
             </div>
+            <div className="flex items-center gap-2">
+              <Switch id="module-visible" checked={localModule.visible !== false}
+                onCheckedChange={visible => updateLocalModule({ visible })} />
+              <Label htmlFor="module-visible">Показывать модуль</Label>
+            </div>
             {renderEditor()}
           </div>
         </div>
@@ -1064,7 +814,7 @@ function ModuleEditDialog({ module, open, onClose, onSave }) {
   );
 }
 
-export default function ModuleEditor({ modules = [], onChange, contentType = 'page' }) {
+export default function ModuleEditor({ modules = [], onChange, contentType = 'page', excludedTypes = [] }) {
   const [editingModuleId, setEditingModuleId] = useState(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
@@ -1075,7 +825,7 @@ export default function ModuleEditor({ modules = [], onChange, contentType = 'pa
     })
   );
 
-  const availableModules = modulesByType[contentType] || modulesByType.page;
+  const availableModules = getAvailableModuleTypes(contentType).filter(type => !excludedTypes.includes(type));
   
   const editingModule = useMemo(() => {
     return modules.find(m => m.id === editingModuleId) || null;

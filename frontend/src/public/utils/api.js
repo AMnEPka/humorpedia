@@ -27,6 +27,7 @@ export const publicApi = {
   getArticle: (slug) => api.get(`/content/articles/${slug}`),
   getPopularArticles: (limit = 5) => api.get('/content/articles', { params: { limit, sort: '-rating' } }),
   getRandomArticle: () => api.get('/content/articles/random'),
+  getRandomContent: (type, params) => api.get(`/random/${type}`, { params }),
   
   // People
   getPeople: (params) => api.get('/content/people', { params }),

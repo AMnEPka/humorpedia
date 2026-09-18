@@ -49,6 +49,16 @@ class ModuleType(str, Enum):
     FIRST_LEAGUE_CHAMPIONS = "first_league_champions"  # Champions table for 1l-kvn (data from children)
     VL_LEAGUE_CHAMPIONS = "vl_league_champions"  # Champions table for vl-kvn (data from children)
 
+    # Существующие публичные блоки и маркеры специальных страниц.
+    TABLE_OF_CONTENTS = "table_of_contents"
+    PERSON_CARD = "person_card"
+    RELATED_LINKS = "related_links"
+    HTML = "html"
+    DIVIDER = "divider"
+    TEXT = "text"
+    CAST_LIST = "cast_list"
+    SEASONS_LIST = "seasons_list"
+
 
 # --- Module Data Schemas ---
 
@@ -75,7 +85,8 @@ class TextBlockData(BaseModel):
 
 class TimelineItem(BaseModel):
     """Single timeline entry"""
-    year: int
+    year: Optional[Union[int, str]] = None
+    date: Optional[str] = None
     month: Optional[int] = None
     title: str
     description: Optional[str] = None
@@ -87,7 +98,7 @@ class TimelineItem(BaseModel):
 class TimelineData(BaseModel):
     """Data for timeline module"""
     title: Optional[str] = "Хронология"
-    items: List[TimelineItem] = Field(default_factory=list)
+    events: List[TimelineItem] = Field(default_factory=list)
 
 
 class TagsData(BaseModel):
@@ -108,7 +119,10 @@ class TableData(BaseModel):
     """Data for table module"""
     title: Optional[str] = None
     columns: List[TableColumn] = Field(default_factory=list)
-    rows: List[Dict[str, Any]] = Field(default_factory=list)
+    headers: List[str] = Field(default_factory=list)
+    rows: List[Union[List[Any], Dict[str, Any]]] = Field(default_factory=list)
+    hasHeaders: bool = True
+    description: Optional[str] = None
     sortable: bool = False
     highlight_rules: Optional[Dict[str, str]] = None  # color rules
 
@@ -124,7 +138,7 @@ class GalleryItem(BaseModel):
 class GalleryData(BaseModel):
     """Data for gallery module"""
     title: Optional[str] = None
-    items: List[GalleryItem] = Field(default_factory=list)
+    images: List[GalleryItem] = Field(default_factory=list)
 
 
 class VideoData(BaseModel):
@@ -161,6 +175,8 @@ class TeamMembersData(BaseModel):
 class TVAppearance(BaseModel):
     """TV broadcast entry"""
     date: Optional[str] = None
+    show: Optional[str] = None
+    description: Optional[str] = None
     season: Optional[str] = None
     league: Optional[str] = None
     episode: Optional[str] = None
@@ -173,7 +189,7 @@ class TVAppearance(BaseModel):
 class TVAppearancesData(BaseModel):
     """Data for tv_appearances module"""
     title: Optional[str] = "ТВ эфиры"
-    appearances: List[TVAppearance] = Field(default_factory=list)
+    items: List[TVAppearance] = Field(default_factory=list)
 
 
 class GameEntry(BaseModel):
@@ -211,6 +227,12 @@ class EpisodesListData(BaseModel):
 class Participant(BaseModel):
     """Show participant"""
     person_id: Optional[str] = None
+    person_slug: Optional[str] = None
+    person_url: Optional[str] = None
+    photo: Optional[str] = None
+    image: Optional[str] = None
+    caption: Optional[str] = None
+    facts: List[Dict[str, Any]] = Field(default_factory=list)
     name: str
     role: Optional[str] = None
     from_year: Optional[int] = None
@@ -221,16 +243,20 @@ class Participant(BaseModel):
 class ParticipantsData(BaseModel):
     """Data for participants module"""
     title: Optional[str] = "Участники"
-    participants: List[Participant] = Field(default_factory=list)
+    items: List[Participant] = Field(default_factory=list)
 
 
 class QuizQuestion(BaseModel):
     """Quiz question"""
-    id: int
+    id: Union[int, str]
+    type: Literal['single', 'multiple', 'text'] = 'single'
     question: str
     image: Optional[str] = None
-    options: List[Dict[str, Any]]  # {id, text, correct}
+    options: List[Dict[str, Any]] = Field(default_factory=list)  # {id, text, correct}
+    correct_answer: Optional[str] = None
     explanation: Optional[str] = None
+    success_explanation: Optional[str] = None
+    error_explanation: Optional[str] = None
 
 
 class QuizQuestionsData(BaseModel):

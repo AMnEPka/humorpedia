@@ -15,6 +15,7 @@
 | [docs/ai/COMPETITIONS.md](docs/ai/COMPETITIONS.md) | **Модель соревнований и перекрёстные ссылки**: турниры, сезоны, participations, составы (memberships), синхронизация, API `/api/competitions` |
 | [docs/ai/SHOW_APPEARANCES.md](docs/ai/SHOW_APPEARANCES.md) | Участие в выбранных шоу без перечисления сезонов, основной дуэт/команда, достижения, ручной выбор новых людей |
 | [docs/ai/FRONTEND.md](docs/ai/FRONTEND.md) | Маршруты React, страницы, ключевые компоненты, API-клиенты |
+| [docs/ai/MODULE_CONTRACT.md](docs/ai/MODULE_CONTRACT.md) | Реестр модулей, редакторы, владельцы публичного рендера и контрактные проверки |
 | [docs/ai/KNOWN_ISSUES.md](docs/ai/KNOWN_ISSUES.md) | Найденные баги, дыры безопасности, техдолг |
 
 ## Стек

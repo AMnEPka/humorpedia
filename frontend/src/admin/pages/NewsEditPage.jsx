@@ -267,6 +267,7 @@ export default function NewsEditPage() {
             </CardHeader>
             <CardContent>
               <ModuleEditor
+                contentType="news"
                 modules={news.modules || []}
                 onChange={(modules) => setNews(p => ({ ...p, modules }))}
               />
