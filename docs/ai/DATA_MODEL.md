@@ -20,6 +20,8 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `cities` | `City` | cities | `content_type="page"`, `aliases[]`; `related_person_ids` — редакционная подборка известных людей, `related_team_ids` — команды со страницами, `related_team_mentions` — команды из дампа без страницы |
 | `users` | `User` | auth, users | `username`, `email`, `password_hash` (bcrypt), `role`, `permissions[]`, `oauth{vk_id, yandex_id}`, `banned` |
 | `comments` | — | comments | `resource_type`+`resource_id`, `user_id`, `parent_id`, `deleted`, модерация |
+| `rating_baselines` | — | ratings | неизменяемая взвешенная база старого рейтинга: `entity_type/entity_id`, `sum`, `count`, `legacy_average`; один документ на страницу |
+| `rating_votes` | — | ratings | новые оценки 1–10; один документ на `(entity_type, entity_id, voter_hash)`, повторная оценка заменяет `score` |
 | `polls` | `Poll` | polls | вопрос, 2–20 вариантов, `draft/published/archived`, анонимные `historical_votes`, политика показа результата |
 | `poll_votes` | — | polls | один новый голос на `(poll_id, user_id)`; детерминированный `_id`, индекс пары unique, результаты агрегируются при чтении |
 | `tags` | — | tags | `name` и `slug` уникальны, `usage_count`, `type` |
@@ -47,6 +49,17 @@ published_at, featured
 `MediaFile` = `{url, alt, caption, thumbnail}`; `SocialLinks` = `{vk, telegram, youtube, instagram, website}`.
 На публичном сайте `draft` используется наравне с `published`; статус сохраняется как редакционная метка.
 Из ссылок, поиска и связанных блоков исключается только `archived`.
+
+## Рейтинги
+
+Рейтинг доступен для `articles`, `people`, `teams` и `shows`. Исторические поля `rating` и `votes_count` остаются
+в документах контента только как источник миграции. `scripts/migrate_ratings.py` переносит их в `rating_baselines`
+(dry-run по умолчанию, запись с `--apply`); для объектного `rating` поле `rating.count` считается достовернее дублирующего
+`votes_count`. Итоговое среднее вычисляется при чтении как `(baseline.sum + сумма новых score) / (baseline.count + число новых голосов)`.
+
+Анонимная cookie не хранится в БД: сервер проверяет её HMAC-подпись и сохраняет только необратимый `voter_hash`.
+Детерминированный `_id` голосования и unique-индекс делают повторный или конкурентный запрос идемпотентным.
+Точное итоговое количество голосов наружу не отдаётся — API возвращает только публичную веху.
 
 ## Модули страниц (models/modules.py)
 
