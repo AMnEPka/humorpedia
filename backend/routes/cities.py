@@ -99,6 +99,7 @@ async def list_cities(
         query["status"] = status.value
     if tag:
         query["tags"] = tag
+    availability_query = dict(query)
     if search:
         search_pattern = literal_search_pattern(search)
         query["$or"] = [
@@ -111,7 +112,8 @@ async def list_cities(
     
     if sort_by == "title" and sort_order >= 0:
         return await list_alphabetical_content(
-            "cities", skip, limit, query, ["name", "title"]
+            "cities", skip, limit, query, ["name", "title"],
+            availability_query=availability_query,
         )
 
     sort_dir = 1 if sort_order >= 0 else -1

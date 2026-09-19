@@ -13,6 +13,7 @@ export default function ShowsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [shows, setShows] = useState([]);
   const [total, setTotal] = useState(0);
+  const [availableLetters, setAvailableLetters] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const query = searchParams.get('q') || '';
@@ -33,6 +34,9 @@ export default function ShowsListPage() {
         });
         setShows(res.data.items || []);
         setTotal(res.data.total || 0);
+        if (Array.isArray(res.data.available_letters)) {
+          setAvailableLetters(res.data.available_letters);
+        }
       } catch (err) {
         console.error('Error fetching shows:', err);
       } finally {
@@ -82,7 +86,11 @@ export default function ShowsListPage() {
         placeholder="Поиск шоу..."
         searchId="shows-search"
       >
-        <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
+        <AlphabetFilter
+          selectedLetter={letter}
+          onLetterClick={handleLetterClick}
+          availableLetters={availableLetters}
+        />
       </ListPageHeader>
 
       {loading ? (

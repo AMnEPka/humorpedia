@@ -65,8 +65,10 @@ async def list_people(
 ):
     """List people with pagination and filters."""
     query = build_query(status, tag, search, ["title", "full_name"], letter)
+    availability_query = build_query(status, tag)
     return await list_alphabetical_content(
-        "people", skip, limit, query, ["title", "full_name"]
+        "people", skip, limit, query, ["title", "full_name"],
+        availability_query=availability_query,
     )
 
 

@@ -11,6 +11,7 @@ import AlphabetFilter from '../components/AlphabetFilter';
 export default function CitiesListPage() {
   const [cities, setCities] = useState([]);
   const [total, setTotal] = useState(0);
+  const [availableLetters, setAvailableLetters] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -34,6 +35,9 @@ export default function CitiesListPage() {
         const response = await publicApi.getCities(params);
         setCities(response.data.items || []);
         setTotal(response.data.total || 0);
+        if (Array.isArray(response.data.available_letters)) {
+          setAvailableLetters(response.data.available_letters);
+        }
       } catch (error) {
         console.error('Error fetching cities:', error);
       } finally {
@@ -84,7 +88,11 @@ export default function CitiesListPage() {
         placeholder="Поиск города..."
         searchId="cities-search"
       >
-        <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
+        <AlphabetFilter
+          selectedLetter={letter}
+          onLetterClick={handleLetterClick}
+          availableLetters={availableLetters}
+        />
       </ListPageHeader>
 
       {/* Results count */}

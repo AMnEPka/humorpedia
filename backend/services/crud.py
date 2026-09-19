@@ -188,6 +188,7 @@ async def update_tags_everywhere(
 
 OTHER_ALPHABET_FILTER = "other"
 CYRILLIC_ALPHABET_RANGES = "\u0400-\u052F\u2DE0-\u2DFF\uA640-\uA69F"
+RUSSIAN_ALPHABET = tuple("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ")
 
 
 def alphabet_letter_pattern(letter: str) -> str:
@@ -195,6 +196,18 @@ def alphabet_letter_pattern(letter: str) -> str:
     if letter == OTHER_ALPHABET_FILTER:
         return rf"^\s*[^{CYRILLIC_ALPHABET_RANGES}]"
     return f"^{re.escape(letter)}"
+
+
+def alphabet_filter_for_initial(initial: str) -> str | None:
+    """Map a stored first character to one of the filters rendered by the UI."""
+    if not initial:
+        return None
+    upper = initial.upper()
+    if upper in RUSSIAN_ALPHABET:
+        return upper
+    if not re.match(f"^[{CYRILLIC_ALPHABET_RANGES}]", initial):
+        return OTHER_ALPHABET_FILTER
+    return None
 
 
 def build_query(
@@ -457,19 +470,7 @@ def build_alphabetical_pipeline(
     if not sort_fields:
         raise ValueError("sort_fields must not be empty")
 
-    sort_value = ""
-    for field in reversed(sort_fields):
-        field_value = {"$ifNull": [f"${field}", ""]}
-        sort_value = {
-            "$cond": [
-                {"$gt": [
-                    {"$strLenCP": {"$trim": {"input": field_value}}},
-                    0,
-                ]},
-                field_value,
-                sort_value,
-            ]
-        }
+    sort_value = _alphabet_sort_value_expression(sort_fields)
 
     pipeline = [
         {"$match": query or {}},
@@ -516,6 +517,68 @@ def build_alphabetical_pipeline(
     return pipeline
 
 
+def _alphabet_sort_value_expression(sort_fields: list[str]) -> dict | str:
+    """Pick the first non-empty display field used by sorting and filters."""
+    sort_value: dict | str = ""
+    for field in reversed(sort_fields):
+        field_value = {"$ifNull": [f"${field}", ""]}
+        sort_value = {
+            "$cond": [
+                {"$gt": [
+                    {"$strLenCP": {"$trim": {"input": field_value}}},
+                    0,
+                ]},
+                field_value,
+                sort_value,
+            ]
+        }
+    return sort_value
+
+
+def build_alphabet_availability_pipeline(query: dict, sort_fields: list[str]) -> list[dict]:
+    """Build an aggregation returning distinct first characters for a list."""
+    if not sort_fields:
+        raise ValueError("sort_fields must not be empty")
+
+    return [
+        {"$match": query or {}},
+        {"$set": {
+            "_alphabet_sort_value": {
+                "$trim": {"input": {"$ifNull": [
+                    _alphabet_sort_value_expression(sort_fields), ""
+                ]}}
+            }
+        }},
+        {"$match": {"_alphabet_sort_value": {"$ne": ""}}},
+        {"$group": {
+            "_id": {"$substrCP": ["$_alphabet_sort_value", 0, 1]}
+        }},
+    ]
+
+
+async def list_available_alphabet_filters(
+    collection_name: str,
+    query: dict,
+    sort_fields: list[str],
+) -> list[str]:
+    """Return only filters that have at least one matching document."""
+    db = await get_db()
+    collection = getattr(db, collection_name)
+    cursor = collection.aggregate(
+        build_alphabet_availability_pipeline(query, sort_fields)
+    )
+    initials = await cursor.to_list(None)
+    available = {
+        filter_value
+        for item in initials
+        if (filter_value := alphabet_filter_for_initial(item.get("_id", "")))
+    }
+    ordered = [letter for letter in RUSSIAN_ALPHABET if letter in available]
+    if OTHER_ALPHABET_FILTER in available:
+        ordered.append(OTHER_ALPHABET_FILTER)
+    return ordered
+
+
 async def list_alphabetical_content(
     collection_name: str,
     skip: int,
@@ -523,6 +586,7 @@ async def list_alphabetical_content(
     query: dict = None,
     sort_fields: list[str] = None,
     exclude_modules: bool = True,
+    availability_query: dict = None,
 ):
     """List content alphabetically before pagination using Russian collation."""
     db = await get_db()
@@ -541,4 +605,11 @@ async def list_alphabetical_content(
         collation={"locale": "ru", "strength": 2},
     )
     items = await cursor.to_list(limit)
-    return {"items": items, "total": total, "skip": skip, "limit": limit}
+    result = {"items": items, "total": total, "skip": skip, "limit": limit}
+    if availability_query is not None:
+        result["available_letters"] = await list_available_alphabet_filters(
+            collection_name,
+            availability_query,
+            sort_fields or ["title", "name"],
+        )
+    return result

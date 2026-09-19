@@ -8,7 +8,7 @@
 > Проверки прав — FastAPI-зависимости из `backend/utils/auth.py`. Роутеры контента, `/sections`, `/cities`, `/tags`, `/redirects` подключены с `require_editor_on_write`: чтение открыто, любой POST/PUT/PATCH/DELETE — ✏️. Тест `backend/tests/test_auth_guards.py` обходит все маршруты и падает, если запись доступна без токена.
 
 Соглашения:
-- Списки возвращают `{items, total, skip, limit}` (через `services/crud.list_content`; поле `modules` в списках исключено), параметры `skip`, `limit` (≤100), `status`, `tag`, `search`, иногда `letter`. Значение `letter=other` объединяет названия с латинской буквы, цифры или символа.
+- Списки возвращают `{items, total, skip, limit}` (через `services/crud.list_content`; поле `modules` в списках исключено), параметры `skip`, `limit` (≤100), `status`, `tag`, `search`, иногда `letter`. Алфавитные списки дополнительно возвращают `available_letters`; значение `letter=other` объединяет названия с латинской буквы, цифры или символа.
 - `GET .../{id_or_slug}` ищет по `_id` или `slug`; `PUT/DELETE .../{id}` — по `_id` (для КВН — по `id`, затем `_id`).
 - Ответы с `response_model=dict` — сырые документы Mongo (`_id` — строка UUID).
 

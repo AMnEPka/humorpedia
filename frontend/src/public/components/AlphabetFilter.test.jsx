@@ -36,6 +36,24 @@ test('marks the combined Latin, digit and symbol group as selected', () => {
   expect(html).toContain('Сбросить');
 });
 
+test('renders only filters that have matching names', () => {
+  const html = renderToStaticMarkup(
+    <AlphabetFilter
+      selectedLetter=""
+      onLetterClick={() => {}}
+      availableLetters={['А', 'Ё']}
+    />
+  );
+
+  expect(html).toContain('>А</button>');
+  expect(html).toContain('>Ё</button>');
+  expect(html).not.toContain('>Б</button>');
+  expect(html).not.toContain('>Ъ</button>');
+  expect(html).not.toContain('>Ы</button>');
+  expect(html).not.toContain('>Ь</button>');
+  expect(html).not.toContain('A–Z 0–9 #');
+});
+
 test('does not render reset action without an active letter', () => {
   const html = renderToStaticMarkup(
     <AlphabetFilter selectedLetter="" onLetterClick={() => {}} />
