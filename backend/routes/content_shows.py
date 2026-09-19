@@ -113,10 +113,16 @@ async def list_shows(
 ):
     """List shows with pagination (excludes child shows by default)."""
     query = build_query(status, tag, search, ["title", "name"], letter)
+    availability_query = build_query(status, tag)
     if not include_children:
         query = {"$and": [query, ROOT_QUERY]} if query else ROOT_QUERY
+        availability_query = (
+            {"$and": [availability_query, ROOT_QUERY]}
+            if availability_query else ROOT_QUERY
+        )
     return await list_alphabetical_content(
-        "shows", skip, limit, query, ["title", "name"]
+        "shows", skip, limit, query, ["title", "name"],
+        availability_query=availability_query,
     )
 
 

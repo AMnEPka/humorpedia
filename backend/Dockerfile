@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     mongodb-mongosh \
   && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+COPY requirements.txt requirements-dev.txt /app/
+RUN pip install --no-cache-dir \
+    -r /app/requirements.txt \
+    -r /app/requirements-dev.txt
 
 # Copy start script first, fix line endings and make it executable
 COPY start.sh /app/start.sh

@@ -4,7 +4,6 @@ from utils.auth import require_editor_on_write
 from typing import Optional
 from datetime import datetime, timezone
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ from utils.database import get_db
 from utils.search import literal_search_pattern
 from services.tags import tag_service
 from services.show_teams import attach_show_info
-from services.crud import list_alphabetical_content
+from services.crud import alphabet_letter_pattern, list_alphabetical_content
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
 
@@ -100,6 +99,7 @@ async def list_cities(
         query["status"] = status.value
     if tag:
         query["tags"] = tag
+    availability_query = dict(query)
     if search:
         search_pattern = literal_search_pattern(search)
         query["$or"] = [
@@ -108,11 +108,12 @@ async def list_cities(
             {"description": {"$regex": search_pattern, "$options": "i"}}
         ]
     if letter:
-        query["title"] = {"$regex": f"^{re.escape(letter)}", "$options": "i"}
+        query["title"] = {"$regex": alphabet_letter_pattern(letter), "$options": "i"}
     
     if sort_by == "title" and sort_order >= 0:
         return await list_alphabetical_content(
-            "cities", skip, limit, query, ["name", "title"]
+            "cities", skip, limit, query, ["name", "title"],
+            availability_query=availability_query,
         )
 
     sort_dir = 1 if sort_order >= 0 else -1

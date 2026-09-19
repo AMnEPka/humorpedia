@@ -8,8 +8,10 @@
 
 ```bash
 cp .env.example .env            # при необходимости задайте ADMIN_EMAIL / ADMIN_PASSWORD
-docker compose up --build
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-sync.ps1
 ```
+
+При создании или переключении ветки повторите `dev-sync.ps1`: исходники затем обновляются автоматически через backend reload и frontend polling/HMR. Подробнее — [DOCKER_DEV.md](DOCKER_DEV.md).
 
 - Сайт: http://localhost:3000, админка: http://localhost:3000/admin
 - API: http://localhost:8001/api, Swagger: http://localhost:8001/docs
@@ -26,6 +28,10 @@ docker compose -f docker-compose-cloud.yml up -d --build
 ## Тесты
 
 ```bash
+docker compose exec -T backend pytest -q tests
+docker compose exec -T frontend yarn test --watchAll=false --runInBand
+
+# либо backend на хосте:
 cd backend && pip install -r requirements.txt -r requirements-dev.txt && pytest tests
 ```
 

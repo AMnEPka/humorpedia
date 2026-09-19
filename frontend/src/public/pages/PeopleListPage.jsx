@@ -13,6 +13,7 @@ export default function PeopleListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [people, setPeople] = useState([]);
   const [total, setTotal] = useState(0);
+  const [availableLetters, setAvailableLetters] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const query = searchParams.get('q') || '';
@@ -33,6 +34,9 @@ export default function PeopleListPage() {
         });
         setPeople(res.data.items || []);
         setTotal(res.data.total || 0);
+        if (Array.isArray(res.data.available_letters)) {
+          setAvailableLetters(res.data.available_letters);
+        }
       } catch (err) {
         console.error('Error fetching people:', err);
       } finally {
@@ -82,7 +86,11 @@ export default function PeopleListPage() {
         placeholder="Поиск человека..."
         searchId="people-search"
       >
-        <AlphabetFilter selectedLetter={letter} onLetterClick={handleLetterClick} />
+        <AlphabetFilter
+          selectedLetter={letter}
+          onLetterClick={handleLetterClick}
+          availableLetters={availableLetters}
+        />
       </ListPageHeader>
 
       {loading ? (

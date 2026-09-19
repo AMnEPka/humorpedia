@@ -19,6 +19,7 @@ from services.crud import (
     create_content, update_content,
     delete_content,
     check_primary_tag_duplicate,
+    alphabet_letter_pattern,
     list_alphabetical_content,
 )
 from services.tags import tag_service
@@ -779,6 +780,8 @@ async def list_teams(
     if show_id:
         conditions.append({"show_id": show_id})
 
+    availability_conditions = list(conditions)
+
     # Поиск подстроки (без учёта регистра) по name, title, slug и aliases
     if search and search.strip():
         search_escaped = literal_search_pattern(search.strip())
@@ -791,13 +794,17 @@ async def list_teams(
 
     # Фильтр по первой букве
     if letter:
-        letter_pattern = f"^{re.escape(letter)}"
+        letter_pattern = alphabet_letter_pattern(letter)
         conditions.append({"title": {"$regex": letter_pattern, "$options": "i"}})
 
     query = {"$and": conditions} if conditions else {}
+    availability_query = (
+        {"$and": availability_conditions} if availability_conditions else {}
+    )
     
     result = await list_alphabetical_content(
-        "teams", skip, limit, query, ["title", "name"]
+        "teams", skip, limit, query, ["title", "name"],
+        availability_query=availability_query,
     )
     items = result["items"]
     await attach_show_info(db, items)

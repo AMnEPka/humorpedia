@@ -11,6 +11,8 @@ const config = {
   enableHealthCheck: process.env.ENABLE_HEALTH_CHECK === "true",
 };
 
+const watchIgnored = /node_modules|\.git|build|dist|coverage|public[\\/]media|backups|migration|\.cache|\.tmp|\.log$|\.swp$|\.swo$|\.DS_Store/;
+
 // Conditionally load health check modules only if enabled
 let WebpackHealthPlugin;
 let setupHealthEndpoints;
@@ -50,19 +52,20 @@ const webpackConfig = {
     configure: (webpackConfig) => {
       const isDocker = process.env.DOCKER_ENV === 'true';
       
-      // In Docker, use minimal file watching to prevent ENOMEM errors
+      // Docker Desktop bind mounts need polling. Heavy directories and media stay ignored
+      // so branch switches are detected without returning to the previous ENOMEM problem.
       if (isDocker) {
-        // Ignore everything - effectively disable file watching
         webpackConfig.watchOptions = {
-          ignored: /./,  // Ignore all files
-          poll: false,
+          ignored: watchIgnored,
+          aggregateTimeout: 500,
+          poll: 1000,
           followSymlinks: false,
         };
       } else {
         // Local development - normal file watching
         webpackConfig.watchOptions = {
           ...webpackConfig.watchOptions,
-          ignored: /node_modules|\.git|build|dist|coverage|public[\\/]media|backups|migration|\.cache|\.tmp|\.log$|\.swp$|\.swo$|\.DS_Store/,
+          ignored: watchIgnored,
           aggregateTimeout: 500,
           poll: false,
           followSymlinks: false,
@@ -112,11 +115,9 @@ webpackConfig.devServer = (devServerConfig) => {
   // This prevents webpack from scanning 3000+ images on startup
   // Media files are served by backend at /media/imported/*
   
-  // In Docker, disable hot reload to prevent ENOMEM errors from inotify limits
-  // Manual browser refresh required to see changes
-  const isDocker = process.env.DOCKER_ENV === 'true';
-  devServerConfig.hot = !isDocker;
-  devServerConfig.liveReload = !isDocker;
+  // Polling watchOptions above avoid inotify exhaustion while preserving automatic reload.
+  devServerConfig.hot = true;
+  devServerConfig.liveReload = true;
   // React Router owns public routes such as /articles. Always return the SPA
   // entry point when a route is opened directly or refreshed in development.
   devServerConfig.historyApiFallback = {

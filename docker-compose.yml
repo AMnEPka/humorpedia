@@ -66,9 +66,8 @@ services:
         condition: service_healthy
     ports:
       - "8001:8001"
-    # Hot reload disabled due to inotify limits being exceeded in Docker
-    # Restart container manually after code changes: docker-compose restart backend
-    command: uvicorn server:app --host 0.0.0.0 --port 8001
+    # Исходники примонтированы из checkout; reload применяет Python-правки без ручного restart.
+    command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload --reload-dir /app --reload-delay 1
     restart: unless-stopped
 
   frontend:

@@ -32,7 +32,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     Header.jsx                 меню из /sections (in_main_menu), автокомплит поиска
     Footer.jsx
     ListPageHeader.jsx         единая панель заголовка/поиска для общих списков
-    AlphabetFilter.jsx         единый полный русский алфавит для списков людей, команд и шоу
+    AlphabetFilter.jsx         общий фильтр людей, команд, шоу и городов: показывает только буквы из `available_letters`; последний пункт `A–Z 0–9 #` объединяет латиницу, цифры и символы
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
     ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
     RatingCard.jsx             среднее, веха числа голосов и 10 кнопок-смайликов
@@ -136,5 +136,5 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 - Статус иностранного агента задаётся переключателем в `PersonEditPage`; звёздочку и поясняющий блок в HTML вручную не добавлять.
 - HTML из БД выводить только через `sanitizeHTML` (DOMPurify).
 - Заголовок вкладки — через `<WithTitle title="...">` в App.js или `usePageTitle`.
-- В Docker hot reload отключён (`DOCKER_ENV=true`) — после правок обновлять страницу вручную; для HMR запускать фронт локально (`yarn start` в `frontend/`, бэкенд на :8001).
+- В Docker (`DOCKER_ENV=true`) изменения `frontend/src` отслеживаются polling-наблюдателем раз в секунду; тяжёлые каталоги и медиа исключены, HMR/live reload включены. После смены ветки или зависимостей запускать корневой `scripts/dev-sync.ps1`.
 - `plugins/health-check` подключается только при `ENABLE_HEALTH_CHECK=true`; старый неиспользуемый `plugins/visual-edits` удалён.
