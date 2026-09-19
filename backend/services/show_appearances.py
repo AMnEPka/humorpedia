@@ -506,9 +506,14 @@ def manual_values(row):
     return row
 
 
-async def public_rows(db, *, person_id=None, show_id=None):
+async def public_rows(db, *, person_id=None, person_ids=None, show_id=None, include_show_id=False):
     query = {'excluded': {'$ne': True}, 'person_id': {'$ne': None}}
     if person_id: query['person_id'] = person_id
+    elif person_ids is not None:
+        person_ids = list(dict.fromkeys(person_ids))
+        if not person_ids:
+            return []
+        query['person_id'] = {'$in': person_ids}
     if show_id: query['show_id'] = show_id
     rows = [manual_values(r) for r in await db.show_appearances.find(query).to_list(None)]
     available = {'status': {'$ne': 'archived'}}
@@ -529,11 +534,49 @@ async def public_rows(db, *, person_id=None, show_id=None):
         for row in choose(variants):
             show, person = shows[row['show_id']], people[pid]
             show_url = '/shows/' + (show.get('full_path') or show['slug'])
-            result.append({'id': row['_id'], 'person_id': pid, 'person_name': person.get('full_name') or person['title'],
-                           'person_url': '/people/' + person['slug'], 'show_title': show['title'],
-                           'show_url': show_url, 'link_url': appearance_url(row, show, teams.get(row.get('team_id'))),
-                           'caption': caption(row, show['title'])})
+            item = {'id': row['_id'], 'person_id': pid,
+                    'person_name': person.get('full_name') or person['title'],
+                    'person_url': '/people/' + person['slug'], 'show_title': show['title'],
+                    'show_url': show_url, 'link_url': appearance_url(row, show, teams.get(row.get('team_id'))),
+                    'caption': caption(row, show['title'])}
+            if include_show_id:
+                item['show_id'] = row['show_id']
+            result.append(item)
     return sorted(result, key=lambda r: (r['show_title'], r['person_name']))
+
+
+async def public_team_projects(db, team_id):
+    """Проекты участников команды КВН без дублирования шоу и людей."""
+    memberships = await db.memberships.find(
+        {'team_id': team_id, 'person_id': {'$ne': None}}, {'person_id': 1},
+    ).to_list(None)
+    person_ids = sorted({row['person_id'] for row in memberships if row.get('person_id')})
+    rows = await public_rows(db, person_ids=person_ids, include_show_id=True)
+
+    projects = {}
+    for row in rows:
+        project = projects.setdefault(row['show_id'], {
+            'show_id': row['show_id'],
+            'show_title': row['show_title'],
+            'show_url': row['show_url'],
+            'members': {},
+        })
+        project['members'][row['person_id']] = {
+            'person_id': row['person_id'],
+            'person_name': row['person_name'],
+            'person_url': row['person_url'],
+            'caption': row['caption'],
+            'appearance_url': row['link_url'],
+        }
+
+    result = []
+    for project in projects.values():
+        project['members'] = sorted(
+            project['members'].values(),
+            key=lambda member: (member['person_name'].casefold(), member['person_id']),
+        )
+        result.append(project)
+    return sorted(result, key=lambda project: (project['show_title'].casefold(), project['show_id']))
 
 
 def apply_participant_card_links(modules, rows, people):

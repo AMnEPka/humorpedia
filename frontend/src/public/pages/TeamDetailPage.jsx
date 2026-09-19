@@ -18,33 +18,65 @@ import { teamLogoUrl } from '@/utils/media';
 import RelatedArticles from '../components/RelatedArticles';
 import RatingCard from '../components/RatingCard';
 import RelatedNews from '../components/RelatedNews';
+import TeamProjects, {
+  TEAM_PROJECTS_TITLE,
+  hasManualTeamProjects,
+  isTeamProjectsModule,
+} from '../components/TeamProjects';
 
 // Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
 
-// Table of Contents component for teams
-function TableOfContents({ modules, mode = 'auto', contentType = 'team' }) {
-  const items = useMemo(() => {
-    const effectiveMode = mode === 'auto' ? 'sections' : mode;
-    
-    if (effectiveMode === 'timeline') {
-      const timelineModule = modules?.find(m => m.type === 'timeline');
-      const events = timelineModule?.data?.events || timelineModule?.data?.items || [];
-      return events.map(item => ({
-        id: `timeline-${item.year}`,
-        label: item.year,
-        title: item.title
-      }));
-    } else {
-      // Get titles from text_block modules
-      return modules?.filter(m => m.type === 'text_block' && m.data?.title)
-        .map(m => ({
-          id: `section-${m.id}`,
-          label: m.data.title,
-          title: m.data.title
-        })) || [];
+export function teamTocItems(modules = [], mode = 'auto', projectsVisible = false) {
+  const effectiveMode = mode === 'auto' ? 'sections' : mode;
+  if (effectiveMode === 'timeline') {
+    const timelineModule = modules.find(m => m.type === 'timeline');
+    const events = timelineModule?.data?.events || timelineModule?.data?.items || [];
+    return events.map(item => ({
+      id: `timeline-${item.year}`,
+      label: item.year,
+      title: item.title,
+    }));
+  }
+
+  const items = [];
+  let projectsAdded = false;
+  for (const module of modules) {
+    if (isTeamProjectsModule(module)) {
+      if (projectsVisible && !projectsAdded) {
+        items.push({
+          id: 'section-team-projects',
+          label: TEAM_PROJECTS_TITLE,
+          title: TEAM_PROJECTS_TITLE,
+        });
+        projectsAdded = true;
+      }
+      continue;
     }
-  }, [modules, mode]);
+    if (module.type === 'text_block' && module.data?.title) {
+      items.push({
+        id: `section-${module.id}`,
+        label: module.data.title,
+        title: module.data.title,
+      });
+    }
+  }
+  if (projectsVisible && !projectsAdded) {
+    items.push({
+      id: 'section-team-projects',
+      label: TEAM_PROJECTS_TITLE,
+      title: TEAM_PROJECTS_TITLE,
+    });
+  }
+  return items;
+}
+
+// Table of Contents component for teams
+function TableOfContents({ modules, mode = 'auto', projectsVisible = false }) {
+  const items = useMemo(
+    () => teamTocItems(modules, mode, projectsVisible),
+    [modules, mode, projectsVisible]
+  );
 
   if (items.length === 0) return null;
 
@@ -84,6 +116,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
   const { slug } = useParams();
   const [team, setTeam] = useState(null);
   const [members, setMembers] = useState(null);
+  const [teamProjects, setTeamProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -118,6 +151,19 @@ export default function TeamDetailPage({ showTeamPath = null }) {
     return () => { cancelled = true; };
   }, [teamKey]);
 
+  useEffect(() => {
+    if (!teamKey || team?.show_id) {
+      setTeamProjects([]);
+      return undefined;
+    }
+    let cancelled = false;
+    setTeamProjects([]);
+    publicApi.getTeamProjects(teamKey)
+      .then(res => { if (!cancelled) setTeamProjects(res.data?.items || []); })
+      .catch(() => { if (!cancelled) setTeamProjects([]); });
+    return () => { cancelled = true; };
+  }, [teamKey, team?.show_id]);
+
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
   const sidebarModules = useMemo(() => {
@@ -133,6 +179,14 @@ export default function TeamDetailPage({ showTeamPath = null }) {
       .filter(m => m.visible !== false && !isSystemModule(m.type) && !isGamesTableModule(m))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [team?.modules]);
+
+  const manualProjectModules = useMemo(() => {
+    if (team?.show_id) return [];
+    return contentModules.filter(isTeamProjectsModule);
+  }, [contentModules, team?.show_id]);
+  const firstProjectModuleId = manualProjectModules[0]?.id;
+  const projectsVisible = !team?.show_id
+    && (teamProjects.length > 0 || hasManualTeamProjects(manualProjectModules));
 
   // Текстовые блоки состава, разобранные полностью, заменяются структурированным составом
   const replacedRosterIds = useMemo(() => {
@@ -423,7 +477,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
           </Button>
 
           {/* Table of Contents */}
-          <TableOfContents modules={contentModules} contentType="team" />
+          <TableOfContents modules={contentModules} projectsVisible={projectsVisible} />
         </div>
 
         {/* Main content */}
@@ -453,7 +507,11 @@ export default function TeamDetailPage({ showTeamPath = null }) {
           {/* Content Modules: старые таблицы игр скрыты, полностью разобранный состав — структурой */}
           {contentModules.map((module, i) => {
             let renderedModule;
-            if (replacedRosterIds.has(module.id)) {
+            if (!team.show_id && isTeamProjectsModule(module)) {
+              renderedModule = module.id === firstProjectModuleId ? (
+                <TeamProjects items={teamProjects} manualModules={manualProjectModules} />
+              ) : null;
+            } else if (replacedRosterIds.has(module.id)) {
               renderedModule = module.id === firstRosterId ? (
                 <TeamRoster
                   members={members}
@@ -474,6 +532,10 @@ export default function TeamDetailPage({ showTeamPath = null }) {
               </Fragment>
             );
           })}
+
+          {!team.show_id && manualProjectModules.length === 0 && teamProjects.length > 0 && (
+            <TeamProjects items={teamProjects} />
+          )}
 
           <TeamParticipations teamSlug={team._id} teamName={team.name || team.title} />
           <RelatedArticles contentType="team" contentId={team._id || team.id || team.slug} />

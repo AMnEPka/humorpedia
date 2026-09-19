@@ -4,7 +4,7 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from services.show_appearances import SHOW_PATHS, public_rows, sync
+from services.show_appearances import SHOW_PATHS, public_rows, public_team_projects, sync
 from utils.auth import require_editor
 from utils.database import get_db
 from utils.search import literal_search_pattern
@@ -15,6 +15,20 @@ router = APIRouter(prefix='/show-appearances', tags=['show-appearances'])
 @router.get('/people/{person_id}')
 async def person_shows(person_id: str):
     return {'items': await public_rows(await get_db(), person_id=person_id)}
+
+
+@router.get('/teams/{id_or_slug}/projects')
+async def team_projects(id_or_slug: str):
+    db = await get_db()
+    team = await db.teams.find_one({
+        '$or': [
+            {'_id': id_or_slug},
+            {'slug': id_or_slug, 'show_id': {'$in': [None, '']}},
+        ],
+    }, {'_id': 1, 'show_id': 1, 'status': 1})
+    if not team or team.get('show_id') or team.get('status') == 'archived':
+        raise HTTPException(404, 'Команда КВН не найдена')
+    return {'team_id': team['_id'], 'items': await public_team_projects(db, team['_id'])}
 
 
 @router.get('/review', dependencies=[Depends(require_editor)])
