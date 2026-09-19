@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException
 
@@ -15,6 +17,10 @@ from services.show_teams import team_url
 SETTINGS_ID = "recommendations"
 CANDIDATE_POOL_PER_TYPE = 60
 RELEVANT_POOL_PER_TYPE = 200
+
+INTERNAL_HOSTS = {"humorpedia.ru", "www.humorpedia.ru", "dev.humorpedia.ru", "localhost", "127.0.0.1"}
+HREF_RE = re.compile(r"href\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
+MOSCOW_TZ = timezone(timedelta(hours=3))
 
 SOURCE_COLLECTIONS = {
     "article": "articles", "news": "news", "person": "people", "team": "teams",
@@ -129,22 +135,151 @@ def _directly_related(source: dict[str, Any], source_type: str, candidate: dict[
     )
 
 
+def _common_tags(source: dict[str, Any], candidate: dict[str, Any]) -> set[str]:
+    source_tags = {str(tag).strip().casefold() for tag in source.get("tags") or [] if str(tag).strip()}
+    candidate_tags = {str(tag).strip().casefold() for tag in candidate.get("tags") or [] if str(tag).strip()}
+    return source_tags & candidate_tags
+
+
+def _is_related(source: dict[str, Any], source_type: str, candidate: dict[str, Any]) -> bool:
+    return _directly_related(source, source_type, candidate) or bool(_common_tags(source, candidate))
+
+
 def rank_candidates(
     source: dict[str, Any], source_type: str, candidates: list[dict[str, Any]], result_types: list[str],
 ) -> list[dict[str, Any]]:
     """Rank mixed content stably: explicit relations, tags, then popularity and recency."""
-    source_tags = {str(tag).strip().casefold() for tag in source.get("tags") or [] if str(tag).strip()}
     type_order = {item_type: index for index, item_type in enumerate(result_types)}
 
     def key(item: dict[str, Any]):
-        tags = {str(tag).strip().casefold() for tag in item.get("tags") or [] if str(tag).strip()}
         return (
-            -int(_directly_related(source, source_type, item)), -len(source_tags & tags),
+            -int(_directly_related(source, source_type, item)), -len(_common_tags(source, item)),
             -int(bool(item.get("featured"))), -_number(item.get("rating")),
             -int(item.get("views") or 0), -_timestamp(item.get("published_at") or item.get("created_at")),
             type_order.get(str(item.get("_recommendation_type")), len(type_order)),
             str(item.get("_id") or item.get("id") or ""),
         )
+
+    return sorted(candidates, key=key)
+
+
+def _normalize_internal_url(value: str) -> str | None:
+    value = html.unescape(value).strip()
+    if not value or value.startswith(("#", "mailto:", "tel:", "javascript:")):
+        return None
+    parsed = urlsplit(value)
+    if parsed.scheme or parsed.netloc:
+        if parsed.scheme not in {"http", "https"} or (parsed.hostname or "").lower() not in INTERNAL_HOSTS:
+            return None
+    path = parsed.path.strip()
+    if not path:
+        return None
+    if not path.startswith("/"):
+        path = f"/{path}"
+    path = re.sub(r"/{2,}", "/", path)
+    return path.rstrip("/") or "/"
+
+
+def source_internal_urls(source: dict[str, Any]) -> set[str]:
+    """Collect public links already rendered from stored page data."""
+    result: set[str] = set()
+
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            for nested in value.values():
+                visit(nested)
+            return
+        if isinstance(value, (list, tuple, set)):
+            for nested in value:
+                visit(nested)
+            return
+        if not isinstance(value, str):
+            return
+        for href in HREF_RE.findall(value):
+            normalized = _normalize_internal_url(href)
+            if normalized:
+                result.add(normalized)
+        if "<" not in value and (value.startswith("/") or "://" in value):
+            normalized = _normalize_internal_url(value)
+            if normalized:
+                result.add(normalized)
+
+    visit(source)
+    return result
+
+
+async def _team_dynamic_urls(db, source: dict[str, Any]) -> set[str]:
+    """Links rendered from team memberships, projects and tournament participation."""
+    source_id = str(source.get("_id") or source.get("id") or "")
+    if not source_id:
+        return set()
+
+    result: set[str] = set()
+    memberships = await db.memberships.find(
+        {"team_id": source_id}, {"person_id": 1, "person_slug": 1},
+    ).to_list(None)
+    person_ids = {str(row["person_id"]) for row in memberships if row.get("person_id")}
+    person_slugs = {str(row["person_slug"]) for row in memberships if row.get("person_slug")}
+    if person_ids:
+        people = await db.people.find(
+            {"_id": {"$in": list(person_ids)}, "status": {"$ne": "archived"}}, {"slug": 1},
+        ).to_list(None)
+        person_slugs.update(str(person["slug"]) for person in people if person.get("slug"))
+    result.update(f"/people/{slug}" for slug in person_slugs)
+
+    if person_ids and not source.get("show_id"):
+        appearances = await db.show_appearances.find(
+            {"person_id": {"$in": list(person_ids)}, "excluded": {"$ne": True}},
+            {"show_id": 1, "team_id": 1},
+        ).to_list(None)
+        show_ids = {str(row["show_id"]) for row in appearances if row.get("show_id")}
+        team_ids = {str(row["team_id"]) for row in appearances if row.get("team_id")}
+        if show_ids:
+            shows = await db.shows.find(
+                {"_id": {"$in": list(show_ids)}, "status": {"$ne": "archived"}},
+                {"slug": 1, "full_path": 1},
+            ).to_list(None)
+            result.update(_url(show, "show") for show in shows if _url(show, "show"))
+        if team_ids:
+            teams = await db.teams.find(
+                {"_id": {"$in": list(team_ids)}, "status": {"$ne": "archived"}},
+                {"slug": 1, "show_id": 1, "full_path": 1},
+            ).to_list(None)
+            result.update(team_url(team) for team in teams if team.get("slug"))
+
+    participations = await db.participations.find(
+        {"team_id": source_id, "kind": "season", "season_status": {"$ne": "draft"}},
+        {"season_path": 1, "tournament_id": 1},
+    ).to_list(None)
+    tournament_ids = {str(row["tournament_id"]) for row in participations if row.get("tournament_id")}
+    for row in participations:
+        if row.get("season_path"):
+            result.add(str(row["season_path"]))
+    if tournament_ids:
+        tournaments = await db.tournaments.find(
+            {"_id": {"$in": list(tournament_ids)}}, {"page_path": 1},
+        ).to_list(None)
+        result.update(str(item["page_path"]) for item in tournaments if item.get("page_path"))
+
+    return {normalized for value in result if (normalized := _normalize_internal_url(value))}
+
+
+async def page_visible_urls(db, source: dict[str, Any], content_type: str) -> set[str]:
+    result = source_internal_urls(source)
+    if content_type == "team":
+        result.update(await _team_dynamic_urls(db, source))
+    return result
+
+
+def daily_order(
+    candidates: list[dict[str, Any]], source_type: str, source_id: str, rotation_day: str, bucket: str,
+) -> list[dict[str, Any]]:
+    """Return a stable pseudo-random order that changes with the Moscow day."""
+    seed = f"{source_type}:{source_id}:{rotation_day}:{bucket}"
+
+    def key(item: dict[str, Any]) -> str:
+        identity = f"{item.get('_recommendation_type', '')}:{item.get('_id') or item.get('id') or ''}"
+        return hashlib.sha256(f"{seed}:{identity}".encode("utf-8")).hexdigest()
 
     return sorted(candidates, key=key)
 
@@ -272,7 +407,9 @@ def _target_key(content_type: str, source: dict[str, Any]) -> str:
     return TARGET_KEYS[content_type]
 
 
-async def recommendations_for(db, content_type: str, content_id: str, limit: int | None = None) -> dict[str, Any]:
+async def recommendations_for(
+    db, content_type: str, content_id: str, limit: int | None = None, *, rotation_day: str | None = None,
+) -> dict[str, Any]:
     if content_type not in SOURCE_COLLECTIONS:
         raise HTTPException(status_code=422, detail="Неподдерживаемый тип страницы")
     source, source_collection = await _resolve_source(db, content_type, content_id)
@@ -294,7 +431,9 @@ async def recommendations_for(db, content_type: str, content_id: str, limit: int
         else content_type
     )
     source_url = _url(source, source_result_type)
-    excluded_urls = {source_url} if source_url else set()
+    visible_urls = await page_visible_urls(db, source, content_type)
+    used_urls = {_normalize_internal_url(source_url)} if source_url else set()
+    used_urls.discard(None)
 
     manual_items: list[dict[str, Any]] = []
     manual_ids = list(dict.fromkeys(str(item) for item in source.get("related_article_ids") or [] if item))
@@ -308,10 +447,11 @@ async def recommendations_for(db, content_type: str, content_id: str, limit: int
             if key in excluded or item_id not in by_id:
                 continue
             serialized = public_item(by_id[item_id], "article", manual=True)
-            if serialized:
+            item_url = _normalize_internal_url(serialized["url"]) if serialized else None
+            if serialized and item_url not in used_urls:
                 manual_items.append(serialized)
                 excluded.add(key)
-                excluded_urls.add(serialized["url"])
+                used_urls.add(item_url)
             if len(manual_items) >= effective_limit:
                 break
 
@@ -324,16 +464,54 @@ async def recommendations_for(db, content_type: str, content_id: str, limit: int
                 item_id = str(document.get("_id") or document.get("id") or "")
                 key = (collection_name, item_id)
                 item_url = _url(document, result_type)
-                if not item_id or key in excluded or not item_url or item_url in excluded_urls:
+                canonical_url = _normalize_internal_url(item_url)
+                if (
+                    not item_id or key in excluded or not canonical_url
+                    or canonical_url in used_urls or canonical_url in visible_urls
+                ):
                     continue
                 candidates.append({**document, "_recommendation_type": result_type})
 
     items = list(manual_items)
-    for candidate in rank_candidates(source, content_type, candidates, result_types):
+    slots = effective_limit - len(items)
+    if slots <= 0:
+        return {**base, "enabled": True, "items": items}
+
+    day = rotation_day or datetime.now(MOSCOW_TZ).date().isoformat()
+    related = [item for item in candidates if _is_related(source, content_type, item)]
+    unrelated = [item for item in candidates if not _is_related(source, content_type, item)]
+    related_target = max(0, slots - 1)
+    selected = daily_order(related, content_type, source_id, day, "related")[:related_target]
+    selected_keys = {
+        (str(item.get("_recommendation_type")), str(item.get("_id") or item.get("id"))) for item in selected
+    }
+
+    discovery_pool = daily_order(unrelated, content_type, source_id, day, "discovery")
+    if not discovery_pool:
+        discovery_pool = [
+            item for item in daily_order(related, content_type, source_id, day, "discovery")
+            if (str(item.get("_recommendation_type")), str(item.get("_id") or item.get("id"))) not in selected_keys
+        ]
+    if discovery_pool:
+        selected.append(discovery_pool[0])
+        selected_keys.add((
+            str(discovery_pool[0].get("_recommendation_type")),
+            str(discovery_pool[0].get("_id") or discovery_pool[0].get("id")),
+        ))
+
+    if len(selected) < slots:
+        remaining = [
+            item for item in daily_order(candidates, content_type, source_id, day, "fill")
+            if (str(item.get("_recommendation_type")), str(item.get("_id") or item.get("id"))) not in selected_keys
+        ]
+        selected.extend(remaining[:slots - len(selected)])
+
+    for candidate in selected:
         serialized = public_item(candidate, str(candidate["_recommendation_type"]))
-        if serialized and serialized["url"] not in excluded_urls:
+        canonical_url = _normalize_internal_url(serialized["url"]) if serialized else None
+        if serialized and canonical_url not in used_urls:
             items.append(serialized)
-            excluded_urls.add(serialized["url"])
+            used_urls.add(canonical_url)
         if len(items) >= effective_limit:
             break
 
