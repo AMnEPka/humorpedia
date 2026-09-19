@@ -16,6 +16,7 @@ import PersonSelector from '../components/PersonSelector';
 import ModuleEditor from '../components/ModuleEditor';
 import MediaSelector from '../components/MediaSelector';
 import RelatedArticlesSelector from '../components/RelatedArticlesSelector';
+import ContentRelationSelector from '../components/ContentRelationSelector';
 
 const emptyNews = {
   title: '',
@@ -27,6 +28,8 @@ const emptyNews = {
   modules: [],
   tags: [],
   related_person_ids: [],
+  related_team_ids: [],
+  related_show_ids: [],
   related_article_ids: [],
   seo: { meta_title: '', meta_description: '' }
 };
@@ -262,6 +265,28 @@ export default function NewsEditPage() {
                   value={news.related_person_ids || []}
                   onChange={(ids) => setNews(p => ({ ...p, related_person_ids: ids }))}
                   placeholder="Выберите людей..."
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Связанные команды</CardTitle></CardHeader>
+              <CardContent>
+                <ContentRelationSelector
+                  type="team"
+                  value={news.related_team_ids || []}
+                  onChange={(ids) => setNews(p => ({ ...p, related_team_ids: ids }))}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Связанные шоу</CardTitle></CardHeader>
+              <CardContent>
+                <ContentRelationSelector
+                  type="show"
+                  value={news.related_show_ids || []}
+                  onChange={(ids) => setNews(p => ({ ...p, related_show_ids: ids }))}
                 />
               </CardContent>
             </Card>

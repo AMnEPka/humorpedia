@@ -27,6 +27,7 @@ const menuItems = [
   { divider: true },
   { path: '/admin/users', icon: Users, label: 'Пользователи', adminOnly: true },
   { path: '/admin/templates', icon: LayoutTemplate, label: 'Шаблоны' },
+  { path: '/admin/related-news', icon: Settings, label: 'Свежие новости', adminOnly: true },
   { path: '/admin/database', icon: Database, label: 'База данных', adminOnly: true },
 ];
 

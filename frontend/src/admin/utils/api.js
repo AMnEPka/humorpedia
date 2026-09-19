@@ -151,8 +151,8 @@ export const contentApi = {
   // raw: ссылки как в данных, без замены отсутствующих страниц текстом (иначе сохранение их потеряет)
   getPerson: (id) => api.get(`/content/people/${id}`, { params: { raw: true } }),
   searchPeople: (q, limit = 10) => api.get('/content/people/search', { params: { q, limit } }),
-  getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
   searchContent: (query, types, limit = 10) => api.get('/content/content/search', { params: { query, types, limit } }),
+  searchForLinks: (query, types, limit = 10) => api.get('/content/search-for-links', { params: { query, types, limit } }),
   resolveContentLink: (contentType, idOrSlug) => api.get(`/content/content/${contentType}/${idOrSlug}/resolve-link`),
   createPerson: (data) => api.post('/content/people', data),
   updatePerson: (id, data) => api.put(`/content/people/${id}`, data),
@@ -243,6 +243,11 @@ export const contentApi = {
 export const statsApi = {
   getStats: () => api.get('/stats'),
   getRandom: (type) => api.get(`/random/${type}`),
+};
+
+export const relatedNewsSettingsApi = {
+  get: () => api.get('/related-news/settings'),
+  update: (data) => api.put('/related-news/settings', data),
 };
 
 // Users API

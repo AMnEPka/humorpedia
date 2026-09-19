@@ -11,7 +11,6 @@ from services.crud import (
     check_slug_unique, create_content, update_content,
     delete_content, get_by_id_or_slug, list_alphabetical_content, build_query,
 )
-from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
 from services.memberships import link_person, unlink_person
@@ -83,25 +82,6 @@ async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10
     cursor = db.people.find(query, {"_id": 1, "full_name": 1, "title": 1, "slug": 1}).limit(limit)
     people = await cursor.to_list(limit)
     return [{"id": p["_id"], "name": p.get("full_name") or p.get("title", ""), "slug": p.get("slug")} for p in people]
-
-
-@router.get("/people/{id_or_slug}/linked-content", response_model=dict)
-async def get_person_linked_content(
-    id_or_slug: str,
-    types: Optional[str] = Query(None, description="Comma-separated content types: news,article,show"),
-    limit: int = Query(20, ge=1, le=100)
-):
-    """Get content linked to a person (for humor_chronicles module)."""
-    db = await get_db()
-    person = await db.people.find_one({
-        "$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]
-    })
-    if not person:
-        raise HTTPException(status_code=404, detail="Person not found")
-
-    person_id = person["_id"]
-    content_types = types.split(",") if types else None
-    return await linking_service.get_linked_content(person_id, content_types, limit)
 
 
 @router.get("/people/{id_or_slug}", response_model=dict)

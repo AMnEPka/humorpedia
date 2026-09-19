@@ -115,9 +115,6 @@ export default function ModuleDataFields({ type, data = {}, onChange }) {
       <Field label="Тип случайной страницы" value={data.content_type || 'article'} onChange={content_type => update({ content_type })}
         options={Object.entries({ person: 'Человек', team: 'Команда', show: 'Шоу', article: 'Статья', news: 'Новость', quiz: 'Квиз', city: 'Город' })} />
     </div>;
-    case 'humor_chronicles': return <div className="space-y-4">{title}
-      <p className="text-sm text-muted-foreground">Новости, статьи и шоу, связанные с человеком, загружаются автоматически.</p>
-    </div>;
     case 'person_card': return <div className="space-y-4">
       {[['name', 'Имя'], ['photo', 'Фото (URL)'], ['role', 'Роль'], ['description', 'Описание']].map(([key, label]) =>
         <Field key={key} label={label} value={data[key]} onChange={value => update({ [key]: value })} />)}

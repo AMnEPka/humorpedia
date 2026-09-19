@@ -15,7 +15,6 @@ from models.content import Show, ShowCreate, ShowUpdate
 from utils.database import get_db
 from services.crud import create_content, delete_content, get_by_id_or_slug, list_alphabetical_content, build_query
 from services.tags import tag_service
-from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.show_teams import move_show_teams
 from services.show_appearances import link_participant_cards
@@ -99,12 +98,7 @@ async def create_show(data: ShowCreate):
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         related_person_ids=data.related_person_ids or []
     )
-    result = await create_content("shows", show, data.tags)
-
-    if data.related_person_ids:
-        await linking_service.update_person_links("show", result["id"], data.related_person_ids)
-
-    return result
+    return await create_content("shows", show, data.tags)
 
 
 @router.get("/shows", response_model=dict)
@@ -226,11 +220,6 @@ async def update_show(id: str, data: ShowUpdate):
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.shows.update_one({"_id": id}, {"$set": update_data})
 
-    if data.related_person_ids is not None:
-        try:
-            await linking_service.update_person_links("show", id, data.related_person_ids)
-        except Exception as e:
-            logger.error(f"Error updating person links: {e}")
     return {"id": id, "updated": True}
 
 

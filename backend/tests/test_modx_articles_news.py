@@ -1,7 +1,5 @@
 """Legacy MODX article/news conversion without database access."""
-import asyncio
 import json
-from unittest.mock import AsyncMock
 
 from models.content import ArticleCreate, ArticleUpdate, NewsCreate
 from routes.redirects import _try_pattern_redirect
@@ -10,7 +8,6 @@ from services.modx_articles_news import (
 )
 from services.modx_content import LinkMapper
 from services.modx_dump import ModxSite
-from services.linking import LinkingService
 
 
 def content_site():
@@ -131,42 +128,3 @@ def test_resource_selection_url_builders_and_news_redirect():
     assert content_url_builder(site, "article")(site.resources[200]) == "/articles/article"
     assert content_url_builder(site, "news")(site.resources[100]) == "/news/short-news"
     assert _try_pattern_redirect("/novosti/short-news.html") == "/news/short-news"
-
-
-def test_linking_service_does_not_boolean_test_motor_collection(monkeypatch):
-    class Collection:
-        def __bool__(self):
-            raise TypeError("Motor collections have no truth value")
-
-        async def update_one(self, query, update):
-            self.updated = (query, update)
-
-        def find(self, query, projection):
-            self.find_args = (query, projection)
-            return self
-
-        def sort(self, *args):
-            return self
-
-        def limit(self, *args):
-            return self
-
-        async def to_list(self, *args):
-            return []
-
-    async def scenario():
-        articles = Collection()
-        fake_db = type("DB", (), {"articles": articles, "news": Collection(), "shows": Collection()})()
-        monkeypatch.setattr("services.linking.get_db", AsyncMock(return_value=fake_db))
-        ensure = AsyncMock()
-        monkeypatch.setattr(LinkingService, "ensure_chronicles_module", ensure)
-
-        await LinkingService.update_person_links("article", "article-id", ["person-id"])
-
-        assert articles.updated == (
-            {"_id": "article-id"}, {"$set": {"related_person_ids": ["person-id"]}}
-        )
-        ensure.assert_awaited_once_with("person-id")
-        assert await LinkingService.get_linked_content("person-id", ["article"]) == {"article": []}
-
-    asyncio.run(scenario())

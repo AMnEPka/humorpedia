@@ -13,7 +13,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `kvn` | `KVN` | content_kvn | иерархия: `id` (UUID, **отдельно от `_id`**), `parent_id`, `level` 0–4, `full_path`; `season_data`, `jury_cards`, `old_urls` |
 | `shows` | `Show` | content_shows | `facts{}`+`facts_order[]`, `social_links`, `poster` (MediaFile); иерархия: `parent_id` (= `_id` родителя), `full_path` (уникален), `level`, `order` — см. «Шоу» |
 | `articles` | `Article` | content_articles | `excerpt`, `cover_image`, `author_*`, `featured`, `related_*_ids` |
-| `news` | `News` | content_news | `content` (HTML), `important`, `related_*_ids` |
+| `news` | `News` | content_news | `content` (HTML), `important`, явные связи `related_person_ids`, `related_team_ids`, `related_show_ids`, `related_article_ids` |
 | `quizzes` | `Quiz` | content_quizzes | вопросы и результаты — в модулях `quiz_questions` / `quiz_results` |
 | `wiki` | `Wiki` | content_wiki | `content` (HTML), `has_header`, `header_facts` |
 | `sections` | `Section` | sections | иерархические разделы: `full_path` (уникален), `parent_id`, `parent_path`, `level`, `order`, `in_main_menu`, `child_types` |
@@ -28,6 +28,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `media` | — | media | `url`, `uploaded_at`, `status` (soft delete) |
 | `templates` | `PageTemplate` | templates | `name` уникально, `content_type`, `modules[]`, `is_default` |
 | `cache_meta` | — | server.py middleware | `{_id: "version", v: int}` — поколение in-memory кэша для синхронизации воркеров |
+| `site_settings` | `RelatedNewsSettings` | related_news | глобальные настройки; документ `_id="related_news"` |
 | `tournaments` | `competition.py` | competitions | турнир/лига/проект: `show`, `slug`, `participant_type` (team/person), ссылка на страницу — см. COMPETITIONS.md |
 | `seasons` | `SeasonUpdate` | competitions | сезон: список участников, победители, этапы → игры → результаты (ссылки на `teams._id`) — источник истины вместо `kvn.season_data` |
 | `participations` | — | competitions | производная: участие в сезоне (`kind=season`), в игре (`kind=game`), роли жюри/ведущего/редактора (`kind=role`) |
@@ -77,7 +78,6 @@ published_at, featured
 - шоу: `episodes_list`, `participants`
 - статьи: `best_articles`, `interesting`, `random_page`
 - квизы: `quiz_questions {questions[{id, question, image, options[{id,text,correct}], explanation}]}`, `quiz_results {results[{min_score, max_score, title, description, image}]}`
-- люди: `humor_chronicles` (данные подтягиваются динамически из `/people/{id}/linked-content`)
 - лиги КВН: `first_league_champions`, `vl_league_champions` (таблицы чемпионов строятся из дочерних сезонов)
 
 Канонический реестр и полная таблица владельцев: [MODULE_CONTRACT.md](MODULE_CONTRACT.md).
@@ -86,6 +86,16 @@ Backend enum также принимает существующие `person_card
 `text`, `cast_list`, `seasons_list`. Общий renderer обслуживает контент; специальные страницы и sidebar-маркеры
 имеют явных владельцев. Неизвестный публичный тип даёт диагностический блок вместо молчаливого исчезновения.
 `poll` доступен в статьях и новостях; определение и голоса не дублируются внутри документа страницы.
+
+### Свежие связанные новости
+
+`news.related_person_ids`, `related_team_ids` и `related_show_ids` — единственный источник блока «Свежие новости».
+Он не является `PageModule` и не записывается в документы страниц: frontend вставляет блок после первого видимого
+контентного блока, backend применяет `site_settings._id="related_news"`, срок свежести и лимит не выше трёх.
+По общему правилу публичности участвуют `draft` и `published`; исключается только `archived`.
+`scripts/migrate_related_news.py` удаляет старые HTML-хвосты `<h3|h4>Новости</...>` и маркеры
+`humor_chronicles`, предварительно перенося разрешённые ссылки в структурированные связи. Скрипт идемпотентен и
+по умолчанию работает как dry-run.
 
 ### Ссылки в контенте
 

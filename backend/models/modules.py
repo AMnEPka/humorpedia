@@ -43,9 +43,6 @@ class ModuleType(str, Enum):
     QUIZ_QUESTIONS = "quiz_questions" # Quiz questions
     QUIZ_RESULTS = "quiz_results"     # Quiz results
     
-    # Person-specific modules
-    HUMOR_CHRONICLES = "humor_chronicles"  # Related content (news, articles, shows)
-
     # KVN league page modules
     FIRST_LEAGUE_CHAMPIONS = "first_league_champions"  # Champions table for 1l-kvn (data from children)
     VL_LEAGUE_CHAMPIONS = "vl_league_champions"  # Champions table for vl-kvn (data from children)
@@ -277,13 +274,6 @@ class QuizResult(BaseModel):
 class QuizResultsData(BaseModel):
     """Data for quiz_results module"""
     results: List[QuizResult] = Field(default_factory=list)
-
-
-class HumorChroniclesData(BaseModel):
-    """Data for humor_chronicles module (dynamic, can be empty)"""
-    # Data is fetched dynamically from API, so this can be empty
-    # The module will request data from /api/people/{id}/linked-content
-    pass
 
 
 # --- Main Module Model ---

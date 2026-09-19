@@ -46,7 +46,6 @@
 | `random_page` | dynamic | `ModuleEditor` | ModuleRenderer | page, section, city |
 | `quiz_questions` | special | `QuizEditPage` | QuizDetailPage | quiz |
 | `quiz_results` | special | `QuizEditPage` | QuizDetailPage | quiz |
-| `humor_chronicles` | dynamic | `ModuleEditor` | ModuleRenderer, PersonDetailPage | person |
 | `first_league_champions` | special | `ModuleEditor` | SectionDetailPage:LeagueSeasonsPage | kvn |
 | `vl_league_champions` | special | `ModuleEditor` | SectionDetailPage:LeagueSeasonsPage | kvn |
 | `table_of_contents` | system | `ModuleEditor` | Page-level TOC independent of marker |  |

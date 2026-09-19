@@ -18,7 +18,6 @@ from services.crud import (
 )
 from services.tags import tag_service
 from services.show_teams import KVN_ONLY
-from services.linking import linking_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
 from services.views_counter import views_counter
@@ -526,10 +525,6 @@ async def create_kvn(data: KVNCreate):
                 {"$addToSet": {"child_kvn_ids": result["id"]}}
             )
     
-    # Update person links (team_ids уже сохранены в документе)
-    if data.person_ids:
-        await linking_service.update_person_links("kvn", result["id"], data.person_ids)
-
     # Модель соревнований: если для страницы автоматически создан season_data — завести сезон
     created_page = await db.kvn.find_one({"id": result["id"]})
     if created_page and created_page.get("season_data"):
@@ -1079,13 +1074,6 @@ async def update_kvn(id: str, data: KVNUpdate):
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")
-    
-    # Update person links if provided (team_ids are already saved in update_data above)
-    if data.person_ids is not None:
-        # Use UUID for linking service
-        kvn_uuid = kvn.get("id") or str(kvn_id)
-        await linking_service.update_person_links("kvn", kvn_uuid, data.person_ids)
-    # Note: team_ids are already saved in the document via update_data, no additional linking needed
     
     # Автоматически обновляем соседние сезоны, если изменился slug, year или league_slug
     should_update_adjacent = False

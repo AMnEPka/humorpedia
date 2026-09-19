@@ -18,6 +18,7 @@
 | [docs/ai/MODULE_CONTRACT.md](docs/ai/MODULE_CONTRACT.md) | Реестр модулей, редакторы, владельцы публичного рендера и контрактные проверки |
 | [docs/ai/KNOWN_ISSUES.md](docs/ai/KNOWN_ISSUES.md) | Найденные баги, дыры безопасности, техдолг |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
+| [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
 
 ## Стек
 
@@ -45,7 +46,7 @@ backend/
   server.py           FastAPI app: lifespan (индексы, админ, views_counter), роутеры, /api/stats, /api/random, /api/cache/*, static mounts; middleware CORS → SlowAPI → CacheSync → CacheControl
   routes/             по файлу на домен; content_*.py → префикс /api/content/...
   services/crud.py    ОБЩИЙ CRUD для контента (slug, теги, primary_tag, list/get/update/delete) — использовать его, а не писать заново
-  services/           cache (in-memory TTL + синхронизация между воркерами через cache_meta), views_counter (батч $inc), link_resolver, linking (связи с людьми), tags, city_linking, admin_bootstrap
+  services/           cache (in-memory TTL + синхронизация между воркерами через cache_meta), views_counter (батч $inc), link_resolver, related_news, tags, city_linking, admin_bootstrap
   models/             Pydantic: base, content (Person/Team/Show/Article/News/Quiz/Wiki/KVN), modules (PageModule + ModuleType), section, city, user
   utils/database.py   ЕДИНСТВЕННОЕ подключение к Mongo: `db = await get_db()`. Новых клиентов не создавать
   utils/auth.py       JWT + зависимости ролей: require_user / require_staff / require_editor / require_moderator / require_admin / require_editor_on_write
@@ -73,6 +74,7 @@ backup/               контейнер mongodump (подключён толь�
 - **Статус контента** — `draft` не ограничивает публичное использование страницы: такие документы участвуют в ссылках, поиске и связанных блоках наравне с `published`. Скрывается только `archived`.
 - **Ссылки в контенте** хранятся адресами нового сайта (даже на ещё не созданные страницы); при выдаче `services/link_resolver.py` показывает ссылки на отсутствующие/архивные страницы текстом. Админка читает документы с `?raw=true` — иначе сохранение уничтожит такие ссылки. Подробно — DATA_MODEL.md «Ссылки в контенте». Картинки старого сайта (`images/...`) лежат в volume `imported_images_volume` → URL `/media/imported/images/...`.
 - **«Читайте также»** строится единым `/api/recommendations`: ручной порядок `related_article_ids` у статей/новостей имеет приоритет, затем идёт детерминированный fallback по связям/тегам/популярности. Цели — только опубликованные статьи; текущая страница, дубли и битые ID исключаются.
+- **«Свежие новости»** — отдельный динамический блок после первого контентного блока людей, команд КВН, команд шоу и шоу. Источник — только явные `news.related_person_ids/related_team_ids/related_show_ids`; глобальные настройки лежат в `site_settings._id=related_news`, доступны admin на `/admin/related-news`, максимум — 3 записи. Старый `humor_chronicles` удалён.
 - **Опросы**: определения в `polls`, новые голоса в `poll_votes` (детерминированный `_id=poll:user`, один голос). Модуль страницы `poll` хранит только `poll_id`; публичный результат складывает новые записи и анонимные `historical_votes`. Голос требует существующий JWT и permission `vote`; публичные login/register пока в бэклоге. Старый дамп проверяется/импортируется `scripts/import_polls_modx.py`, по умолчанию это dry-run.
 - **Рейтинги**: для статьи, человека, команды и шоу работают независимо от `rating_widget`. Старые агрегаты перенесены в `rating_baselines`, новые анонимные оценки — в `rating_votes`; один подписанный cookie-посетитель имеет один изменяемый голос на страницу. Публичный API отдаёт среднее и только веху количества, без точного счётчика.
 - **Изображения-заглушки** — четыре исходника `backups/images/pattern/{1..4}.jpg` при старте backend копируются в `imported_images_volume`. `frontend/src/utils/media.js` выбирает вариант стабильно по slug/id и использует его для отсутствующих или недоступных изображений карточек и страниц. Не сохранять букву/иконку как отдельную заглушку и не возвращать старые URL `pattern-N.jpeg`.

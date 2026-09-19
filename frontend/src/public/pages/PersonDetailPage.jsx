@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { orderedFacts, personPhotoUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import RelatedArticles from '../components/RelatedArticles';
 import RatingCard from '../components/RatingCard';
+import RelatedNews from '../components/RelatedNews';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
@@ -357,6 +358,10 @@ export default function PersonDetailPage() {
 
         {/* Main content - динамический рендер контентных модулей */}
         <div className="lg:col-span-2 space-y-6 min-w-0">
+          {contentModules.length === 0 && (
+            <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />
+          )}
+
           {/* Tags Cloud Module */}
           {sidebarModules.find(m => m.type === 'tags_cloud') && person.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -372,21 +377,33 @@ export default function PersonDetailPage() {
 
           {/* Content Modules */}
           {contentModules.slice(0, careerInsertIndex).map((module, i) => (
-            <ModuleRenderer key={module.id || i} module={module} index={i} personId={person._id || person.id} />
+            <Fragment key={module.id || i}>
+              <ModuleRenderer module={module} index={i} personId={person._id || person.id} />
+              {i === 0 && (
+                <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />
+              )}
+            </Fragment>
           ))}
 
           {/* Команды, сезоны и роли в турнирах (из составов и participations) */}
           <PersonCareer personSlug={person.slug || person._id} />
           <ShowAppearances personId={person._id || person.id} />
 
-          {contentModules.slice(careerInsertIndex).map((module, i) => (
-            <ModuleRenderer
-              key={module.id || careerInsertIndex + i}
-              module={module}
-              index={careerInsertIndex + i}
-              personId={person._id || person.id}
-            />
-          ))}
+          {contentModules.slice(careerInsertIndex).map((module, i) => {
+            const moduleIndex = careerInsertIndex + i;
+            return (
+              <Fragment key={module.id || moduleIndex}>
+                <ModuleRenderer
+                  module={module}
+                  index={moduleIndex}
+                  personId={person._id || person.id}
+                />
+                {moduleIndex === 0 && (
+                  <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />
+                )}
+              </Fragment>
+            );
+          })}
 
           <ForeignAgentNotice visible={person.foreign_agent_notice} />
           <RelatedArticles contentType="person" contentId={person._id || person.id || person.slug} />
@@ -539,166 +556,7 @@ export function ModuleRenderer({ module, index, personId }) {
         </Card>
       );
     
-    case 'humor_chronicles':
-      return <HumorChroniclesModule module={module} personId={personId} index={index} />;
-    
     default:
       return <CommonModuleRenderer module={module} personId={personId} />;
   }
-}
-
-// Humor Chronicles Module Component
-function HumorChroniclesModule({ module, personId, index }) {
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!personId) {
-      setLoading(false);
-      return;
-    }
-
-    const loadContent = async () => {
-      try {
-        setLoading(true);
-        const res = await publicApi.getPersonLinkedContent(personId, 'news,article,show', 20);
-        setContent(res.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error loading linked content:', err);
-        setError('Не удалось загрузить контент');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [personId]);
-
-  if (loading) {
-    return (
-      <Card id={`humor-chronicles-${index}`} className="my-4">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Загрузка...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error || !content) {
-    return null;
-  }
-
-  const hasContent = (content.news?.length > 0) || (content.article?.length > 0) || (content.show?.length > 0);
-  if (!hasContent) {
-    return null;
-  }
-
-  const title = module.title || module.data?.title || 'Юмористические хроники';
-
-  // Format date helper
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('ru-RU', { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Content item component (compact for mobile)
-  const ContentItem = ({ item, type }) => {
-    const typeLabels = {
-      news: 'Новость',
-      article: 'Статья',
-      show: 'Шоу'
-    };
-    const typeRoutes = {
-      news: '/news',
-      article: '/articles',
-      show: '/shows'
-    };
-    const slug = item.slug || item._id || item.id;
-    const url = `${typeRoutes[type]}/${slug}`;
-    const coverImage = item.cover_image?.url || item.poster?.url || item.cover_image || item.poster;
-
-    return (
-      <Link to={url} className="block">
-        <div className="flex gap-3 p-2 hover:bg-gray-50 rounded transition-colors">
-          {coverImage && (
-            <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden bg-gray-100">
-              <img
-                src={coverImage}
-                alt={item.title || item.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <span className="text-xs text-muted-foreground uppercase">{typeLabels[type]}</span>
-              {item.published_at && (
-                <span className="text-xs text-muted-foreground flex-shrink-0">
-                  {formatDate(item.published_at)}
-                </span>
-              )}
-            </div>
-            <h4 className="font-medium text-sm line-clamp-2 leading-snug">
-              {item.title || item.name}
-            </h4>
-            {item.excerpt && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                {item.excerpt}
-              </p>
-            )}
-          </div>
-        </div>
-      </Link>
-    );
-  };
-
-  return (
-    <Card id={`humor-chronicles-${index}`} className="my-4">
-      <CardContent className="p-4">
-        <h3 className="font-bold text-lg mb-3">{title}</h3>
-        <div className="space-y-3">
-          {content.news && content.news.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">Новости</h4>
-              <div className="space-y-1">
-                {content.news.map((item) => (
-                  <ContentItem key={item._id || item.id} item={item} type="news" />
-                ))}
-              </div>
-            </div>
-          )}
-          {content.article && content.article.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">Статьи</h4>
-              <div className="space-y-1">
-                {content.article.map((item) => (
-                  <ContentItem key={item._id || item.id} item={item} type="article" />
-                ))}
-              </div>
-            </div>
-          )}
-          {content.show && content.show.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">Шоу</h4>
-              <div className="space-y-1">
-                {content.show.map((item) => (
-                  <ContentItem key={item._id || item.id} item={item} type="show" />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
 }

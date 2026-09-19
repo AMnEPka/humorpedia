@@ -46,7 +46,6 @@
 | POST | `/people` ✏️ | создать; если нет `primary_tag` — берётся из title с переставленными словами («Имя Фамилия» → «Фамилия Имя») |
 | GET | `/people` | список, фильтры `status, tag, search, letter`, сортировка по title |
 | GET | `/people/search?q=` | быстрый поиск для селекторов `[{id, name, slug}]` |
-| GET | `/people/{id_or_slug}/linked-content?types=news,article,show` | контент для модуля humor_chronicles |
 | GET | `/people/{id_or_slug}?raw=` | документ; ссылки проверяются, ссылки на людей с `foreign_agent=true` получают динамическую звёздочку и `foreign_agent_notice`; `raw=true` — как в данных (админка) |
 | PUT | `/people/{id}` ✏️ | обновить (services/crud.update_content) |
 | DELETE | `/people/{id}` ✏️ | удалить |
@@ -90,9 +89,15 @@ POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`
 - `quizzes`: POST/GET `/quizzes`, GET `/quizzes/{id_or_slug}`, PUT/DELETE `/quizzes/{id}`
 - `wiki`: POST/GET `/wiki`, GET `/wiki/{id_or_slug}`, PUT/DELETE `/wiki/{id}`
 
-Все write — ✏️. При сохранении `related_person_ids` обновляются связи с людьми (`services/linking.py`).
+Все write — ✏️. Связи новости с целевыми страницами хранятся непосредственно в
+`related_person_ids`, `related_team_ids`, `related_show_ids`.
 Публичные GET статьи и новости проверяют внутренние ссылки и динамически добавляют пометку иностранного агента;
 админка использует `raw=true`, чтобы не записывать сгенерированную разметку.
+
+## related_news.py — `/related-news`
+
+- `GET /{entity_type}/{entity_id}` 🔓, где `entity_type=person|team|show` — максимум три новости новее настроенного порога. Команда КВН и команда шоу различаются по `teams.show_id`; отключённый тип возвращает `enabled=false, items=[]`.
+- `GET /settings` 🛡 и `PUT /settings` 🛡 — глобальные настройки: `enabled`, `freshness_days`, `max_items` (1–3), `apply_to.people/kvn_teams/show_teams/shows`.
 
 ## recommendations.py — `/recommendations`
 `GET /?content_type={article|news|person|team|show|city|kvn}&content_id=&limit=` 🔓 — блок «Читайте также».

@@ -69,11 +69,12 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── routes/
 │   │   ├── auth.py               email login/register (лимиты), refresh (grace 30 дней), VK и Yandex OAuth; JWT-хелперы — в utils/auth.py
 │   │   ├── users.py              управление пользователями (admin)
-│   │   ├── content_people.py     люди + /people/search + linked-content (humor_chronicles)
+│   │   ├── content_people.py     люди + /people/search
 │   │   ├── content_teams.py      команды (1682 строки): bulk-check/create, restore-logos, refresh (self-healing), переименование slug во всех сезонах
 │   │   ├── content_kvn.py        КВН (1267 строк): иерархия, by-path, children, jury-stats, соседние сезоны, update с season_data
 │   │   ├── content_shows.py      шоу с иерархией (by-path, children, hierarchy)
 │   │   ├── content_articles.py / content_news.py / content_quizzes.py / content_wiki.py   простой CRUD через services/crud.py
+│   │   ├── related_news.py       свежие связанные новости + глобальные admin-настройки
 │   │   ├── content_search.py     поиск, автокомплит, по тегу, search-for-links, resolve-link, duplicate
 │   │   ├── sections.py           иерархические разделы (full_path, дерево, каскадное удаление)
 │   │   ├── cities.py             города; люди — редакционная подборка, команды — точное связывание по городу
@@ -102,7 +103,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── ratings.py            cookie-подпись, legacy baseline, upsert голоса и расчёт среднего
 │   │   ├── views_counter.py      батч-счётчик просмотров
 │   │   ├── link_resolver.py      ссылки при выдаче: актуальные адреса (slug, old_id, old_urls, паттерны), отсутствующие страницы — текстом; load_old_id_urls
-│   │   ├── linking.py            related_person_ids → страницы людей, модуль humor_chronicles
+│   │   ├── related_news.py       настройки, выборка ≤3 свежих новостей по явным связям
+│   │   ├── related_news_migration.py  очистка старых HTML-вставок и перенос их связей
 │   │   ├── tags.py               TagService.sync_tags / get_all / search
 │   │   └── city_linking.py       точное сопоставление команд; список людей не строится по месту рождения
 │   ├── utils/
@@ -113,6 +115,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   └── team_matcher.py       нормализация названий команд
 │   ├── tests/                    pytest: test_auth_guards.py (все маршруты: запись без токена → 401/403; роли), test_competitions.py (конвертация, participations), test_memberships.py (разбор составов, роли), test_modx_import.py (дамп MODX, конвертация человека)
 │   └── scripts/                  разовые скрипты данных (запуск: docker compose exec backend python scripts/<file>.py)
+│       ├── migrate_related_news.py   старые секции «Новости» + humor_chronicles → структурированные связи (dry-run/--apply)
+│       ├── seed_related_news_demo.py  10 маркированных локальных демо-новостей (--apply; --cleanup --apply)
 │       ├── migrate_competitions.py    season_data → tournaments/seasons/participations (отчёт; --apply — запись)
 │       ├── migrate_ratings.py        rating/votes_count → неизменяемые rating_baselines (dry-run; --apply — запись)
 │       ├── import_people_modx.py      люди из SQL-дампа MODX через create_person (как админка): --ids/--slugs, --all (--batch 75), --list, --show, --apply, --update
