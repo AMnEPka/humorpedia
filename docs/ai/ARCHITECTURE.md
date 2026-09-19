@@ -45,7 +45,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 ├── DOCKER_VOLUME_SETUP.md        volume images_volume для /images
 ├── BACKUP_SYSTEM.md, RESTORE_BACKUP.md   бэкап/восстановление Mongo
 ├── PERFORMANCE_OPTIMIZATIONS.md  что сделано для нагрузки (lazy, text-индексы, rate limit, pool)
-├── docker-compose.yml            dev: mongodb(--auth) + backend(uvicorn, без reload) + frontend(yarn start)
+├── docker-compose.yml            dev: mongodb(--auth) + backend(uvicorn reload) + frontend(yarn start, polling/HMR)
 ├── docker-compose-cloud.yml      prod: mongodb(--auth, порт не публикуется) + backend(gunicorn 4×UvicornWorker) + backup(раз в сутки) + frontend(nginx); требует .env
 ├── uploads/2025/12, 2026/01      несколько загруженных картинок
 │
@@ -54,7 +54,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── start.sh                  entrypoint: restore_backup.py → exec CMD
 │   ├── Dockerfile                python:3.11-slim + mongodb-database-tools + mongosh; ENTRYPOINT чинит CRLF
 │   ├── Dockerfile-cloud          без mongo tools, gunicorn
-│   ├── requirements.txt          прямые runtime-зависимости (pinned); requirements-dev.txt — pytest
+│   ├── requirements.txt          прямые runtime-зависимости (pinned); requirements-dev.txt — pytest, включён только в локальный dev-образ
 │   ├── init_admin.py             CLI: создать админа / сбросить пароль (--email, --username, --reset; пароль из ADMIN_PASSWORD или ввод)
 │   ├── link_cities.py            cron-скрипт: обновить команды городов, не меняя редакционный список людей
 │   ├── models/
@@ -134,7 +134,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │       └── fix_mongo_user.py          пересоздание пользователя Mongo
 │
 ├── frontend/                     см. FRONTEND.md
-│   ├── craco.config.js           алиас @, прокси dev-сервера, отключение watch в Docker, health-check плагин (ENABLE_HEALTH_CHECK)
+│   ├── craco.config.js           алиас @, прокси dev-сервера, polling/HMR в Docker с исключением тяжёлых каталогов, health-check плагин (ENABLE_HEALTH_CHECK)
 │   ├── nginx.conf                SPA fallback, кэш статики 1y, no-store для index.html и config.js
 │   ├── public/config.js          window.__BACKEND_URL__ = http://localhost:8001 для localhost
 │   ├── plugins/health-check/     опциональный health-check для dev-сервера (`ENABLE_HEALTH_CHECK=true`)
@@ -176,7 +176,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 | `MONGO_INITDB_ROOT_USERNAME/PASSWORD` | compose | учётка Mongo (дефолт `humorpedia` / `change_me_in_prod`) |
 | `REACT_APP_BACKEND_URL` | frontend | URL бэкенда (в prod вшивается build-arg) |
 | `REACT_APP_USE_API_PROXY` | frontend | `true` → запросы на относительный `/api` |
-| `DOCKER_ENV` | frontend | `true` → отключает watch/HMR |
+| `DOCKER_ENV` | frontend | `true` → включает Docker polling для watch; HMR остаётся активным |
 | `CACHEBUST` | frontend build | сброс кэша слоёв Docker |
 
 ## 4. Docker volumes

@@ -25,19 +25,20 @@
 - **Backend**: Python 3.11, FastAPI 0.110, Motor (async MongoDB), Pydantic v2, PyJWT + bcrypt, slowapi, cachetools. Точка входа `backend/server.py`.
 - **Frontend**: React 19 + CRA через CRACO, React Router 7, Tailwind + shadcn/ui (Radix), TipTap/react-quill (редакторы), dnd-kit, axios. Алиас `@` → `frontend/src`. Пакетный менеджер — **yarn**.
 - **БД**: MongoDB 6, база `humorpedia`. Отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`.
-- **Инфра**: `docker-compose.yml` (dev, mongo с auth, hot reload выключен), `docker-compose-cloud.yml` (прод: gunicorn ×4 воркера, nginx-статика фронта).
+- **Инфра**: `docker-compose.yml` (dev, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (прод: gunicorn ×4 воркера, nginx-статика фронта).
 
 ## Запуск
 
 ```bash
-docker compose up --build          # dev: фронт :3000, бэк :8001, mongo внутри сети
-docker compose restart backend     # после правок Python (reload выключен)
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-sync.ps1  # новая/переключённая ветка
+docker compose up -d               # повторный запуск уже синхронизированного dev-стека
 ```
-- В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси CRA (`REACT_APP_USE_API_PROXY=true`, см. `frontend/craco.config.js`). В Docker фронт не отслеживает изменения файлов вообще (`craco.config.js`: watch ignored) — после правок или `git pull`/merge нужен `docker compose restart frontend`, иначе работает старый код (как и бэкенду — `restart backend`).
+- **Local-first обязателен**: после создания/переключения ветки основной агент сначала запускает `scripts/dev-sync.ps1`; подробные правила — [AGENTS.md](AGENTS.md). Скрипт пересобирает образы, синхронизирует именованный `frontend_node_modules`, поднимает стек и ждёт готовности :8001/:3000.
+- В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси CRA (`REACT_APP_USE_API_PROXY=true`, см. `frontend/craco.config.js`). Python-код автоматически перезапускает Uvicorn, изменения `frontend/src` пересобираются polling-наблюдателем с HMR. После правок зависимостей, Dockerfile или Compose повторить полный `dev-sync.ps1`.
 - Swagger: http://localhost:8001/docs.
 - При старте бэкенд создаёт индексы (каждый независимо), первого админа из `ADMIN_EMAIL`/`ADMIN_PASSWORD` (только если админов в БД нет; вручную — `python init_admin.py --email … [--reset]`) и запускает батч-счётчик просмотров. `backend/start.sh` перед стартом зовёт `scripts/restore_backup.py` (восстанавливает БД из бэкапа, если она пустая).
 - Переменные окружения — шаблон `.env.example` (в корне; `.env` не коммитится). Прод (`ENVIRONMENT=production`) не стартует без `JWT_SECRET` ≥32 символов; compose-cloud требует `MONGO_INITDB_ROOT_PASSWORD`.
-- Тесты: `cd backend && pytest tests` (нужны `requirements.txt` + `requirements-dev.txt`); в CI — GitHub Actions `.github/workflows/tests.yml`.
+- Тесты локального стека: `docker compose exec -T backend pytest -q tests` и `docker compose exec -T frontend yarn test --watchAll=false --runInBand`; dev-образ backend включает `requirements-dev.txt`, production — нет. В CI — GitHub Actions `.github/workflows/tests.yml`.
 
 ## Устройство кода (коротко)
 

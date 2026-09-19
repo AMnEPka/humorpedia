@@ -136,5 +136,5 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 - Статус иностранного агента задаётся переключателем в `PersonEditPage`; звёздочку и поясняющий блок в HTML вручную не добавлять.
 - HTML из БД выводить только через `sanitizeHTML` (DOMPurify).
 - Заголовок вкладки — через `<WithTitle title="...">` в App.js или `usePageTitle`.
-- В Docker hot reload отключён (`DOCKER_ENV=true`) — после правок обновлять страницу вручную; для HMR запускать фронт локально (`yarn start` в `frontend/`, бэкенд на :8001).
+- В Docker (`DOCKER_ENV=true`) изменения `frontend/src` отслеживаются polling-наблюдателем раз в секунду; тяжёлые каталоги и медиа исключены, HMR/live reload включены. После смены ветки или зависимостей запускать корневой `scripts/dev-sync.ps1`.
 - `plugins/health-check` подключается только при `ENABLE_HEALTH_CHECK=true`; старый неиспользуемый `plugins/visual-edits` удалён.
