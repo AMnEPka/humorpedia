@@ -7,6 +7,7 @@ from typing import Optional
 from models.base import ContentStatus
 from models.content import Person, PersonCreate, PersonUpdate
 from utils.database import get_db
+from utils.search import literal_search_pattern
 from services.crud import (
     check_slug_unique, create_content, update_content,
     delete_content, get_by_id_or_slug, list_alphabetical_content, build_query,
@@ -73,10 +74,11 @@ async def list_people(
 async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10, ge=1, le=50)):
     """Search people by name for editor assistance."""
     db = await get_db()
+    search_pattern = literal_search_pattern(q)
     query = {
         "$or": [
-            {"full_name": {"$regex": q, "$options": "i"}},
-            {"title": {"$regex": q, "$options": "i"}}
+            {"full_name": {"$regex": search_pattern, "$options": "i"}},
+            {"title": {"$regex": search_pattern, "$options": "i"}}
         ]
     }
     cursor = db.people.find(query, {"_id": 1, "full_name": 1, "title": 1, "slug": 1}).limit(limit)

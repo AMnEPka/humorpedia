@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from models.user import User, UserUpdate, UserAdminUpdate, UserRole
 from utils.database import get_db
 from utils.auth import get_current_user, require_user, require_admin
+from utils.search import literal_search_pattern
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -27,9 +28,10 @@ async def list_users(
     if role:
         query["role"] = role
     if search:
+        search_pattern = literal_search_pattern(search)
         query["$or"] = [
-            {"username": {"$regex": search, "$options": "i"}},
-            {"email": {"$regex": search, "$options": "i"}}
+            {"username": {"$regex": search_pattern, "$options": "i"}},
+            {"email": {"$regex": search_pattern, "$options": "i"}}
         ]
     if banned is not None:
         query["banned"] = banned

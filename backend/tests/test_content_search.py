@@ -70,6 +70,20 @@ def test_equal_prefixes_are_ordered_by_primary_field_then_alphabetically():
     assert [item["_id"] for item in ranked] == ["primary", "wanted", "short"]
 
 
+def test_relevance_treats_yo_as_e_for_project_title():
+    items = [
+        {"_id": "news", "title": "История шоу Звёзды"},
+        {"_id": "show", "title": "Звёзды на НТВ"},
+    ]
+
+    ranked = sorted(items, key=lambda item: _relevance_key(item, ["title"], "звезды"))
+
+    assert [item["_id"] for item in ranked] == ["show", "news"]
+    assert _partial_search_query("звезды", ["title"])["$and"][1]["$or"][0] == {
+        "title": {"$regex": "зв[её]зды", "$options": "i"}
+    }
+
+
 def test_ranked_search_uses_partial_query_and_returns_best_matches_first():
     collection = FakeCollection([
         {"_id": "word", "full_name": "Александр Гудков"},

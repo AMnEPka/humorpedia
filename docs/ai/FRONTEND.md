@@ -16,6 +16,7 @@ utils/
   number.js                    formatDecimalTrim, roundTo (баллы КВН)
   team.js                      cleanTeamName
   media.js                     URL медиа, personPhotoUrl/teamLogoUrl/contentImageUrl, стабильный выбор одной из 4 фирменных заглушек, orderedFacts
+  search.js                    normalizeSearchText: единая нормализация локальных фильтров, включая эквивалентность е/ё
   (public/components/ContentTable.jsx — таблица модуля `table`: пояснение, сортировка по столбцам)
 components/
   ui/*                         shadcn/ui (Radix) — генерированные, не трогать без нужды

@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { contentApi } from '../utils/api';
+import { normalizeSearchText } from '@/utils/search';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -174,18 +175,18 @@ export default function GameTeamSelector({
     const searchTeams = () => {
       setLoading(true);
       try {
-        const searchLower = search.trim().toLowerCase();
+        const searchLower = normalizeSearchText(search);
         // Нормализуем поисковый запрос (убираем пробелы, приводим к нижнему регистру)
         const normalizedSearch = searchLower.replace(/\s+/g, '');
         
         // Ищем только среди команд сезона
         const filtered = (seasonAllTeams || []).filter(team => {
           const teamName = (typeof team === 'object' && team !== null)
-            ? (team.name || team.team_name || '').toLowerCase()
-            : String(team).toLowerCase();
+            ? normalizeSearchText(team.name || team.team_name || '')
+            : normalizeSearchText(team);
           const teamSlug = (typeof team === 'object' && team !== null)
-            ? (team.slug || team.team_slug || team.id || '').toLowerCase()
-            : String(team).toLowerCase();
+            ? normalizeSearchText(team.slug || team.team_slug || team.id || '')
+            : normalizeSearchText(team);
           
           // Нормализуем названия команд (убираем пробелы для сравнения)
           const normalizedName = teamName.replace(/\s+/g, '');

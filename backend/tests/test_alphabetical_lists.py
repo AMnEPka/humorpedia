@@ -48,3 +48,9 @@ def test_query_builder_treats_search_and_letter_as_literal_text():
 
     assert query["$or"][0]["title"]["$regex"] == r"\["
     assert query["title"]["$regex"] == r"^\."
+
+
+def test_query_builder_treats_e_and_yo_as_equivalent_in_text_search():
+    query = build_query(search="звезды", search_fields=["title"])
+
+    assert query["$or"][0]["title"]["$regex"] == "зв[её]зды"

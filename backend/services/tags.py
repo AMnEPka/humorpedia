@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from utils.database import get_db
+from utils.search import literal_search_pattern
 
 
 # Transliteration map for cyrillic -> latin slugs
@@ -84,7 +85,7 @@ class TagService:
         """Search tags by name"""
         db = await get_db()
         # Escape special regex characters in query to prevent regex errors
-        escaped_query = re.escape(query)
+        escaped_query = literal_search_pattern(query)
         cursor = db.tags.find(
             {"name": {"$regex": escaped_query, "$options": "i"}},
             {"name": 1, "_id": 0}

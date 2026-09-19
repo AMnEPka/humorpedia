@@ -26,6 +26,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { contentApi } from '../utils/api';
+import { normalizeSearchText } from '@/utils/search';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -339,23 +340,23 @@ export default function TeamSelector({
       }));
 
       // Нормализуем названия для сравнения
-      const normalizedName = teamName.toLowerCase().trim();
-      const normalizedCity = city.toLowerCase().trim();
+      const normalizedName = normalizeSearchText(teamName);
+      const normalizedCity = normalizeSearchText(city);
 
       // Ищем точное совпадение по названию
       let match = teams.find(team => {
-        const teamNameNorm = (team.name || team.title || '').toLowerCase().trim();
+        const teamNameNorm = normalizeSearchText(team.name || team.title || '');
         return teamNameNorm === normalizedName;
       });
 
       // Если есть город, проверяем его тоже
       if (match && normalizedCity) {
-        const teamCityNorm = (match.city || '').toLowerCase().trim();
+        const teamCityNorm = normalizeSearchText(match.city || '');
         if (teamCityNorm && !teamCityNorm.includes(normalizedCity) && !normalizedCity.includes(teamCityNorm)) {
           // Город не совпадает, ищем дальше
           match = teams.find(team => {
-            const teamNameNorm = (team.name || team.title || '').toLowerCase().trim();
-            const teamCityNorm = (team.city || '').toLowerCase().trim();
+            const teamNameNorm = normalizeSearchText(team.name || team.title || '');
+            const teamCityNorm = normalizeSearchText(team.city || '');
             return teamNameNorm === normalizedName && 
                    teamCityNorm && 
                    (teamCityNorm.includes(normalizedCity) || normalizedCity.includes(teamCityNorm));
@@ -366,7 +367,7 @@ export default function TeamSelector({
       // Если не нашли точное совпадение, ищем частичное
       if (!match) {
         match = teams.find(team => {
-          const teamNameNorm = (team.name || team.title || '').toLowerCase().trim();
+          const teamNameNorm = normalizeSearchText(team.name || team.title || '');
           return teamNameNorm.includes(normalizedName) || normalizedName.includes(teamNameNorm);
         });
       }

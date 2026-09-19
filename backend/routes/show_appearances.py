@@ -1,5 +1,4 @@
 """Публичные взаимные ссылки и ручная проверка участников шоу редактором."""
-import re
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -8,6 +7,7 @@ from pydantic import BaseModel, Field
 from services.show_appearances import SHOW_PATHS, public_rows, sync
 from utils.auth import require_editor
 from utils.database import get_db
+from utils.search import literal_search_pattern
 
 router = APIRouter(prefix='/show-appearances', tags=['show-appearances'])
 
@@ -22,7 +22,7 @@ async def review(q: str = '', show_id: Optional[str] = None, unresolved: bool = 
                  skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     db = await get_db()
     query = {}
-    if q: query['person_name'] = {'$regex': re.escape(q), '$options': 'i'}
+    if q: query['person_name'] = {'$regex': literal_search_pattern(q), '$options': 'i'}
     if show_id: query['show_id'] = show_id
     if unresolved: query['person_id'] = None
     items = await db.show_appearances.find(query).sort([('person_name', 1), ('show_path', 1)]).skip(skip).limit(limit).to_list(limit)
