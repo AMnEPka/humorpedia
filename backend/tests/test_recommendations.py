@@ -5,11 +5,13 @@ from pydantic import ValidationError
 
 from models.recommendation import DEFAULT_RECOMMENDATION_TYPES, RecommendationSettings
 from services.recommendations import (
+    daily_order,
     get_recommendation_settings,
     public_item,
     rank_candidates,
     recommendations_for,
     save_recommendation_settings,
+    source_internal_urls,
 )
 
 
@@ -75,7 +77,8 @@ class _Db:
     def __init__(self, **collections):
         names = [
             "site_settings", "articles", "news", "people", "teams", "shows",
-            "cities", "kvn", "sections", "quizzes",
+            "cities", "kvn", "sections", "quizzes", "memberships", "show_appearances",
+            "participations", "tournaments",
         ]
         for name in names:
             setattr(self, name, _Collection(collections.get(name)))
@@ -125,6 +128,39 @@ def test_rank_mixed_content_prefers_direct_relation_then_tags():
     ]
 
 
+def test_source_internal_urls_collects_rendered_links_only():
+    source = {
+        "modules": [{
+            "data": {
+                "content": (
+                    '<a href="/city/voronezh?from=team">Воронеж</a>'
+                    '<a href="https://humorpedia.ru/people/yuliya-akhmedova#bio">Юлия</a>'
+                    '<a href="https://example.com/people/external">Внешняя</a>'
+                ),
+            },
+        }],
+        "cover_image": {"url": "/media/team.jpg"},
+    }
+
+    assert source_internal_urls(source) == {
+        "/city/voronezh", "/people/yuliya-akhmedova", "/media/team.jpg",
+    }
+
+
+def test_daily_order_is_stable_within_day_and_rotates_between_days():
+    candidates = [
+        {"_id": str(index), "_recommendation_type": "article"}
+        for index in range(10)
+    ]
+
+    first = [item["_id"] for item in daily_order(candidates, "team", "team-1", "2026-09-19", "related")]
+    repeat = [item["_id"] for item in daily_order(candidates, "team", "team-1", "2026-09-19", "related")]
+    next_day = [item["_id"] for item in daily_order(candidates, "team", "team-1", "2026-09-20", "related")]
+
+    assert first == repeat
+    assert first != next_day
+
+
 def test_manual_articles_keep_priority_then_mixed_automatic_results():
     db = _Db(
         site_settings=[{
@@ -145,10 +181,84 @@ def test_manual_articles_keep_priority_then_mixed_automatic_results():
     result = asyncio.run(recommendations_for(db, "article", "current"))
 
     assert result["enabled"] is True
-    assert [(item["id"], item["type"], item["manual"]) for item in result["items"]] == [
-        ("manual", "article", True),
-        ("person", "person", False),
-        ("automatic", "article", False),
+    assert (result["items"][0]["id"], result["items"][0]["manual"]) == ("manual", True)
+    assert {item["id"] for item in result["items"][1:]} == {"person", "automatic"}
+
+
+def test_recommendations_exclude_links_already_on_page_and_add_daily_discovery():
+    db = _Db(
+        site_settings=[{
+            "_id": "recommendations", "max_items": 3,
+            "result_types": ["person", "city", "show", "kvn", "quiz"],
+        }],
+        teams=[{
+            "_id": "team", "slug": "25", "title": "25-ая", "status": "published", "tags": ["КВН"],
+            "modules": [{"data": {"content": (
+                '<a href="/city/voronezh">Воронеж</a>'
+                '<a href="/people/linked-person">Участник</a>'
+            )}}],
+        }],
+        people=[
+            {"_id": "linked", "slug": "linked-person", "title": "Уже на странице", "status": "published",
+             "tags": ["КВН"]},
+            {"_id": "related-1", "slug": "related-1", "title": "Связанный 1", "status": "published",
+             "tags": ["КВН"]},
+            {"_id": "related-2", "slug": "related-2", "title": "Связанный 2", "status": "published",
+             "tags": ["КВН"]},
+        ],
+        cities=[{"_id": "city", "slug": "voronezh", "title": "Воронеж", "status": "published", "tags": ["КВН"]}],
+        memberships=[{"_id": "membership", "team_id": "team", "person_id": "linked", "person_slug": "linked-person"}],
+        show_appearances=[{"_id": "appearance", "person_id": "linked", "show_id": "shown-show"}],
+        shows=[{"_id": "shown-show", "slug": "shown-show", "title": "Уже показанное шоу", "status": "published",
+                "tags": ["КВН"]}],
+        participations=[{
+            "_id": "participation", "team_id": "team", "kind": "season", "season_status": "published",
+            "season_path": "kvn/vl-kvn/vl-2026", "tournament_id": "tournament",
+        }],
+        tournaments=[{"_id": "tournament", "page_path": "kvn/vl-kvn"}],
+        kvn=[
+            {"_id": "league", "slug": "vl-kvn", "full_path": "kvn/vl-kvn", "title": "Высшая лига",
+             "status": "published", "tags": ["КВН"]},
+            {"_id": "season", "slug": "vl-2026", "full_path": "kvn/vl-kvn/vl-2026", "title": "Сезон",
+             "status": "published", "tags": ["КВН"]},
+        ],
+        quizzes=[{"_id": "quiz", "slug": "random-quiz", "title": "Случайная находка", "status": "published"}],
+    )
+
+    result = asyncio.run(recommendations_for(
+        db, "team", "team", rotation_day="2026-09-19",
+    ))
+
+    assert {item["id"] for item in result["items"][:2]} == {"related-1", "related-2"}
+    assert result["items"][2]["id"] == "quiz"
+    assert {item["url"] for item in result["items"]}.isdisjoint({
+        "/city/voronezh", "/people/linked-person", "/shows/shown-show",
+        "/kvn/vl-kvn", "/kvn/vl-kvn/vl-2026",
+    })
+
+
+def test_manual_article_keeps_priority_even_when_already_linked_in_content():
+    db = _Db(
+        site_settings=[{
+            "_id": "recommendations", "max_items": 2, "result_types": ["article", "quiz"],
+        }],
+        articles=[
+            {
+                "_id": "current", "slug": "current", "title": "Текущая", "status": "published",
+                "related_article_ids": ["manual"],
+                "modules": [{"data": {"content": '<a href="/articles/manual">Ручная</a>'}}],
+            },
+            {"_id": "manual", "slug": "manual", "title": "Ручная", "status": "published"},
+        ],
+        quizzes=[{"_id": "quiz", "slug": "quiz", "title": "Квиз", "status": "published"}],
+    )
+
+    result = asyncio.run(recommendations_for(
+        db, "article", "current", rotation_day="2026-09-19",
+    ))
+
+    assert [(item["id"], item["manual"]) for item in result["items"]] == [
+        ("manual", True), ("quiz", False),
     ]
 
 
