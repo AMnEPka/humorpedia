@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Calendar, Users, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
+import { Loader2, Calendar, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,6 @@ import {
 } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
 import ForeignAgentNotice, { ForeignAgentMarker } from '../components/ForeignAgentNotice';
-import { teamUrl } from '@/utils/teams';
 import { orderedFacts, personPhotoUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import RelatedArticles from '../components/RelatedArticles';
@@ -328,30 +327,6 @@ export default function PersonDetailPage() {
 
           <RatingCard entityType="person" entityId={person._id || person.id} />
 
-          {/* Teams */}
-          {person.teams?.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5" /> Команды
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="space-y-2">
-                  {person.teams.map((team, i) => (
-                    <Link 
-                      key={i} 
-                      to={teamUrl(team)}
-                      className="block p-2 rounded hover:bg-gray-100 transition-colors"
-                    >
-                      {team.title || team.name}
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Table of Contents */}
           <TableOfContents modules={contentModules} contentType="person" />
         </div>
@@ -385,7 +360,7 @@ export default function PersonDetailPage() {
             </Fragment>
           ))}
 
-          {/* Команды, сезоны и роли в турнирах (из составов и participations) */}
+          {/* Команды КВН из составов и роли в турнирах */}
           <PersonCareer personSlug={person.slug || person._id} />
           <ShowAppearances personId={person._id || person.id} />
 

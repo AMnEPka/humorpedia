@@ -193,4 +193,4 @@ GET `/teams/{id_or_slug}/members` · POST `/memberships` ✏️ · PUT `/members
 
 ## show_appearances.py — `/show-appearances` (участие людей в шоу)
 GET `/people/{person_id}` 🔓 · GET `/review` ✏️ · POST `/sync` ✏️ · PATCH `/review/{id}` ✏️ · POST `/review/{id}/create-person` ✏️.
-Публичный метод отдаёт участие для страницы человека; в существующие карточки участников шоу проверенные ссылки добавляет `content_shows.py`. Проверка, ручная привязка и создание одного черновика доступны редактору. Подробно — [SHOW_APPEARANCES.md](SHOW_APPEARANCES.md).
+Публичный метод отдаёт участие для страницы человека: `show_url` ведёт на проект, а `link_url` — на проект для индивидуальной записи и на команду для командной. В существующие карточки участников шоу проверенные ссылки добавляет `content_shows.py`. Проверка, ручная привязка и создание одного черновика доступны редактору. Подробно — [SHOW_APPEARANCES.md](SHOW_APPEARANCES.md).

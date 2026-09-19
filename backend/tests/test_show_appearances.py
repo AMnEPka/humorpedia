@@ -4,7 +4,9 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import services.show_appearances as appearances
-from services.show_appearances import apply_participant_card_links, extract, choose, caption, table_grid, Tree, text
+from services.show_appearances import (
+    Tree, appearance_url, apply_participant_card_links, caption, choose, extract, table_grid, text,
+)
 
 
 def show(path, content='', modules=None):
@@ -37,6 +39,14 @@ def test_team_membership_links_to_show_without_flattening_team():
     rows, _ = extract([show('zvezdy-ntv')], PEOPLE, [team], [member])
     assert len(rows) == 1 and rows[0]['person_id'] == 'ivan'
     assert caption(rows[0], 'Звёзды на НТВ') == 'Участник проекта «Звёзды на НТВ» в составе команды «Плюшки»'
+
+
+def test_appearance_link_targets_team_only_for_team_entry():
+    show_doc = {'slug': 'improv-teams', 'full_path': 'improv-teams'}
+    team = {'slug': 'fantasticheskie', 'show_id': 'show', 'full_path': 'improv-teams/teams/fantasticheskie'}
+
+    assert appearance_url({'team_id': 'team', 'group_kind': 'group'}, show_doc, team) == '/shows/improv-teams/teams/fantasticheskie'
+    assert appearance_url({'group_kind': ''}, show_doc, None) == '/shows/improv-teams'
 
 
 def test_ubojnaya_counts_main_group_and_first_episode():

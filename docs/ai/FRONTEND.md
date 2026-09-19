@@ -39,9 +39,9 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     RelatedNews.jsx            компактный блок ≤3 свежих новостей после первого контентного блока
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
-    ShowAppearances.jsx        блок участия в шоу только на странице человека
+    ShowAppearances.jsx        «Участие в других проектах»: индивидуальная ссылка на шоу, командная — на команду
     ArticleCard.jsx, NewsCard.jsx, MultiSelectWithSearch.jsx
-    competitions/              TeamParticipations (участие команды в турнирах), TeamRoster (состав), PersonCareer (команды и роли человека), labels.js
+    competitions/              TeamParticipations (участие команды в турнирах), TeamRoster (состав), PersonCareer («Команды КВН» и роли человека), labels.js
   pages/
     HomePage.jsx               новости, популярные/случайная статья
     SectionDetailPage.jsx      CATCH-ALL `/*`: kvn/by-path → sections/path → redirects/lookup; при season_data отдаёт SeasonDetailPage; таблицы чемпионов лиг

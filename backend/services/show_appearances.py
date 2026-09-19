@@ -12,6 +12,7 @@ from collections import defaultdict
 from html.parser import HTMLParser
 
 from services.memberships import PersonLookup, name_key
+from services.show_teams import team_url
 
 # Точные пути: вложенное шоу не означает включение всего родительского раздела.
 TEAM_SHOWS = ('igra', 'zvezdy-ntv', 'ls', 'improv-teams', 'liga-gorodov', 'komandy', 'kontserty', 'superliga')
@@ -445,6 +446,13 @@ def caption(row, show_title):
     return result
 
 
+def appearance_url(row, show, team=None):
+    """Командное участие ведёт на команду, индивидуальное — на основной проект."""
+    if row.get('team_id') and team:
+        return team_url(team)
+    return '/shows/' + (show.get('full_path') or show['slug'])
+
+
 async def sync(db, apply=False):
     shows = await db.shows.find({}).to_list(None)
     people = await db.people.find({}, {'title': 1, 'full_name': 1, 'slug': 1, 'old_urls': 1, 'modules': 1}).to_list(None)
@@ -507,7 +515,10 @@ async def public_rows(db, *, person_id=None, show_id=None):
     people = {p['_id']: p for p in await db.people.find({'_id': {'$in': [r['person_id'] for r in rows]}, **available}, {'title': 1, 'full_name': 1, 'slug': 1}).to_list(None)}
     shows = {s['_id']: s for s in await db.shows.find({'_id': {'$in': [r['show_id'] for r in rows]}, **available}, {'title': 1, 'full_path': 1, 'slug': 1}).to_list(None)}
     sources = {s['_id'] for s in await db.shows.find({'_id': {'$in': [r['source_page_id'] for r in rows]}, **available}, {'_id': 1}).to_list(None)}
-    teams = {t['_id'] for t in await db.teams.find({'_id': {'$in': [r.get('team_id') for r in rows]}, **available}, {'_id': 1}).to_list(None)}
+    teams = {t['_id']: t for t in await db.teams.find(
+        {'_id': {'$in': [r.get('team_id') for r in rows]}, **available},
+        {'slug': 1, 'show_id': 1, 'full_path': 1},
+    ).to_list(None)}
     by_person = defaultdict(list)
     for row in rows:
         if (row['person_id'] in people and row['show_id'] in shows and row['source_page_id'] in sources
@@ -517,9 +528,10 @@ async def public_rows(db, *, person_id=None, show_id=None):
     for pid, variants in by_person.items():
         for row in choose(variants):
             show, person = shows[row['show_id']], people[pid]
+            show_url = '/shows/' + (show.get('full_path') or show['slug'])
             result.append({'id': row['_id'], 'person_id': pid, 'person_name': person.get('full_name') or person['title'],
                            'person_url': '/people/' + person['slug'], 'show_title': show['title'],
-                           'show_url': '/shows/' + (show.get('full_path') or show['slug']),
+                           'show_url': show_url, 'link_url': appearance_url(row, show, teams.get(row.get('team_id'))),
                            'caption': caption(row, show['title'])})
     return sorted(result, key=lambda r: (r['show_title'], r['person_name']))
 
