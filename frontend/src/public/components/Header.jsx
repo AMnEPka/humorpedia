@@ -1,14 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, User, LogIn, Loader2 } from 'lucide-react';
+import { Search, Menu, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import publicApi from '../utils/api';
 
@@ -75,11 +69,12 @@ export default function Header() {
 
   useEffect(() => {
     // Load autocomplete suggestions
-    if (searchQuery.length >= 2) {
+    const query = searchQuery.trim();
+    if (query.length >= 2) {
       setLoadingSuggestions(true);
       let cancelled = false;
       const timer = setTimeout(() => {
-        publicApi.searchAutocomplete(searchQuery)
+        publicApi.searchAutocomplete(query)
           .then(res => {
             if (cancelled) {
               return;
@@ -239,23 +234,6 @@ export default function Header() {
                 </Button>
               )}
             </div>
-
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-gray-600">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to="/login">Войти</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/register">Регистрация</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Mobile menu button */}
             <Button

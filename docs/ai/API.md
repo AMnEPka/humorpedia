@@ -110,8 +110,8 @@ POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`
 |---|---|---|
 | GET | `/search-for-links?q=` | поиск для вставки внутренних ссылок в редакторе |
 | GET | `/{content_type}/{id_or_slug}/resolve-link` | актуальный URL сущности |
-| GET | `/search?q=` | полнотекстовый поиск (text-индексы, 60/мин) |
-| GET | `/search/autocomplete?q=` | автокомплит (120/мин) |
+| GET | `/search?q=` | поиск по подстроке от 2 символов с ранжированием совпадений (60/мин) |
+| GET | `/search/autocomplete?q=` | автокомплит от 2 символов, общая сортировка по релевантности (120/мин) |
 | GET | `/search/by-tag/{tag}` | весь контент с тегом |
 | POST | `/{content_type}/{id}/duplicate` ✏️ | дублировать документ |
 

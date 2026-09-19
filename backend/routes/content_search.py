@@ -5,8 +5,9 @@ from typing import Optional
 from datetime import datetime, timezone
 
 import copy as copy_module
-import uuid
 import logging
+import re
+import uuid
 
 from utils.database import get_db
 from services.crud import (
@@ -19,6 +20,68 @@ logger = logging.getLogger(__name__)
 
 # Rate limiter for search endpoints (общий экземпляр)
 from utils.rate_limit import limiter
+
+
+def _normalized_search_query(query: str) -> str:
+    """Normalize user whitespace without changing the displayed spelling."""
+    return " ".join(query.split())
+
+
+def _partial_search_query(query: str, fields: list[str]) -> dict:
+    """Build a literal, case-insensitive substring search for MongoDB."""
+    escaped_query = re.escape(query)
+    return {
+        "$and": [
+            {"status": {"$ne": "archived"}},
+            {"$or": [
+                {field: {"$regex": escaped_query, "$options": "i"}}
+                for field in fields
+            ]},
+        ]
+    }
+
+
+def _relevance_key(document: dict, fields: list[str], query: str, type_order: int = 0) -> tuple:
+    """Rank exact, title-prefix, word-prefix and substring matches in that order."""
+    needle = _normalized_search_query(query).casefold()
+    best = (4, 10**9, 10**9, len(fields), "")
+
+    for field_order, field in enumerate(fields):
+        value = _normalized_search_query(str(document.get(field) or ""))
+        haystack = value.casefold()
+        position = haystack.find(needle)
+        if position < 0:
+            continue
+
+        if haystack == needle:
+            match_kind = 0
+        elif position == 0:
+            match_kind = 1
+        elif re.search(rf"(?<!\w){re.escape(needle)}", haystack):
+            match_kind = 2
+        else:
+            match_kind = 3
+
+        best = min(best, (match_kind, position, len(haystack), field_order, haystack))
+
+    return (
+        best[0], best[1], type_order, best[3], best[4], best[2],
+        str(document.get("_id", "")),
+    )
+
+
+async def _find_ranked_matches(
+    collection,
+    fields: list[str],
+    query: str,
+    limit: int,
+    projection: dict,
+) -> list[dict]:
+    """Fetch a bounded candidate set and return its most relevant matches."""
+    candidate_limit = min(max(limit * 5, 100), 500)
+    cursor = collection.find(_partial_search_query(query, fields), projection).limit(candidate_limit)
+    items = await cursor.to_list(candidate_limit)
+    return sorted(items, key=lambda item: _relevance_key(item, fields, query))[:limit]
 
 router = APIRouter(prefix="/content", tags=["search"], dependencies=[Depends(require_editor_on_write)])
 
@@ -150,15 +213,18 @@ async def search_all(
     types: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100)
 ):
-    """Search across all content types."""
+    """Search across all content types by a literal fragment of two or more characters."""
     db = await get_db()
+    query_text = _normalized_search_query(q)
+    if len(query_text) < 2:
+        raise HTTPException(status_code=422, detail="Поисковый запрос должен содержать минимум 2 символа")
 
-    search_types = types.split(",") if types else ["person", "team", "show", "article", "news", "wiki", "section"]
+    search_types = [item.strip() for item in types.split(",")] if types else ["person", "team", "show", "article", "news", "wiki", "section"]
 
     collection_map = {
-        "person": ("people", ["title", "full_name"]),
-        "team": ("teams", ["title", "name"]),
-        "show": ("shows", ["title", "name"]),
+        "person": ("people", ["full_name", "title"]),
+        "team": ("teams", ["name", "title"]),
+        "show": ("shows", ["name", "title"]),
         "article": ("articles", ["title"]),
         "news": ("news", ["title"]),
         "wiki": ("wiki", ["title"]),
@@ -171,17 +237,11 @@ async def search_all(
             continue
         coll_name, fields = collection_map[content_type]
         collection = getattr(db, coll_name)
-        
+
         # Draft pages are valid public results; only archived content is hidden.
-        query = {
-            "$and": [
-                {"status": {"$ne": "archived"}},
-                {"$text": {"$search": q}}
-            ]
-        }
-        
-        cursor = collection.find(query, {"modules": 0}).limit(limit)
-        items = await cursor.to_list(limit)
+        items = await _find_ranked_matches(
+            collection, fields, query_text, limit, {"modules": 0}
+        )
         if content_type == "team":
             await attach_show_info(db, items)
         if items:
@@ -197,30 +257,30 @@ async def search_autocomplete(
     q: str = Query(..., min_length=2),
     limit: int = Query(5, ge=1, le=20)
 ):
-    """Fast autocomplete search across all content."""
+    """Autocomplete by a literal fragment, globally ordered by relevance."""
     db = await get_db()
+    query_text = _normalized_search_query(q)
+    if len(query_text) < 2:
+        raise HTTPException(status_code=422, detail="Поисковый запрос должен содержать минимум 2 символа")
 
     suggestions = []
     collections_config = [
-        ("people", "full_name", "person"),
-        ("teams", "name", "team"),
-        ("shows", "name", "show"),
-        ("articles", "title", "article"),
-        ("news", "title", "news"),
-        ("sections", "title", "section"),
+        ("people", ["full_name", "title"], "person"),
+        ("teams", ["name", "title"], "team"),
+        ("shows", ["name", "title"], "show"),
+        ("articles", ["title"], "article"),
+        ("news", ["title"], "news"),
+        ("sections", ["title"], "section"),
     ]
 
-    for coll_name, field, content_type in collections_config:
+    for type_order, (coll_name, fields, content_type) in enumerate(collections_config):
         collection = getattr(db, coll_name)
-        
-        # Use MongoDB text search for autocomplete
-        query = {
-            "status": {"$ne": "archived"},
-            "$text": {"$search": q}
+
+        projection = {
+            "_id": 1, "slug": 1, "full_path": 1, "show_id": 1,
+            **{field: 1 for field in fields},
         }
-        
-        cursor = collection.find(query, {"_id": 1, field: 1, "slug": 1, "full_path": 1, "show_id": 1}).limit(limit)
-        items = await cursor.to_list(limit)
+        items = await _find_ranked_matches(collection, fields, query_text, limit, projection)
 
         if content_type == "team":
             await attach_show_info(db, items)
@@ -236,18 +296,20 @@ async def search_autocomplete(
             else:
                 path = f"/{content_type}s/{item.get('slug', item['_id'])}"
             suggestions.append({
-                "id": item["_id"],
-                "title": item.get(field, item.get("title", "")),
+                "id": str(item["_id"]),
+                "title": next((item.get(field) for field in fields if item.get(field)), ""),
                 "type": content_type,
                 "slug": item.get("slug"),
                 "path": path,
+                "_relevance": _relevance_key(item, fields, query_text, type_order),
                 **({"show": item["show"]} if item.get("show") else {}),
             })
 
-        if len(suggestions) >= limit:
-            break
-
-    return suggestions[:limit]
+    suggestions.sort(key=lambda item: item["_relevance"])
+    result = suggestions[:limit]
+    for item in result:
+        item.pop("_relevance")
+    return result
 
 
 @router.get("/search/by-tag/{tag}", response_model=dict)
