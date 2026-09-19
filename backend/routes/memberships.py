@@ -25,6 +25,7 @@ class MembershipIn(BaseModel):
 
     team_id: str
     person_id: Optional[str] = None
+    person_link_disabled: bool = False
     person_name: str = ""
     person_slug: Optional[str] = None
     roles: List[str] = Field(default_factory=list)
@@ -141,8 +142,11 @@ async def _prepare_membership(db, data: MembershipIn) -> dict:
         person = await _find_person(db, data.person_id)
         doc["person_name"] = doc["person_name"] or person.get("full_name") or person.get("title") or ""
         doc["matched_by"] = "manual"
+        doc["person_link_disabled"] = False
     elif not doc["person_name"].strip():
         raise HTTPException(status_code=422, detail="Укажите человека или имя")
+    elif data.person_link_disabled:
+        doc["matched_by"] = "manual"
     doc["person_name"] = doc["person_name"].strip()
     doc["name_key"] = name_key(doc["person_name"])
     doc["roles"] = [r.strip() for r in doc["roles"] if r.strip()]

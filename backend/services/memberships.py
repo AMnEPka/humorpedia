@@ -451,9 +451,18 @@ async def link_person(db, person: dict) -> int:
     lookup = await load_person_lookup(db)
     slugs = [s for s, pid in lookup.by_slug.items() if pid == person_id]
     keys = [k for k, pid in lookup.by_key.items() if pid == person_id]
-    query = {"person_id": None, "$or": [{"person_slug": {"$in": slugs}}, {"name_key": {"$in": keys}}]}
+    query = linkable_memberships_query(slugs, keys)
     result = await db.memberships.update_many(query, {"$set": {"person_id": person_id, "updated_at": now_iso()}})
     return result.modified_count
+
+
+def linkable_memberships_query(slugs: list[str], keys: list[str]) -> dict:
+    """Автосвязь не должна отменять ручное решение редактора оставить однофамильца без страницы."""
+    return {
+        "person_id": None,
+        "person_link_disabled": {"$ne": True},
+        "$or": [{"person_slug": {"$in": slugs}}, {"name_key": {"$in": keys}}],
+    }
 
 
 async def unlink_person(db, person_id: str) -> int:

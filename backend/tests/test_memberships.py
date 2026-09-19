@@ -3,7 +3,7 @@ import pytest
 
 from services.competitions import TeamLookup, build_participations, legacy_to_season
 from services.memberships import (
-    PersonLookup, memberships_from_team, name_key, normalize_role, parse_roster_html, parse_years,
+    PersonLookup, linkable_memberships_query, memberships_from_team, name_key, normalize_role, parse_roster_html, parse_years,
 )
 
 
@@ -101,6 +101,17 @@ def test_person_lookup_by_slug_old_url_and_unambiguous_name():
     assert lookup.resolve(None, "Антон Шастун") == ("p1", "name")
     assert lookup.resolve("ivan-ivanov", "Иван Иванов") == ("p2", "slug")
     assert lookup.resolve(None, "Иван Иванов") == (None, None), "тёзки — по имени не связываем"
+
+
+def test_manual_unlink_is_excluded_from_future_auto_linking():
+    assert linkable_memberships_query(["anna-borodina"], ["анна бородина"]) == {
+        "person_id": None,
+        "person_link_disabled": {"$ne": True},
+        "$or": [
+            {"person_slug": {"$in": ["anna-borodina"]}},
+            {"name_key": {"$in": ["анна бородина"]}},
+        ],
+    }
 
 
 def test_memberships_from_team():
