@@ -36,7 +36,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
     ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
     RatingCard.jsx             среднее, веха числа голосов и 10 кнопок-смайликов
-    RelatedArticles.jsx        общий блок «Читайте также» для detail-страниц
+    RelatedArticles.jsx        общий смешанный блок «Читайте также» для detail-страниц; URL и подпись типа приходят из API
     RelatedNews.jsx            компактный блок ≤3 свежих новостей после первого контентного блока
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
@@ -60,9 +60,10 @@ admin/                         АДМИНКА
   utils/api.js                 axios `api` с Bearer из localStorage.admin_token и refresh-интерсептором (очередь запросов на время refresh);
                                группы: authApi, contentApi, statsApi, usersApi, tagsApi, commentsApi, mediaApi, templatesApi, sectionsApi; getErrorMessage()
   components/
-    AdminLayout.jsx            сайдбар навигации (пункты «Пользователи» и «База данных» — adminOnly)
+    AdminLayout.jsx            сайдбар навигации (пункты «Пользователи», «База данных» и «Читайте также» — adminOnly)
     ModuleEditor.jsx           конструктор модулей страницы (dnd-kit), 1104 строки
     SeasonDataEditor.jsx       редактор season_data: стадии/игры/команды/баллы/конкурсы, копирование, dnd — 2665 строк, самый сложный компонент
+  pages/RelatedContentSettingsPage.jsx  глобальные настройки «Читайте также»: включение, лимит, типы результатов и страницы показа
     RichTextEditor.jsx         TipTap (таблицы, цвета, выравнивание) + LinkInserter
     LinkInserter.jsx           поиск контента и вставка внутренней ссылки (/content/search-for-links)
     MediaSelector.jsx          выбор/загрузка медиа (uploads и volume-папки)

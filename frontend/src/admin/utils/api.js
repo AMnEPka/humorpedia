@@ -250,6 +250,11 @@ export const relatedNewsSettingsApi = {
   update: (data) => api.put('/related-news/settings', data),
 };
 
+export const recommendationSettingsApi = {
+  get: () => api.get('/recommendations/settings'),
+  update: (data) => api.put('/recommendations/settings', data),
+};
+
 // Users API
 export const usersApi = {
   list: (params) => api.get('/users', { params }),

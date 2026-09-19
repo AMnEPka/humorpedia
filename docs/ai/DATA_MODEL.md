@@ -179,7 +179,7 @@ Backend enum также принимает существующие `person_card
 | `timeline.list_triple` (`title`, `subtitle` = годы, `content`) | timeline |
 | `text` | text_block без заголовка |
 | `tags`, `table_of_contents`, `popular_articles`, `ad_*` | не переносятся (выводятся автоматически / не нужны) |
-| `popular_articles`, `related_articles` | не создают модули: общий `/api/recommendations` строит «Читайте также» динамически |
+| `popular_articles`, `related_articles` | не создают модули: общий `/api/recommendations` строит «Читайте также» динамически по `site_settings._id=recommendations` |
 | `voting` | преобразуется в `poll` с детерминированным `legacy-poll-{old_id}`; определения импортирует отдельный dry-run/apply-скрипт |
 
 `pagetitle` → `title`, `longtitle` → `full_name`, `alias` → `slug`, `description` → `seo.meta_description`, `keywords` → `seo.keywords`, `rating`/`votes` → рейтинг.
