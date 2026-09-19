@@ -73,6 +73,7 @@ admin/                         АДМИНКА
   pages/                       *ListPage + *EditPage для: people, teams, shows, kvn, articles, news, quizzes, wiki, cities, sections, templates;
                                DashboardPage, LoginPage, MediaPage, TagsPage, CommentsPage, UsersPage, MongoAdminPage (сырой доступ к коллекциям),
                                ShowAppearancesPage (проверка участников шоу и точечное создание черновиков людей),
+                               MembershipLinksPage (очередь проверки связей состава: подтвердить, заменить или отвязать),
                                RelatedNewsSettingsPage (adminOnly: включение, свежесть, лимит и области применения)
 ```
 

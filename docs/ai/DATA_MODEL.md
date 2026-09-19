@@ -32,7 +32,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `tournaments` | `competition.py` | competitions | турнир/лига/проект: `show`, `slug`, `participant_type` (team/person), ссылка на страницу — см. COMPETITIONS.md |
 | `seasons` | `SeasonUpdate` | competitions | сезон: список участников, победители, этапы → игры → результаты (ссылки на `teams._id`) — источник истины вместо `kvn.season_data` |
 | `participations` | — | competitions | производная: участие в сезоне (`kind=season`), в игре (`kind=game`), роли жюри/ведущего/редактора (`kind=role`) |
-| `memberships` | — | memberships | составы команд: человек (или имя + slug старого сайта) — команда — роли — годы — статус |
+| `memberships` | — | memberships | составы команд: человек (или имя + slug старого сайта) — команда — роли — годы; `candidate_person_id` и `link_review_status` для проверки сомнительных связей |
 | `show_appearances` | — | show_appearances | варианты участия человека в согласованных шоу: `person_id/show_id`, состав, достижение, источник и ручные решения — см. SHOW_APPEARANCES.md |
 
 Индексы создаются при каждом старте в `server.py:create_indexes` — при добавлении полей для фильтрации добавлять индекс туда.

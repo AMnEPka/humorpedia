@@ -328,11 +328,16 @@ export default function TeamsListPage() {
           <h1 className="text-3xl font-bold">Команды</h1>
           <p className="text-muted-foreground">Управление командами КВН, Лиги Смеха и других шоу</p>
         </div>
-        <Button asChild data-testid="add-team-btn">
-          <Link to="/admin/teams/new">
-            <Plus className="mr-2 h-4 w-4" /> Добавить
-          </Link>
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/admin/membership-links">Проверить связи</Link>
+          </Button>
+          <Button asChild data-testid="add-team-btn">
+            <Link to="/admin/teams/new">
+              <Plus className="mr-2 h-4 w-4" /> Добавить
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="list" className="space-y-6">
