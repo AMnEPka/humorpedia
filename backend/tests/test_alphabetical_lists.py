@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from services.crud import build_alphabetical_pipeline, build_query
@@ -54,3 +56,17 @@ def test_query_builder_treats_e_and_yo_as_equivalent_in_text_search():
     query = build_query(search="звезды", search_fields=["title"])
 
     assert query["$or"][0]["title"]["$regex"] == "зв[её]зды"
+
+
+@pytest.mark.parametrize("title", ["Comedy Club", "2x2", "+7", "#Команда"])
+def test_query_builder_groups_latin_digits_and_symbols(title):
+    query = build_query(letter="other")
+    pattern = query["title"]["$regex"]
+
+    assert re.search(pattern, title)
+
+
+def test_query_builder_excludes_cyrillic_from_other_group():
+    query = build_query(letter="other")
+
+    assert not re.search(query["title"]["$regex"], "Команда")

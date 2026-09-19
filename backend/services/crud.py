@@ -186,6 +186,17 @@ async def update_tags_everywhere(
 #  Query builder
 # ---------------------------------------------------------------------------
 
+OTHER_ALPHABET_FILTER = "other"
+CYRILLIC_ALPHABET_RANGES = "\u0400-\u052F\u2DE0-\u2DFF\uA640-\uA69F"
+
+
+def alphabet_letter_pattern(letter: str) -> str:
+    """Return a first-character filter, including one group for all non-Cyrillic names."""
+    if letter == OTHER_ALPHABET_FILTER:
+        return rf"^\s*[^{CYRILLIC_ALPHABET_RANGES}]"
+    return f"^{re.escape(letter)}"
+
+
 def build_query(
     status=None,
     tag: str = None,
@@ -205,7 +216,7 @@ def build_query(
         search_pattern = literal_search_pattern(search)
         query["$or"] = [{f: {"$regex": search_pattern, "$options": "i"}} for f in search_fields]
     if letter:
-        query[letter_field] = {"$regex": f"^{re.escape(letter)}", "$options": "i"}
+        query[letter_field] = {"$regex": alphabet_letter_pattern(letter), "$options": "i"}
     if extra:
         query.update(extra)
     return query

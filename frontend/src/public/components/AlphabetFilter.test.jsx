@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import AlphabetFilter, { RUSSIAN_ALPHABET } from './AlphabetFilter';
+import AlphabetFilter, {
+  OTHER_ALPHABET_FILTER,
+  RUSSIAN_ALPHABET,
+} from './AlphabetFilter';
 
 test('renders the full Russian alphabet and marks the selected letter', () => {
   const html = renderToStaticMarkup(
@@ -17,6 +20,19 @@ test('renders the full Russian alphabet and marks the selected letter', () => {
   expect(html).toContain('>Ъ</button>');
   expect(html).toContain('>Ы</button>');
   expect(html).toContain('>Ь</button>');
+  expect(html).toContain('aria-label="Латиница, цифры и символы"');
+  expect(html).toContain('>A–Z 0–9 #</button>');
+  expect(html).toContain('Сбросить');
+});
+
+test('marks the combined Latin, digit and symbol group as selected', () => {
+  const html = renderToStaticMarkup(
+    <AlphabetFilter selectedLetter={OTHER_ALPHABET_FILTER} onLetterClick={() => {}} />
+  );
+
+  expect(html).toContain(
+    'aria-label="Латиница, цифры и символы" aria-pressed="true"'
+  );
   expect(html).toContain('Сбросить');
 });
 

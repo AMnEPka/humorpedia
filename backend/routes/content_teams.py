@@ -19,6 +19,7 @@ from services.crud import (
     create_content, update_content,
     delete_content,
     check_primary_tag_duplicate,
+    alphabet_letter_pattern,
     list_alphabetical_content,
 )
 from services.tags import tag_service
@@ -791,7 +792,7 @@ async def list_teams(
 
     # Фильтр по первой букве
     if letter:
-        letter_pattern = f"^{re.escape(letter)}"
+        letter_pattern = alphabet_letter_pattern(letter)
         conditions.append({"title": {"$regex": letter_pattern, "$options": "i"}})
 
     query = {"$and": conditions} if conditions else {}
