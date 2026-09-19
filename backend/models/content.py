@@ -306,6 +306,7 @@ class News(BaseContent):
     # Relations
     related_person_ids: List[str] = Field(default_factory=list)
     related_team_ids: List[str] = Field(default_factory=list)
+    related_show_ids: List[str] = Field(default_factory=list)
     related_article_ids: List[str] = Field(default_factory=list)
 
 
@@ -323,6 +324,7 @@ class NewsCreate(BaseModel):
     status: ContentStatus = ContentStatus.DRAFT
     related_person_ids: Optional[List[str]] = None
     related_team_ids: Optional[List[str]] = None
+    related_show_ids: Optional[List[str]] = None
     related_article_ids: Optional[List[str]] = None
 
 
@@ -340,6 +342,7 @@ class NewsUpdate(BaseModel):
     status: Optional[ContentStatus] = None
     related_person_ids: Optional[List[str]] = None
     related_team_ids: Optional[List[str]] = None
+    related_show_ids: Optional[List[str]] = None
     related_article_ids: Optional[List[str]] = None
 
 

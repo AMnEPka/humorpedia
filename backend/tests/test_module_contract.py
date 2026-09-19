@@ -56,7 +56,7 @@ def template_client(monkeypatch):
 
 def test_registry_matches_enum_and_declares_working_editors_and_owners():
     names = [entry["type"] for entry in MODULE_CONTRACT]
-    assert len(names) == len(set(names)) == 36
+    assert len(names) == len(set(names)) == 35
     assert set(names) == {member.value for member in ModuleType}
     assert SELECTABLE
     for entry in SELECTABLE:

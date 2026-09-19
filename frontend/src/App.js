@@ -4,6 +4,7 @@ import { usePageTitle } from '@/utils/pageTitle';
 import { AuthProvider, useAuth } from './admin/hooks/useAuth';
 
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import '@/App.css';
 
 // ─── Спиннер для Suspense ─────────────────────────────────────────────────────
@@ -72,6 +73,7 @@ const CommentsPage = React.lazy(() => import('./admin/pages/CommentsPage'));
 const UsersPage = React.lazy(() => import('./admin/pages/UsersPage'));
 const TemplatesPage = React.lazy(() => import('./admin/pages/TemplatesPage'));
 const TemplateEditPage = React.lazy(() => import('./admin/pages/TemplateEditPage'));
+const RelatedNewsSettingsPage = React.lazy(() => import('./admin/pages/RelatedNewsSettingsPage'));
 const MongoAdminPage = React.lazy(() => import('./admin/pages/MongoAdminPage'));
 
 
@@ -124,8 +126,8 @@ function WithTitle({ title, children }) {
 }
 
 // Protected route wrapper for admin (AdminLayout тоже lazy)
-function ProtectedRoute({ children }) {
-  const { user, loading, isStaff, logout } = useAuth();
+function ProtectedRoute({ children, adminOnly = false }) {
+  const { user, loading, isStaff, isAdmin, logout } = useAuth();
 
   if (loading) {
     return (
@@ -146,6 +148,17 @@ function ProtectedRoute({ children }) {
         <button type="button" className="text-primary underline" onClick={logout}>
           Войти под другим пользователем
         </button>
+      </div>
+    );
+  }
+
+  if (adminOnly && !isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
+        <p className="text-gray-700">Эта страница доступна только администратору.</p>
+        <Button type="button" variant="link" onClick={() => window.history.back()}>
+          Вернуться назад
+        </Button>
       </div>
     );
   }
@@ -275,6 +288,9 @@ function AppRoutes() {
         {/* Admin - Templates */}
         <Route path="/admin/templates" element={<WithTitle title="Админка: Шаблоны"><ProtectedRoute><TemplatesPage /></ProtectedRoute></WithTitle>} />
         <Route path="/admin/templates/:id" element={<WithTitle title="Админка: Редактирование шаблона"><ProtectedRoute><TemplateEditPage /></ProtectedRoute></WithTitle>} />
+
+        {/* Admin - Related news settings */}
+        <Route path="/admin/related-news" element={<WithTitle title="Админка: Свежие новости"><ProtectedRoute adminOnly><RelatedNewsSettingsPage /></ProtectedRoute></WithTitle>} />
         
         {/* Admin - MongoDB */}
         <Route path="/admin/database" element={<WithTitle title="Админка: База данных"><ProtectedRoute><MongoAdminPage /></ProtectedRoute></WithTitle>} />

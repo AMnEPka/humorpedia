@@ -415,20 +415,6 @@
     "schema": "PageModule"
   },
   {
-    "type": "humor_chronicles",
-    "name": "Юмористические хроники",
-    "kind": "dynamic",
-    "editor": "ModuleEditor",
-    "for_types": [
-      "person"
-    ],
-    "owners": [
-      "ModuleRenderer",
-      "PersonDetailPage"
-    ],
-    "schema": "PageModule"
-  },
-  {
     "type": "first_league_champions",
     "name": "Чемпионы Первой лиги КВН",
     "kind": "special",

@@ -36,6 +36,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
     RatingCard.jsx             среднее, веха числа голосов и 10 кнопок-смайликов
     RelatedArticles.jsx        общий блок «Читайте также» для detail-страниц
+    RelatedNews.jsx            компактный блок ≤3 свежих новостей после первого контентного блока
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
     ShowAppearances.jsx        блок участия в шоу только на странице человека
@@ -64,11 +65,12 @@ admin/                         АДМИНКА
     RichTextEditor.jsx         TipTap (таблицы, цвета, выравнивание) + LinkInserter
     LinkInserter.jsx           поиск контента и вставка внутренней ссылки (/content/search-for-links)
     MediaSelector.jsx          выбор/загрузка медиа (uploads и volume-папки)
-    TeamSelector.jsx, GameTeamSelector.jsx, PersonSelector.jsx, TagSelector.jsx, FactsEditor.jsx
+    TeamSelector.jsx, GameTeamSelector.jsx, PersonSelector.jsx, ContentRelationSelector.jsx, TagSelector.jsx, FactsEditor.jsx
     TeamMembershipsEditor.jsx  вкладка «Состав» в редактировании команды
   pages/                       *ListPage + *EditPage для: people, teams, shows, kvn, articles, news, quizzes, wiki, cities, sections, templates;
                                DashboardPage, LoginPage, MediaPage, TagsPage, CommentsPage, UsersPage, MongoAdminPage (сырой доступ к коллекциям),
-                               ShowAppearancesPage (проверка участников шоу и точечное создание черновиков людей)
+                               ShowAppearancesPage (проверка участников шоу и точечное создание черновиков людей),
+                               RelatedNewsSettingsPage (adminOnly: включение, свежесть, лимит и области применения)
 ```
 
 ## Маршруты (App.js)
@@ -91,7 +93,7 @@ admin/                         АДМИНКА
 | `/*` | **SectionDetailPage** (КВН, разделы, редиректы старых URL) |
 
 Админка (`ProtectedRoute` — пользователь залогинен И роль admin/editor/moderator; внутри `AdminLayout`):
-`/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/show-appearances`, `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/users`, `/admin/database`.
+`/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/show-appearances`, `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/users`, `/admin/database`, `/admin/related-news` (adminOnly).
 
 HomePage, SectionDetailPage и PublicLayout грузятся синхронно; остальное — `React.lazy`, админка — отдельным чанком.
 
@@ -110,6 +112,9 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 
 - `RelatedArticles` используется статьями, новостями, людьми, командами, городами, шоу и KVN-страницами; ручные связи
   настраиваются `RelatedArticlesSelector` в редакторах статьи/новости.
+- `RelatedNews` используется людьми, командами КВН, командами шоу и шоу. Он запрашивает только свежие новости по
+  явным связям и не отображает loading/error/пустое состояние. В редакторе новости связи с командами и шоу задаёт
+  `ContentRelationSelector`; глобальные настройки находятся на `/admin/related-news`.
 - `poll` можно добавить в `ModuleEditor` статьи или новости. В диалоге создаётся/редактируется определение опроса,
   а модуль сохраняет только `poll_id`.
 - Публичный модуль показывает результаты после голоса (либо заранее по настройке) и обрабатывает 401 сообщением о входе.

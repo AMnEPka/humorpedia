@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { publicApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { isShowTeamPath } from '@/utils/teams';
 import ForeignAgentNotice from '../components/ForeignAgentNotice';
 import RelatedArticles from '../components/RelatedArticles';
 import RatingCard from '../components/RatingCard';
+import RelatedNews from '../components/RelatedNews';
 
 // Module renderer component
 export function ModuleRenderer({ module }) {
@@ -467,8 +468,16 @@ function ShowPage({ fullPath }) {
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6 min-w-0">
-          {contentModules.map((module) => (
-            <ModuleRenderer key={module.id} module={module} />
+          {contentModules.length === 0 && (
+            <RelatedNews entityType="show" entityId={show._id || show.id || show.slug} />
+          )}
+          {contentModules.map((module, index) => (
+            <Fragment key={module.id || index}>
+              <ModuleRenderer module={module} />
+              {index === 0 && (
+                <RelatedNews entityType="show" entityId={show._id || show.id || show.slug} />
+              )}
+            </Fragment>
           ))}
           <ForeignAgentNotice
             visible={show.foreign_agent_notice}

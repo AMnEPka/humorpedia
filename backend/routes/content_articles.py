@@ -44,8 +44,6 @@ async def create_article(data: ArticleCreate):
     return await create_content(
         "articles", article, data.tags,
         published_status=ContentStatus.PUBLISHED,
-        related_person_ids=data.related_person_ids,
-        content_label="article"
     )
 
 
@@ -84,8 +82,6 @@ async def update_article(id: str, data: ArticleUpdate):
     return await update_content(
         "articles", id, data, "Article not found",
         published_status=ContentStatus.PUBLISHED,
-        related_person_ids=data.related_person_ids,
-        content_label="article"
     )
 
 

@@ -36,11 +36,13 @@ export const publicApi = {
   getRecommendations: (contentType, contentId, limit) => api.get('/recommendations', {
     params: { content_type: contentType, content_id: contentId, ...(limit ? { limit } : {}) }
   }),
+  getRelatedNews: (entityType, entityId) => api.get(
+    `/related-news/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`
+  ),
   
   // People
   getPeople: (params) => api.get('/content/people', { params }),
   getPerson: (slug) => api.get(`/content/people/${slug}`),
-  getPersonLinkedContent: (id, types, limit = 20) => api.get(`/content/people/${id}/linked-content`, { params: { types, limit } }),
 
   // Турниры, сезоны, составы (перекрёстные ссылки)
   getTeamParticipations: (idOrSlug, games = true) => api.get(`/competitions/teams/${idOrSlug}/participations`, { params: { games } }),

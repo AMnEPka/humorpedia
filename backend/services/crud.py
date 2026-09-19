@@ -12,7 +12,6 @@ import re
 
 from utils.database import get_db
 from services.tags import tag_service
-from services.linking import linking_service
 
 logger = logging.getLogger(__name__)
 
@@ -243,8 +242,6 @@ async def create_content(
     tags: list = None,
     *,
     published_status=None,
-    related_person_ids: list = None,
-    content_label: str = None
 ):
     """Universal create handler.
 
@@ -253,8 +250,6 @@ async def create_content(
         model_instance: Pydantic model instance to insert
         tags: Tags to sync (fallback: doc["tags"])
         published_status: If set and matches data.status, set published_at
-        related_person_ids: IDs for linking_service (articles, news)
-        content_label: Label for linking_service (e.g. "article", "news")
     """
     db = await get_db()
     collection = getattr(db, collection_name)
@@ -291,11 +286,6 @@ async def create_content(
 
     await collection.insert_one(doc)
 
-    # Link to persons if needed
-    doc_id = doc.get("id") if collection_name == "kvn" else doc["_id"]
-    if related_person_ids and content_label:
-        await linking_service.update_person_links(content_label, doc_id, related_person_ids)
-
     if collection_name == "kvn":
         return {"id": doc.get("id"), "slug": doc.get("slug")}
     return {"id": doc["_id"], "slug": doc.get("slug")}
@@ -308,15 +298,11 @@ async def update_content(
     not_found_msg: str,
     *,
     published_status=None,
-    related_person_ids=None,
-    content_label: str = None
 ):
     """Universal update handler.
 
     Args:
         published_status: If data.status matches this value and published_at is not set, set it now.
-        related_person_ids: If provided, update person links via linking_service.
-        content_label: Label for linking_service (e.g. "article", "news").
     """
     db = await get_db()
     collection = getattr(db, collection_name)
@@ -387,10 +373,6 @@ async def update_content(
     final_new_primary_tag = update_data.get("primary_tag") or old_primary_tag
     if hasattr(data, 'primary_tag') and final_new_primary_tag != old_primary_tag:
         await update_tags_everywhere(db, old_primary_tag, final_new_primary_tag)
-
-    # Update person links if provided
-    if related_person_ids is not None and content_label:
-        await linking_service.update_person_links(content_label, item_id, related_person_ids)
 
     return {"id": item_id, "updated": True}
 

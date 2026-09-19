@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Loader2, Users, MapPin, Trophy, Share2, Calendar, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import FittedImage from '@/components/FittedImage';
 import { teamLogoUrl } from '@/utils/media';
 import RelatedArticles from '../components/RelatedArticles';
 import RatingCard from '../components/RatingCard';
+import RelatedNews from '../components/RelatedNews';
 
 // Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
@@ -429,32 +430,49 @@ export default function TeamDetailPage({ showTeamPath = null }) {
         <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* History/Bio */}
           {team.history && (
-            <Card>
-              <CardHeader>
-                <CardTitle>История</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div 
-                  className="prose prose-blue max-w-none overflow-x-auto break-words"
-                  dangerouslySetInnerHTML={{ __html: team.history }}
-                />
-              </CardContent>
-            </Card>
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>История</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div
+                    className="prose prose-blue max-w-none overflow-x-auto break-words"
+                    dangerouslySetInnerHTML={{ __html: team.history }}
+                  />
+                </CardContent>
+              </Card>
+              <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />
+            </>
+          )}
+
+          {!team.history && contentModules.length === 0 && (
+            <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />
           )}
 
           {/* Content Modules: старые таблицы игр скрыты, полностью разобранный состав — структурой */}
           {contentModules.map((module, i) => {
+            let renderedModule;
             if (replacedRosterIds.has(module.id)) {
-              return module.id === firstRosterId ? (
+              renderedModule = module.id === firstRosterId ? (
                 <TeamRoster
-                  key={module.id}
                   members={members}
                   title={module.data?.title || 'Состав команды'}
                   anchorId={`section-${module.id}`}
                 />
               ) : null;
+            } else {
+              renderedModule = <ModuleRenderer module={module} />;
             }
-            return <ModuleRenderer key={module.id || i} module={module} />;
+
+            return (
+              <Fragment key={module.id || i}>
+                {renderedModule}
+                {!team.history && i === 0 && (
+                  <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />
+                )}
+              </Fragment>
+            );
           })}
 
           <TeamParticipations teamSlug={team._id} teamName={team.name || team.title} />

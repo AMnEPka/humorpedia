@@ -24,13 +24,12 @@ async def create_news(data: NewsCreate):
         cover_image=data.cover_image, content=data.content, important=data.important,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         related_person_ids=data.related_person_ids or [], related_team_ids=data.related_team_ids or [],
+        related_show_ids=data.related_show_ids or [],
         related_article_ids=data.related_article_ids or []
     )
     return await create_content(
         "news", news, data.tags,
         published_status=ContentStatus.PUBLISHED,
-        related_person_ids=data.related_person_ids,
-        content_label="news"
     )
 
 
@@ -63,8 +62,6 @@ async def update_news(id: str, data: NewsUpdate):
     return await update_content(
         "news", id, data, "News not found",
         published_status=ContentStatus.PUBLISHED,
-        related_person_ids=data.related_person_ids,
-        content_label="news"
     )
 
 

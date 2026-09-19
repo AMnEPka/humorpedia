@@ -190,6 +190,9 @@ async def create_indexes(db):
         await _ensure_index(db.news, "tags")
         await _ensure_index(db.news, "status")
         await _ensure_index(db.news, "published_at")
+        await _ensure_index(db.news, [("related_person_ids", 1), ("published_at", -1)])
+        await _ensure_index(db.news, [("related_team_ids", 1), ("published_at", -1)])
+        await _ensure_index(db.news, [("related_show_ids", 1), ("published_at", -1)])
         await _ensure_index(db.news, "old_id", unique=True, sparse=True)
         await _ensure_index(db.news, "old_urls")
         await _ensure_index(db.news, [("title", "text")])
@@ -362,6 +365,7 @@ from routes.show_appearances import router as show_appearances_router
 from routes.recommendations import router as recommendations_router
 from routes.polls import router as polls_router
 from routes.ratings import router as ratings_router
+from routes.related_news import router as related_news_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -390,6 +394,7 @@ api_router.include_router(show_appearances_router)
 api_router.include_router(recommendations_router)
 api_router.include_router(polls_router)
 api_router.include_router(ratings_router)
+api_router.include_router(related_news_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
