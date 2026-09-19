@@ -23,6 +23,7 @@ const pollAuthConfig = () => {
 // Public API - no auth required
 export const publicApi = {
   getPersonShows: (id) => api.get(`/show-appearances/people/${id}`),
+  getTeamProjects: (idOrSlug) => api.get(`/show-appearances/teams/${encodeURIComponent(idOrSlug)}/projects`),
   // News
   getNews: (params) => api.get('/content/news', { params }),
   getNewsItem: (slug) => api.get(`/content/news/${slug}`),

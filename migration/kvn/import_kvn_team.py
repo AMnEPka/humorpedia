@@ -346,7 +346,7 @@ def build_team_doc(sc, tv_by_id: dict[str, str], tv_map: dict[str, str], image_m
             break
     if projects:
         text_blocks.append({
-            'title': 'Сторонние проекты команды после/во время игры в КВН',
+            'title': 'Участие членов команды в других проектах',
             'content': projects['content'],
         })
     

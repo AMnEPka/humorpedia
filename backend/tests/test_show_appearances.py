@@ -3,9 +3,14 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import pytest
+from fastapi import HTTPException
+
+import routes.show_appearances as appearance_routes
 import services.show_appearances as appearances
 from services.show_appearances import (
-    Tree, appearance_url, apply_participant_card_links, caption, choose, extract, table_grid, text,
+    Tree, appearance_url, apply_participant_card_links, caption, choose, extract,
+    public_team_projects, table_grid, text,
 )
 
 
@@ -158,3 +163,154 @@ def test_existing_participant_cards_get_only_verified_person_links():
     assert items[0]['person_url'] == '/people/ivan'
     assert 'person_url' not in items[1]
     assert 'person_url' not in items[2]
+
+
+class _Cursor:
+    def __init__(self, rows):
+        self.rows = rows
+
+    async def to_list(self, _limit):
+        return [dict(row) for row in self.rows]
+
+
+def _matches(doc, query):
+    for field, expected in query.items():
+        value = doc.get(field)
+        if isinstance(expected, dict):
+            if '$in' in expected and value not in expected['$in']:
+                return False
+            if '$ne' in expected and value == expected['$ne']:
+                return False
+        elif value != expected:
+            return False
+    return True
+
+
+class _Collection:
+    def __init__(self, rows):
+        self.rows = rows
+        self.find_calls = []
+
+    def find(self, query, _projection=None):
+        self.find_calls.append(query)
+        return _Cursor([row for row in self.rows if _matches(row, query)])
+
+
+def test_team_projects_group_members_and_reuse_public_filters():
+    db = SimpleNamespace(
+        memberships=_Collection([
+            {'team_id': 'kvn-team', 'person_id': 'p1'},
+            {'team_id': 'kvn-team', 'person_id': 'p1'},
+            {'team_id': 'kvn-team', 'person_id': 'p2'},
+            {'team_id': 'kvn-team', 'person_id': 'p3'},
+            {'team_id': 'kvn-team', 'person_id': 'p4'},
+        ]),
+        show_appearances=_Collection([
+            {'_id': 'a', 'person_id': 'p1', 'show_id': 's1', 'source_page_id': 'source',
+             'achievement': 'participant', 'manual_achievement': 'winner', 'appearances': 1,
+             'first_episode': 1, 'group_name': 'Состав', 'group_kind': 'team', 'team_id': 'show-team',
+             'manual_group_name': 'Ручной состав', 'manual_group_kind': 'team', 'preferred': True},
+            {'_id': 'b', 'person_id': 'p1', 'show_id': 's1', 'source_page_id': 'source',
+             'achievement': 'finalist', 'appearances': 20, 'first_episode': 2,
+             'group_name': '', 'group_kind': ''},
+            {'_id': 'c', 'person_id': 'p2', 'show_id': 's1', 'source_page_id': 'source',
+             'achievement': 'participant', 'appearances': 1, 'first_episode': 1,
+             'group_name': '', 'group_kind': ''},
+            {'_id': 'first-project', 'person_id': 'p2', 'show_id': 's0', 'source_page_id': 'source',
+             'achievement': 'finalist', 'appearances': 1, 'first_episode': 1,
+             'group_name': '', 'group_kind': ''},
+            {'_id': 'excluded', 'person_id': 'p2', 'show_id': 's2', 'source_page_id': 'source',
+             'achievement': 'participant', 'appearances': 1, 'first_episode': 1,
+             'group_name': '', 'group_kind': '', 'excluded': True},
+            {'_id': 'archived-person', 'person_id': 'p3', 'show_id': 's1', 'source_page_id': 'source',
+             'achievement': 'participant', 'appearances': 1, 'first_episode': 1,
+             'group_name': '', 'group_kind': ''},
+            {'_id': 'archived-show', 'person_id': 'p4', 'show_id': 's2', 'source_page_id': 'source',
+             'achievement': 'participant', 'appearances': 1, 'first_episode': 1,
+             'group_name': '', 'group_kind': ''},
+            {'_id': 'archived-source', 'person_id': 'p2', 'show_id': 's3', 'source_page_id': 'old-source',
+             'achievement': 'participant', 'appearances': 1, 'first_episode': 1,
+             'group_name': '', 'group_kind': ''},
+            {'_id': 'archived-team', 'person_id': 'p2', 'show_id': 's4', 'source_page_id': 'source',
+             'achievement': 'participant', 'appearances': 1, 'first_episode': 1,
+             'group_name': 'Архивный состав', 'group_kind': 'team', 'team_id': 'old-show-team'},
+        ]),
+        people=_Collection([
+            {'_id': 'p1', 'slug': 'anna', 'full_name': 'Анна'},
+            {'_id': 'p2', 'slug': 'boris', 'full_name': 'Борис'},
+            {'_id': 'p3', 'slug': 'vera', 'full_name': 'Вера', 'status': 'archived'},
+            {'_id': 'p4', 'slug': 'german', 'full_name': 'Герман'},
+        ]),
+        shows=_Collection([
+            {'_id': 's0', 'slug': 'alpha', 'title': 'Альфа'},
+            {'_id': 's1', 'slug': 'project', 'title': 'Проект'},
+            {'_id': 's2', 'slug': 'old-project', 'title': 'Старый проект', 'status': 'archived'},
+            {'_id': 's3', 'slug': 'source-archived', 'title': 'Проект с архивным источником'},
+            {'_id': 's4', 'slug': 'archived-team-project', 'title': 'Проект архивной команды'},
+            {'_id': 'source', 'slug': 'source', 'title': 'Источник'},
+            {'_id': 'old-source', 'slug': 'old-source', 'title': 'Старый источник', 'status': 'archived'},
+        ]),
+        teams=_Collection([
+            {'_id': 'show-team', 'slug': 'cast', 'show_id': 's1', 'full_path': 'project/teams/cast'},
+            {'_id': 'old-show-team', 'slug': 'old-cast', 'show_id': 's4',
+             'full_path': 'archived-team-project/teams/old-cast', 'status': 'archived'},
+        ]),
+    )
+
+    result = asyncio.run(public_team_projects(db, 'kvn-team'))
+
+    assert result == [
+        {
+            'show_id': 's0', 'show_title': 'Альфа', 'show_url': '/shows/alpha',
+            'members': [{
+                'person_id': 'p2', 'person_name': 'Борис', 'person_url': '/people/boris',
+                'caption': 'Финалист проекта «Альфа»', 'appearance_url': '/shows/alpha',
+            }],
+        },
+        {
+            'show_id': 's1', 'show_title': 'Проект', 'show_url': '/shows/project',
+            'members': [
+                {'person_id': 'p1', 'person_name': 'Анна', 'person_url': '/people/anna',
+                 'caption': 'Победитель проекта «Проект» в составе команды «Ручной состав»',
+                 'appearance_url': '/shows/project/teams/cast'},
+                {'person_id': 'p2', 'person_name': 'Борис', 'person_url': '/people/boris',
+                 'caption': 'Участник проекта «Проект»', 'appearance_url': '/shows/project'},
+            ],
+        },
+    ]
+    assert len(db.memberships.find_calls) == len(db.show_appearances.find_calls) == 1
+    assert len(db.people.find_calls) == len(db.teams.find_calls) == 1
+    assert len(db.shows.find_calls) == 2
+
+
+def test_team_projects_empty_memberships_do_not_load_public_rows():
+    db = SimpleNamespace(
+        memberships=_Collection([]),
+        show_appearances=_Collection([]), people=_Collection([]), shows=_Collection([]), teams=_Collection([]),
+    )
+
+    assert asyncio.run(public_team_projects(db, 'empty-team')) == []
+    assert db.show_appearances.find_calls == []
+
+
+def test_team_projects_route_returns_canonical_team_id(monkeypatch):
+    db = SimpleNamespace(teams=SimpleNamespace(find_one=AsyncMock(return_value={
+        '_id': 'kvn-team', 'show_id': '', 'status': 'published',
+    })))
+    projects = AsyncMock(return_value=[])
+    monkeypatch.setattr(appearance_routes, 'get_db', AsyncMock(return_value=db))
+    monkeypatch.setattr(appearance_routes, 'public_team_projects', projects)
+
+    assert asyncio.run(appearance_routes.team_projects('slug')) == {'team_id': 'kvn-team', 'items': []}
+    projects.assert_awaited_once_with(db, 'kvn-team')
+
+
+def test_team_projects_route_rejects_show_team(monkeypatch):
+    db = SimpleNamespace(teams=SimpleNamespace(find_one=AsyncMock(return_value={
+        '_id': 'show-team', 'show_id': 'show', 'status': 'published',
+    })))
+    monkeypatch.setattr(appearance_routes, 'get_db', AsyncMock(return_value=db))
+
+    with pytest.raises(HTTPException) as error:
+        asyncio.run(appearance_routes.team_projects('show-team'))
+    assert error.value.status_code == 404

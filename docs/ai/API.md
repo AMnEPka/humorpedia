@@ -200,5 +200,5 @@ GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + с�
 GET `/teams/{id_or_slug}/members` · POST `/memberships` ✏️ · PUT `/memberships/{id}` ✏️ · DELETE `/memberships/{id}` ✏️ · POST `/memberships/import-rosters?team=` 🛡 · GET `/people/{id_or_slug}/career`
 
 ## show_appearances.py — `/show-appearances` (участие людей в шоу)
-GET `/people/{person_id}` 🔓 · GET `/review` ✏️ · POST `/sync` ✏️ · PATCH `/review/{id}` ✏️ · POST `/review/{id}/create-person` ✏️.
-Публичный метод отдаёт участие для страницы человека: `show_url` ведёт на проект, а `link_url` — на проект для индивидуальной записи и на команду для командной. В существующие карточки участников шоу проверенные ссылки добавляет `content_shows.py`. Проверка, ручная привязка и создание одного черновика доступны редактору. Подробно — [SHOW_APPEARANCES.md](SHOW_APPEARANCES.md).
+GET `/people/{person_id}` 🔓 · GET `/teams/{id_or_slug}/projects` 🔓 · GET `/review` ✏️ · POST `/sync` ✏️ · PATCH `/review/{id}` ✏️ · POST `/review/{id}/create-person` ✏️.
+Публичные методы отдают участие для страницы человека и сгруппированные проекты участников команды КВН. `show_url` ведёт на проект, а `link_url`/`appearance_url` — на проект для индивидуальной записи и на команду для командной. В существующие карточки участников шоу проверенные ссылки добавляет `content_shows.py`. Проверка, ручная привязка и создание одного черновика доступны редактору. Подробно — [SHOW_APPEARANCES.md](SHOW_APPEARANCES.md).
