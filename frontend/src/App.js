@@ -74,6 +74,7 @@ const UsersPage = React.lazy(() => import('./admin/pages/UsersPage'));
 const TemplatesPage = React.lazy(() => import('./admin/pages/TemplatesPage'));
 const TemplateEditPage = React.lazy(() => import('./admin/pages/TemplateEditPage'));
 const RelatedNewsSettingsPage = React.lazy(() => import('./admin/pages/RelatedNewsSettingsPage'));
+const RelatedContentSettingsPage = React.lazy(() => import('./admin/pages/RelatedContentSettingsPage'));
 const MongoAdminPage = React.lazy(() => import('./admin/pages/MongoAdminPage'));
 
 
@@ -291,6 +292,9 @@ function AppRoutes() {
 
         {/* Admin - Related news settings */}
         <Route path="/admin/related-news" element={<WithTitle title="Админка: Свежие новости"><ProtectedRoute adminOnly><RelatedNewsSettingsPage /></ProtectedRoute></WithTitle>} />
+
+        {/* Admin - Related content settings */}
+        <Route path="/admin/related-content" element={<WithTitle title="Админка: Читайте также"><ProtectedRoute adminOnly><RelatedContentSettingsPage /></ProtectedRoute></WithTitle>} />
         
         {/* Admin - MongoDB */}
         <Route path="/admin/database" element={<WithTitle title="Админка: База данных"><ProtectedRoute><MongoAdminPage /></ProtectedRoute></WithTitle>} />

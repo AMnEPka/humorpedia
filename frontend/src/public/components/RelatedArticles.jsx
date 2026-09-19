@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { publicApi } from '../utils/api';
 import FittedImage from '@/components/FittedImage';
+import { contentImageUrl } from '@/utils/media';
 
 export default function RelatedArticles({ contentType, contentId, className = '' }) {
   const [items, setItems] = useState([]);
@@ -39,17 +40,22 @@ export default function RelatedArticles({ contentType, contentId, className = ''
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <Link
-            key={item.id}
+            key={`${item.type || 'article'}:${item.id}`}
             to={item.url}
             className="group overflow-hidden rounded-xl border bg-white transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
           >
             <FittedImage
-              src={item.cover_image?.url}
+              src={contentImageUrl(item, item.cover_image)}
               fallbackKey={item.slug || item.id}
               alt=""
               className="aspect-[16/9] w-full"
             />
             <div className="p-4">
+              {item.type_label && (
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-blue-700">
+                  {item.type_label}
+                </div>
+              )}
               <h3 className="font-semibold leading-snug text-gray-900 group-hover:text-blue-700">
                 {item.title}
               </h3>

@@ -37,6 +37,7 @@ PROTECTED_READ_ROUTES = [
     "/api/polls",
     "/api/polls/some-id/edit",
     "/api/related-news/settings",
+    "/api/recommendations/settings",
 ]
 
 
