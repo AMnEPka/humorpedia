@@ -506,7 +506,10 @@ def manual_values(row):
     return row
 
 
-async def public_rows(db, *, person_id=None, person_ids=None, show_id=None, include_show_id=False):
+async def public_rows(
+    db, *, person_id=None, person_ids=None, show_id=None, include_show_id=False,
+    individual_only=False,
+):
     query = {'excluded': {'$ne': True}, 'person_id': {'$ne': None}}
     if person_id: query['person_id'] = person_id
     elif person_ids is not None:
@@ -515,6 +518,7 @@ async def public_rows(db, *, person_id=None, person_ids=None, show_id=None, incl
             return []
         query['person_id'] = {'$in': person_ids}
     if show_id: query['show_id'] = show_id
+    if individual_only: query['team_id'] = {'$in': [None, '']}
     rows = [manual_values(r) for r in await db.show_appearances.find(query).to_list(None)]
     available = {'status': {'$ne': 'archived'}}
     people = {p['_id']: p for p in await db.people.find({'_id': {'$in': [r['person_id'] for r in rows]}, **available}, {'title': 1, 'full_name': 1, 'slug': 1}).to_list(None)}
@@ -546,12 +550,14 @@ async def public_rows(db, *, person_id=None, person_ids=None, show_id=None, incl
 
 
 async def public_team_projects(db, team_id):
-    """Проекты участников команды КВН без дублирования шоу и людей."""
+    """Индивидуальные проекты участников команды КВН без дублей шоу и людей."""
     memberships = await db.memberships.find(
         {'team_id': team_id, 'person_id': {'$ne': None}}, {'person_id': 1},
     ).to_list(None)
     person_ids = sorted({row['person_id'] for row in memberships if row.get('person_id')})
-    rows = await public_rows(db, person_ids=person_ids, include_show_id=True)
+    rows = await public_rows(
+        db, person_ids=person_ids, include_show_id=True, individual_only=True,
+    )
 
     projects = {}
     for row in rows:

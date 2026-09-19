@@ -41,7 +41,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
     ShowAppearances.jsx        «Участие в других проектах»: индивидуальная ссылка на шоу, командная — на команду
-    TeamProjects.jsx           единый блок проектов команды КВН: автоматические связи участников + ручной текстовый модуль
+    TeamProjects.jsx           единый блок индивидуальных проектов участников команды КВН + ручной текст, разделённые линией
     ArticleCard.jsx, NewsCard.jsx, MultiSelectWithSearch.jsx
     competitions/              TeamParticipations (участие команды в турнирах), TeamRoster (состав), PersonCareer («Команды КВН» и роли человека), labels.js
   pages/
