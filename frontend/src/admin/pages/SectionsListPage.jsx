@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sectionsApi, contentApi } from '../utils/api';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Edit2, Trash2, Loader2, ChevronRight, ChevronDown, Menu, Copy } from 'lucide-react';
+import { normalizeSearchText } from '@/utils/search';
+
+const filterSectionTree = (sections, query) => sections.reduce((matches, section) => {
+  const children = filterSectionTree(section.children || [], query);
+  const searchableText = normalizeSearchText(
+    `${section.title || ''} ${section.full_path || ''} ${section.description || ''}`
+  );
+
+  if (searchableText.includes(query) || children.length > 0) {
+    matches.push({ ...section, children });
+  }
+  return matches;
+}, []);
 
 function SectionTreeItem({ section, onEdit, onDelete, onDuplicate, level = 0, duplicatingId }) {
   const [expanded, setExpanded] = useState(true);
@@ -85,6 +98,11 @@ export default function SectionsListPage() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [duplicatingId, setDuplicatingId] = useState(null); // Защита от повторных кликов
+  const normalizedSearch = normalizeSearchText(search);
+  const visibleTree = useMemo(
+    () => normalizedSearch ? filterSectionTree(tree, normalizedSearch) : tree,
+    [tree, normalizedSearch]
+  );
 
   useEffect(() => {
     loadTree();
@@ -165,20 +183,22 @@ export default function SectionsListPage() {
           />
         </CardHeader>
         <CardContent>
-          {tree.length === 0 ? (
+          {visibleTree.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p>Нет разделов</p>
-              <Button
-                variant="link"
-                onClick={() => navigate('/admin/sections/new')}
-                className="mt-2"
-              >
-                Создать первый раздел
-              </Button>
+              <p>{normalizedSearch ? 'Ничего не найдено' : 'Нет разделов'}</p>
+              {!normalizedSearch && (
+                <Button
+                  variant="link"
+                  onClick={() => navigate('/admin/sections/new')}
+                  className="mt-2"
+                >
+                  Создать первый раздел
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-1">
-              {tree.map((section) => (
+              {visibleTree.map((section) => (
                 <SectionTreeItem
                   key={section.id}
                   section={section}

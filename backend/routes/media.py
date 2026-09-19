@@ -11,6 +11,7 @@ from models.user import Media, MediaCreate
 from models.media_browser import MediaBrowseResponse, MediaBrowseItem, MediaBrowseFolder
 from utils.database import get_db
 from utils.auth import get_current_user, require_staff, require_admin
+from utils.search import literal_search_pattern, normalize_search_text
 
 router = APIRouter(prefix="/media", tags=["media"])
 
@@ -237,9 +238,10 @@ async def list_media(
     if mime_type:
         query["mime_type"] = {"$regex": f"^{mime_type}"}
     if search:
+        search_pattern = literal_search_pattern(search)
         query["$or"] = [
-            {"original_name": {"$regex": search, "$options": "i"}},
-            {"alt": {"$regex": search, "$options": "i"}}
+            {"original_name": {"$regex": search_pattern, "$options": "i"}},
+            {"alt": {"$regex": search_pattern, "$options": "i"}}
         ]
     
     total = await db.media.count_documents(query)
@@ -300,7 +302,7 @@ async def browse_imported_media(
         logger.warning(f"Директория не существует или не является папкой: {target_dir} (source={source}, prefix={prefix})")
         return MediaBrowseResponse(items=[], folders=[], total=0)
 
-    q = (query or "").lower() if query else None
+    q = normalize_search_text(query) if query else None
     items: list[MediaBrowseItem] = []
     folders: list[MediaBrowseFolder] = []
 
@@ -329,7 +331,7 @@ async def browse_imported_media(
                 name = entry.name
                 
                 # Фильтр по поисковому запросу
-                if q and q not in rel.lower() and q not in name.lower():
+                if q and q not in normalize_search_text(rel) and q not in normalize_search_text(name):
                     continue
 
                 items.append(

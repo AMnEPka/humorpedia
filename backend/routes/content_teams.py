@@ -13,6 +13,7 @@ from models.modules import ModuleType, PageModule
 from models.content import Team, TeamCreate, TeamUpdate
 from utils.database import get_db
 from utils.slugify import generate_slug
+from utils.search import literal_search_pattern
 from utils.team_matcher import normalize_team_name
 from services.crud import (
     create_content, update_content,
@@ -780,7 +781,7 @@ async def list_teams(
 
     # Поиск подстроки (без учёта регистра) по name, title, slug и aliases
     if search and search.strip():
-        search_escaped = re.escape(search.strip())
+        search_escaped = literal_search_pattern(search.strip())
         conditions.append({"$or": [
             {"name": {"$regex": search_escaped, "$options": "i"}},
             {"title": {"$regex": search_escaped, "$options": "i"}},

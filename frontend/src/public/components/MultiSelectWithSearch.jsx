@@ -15,6 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { normalizeSearchText } from '@/utils/search';
 
 export default function MultiSelectWithSearch({
   value = [],
@@ -25,9 +26,9 @@ export default function MultiSelectWithSearch({
   getOptionLabel = (option) => String(option),
   getOptionValue = (option) => String(option),
   filterOptions = (options, search) => {
-    const query = search.toLowerCase();
+    const query = normalizeSearchText(search);
     return options.filter(option => {
-      const label = getOptionLabel(option).toLowerCase();
+      const label = normalizeSearchText(getOptionLabel(option));
       return label.includes(query);
     });
   },

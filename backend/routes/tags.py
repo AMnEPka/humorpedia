@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from models.user import Tag, TagCreate
 from utils.database import get_db
 from utils.slugify import generate_slug
+from utils.search import literal_search_pattern
 
 router = APIRouter(prefix="/tags", tags=["tags"], dependencies=[Depends(require_editor_on_write)])
 
@@ -46,7 +47,7 @@ async def list_tags(
     
     query = {}
     if search:
-        query["name"] = {"$regex": search, "$options": "i"}
+        query["name"] = {"$regex": literal_search_pattern(search), "$options": "i"}
     
     sort_field = {
         "usage": ("usage_count", -1),

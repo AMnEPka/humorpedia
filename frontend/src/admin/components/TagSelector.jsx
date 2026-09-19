@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/popover';
 import { tagsApi } from '../utils/api';
 import { cn } from '@/lib/utils';
+import { normalizeSearchText } from '@/utils/search';
 
 export default function TagSelector({ value = [], onChange, placeholder = "Добавить тег..." }) {
   const [open, setOpen] = useState(false);
@@ -42,15 +43,16 @@ export default function TagSelector({ value = [], onChange, placeholder = "До�
   }, []);
 
   // Filter tags based on search
-  const filteredTags = allTags.filter(tag => 
-    tag.toLowerCase().includes(search.toLowerCase()) && 
+  const normalizedSearch = normalizeSearchText(search);
+  const filteredTags = allTags.filter(tag =>
+    normalizeSearchText(tag).includes(normalizedSearch) &&
     !value.includes(tag)
   );
 
   // Check if search term is a new tag (not in allTags)
-  const isNewTag = search.trim() && 
-    !allTags.some(t => t.toLowerCase() === search.toLowerCase()) &&
-    !value.some(t => t.toLowerCase() === search.toLowerCase());
+  const isNewTag = search.trim() &&
+    !allTags.some(t => normalizeSearchText(t) === normalizedSearch) &&
+    !value.some(t => normalizeSearchText(t) === normalizedSearch);
 
   const addTag = useCallback((tag) => {
     if (tag && !value.includes(tag)) {

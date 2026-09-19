@@ -25,7 +25,7 @@ export default function LinkInserter({ editor, onInsert }) {
 
     setLoading(true);
     try {
-      const response = await contentApi.searchContent(searchQuery, selectedTypes.join(','));
+      const response = await contentApi.searchForLinks(searchQuery, selectedTypes.join(','));
       setResults(response.data.results || []);
     } catch (error) {
       console.error('Search error:', error);

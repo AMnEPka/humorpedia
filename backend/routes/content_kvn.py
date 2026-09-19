@@ -12,6 +12,7 @@ import logging
 from models.base import ContentStatus
 from models.content import KVN, KVNCreate, KVNUpdate
 from utils.database import get_db
+from utils.search import literal_search_pattern
 from services.crud import (
     check_slug_unique, create_content, delete_content,
     get_by_id_or_slug, convert_objectids_to_strings,
@@ -551,10 +552,11 @@ async def list_kvn(
     query = {}
     
     if search:
+        search_pattern = literal_search_pattern(search)
         query["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"name": {"$regex": search, "$options": "i"}},
-            {"slug": {"$regex": search, "$options": "i"}}
+            {"title": {"$regex": search_pattern, "$options": "i"}},
+            {"name": {"$regex": search_pattern, "$options": "i"}},
+            {"slug": {"$regex": search_pattern, "$options": "i"}}
         ]
     
     if status:

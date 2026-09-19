@@ -56,7 +56,7 @@ def _team_card(team: dict) -> dict:
     return {
         "id": team["_id"], "slug": team.get("slug"), "name": team.get("name") or team.get("title"),
         "team_type": team.get("team_type"), "logo": team.get("logo"), "status": team.get("status"),
-        "url": team_url(team), "show": team.get("show"),
+        "show_id": team.get("show_id"), "url": team_url(team), "show": team.get("show"),
     }
 
 

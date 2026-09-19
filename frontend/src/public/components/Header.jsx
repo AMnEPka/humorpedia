@@ -1,14 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, User, LogIn, Loader2 } from 'lucide-react';
+import { Search, Menu, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import publicApi from '../utils/api';
 
@@ -75,11 +69,12 @@ export default function Header() {
 
   useEffect(() => {
     // Load autocomplete suggestions
-    if (searchQuery.length >= 2) {
+    const query = searchQuery.trim();
+    if (query.length >= 2) {
       setLoadingSuggestions(true);
       let cancelled = false;
       const timer = setTimeout(() => {
-        publicApi.searchAutocomplete(searchQuery)
+        publicApi.searchAutocomplete(query)
           .then(res => {
             if (cancelled) {
               return;
@@ -123,15 +118,20 @@ export default function Header() {
 
   const navigation = [...menuSections, ...staticNavigation];
 
+  const openSearchResults = () => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      return;
+    }
+    setSearchQuery('');
+    setSearchOpen(false);
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(query)}`);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim();
-      setSearchQuery(''); // Очистить поле после поиска
-      setSearchOpen(false);
-      setShowSuggestions(false);
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-    }
+    openSearchResults();
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -193,6 +193,7 @@ export default function Header() {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label="Закрыть поиск"
                       onClick={() => {
                         setSearchOpen(false);
                         setShowSuggestions(false);
@@ -205,7 +206,7 @@ export default function Header() {
                   </form>
                   
                   {/* Autocomplete suggestions */}
-                  {showSuggestions && suggestions.length > 0 && (
+                  {showSuggestions && searchQuery.trim().length >= 2 && (
                     <div className="absolute top-full mt-2 w-full sm:w-96 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto">
                       {suggestions.map((item) => (
                         <button
@@ -225,6 +226,13 @@ export default function Header() {
                           </div>
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={openSearchResults}
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-blue-700 hover:bg-blue-50 border-t transition-colors"
+                      >
+                        Показать все результаты по запросу «{searchQuery.trim()}»
+                      </button>
                     </div>
                   )}
                 </div>
@@ -232,6 +240,7 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Открыть поиск"
                   onClick={() => setSearchOpen(true)}
                   className="text-gray-600"
                 >
@@ -239,23 +248,6 @@ export default function Header() {
                 </Button>
               )}
             </div>
-
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-gray-600">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to="/login">Войти</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/register">Регистрация</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Mobile menu button */}
             <Button

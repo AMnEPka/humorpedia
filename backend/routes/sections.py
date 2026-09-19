@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from models.section import Section, SectionCreate, SectionUpdate, SectionTree
 from models.base import ContentStatus
 from utils.database import get_db
+from utils.search import literal_search_pattern
 from services.tags import tag_service
 
 router = APIRouter(prefix="/sections", tags=["sections"], dependencies=[Depends(require_editor_on_write)])
@@ -182,9 +183,10 @@ async def list_sections(
         query["in_main_menu"] = in_main_menu
     
     if search:
+        search_pattern = literal_search_pattern(search)
         query["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}}
+            {"title": {"$regex": search_pattern, "$options": "i"}},
+            {"description": {"$regex": search_pattern, "$options": "i"}}
         ]
     
     total = await db.sections.count_documents(query)

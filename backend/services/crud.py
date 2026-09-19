@@ -11,6 +11,7 @@ import logging
 import re
 
 from utils.database import get_db
+from utils.search import literal_search_pattern
 from services.tags import tag_service
 
 logger = logging.getLogger(__name__)
@@ -201,7 +202,7 @@ def build_query(
     if tag:
         query["tags"] = tag
     if search and search_fields:
-        search_pattern = re.escape(search)
+        search_pattern = literal_search_pattern(search)
         query["$or"] = [{f: {"$regex": search_pattern, "$options": "i"}} for f in search_fields]
     if letter:
         query[letter_field] = {"$regex": f"^{re.escape(letter)}", "$options": "i"}

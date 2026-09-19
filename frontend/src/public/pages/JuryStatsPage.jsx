@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import MultiSelectWithSearch from '../components/MultiSelectWithSearch';
 import publicApi from '../utils/api';
 import { usePageTitle } from '@/utils/pageTitle';
+import { normalizeSearchText } from '@/utils/search';
 
 export default function JuryStatsPage() {
   const location = useLocation();
@@ -116,9 +117,9 @@ export default function JuryStatsPage() {
     
     // Filter by search query
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(jury => 
-        jury.name.toLowerCase().includes(query)
+      const query = normalizeSearchText(searchQuery);
+      filtered = filtered.filter(jury =>
+        normalizeSearchText(jury.name).includes(query)
       );
     }
     
@@ -441,10 +442,10 @@ export default function JuryStatsPage() {
                     getOptionLabel={(option) => teamNames[option] || option}
                     getOptionValue={(option) => option}
                     filterOptions={(options, search) => {
-                      const query = search.toLowerCase();
+                      const query = normalizeSearchText(search);
                       return options.filter(team => {
-                        const teamName = (teamNames[team] || team).toLowerCase();
-                        return teamName.includes(query) || team.toLowerCase().includes(query);
+                        const teamName = normalizeSearchText(teamNames[team] || team);
+                        return teamName.includes(query) || normalizeSearchText(team).includes(query);
                       });
                     }}
                   />
@@ -461,8 +462,8 @@ export default function JuryStatsPage() {
                     getOptionLabel={(option) => option.name}
                     getOptionValue={(option) => option.name}
                     filterOptions={(options, search) => {
-                      const query = search.toLowerCase();
-                      return options.filter(jury => jury.name.toLowerCase().includes(query));
+                      const query = normalizeSearchText(search);
+                      return options.filter(jury => normalizeSearchText(jury.name).includes(query));
                     }}
                   />
                 </div>

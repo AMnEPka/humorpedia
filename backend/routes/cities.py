@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 from models.base import ContentStatus
 from models.city import City, CityCreate, CityUpdate
 from utils.database import get_db
+from utils.search import literal_search_pattern
 from services.tags import tag_service
 from services.show_teams import attach_show_info
 from services.crud import list_alphabetical_content
@@ -100,7 +101,7 @@ async def list_cities(
     if tag:
         query["tags"] = tag
     if search:
-        search_pattern = re.escape(search)
+        search_pattern = literal_search_pattern(search)
         query["$or"] = [
             {"title": {"$regex": search_pattern, "$options": "i"}},
             {"name": {"$regex": search_pattern, "$options": "i"}},

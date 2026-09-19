@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { Award, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import publicApi from '../../utils/api';
-import {
-  RESULT_TONE_CLASSES, pagePath, roleTitle, seasonResult, teamHref, tournamentTitle, yearsLabel,
-} from './labels';
+import { pagePath, roleTitle, teamHref, tournamentTitle } from './labels';
 
-// Карьера человека: команды (из составов) с сезонами и роли в турнирах (жюри, ведущий, редактор).
+export function kvnCareerTeams(teams = []) {
+  return teams.filter(({ team }) => !team?.show_id);
+}
+
+// Карьера человека: команды КВН из составов и роли в турнирах (жюри, ведущий, редактор).
 export default function PersonCareer({ personSlug }) {
   const [data, setData] = useState(null);
 
@@ -30,35 +32,35 @@ export default function PersonCareer({ personSlug }) {
     return [...groups.values()];
   }, [data]);
 
-  if (!data || (data.teams.length === 0 && roleGroups.length === 0)) return null;
+  if (!data) return null;
+
+  return <PersonCareerContent teams={kvnCareerTeams(data.teams)} roleGroups={roleGroups} />;
+}
+
+export function PersonCareerContent({ teams, roleGroups }) {
+  if (teams.length === 0 && roleGroups.length === 0) return null;
 
   return (
     <>
-      {data.teams.length > 0 && (
+      {teams.length > 0 && (
         <Card id="section-career-teams" className="scroll-mt-20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" /> Команды
+              <Users className="h-5 w-5 text-blue-600" /> Команды КВН
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-              {data.teams.map(({ membership, team, seasons }) => (
+              {teams.map(({ membership, team }) => (
                 <li key={membership._id}>
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <Link to={teamHref(team)} className="font-semibold text-blue-700 hover:underline">{team.name}</Link>
-                    {[membership.roles?.join(', '), yearsLabel(membership)].filter(Boolean).length > 0 && (
+                    {membership.roles?.length > 0 && (
                       <span className="text-sm text-gray-500">
-                        {[membership.roles?.join(', '), yearsLabel(membership)].filter(Boolean).join(' · ')}
+                        {membership.roles.join(', ')}
                       </span>
                     )}
-                    {membership.status === 'former' && <span className="text-xs text-gray-400">бывший участник</span>}
                   </div>
-                  {seasons.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {seasons.map((season) => <SeasonChip key={season._id} season={season} />)}
-                    </div>
-                  )}
                 </li>
               ))}
             </ul>
@@ -102,20 +104,4 @@ export default function PersonCareer({ personSlug }) {
       )}
     </>
   );
-}
-
-function SeasonChip({ season }) {
-  const result = seasonResult(season);
-  const href = pagePath(season.season_path);
-  const label = `${season.tournament?.short_title || tournamentTitle(season.tournament)} ${season.season_year}`;
-  const className = `text-xs px-2 py-0.5 rounded border ${RESULT_TONE_CLASSES[result.tone]}`;
-  const content = (
-    <>
-      {label}
-      {result.tone === 'gold' && ' 🏆'}
-    </>
-  );
-  return href
-    ? <Link to={href} className={`${className} hover:opacity-80`} title={result.label}>{content}</Link>
-    : <span className={className} title={result.label}>{content}</span>;
 }
