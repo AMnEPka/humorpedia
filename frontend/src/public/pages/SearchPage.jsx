@@ -60,7 +60,7 @@ export default function SearchPage() {
   const performSearch = async (q) => {
     setLoading(true);
     try {
-      const res = await publicApi.search(q);
+      const res = await publicApi.search(q, { limit: 100 });
       setResults(res.data);
       
       // Calculate total

@@ -118,15 +118,20 @@ export default function Header() {
 
   const navigation = [...menuSections, ...staticNavigation];
 
+  const openSearchResults = () => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      return;
+    }
+    setSearchQuery('');
+    setSearchOpen(false);
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(query)}`);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim();
-      setSearchQuery(''); // Очистить поле после поиска
-      setSearchOpen(false);
-      setShowSuggestions(false);
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-    }
+    openSearchResults();
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -188,6 +193,7 @@ export default function Header() {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label="Закрыть поиск"
                       onClick={() => {
                         setSearchOpen(false);
                         setShowSuggestions(false);
@@ -200,7 +206,7 @@ export default function Header() {
                   </form>
                   
                   {/* Autocomplete suggestions */}
-                  {showSuggestions && suggestions.length > 0 && (
+                  {showSuggestions && searchQuery.trim().length >= 2 && (
                     <div className="absolute top-full mt-2 w-full sm:w-96 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto">
                       {suggestions.map((item) => (
                         <button
@@ -220,6 +226,13 @@ export default function Header() {
                           </div>
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={openSearchResults}
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-blue-700 hover:bg-blue-50 border-t transition-colors"
+                      >
+                        Показать все результаты по запросу «{searchQuery.trim()}»
+                      </button>
                     </div>
                   )}
                 </div>
@@ -227,6 +240,7 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Открыть поиск"
                   onClick={() => setSearchOpen(true)}
                   className="text-gray-600"
                 >
