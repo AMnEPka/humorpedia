@@ -19,6 +19,7 @@ const reasonLabels = {
   name_only: 'Совпадение только по имени',
   slug_conflict: 'Конфликт slug',
   slug_unresolved: 'Страница из исходной ссылки не найдена',
+  name_mismatch: 'Имя в составе не совпадает со страницей',
 };
 
 function personTitle(person) {

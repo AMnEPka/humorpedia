@@ -201,7 +201,8 @@ GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + с�
 ## memberships.py — `/competitions` (составы, карьера человека)
 GET `/teams/{id_or_slug}/members` · POST `/memberships` ✏️ · PUT `/memberships/{id}` ✏️ · DELETE `/memberships/{id}` ✏️ · POST `/memberships/import-rosters?team=` 🛡 · GET `/membership-links/review` ✏️ · PATCH `/membership-links/review/{id}` ✏️ · GET `/people/{id_or_slug}/career`
 
-Очередь связей состава показывает кандидатов по совпадению имени, конфликты slug и отсутствующие цели исходных ссылок. `confirm` подтверждает предложенную
+Очередь связей состава показывает кандидатов по совпадению имени, конфликты slug, отличающееся от страницы имя в составе
+и отсутствующие цели исходных ссылок. `confirm` подтверждает предложенную
 страницу, `link` выбирает другую, `reject` снимает только ссылку и сохраняет строку участника. Карьера человека использует
 только сохранённые `person_id`, без обратного динамического связывания по имени.
 

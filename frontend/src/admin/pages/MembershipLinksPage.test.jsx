@@ -101,6 +101,19 @@ test('показывает данные проверки и объясняет �
   expect(container.textContent).toContain('Ожидают: 1');
 });
 
+test('объясняет несовпадение имени в составе со страницей человека', async () => {
+  contentApi.listMembershipLinkReviews.mockResolvedValue({
+    data: {
+      ...response,
+      items: [{ ...response.items[0], reason: 'name_mismatch' }],
+    },
+  });
+
+  await renderPage();
+
+  expect(container.textContent).toContain('Имя в составе не совпадает со страницей');
+});
+
 test('подтверждает, отклоняет и вручную меняет страницу человека', async () => {
   await renderPage();
 
