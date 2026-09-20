@@ -521,14 +521,17 @@ from services.cache import cache_service as _cache
 
 
 class CacheControlMiddleware(BaseHTTPMiddleware):
-    """Cache-Control для публичных GET-ответов (кроме /auth, /admin, /cache)."""
+    """Публичные GET кэшируются, авторизованные ответы браузер не переиспользует."""
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         if request.method == "GET" and response.status_code == 200:
             path = request.url.path
-            if "cache-control" not in response.headers and "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
-                # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
-                response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+            if "cache-control" not in response.headers:
+                if request.headers.get("Authorization"):
+                    response.headers["Cache-Control"] = "private, no-store"
+                elif "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
+                    # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
+                    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
         return response
 
 

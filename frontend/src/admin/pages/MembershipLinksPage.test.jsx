@@ -114,6 +114,7 @@ test('подтверждает, отклоняет и вручную меняе�
   await click('Выбрать Анну');
   expect(contentApi.reviewMembershipLink).toHaveBeenCalledWith('membership-1', { action: 'link', person_id: 'person-2' });
   expect(contentApi.listMembershipLinkReviews.mock.calls.length).toBeGreaterThan(1);
+  expect(container.querySelector('[role="status"]')?.textContent).toContain('Решение сохранено');
 });
 
 test('передаёт поиск, фильтры и следующую страницу в API', async () => {
