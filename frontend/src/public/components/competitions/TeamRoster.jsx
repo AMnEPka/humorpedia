@@ -39,7 +39,7 @@ function MemberList({ members, muted = false }) {
         return (
           <li key={member._id} className="text-sm leading-snug">
             {href ? (
-              <Link to={href} className={muted ? 'text-gray-700 hover:text-blue-600' : 'text-blue-700 hover:underline'}>
+              <Link to={href} className="text-blue-700 hover:underline">
                 {member.person?.name || member.person_name}
               </Link>
             ) : (

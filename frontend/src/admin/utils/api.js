@@ -234,6 +234,8 @@ export const contentApi = {
   updateMembership: (id, data) => api.put(`/competitions/memberships/${id}`, data),
   deleteMembership: (id) => api.delete(`/competitions/memberships/${id}`),
   importTeamRoster: (teamIdOrSlug) => api.post('/competitions/memberships/import-rosters', null, { params: { team: teamIdOrSlug } }),
+  listMembershipLinkReviews: (params) => api.get('/competitions/membership-links/review', { params }),
+  reviewMembershipLink: (id, data) => api.patch(`/competitions/membership-links/review/${id}`, data),
 
   // Duplicate content
   duplicateContent: (contentType, id) => api.post(`/content/${contentType}/${id}/duplicate`),

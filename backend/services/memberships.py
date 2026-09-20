@@ -2,9 +2,10 @@
 Составы: связь «человек — команда — роль — годы».
 
 Коллекция memberships:
-{ _id, team_id, person_id|null, person_name, person_slug (slug со старого сайта), name_key,
+{ _id, team_id, person_id|null, candidate_person_id|null, person_name, person_slug (slug со старого сайта), name_key,
   roles: ["капитан", ...], from_year, to_year, status: "current"|"former", season_ids: [],
-  note, source: "manual"|"roster_text", source_ref (id модуля), order, created_at, updated_at }
+  note, source: "manual"|"roster_text", source_ref (id модуля), link_review_status,
+  reviewed_by, reviewed_at, order, created_at, updated_at }
 
 Человек может ещё не иметь страницы (в БД почти нет людей): запись хранит имя и slug, а person_id
 проставляется автоматически при появлении человека (link_person / resolve_memberships).
@@ -27,6 +28,9 @@ SOURCE_ROSTER = "roster_text"
 SOURCE_MANUAL = "manual"
 STATUS_CURRENT = "current"
 STATUS_FORMER = "former"
+LINK_CANDIDATE = "candidate"
+LINK_CONFIRMED = "confirmed"
+LINK_REJECTED = "rejected"
 
 _DASHES = "–—-"
 _BLOCK_TAGS = {"li", "p", "div", "h2", "h3", "h4", "h5", "tr"}
@@ -334,6 +338,47 @@ def person_keys(person: dict) -> set[str]:
     return keys
 
 
+def membership_link_reason(membership: dict, lookup: PersonLookup) -> Optional[str]:
+    """Причина, по которой связь требует редакторской проверки."""
+    target_id = membership.get("candidate_person_id") or membership.get("person_id")
+    if not target_id or membership.get("link_review_status") in (LINK_CONFIRMED, LINK_REJECTED):
+        return None
+    slug = (membership.get("person_slug") or "").lower()
+    if not slug:
+        return "name_only"
+    source_person_id = lookup.by_slug.get(slug)
+    if not source_person_id:
+        return "slug_unresolved"
+    if source_person_id != target_id:
+        return "slug_conflict"
+    return None
+
+
+def membership_review_status(membership: dict, lookup: PersonLookup) -> str:
+    explicit = membership.get("link_review_status")
+    if explicit in (LINK_CANDIDATE, LINK_CONFIRMED, LINK_REJECTED):
+        return explicit
+    if membership.get("person_link_disabled"):
+        return LINK_REJECTED
+    if membership_link_reason(membership, lookup):
+        return LINK_CANDIDATE
+    if membership.get("person_id"):
+        return LINK_CONFIRMED
+    return "unresolved"
+
+
+def preserve_pending_public_link(doc: dict, existing: Optional[dict], lookup: PersonLookup) -> dict:
+    """Не скрывать старую сомнительную связь при повторном импорте до решения редактора."""
+    if existing and membership_review_status(existing, lookup) == LINK_CANDIDATE and existing.get("person_id"):
+        doc.update({
+            "person_id": existing["person_id"],
+            "candidate_person_id": existing.get("candidate_person_id"),
+            "matched_by": existing.get("matched_by"),
+            "link_review_status": LINK_CANDIDATE,
+        })
+    return doc
+
+
 async def load_person_lookup(db) -> PersonLookup:
     people = await db.people.find({}, {"_id": 1, "slug": 1, "full_name": 1, "title": 1, "aliases": 1, "old_urls": 1}).to_list(None)
     return PersonLookup(people)
@@ -353,12 +398,16 @@ def memberships_from_team(team: dict, lookup: PersonLookup) -> tuple[list[dict],
             "unparsed": parsed["unparsed"], "count": len(parsed["entries"]),
         })
         for order, entry in enumerate(parsed["entries"]):
-            person_id, matched_by = lookup.resolve(entry["person_slug"], entry["person_name"])
+            resolved_person_id, matched_by = lookup.resolve(entry["person_slug"], entry["person_name"])
+            person_id = resolved_person_id if matched_by == "slug" else None
+            candidate_person_id = resolved_person_id if matched_by == "name" else None
             docs.append({
                 "_id": stable_id("membership", team["_id"], module.get("id"), order),
                 "team_id": team["_id"],
                 "person_id": person_id,
+                "candidate_person_id": candidate_person_id,
                 "matched_by": matched_by,
+                "link_review_status": LINK_CONFIRMED if person_id else (LINK_CANDIDATE if candidate_person_id else None),
                 "person_name": entry["person_name"],
                 "person_slug": entry["person_slug"],
                 "name_key": entry["name_key"],
@@ -384,6 +433,12 @@ async def import_team_rosters(db, team: dict, lookup: Optional[PersonLookup] = N
     lookup = lookup or await load_person_lookup(db)
     docs, report = memberships_from_team(team, lookup)
 
+    existing_roster = {
+        m["name_key"]: m async for m in db.memberships.find(
+            {"team_id": team["_id"], "source": SOURCE_ROSTER}
+        ) if m.get("name_key")
+    }
+
     manual_keys = {
         m["name_key"] async for m in db.memberships.find(
             {"team_id": team["_id"], "source": {"$ne": SOURCE_ROSTER}}, {"name_key": 1}
@@ -394,10 +449,11 @@ async def import_team_rosters(db, team: dict, lookup: Optional[PersonLookup] = N
         key = doc["name_key"]
         if not key or key in manual_keys:
             continue
+        preserve_pending_public_link(doc, existing_roster.get(key), lookup)
         if key in merged:
             target = merged[key]
             target["roles"] += [r for r in doc["roles"] if r not in target["roles"]]
-            for field in ("person_id", "matched_by", "person_slug", "from_year", "to_year"):
+            for field in ("person_id", "candidate_person_id", "matched_by", "person_slug", "from_year", "to_year"):
                 target[field] = target[field] or doc[field]
             if doc["status"] == STATUS_CURRENT:
                 target["status"] = STATUS_CURRENT
@@ -446,19 +502,59 @@ async def ensure_rosters_imported(db) -> None:
 
 
 async def link_person(db, person: dict) -> int:
-    """Проставить person_id записям составов, которые ссылаются на этого человека по slug или однозначному имени."""
+    """Связать явный slug; совпадение только по имени сохранить кандидатом для редактора."""
     person_id = str(person["_id"])
     lookup = await load_person_lookup(db)
     slugs = [s for s, pid in lookup.by_slug.items() if pid == person_id]
     keys = [k for k, pid in lookup.by_key.items() if pid == person_id]
-    query = {"person_id": None, "$or": [{"person_slug": {"$in": slugs}}, {"name_key": {"$in": keys}}]}
-    result = await db.memberships.update_many(query, {"$set": {"person_id": person_id, "updated_at": now_iso()}})
-    return result.modified_count
+    now = now_iso()
+    slug_result = await db.memberships.update_many(
+        {
+            "person_id": None,
+            "person_link_disabled": {"$ne": True},
+            "person_slug": {"$in": slugs},
+        },
+        {"$set": {
+            "person_id": person_id,
+            "candidate_person_id": None,
+            "matched_by": "slug",
+            "link_review_status": LINK_CONFIRMED,
+            "updated_at": now,
+        }},
+    )
+    name_result = await db.memberships.update_many(
+        {
+            "person_id": None,
+            "person_link_disabled": {"$ne": True},
+            "name_key": {"$in": keys},
+            "$or": [{"person_slug": None}, {"person_slug": ""}, {"person_slug": {"$nin": slugs}}],
+        },
+        {"$set": {
+            "candidate_person_id": person_id,
+            "matched_by": "name",
+            "link_review_status": LINK_CANDIDATE,
+            "updated_at": now,
+        }},
+    )
+    return slug_result.modified_count + name_result.modified_count
+
+
+def linkable_memberships_query(slugs: list[str], keys: list[str]) -> dict:
+    """Автосвязь не должна отменять ручное решение редактора оставить однофамильца без страницы."""
+    return {
+        "person_id": None,
+        "person_link_disabled": {"$ne": True},
+        "$or": [{"person_slug": {"$in": slugs}}, {"name_key": {"$in": keys}}],
+    }
 
 
 async def unlink_person(db, person_id: str) -> int:
     result = await db.memberships.update_many(
-        {"person_id": person_id}, {"$set": {"person_id": None, "matched_by": None, "updated_at": now_iso()}}
+        {"person_id": person_id},
+        {
+            "$set": {"person_id": None, "matched_by": None, "updated_at": now_iso()},
+            "$unset": {"link_review_status": "", "candidate_person_id": ""},
+        },
     )
     return result.modified_count
 
@@ -466,5 +562,7 @@ async def unlink_person(db, person_id: str) -> int:
 async def create_membership_indexes(ensure_index, db) -> None:
     await ensure_index(db.memberships, [("team_id", 1), ("status", 1), ("order", 1)])
     await ensure_index(db.memberships, "person_id")
+    await ensure_index(db.memberships, "candidate_person_id", sparse=True)
+    await ensure_index(db.memberships, "link_review_status", sparse=True)
     await ensure_index(db.memberships, "person_slug", sparse=True)
     await ensure_index(db.memberships, "name_key")

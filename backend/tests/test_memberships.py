@@ -3,7 +3,9 @@ import pytest
 
 from services.competitions import TeamLookup, build_participations, legacy_to_season
 from services.memberships import (
-    PersonLookup, memberships_from_team, name_key, normalize_role, parse_roster_html, parse_years,
+    LINK_CANDIDATE, LINK_CONFIRMED, PersonLookup, linkable_memberships_query, membership_link_reason,
+    membership_review_status, memberships_from_team, name_key, normalize_role, parse_roster_html, parse_years,
+    preserve_pending_public_link,
 )
 
 
@@ -103,18 +105,64 @@ def test_person_lookup_by_slug_old_url_and_unambiguous_name():
     assert lookup.resolve(None, "Иван Иванов") == (None, None), "тёзки — по имени не связываем"
 
 
+def test_manual_unlink_is_excluded_from_future_auto_linking():
+    assert linkable_memberships_query(["anna-borodina"], ["анна бородина"]) == {
+        "person_id": None,
+        "person_link_disabled": {"$ne": True},
+        "$or": [
+            {"person_slug": {"$in": ["anna-borodina"]}},
+            {"name_key": {"$in": ["анна бородина"]}},
+        ],
+    }
+
+
+def test_legacy_name_link_and_slug_conflict_require_review():
+    lookup = PersonLookup([{"_id": "p1", "slug": "anna-borodina", "full_name": "Анна Бородина"}])
+    name_only = {"person_id": "p1", "person_name": "Анна Бородина", "person_slug": None}
+    slug_conflict = {**name_only, "person_slug": "other-anna"}
+
+    assert membership_link_reason(name_only, lookup) == "name_only"
+    assert membership_link_reason(slug_conflict, lookup) == "slug_unresolved"
+    lookup.by_slug["other-anna"] = "p2"
+    assert membership_link_reason(slug_conflict, lookup) == "slug_conflict"
+    assert membership_review_status(name_only, lookup) == LINK_CANDIDATE
+    assert membership_link_reason({**name_only, "link_review_status": LINK_CONFIRMED}, lookup) is None
+
+
+def test_reimport_keeps_legacy_candidate_public_until_review():
+    lookup = PersonLookup([{"_id": "p1", "slug": "anna-borodina", "full_name": "Анна Бородина"}])
+    generated = {
+        "person_id": None,
+        "candidate_person_id": "p1",
+        "matched_by": "name",
+        "link_review_status": LINK_CANDIDATE,
+    }
+    existing = {"person_id": "p1", "person_name": "Анна Бородина", "matched_by": "name"}
+
+    result = preserve_pending_public_link(generated, existing, lookup)
+
+    assert result["person_id"] == "p1"
+    assert result["link_review_status"] == LINK_CANDIDATE
+
+
 def test_memberships_from_team():
     team = {"_id": "team-1", "modules": [
         {"id": "m1", "type": "text_block", "data": {"title": "Состав команды", "content":
             '<ul><li><a href="people/anton-shastun.html">Антон Шастун</a> – капитан</li><li>Пётр Петров</li></ul>'}},
         {"id": "m2", "type": "text_block", "data": {"title": "История команды", "content": "<p>Текст</p>"}},
     ]}
-    lookup = PersonLookup([{"_id": "p1", "slug": "anton-shastun", "title": "Шастун Антон"}])
+    lookup = PersonLookup([
+        {"_id": "p1", "slug": "anton-shastun", "title": "Шастун Антон"},
+        {"_id": "p2", "slug": "petr-petrov", "title": "Пётр Петров"},
+    ])
     docs, report = memberships_from_team(team, lookup)
     assert report == [{"module_id": "m1", "complete": True, "unparsed": [], "count": 2}]
     assert [(d["person_name"], d["person_id"], d["roles"]) for d in docs] == [
         ("Антон Шастун", "p1", ["капитан"]), ("Пётр Петров", None, []),
     ]
+    assert docs[0]["link_review_status"] == LINK_CONFIRMED
+    assert docs[1]["candidate_person_id"] == "p2"
+    assert docs[1]["link_review_status"] == LINK_CANDIDATE
     assert docs[0]["_id"] != docs[1]["_id"] and all(d["source"] == "roster_text" for d in docs)
 
 

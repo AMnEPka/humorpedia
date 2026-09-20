@@ -50,6 +50,7 @@ const AdminPeopleListPage = React.lazy(() => import('./admin/pages/PeopleListPag
 const PersonEditPage = React.lazy(() => import('./admin/pages/PersonEditPage'));
 const AdminTeamsListPage = React.lazy(() => import('./admin/pages/TeamsListPage'));
 const TeamEditPage = React.lazy(() => import('./admin/pages/TeamEditPage'));
+const MembershipLinksPage = React.lazy(() => import('./admin/pages/MembershipLinksPage'));
 const AdminShowsListPage = React.lazy(() => import('./admin/pages/ShowsListPage'));
 const ShowEditPage = React.lazy(() => import('./admin/pages/ShowEditPage'));
 const ShowAppearancesPage = React.lazy(() => import('./admin/pages/ShowAppearancesPage'));
@@ -240,6 +241,7 @@ function AppRoutes() {
         {/* Admin - Teams */}
         <Route path="/admin/teams" element={<WithTitle title="Админка: Команды"><ProtectedRoute><AdminTeamsListPage /></ProtectedRoute></WithTitle>} />
         <Route path="/admin/teams/:id" element={<WithTitle title="Админка: Редактирование команды"><ProtectedRoute><TeamEditPage /></ProtectedRoute></WithTitle>} />
+        <Route path="/admin/membership-links" element={<WithTitle title="Админка: Проверка связей состава"><ProtectedRoute><MembershipLinksPage /></ProtectedRoute></WithTitle>} />
         
         {/* Admin - Shows */}
         <Route path="/admin/show-appearances" element={<WithTitle title="Админка: Участники шоу"><ProtectedRoute><ShowAppearancesPage /></ProtectedRoute></WithTitle>} />

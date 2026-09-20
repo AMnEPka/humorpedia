@@ -10,11 +10,12 @@ import { contentApi, getErrorMessage } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import PersonSelector from './PersonSelector';
 
-const emptyRow = { person_id: null, person_name: '', roles: [], from_year: null, to_year: null, status: 'current', note: '' };
+const emptyRow = { person_id: null, person_link_disabled: false, person_name: '', roles: [], from_year: null, to_year: null, status: 'current', note: '' };
 
-const toPayload = (teamId, row) => ({
+export const toPayload = (teamId, row) => ({
   team_id: teamId,
   person_id: row.person_id || null,
+  person_link_disabled: Boolean(row.person_link_disabled),
   person_name: row.person_name || '',
   person_slug: row.person_slug || null,
   roles: row.roles || [],
@@ -24,6 +25,11 @@ const toPayload = (teamId, row) => ({
   season_ids: row.season_ids || [],
   note: row.note || '',
   order: row.order || 0,
+});
+
+export const personSelectionPatch = (ids) => ({
+  person_id: ids.length ? ids[ids.length - 1] : null,
+  person_link_disabled: ids.length === 0,
 });
 
 // Состав команды: записи «человек — роль — годы». Импортированные из текста записи
@@ -76,7 +82,9 @@ export default function TeamMembershipsEditor({ teamId }) {
             <CardTitle>Состав команды ({rows.length})</CardTitle>
             <CardDescription>
               Записи из блока «Состав команды» разбираются автоматически при сохранении модулей.
-              Люди без страницы связываются сами, когда страница появится (по slug старого сайта или имени).
+              Связи со страницами людей правятся здесь отдельно от текста модуля: крестик рядом с выбранным человеком
+              оставляет имя без ссылки. Остальные люди без страницы связываются сами, когда страница появится
+              (по slug старого сайта или имени).
             </CardDescription>
           </div>
           {isAdmin && (
@@ -169,9 +177,14 @@ function RowFields({ value, onChange }) {
       <div className="md:col-span-4 space-y-1">
         <PersonSelector
           value={value.person_id ? [value.person_id] : []}
-          onChange={(ids) => set({ person_id: ids.length ? ids[ids.length - 1] : null })}
+          onChange={(ids) => set(personSelectionPatch(ids))}
           placeholder="Страница человека…"
         />
+        {value.person_link_disabled && (
+          <p className="text-xs text-amber-700">
+            Автопривязка отключена: участник останется без ссылки, пока вы не выберете страницу вручную.
+          </p>
+        )}
         {!value.person_id && (
           <Input placeholder="Имя (если страницы нет)" value={value.person_name || ''} onChange={e => set({ person_name: e.target.value })} />
         )}
