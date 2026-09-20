@@ -62,6 +62,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── competition.py        SeasonUpdate / Stage / Game / GameResult / ParticipantRef — валидация правки сезона
 │   │   ├── content.py            Person, Team, Show, Article, News, Quiz, Wiki, KVN (+ *Create / *Update)
 │   │   ├── modules.py            ModuleType (enum), схемы data модулей, PageModule, PageTemplate
+│   │   ├── correction_suggestion.py  plain-text предложение правки и статусы редакционной очереди
 │   │   ├── section.py            Section, SectionCreate/Update, SectionTree
 │   │   ├── city.py               City (+Create/Update)
 │   │   ├── user.py               User, UserRole, AuthProvider, OAuthData, TokenResponse…
@@ -80,6 +81,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── cities.py             города; люди — редакционная подборка, команды — точное связывание по городу
 │   │   ├── tags.py               теги, популярные, пересчёт usage_count
 │   │   ├── comments.py           комментарии, лайки, модерация
+│   │   ├── correction_suggestions.py  анонимная отправка предложений и очередь admin/editor
 │   │   ├── ratings.py            анонимные оценки 1–10 для article/person/team/show
 │   │   ├── media.py              загрузка файлов, браузер volume-папок, rename/delete в источнике
 │   │   ├── templates.py          шаблоны модулей, default на тип, apply-to-teams (merge модулей)

@@ -285,6 +285,11 @@ export const commentsApi = {
   delete: (id) => api.delete(`/comments/${id}`),
 };
 
+export const correctionSuggestionsApi = {
+  list: (params) => api.get('/correction-suggestions', { params }),
+  review: (id, data) => api.patch(`/correction-suggestions/${id}`, data),
+};
+
 // Media API
 export const mediaApi = {
   uploadToSource: async (file, source, prefix = '') => {

@@ -20,6 +20,7 @@ Pydantic-модели — `backend/models/`. Они используются д�
 | `cities` | `City` | cities | `content_type="page"`, `aliases[]`; `related_person_ids` — редакционная подборка известных людей, `related_team_ids` — команды со страницами, `related_team_mentions` — команды из дампа без страницы |
 | `users` | `User` | auth, users | `username`, `email`, `password_hash` (bcrypt), `role`, `permissions[]`, `oauth{vk_id, yandex_id}`, `banned` |
 | `comments` | — | comments | `resource_type`+`resource_id`, `user_id`, `parent_id`, `deleted`, модерация |
+| `correction_suggestions` | `CorrectionSuggestionCreate` | correction_suggestions | анонимные предложения правок: `page_title/page_path`, выбранный `section`, plain-text `message`, необязательные `source/email`, статус `new/in_review/fixed/rejected`, решение редактора |
 | `rating_baselines` | — | ratings | неизменяемая взвешенная база старого рейтинга: `entity_type/entity_id`, `sum`, `count`, `legacy_average`; один документ на страницу |
 | `rating_votes` | — | ratings | новые оценки 1–10; один документ на `(entity_type, entity_id, voter_hash)`, повторная оценка заменяет `score` |
 | `polls` | `Poll` | polls | вопрос, 2–20 вариантов, `draft/published/archived`, анонимные `historical_votes`, политика показа результата |

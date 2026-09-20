@@ -144,6 +144,16 @@ POST `` ✏️ · GET `` · GET `/popular` · GET `/{id_or_slug}` · PUT `/{id}`
 | POST `` 👤 (не забанен) · GET `?resource_type&resource_id` · GET `/recent` · PUT `/{id}` 👤 автор или admin · DELETE `/{id}` 👤 автор или admin · POST `/{id}/like` 👤 · GET `/pending` 🧑‍⚖️ · POST `/{id}/approve` 🧑‍⚖️ · POST `/{id}/reject` 🧑‍⚖️ |
 |---|
 
+## correction_suggestions.py — `/correction-suggestions`
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `` 🔓 | анонимно предложить исправление: путь и название страницы, раздел, plain-text сообщение, необязательные источник и email; лимит 5/час на IP |
+| GET | `` ✏️ | очередь предложений; фильтр `status`, пагинация `skip/limit` |
+| PATCH | `/{suggestion_id}` ✏️ | перевести новое/взятое в работу предложение в `in_review`, `fixed` или `rejected`, сохранить комментарий редакции |
+
+Предложения не меняют контент автоматически и не сбрасывают публичный кэш. Honeypot `website` поглощает простые
+бот-запросы. Повторное решение уже обработанного предложения возвращает `409`.
+
 ## ratings.py — `/ratings`
 | Метод | Путь | Описание |
 |---|---|---|

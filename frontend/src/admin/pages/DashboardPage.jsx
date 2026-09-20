@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { statsApi, commentsApi } from '../utils/api';
+import { statsApi, commentsApi, correctionSuggestionsApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Users, UsersRound, Tv, FileText, Newspaper, 
   HelpCircle, BookOpen, MessageSquare, Tags, Eye,
-  Plus, ArrowRight, Loader2
+  Plus, ArrowRight, Loader2, PencilLine
 } from 'lucide-react';
 
 const statCards = [
@@ -32,17 +32,20 @@ const quickActions = [
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [pendingComments, setPendingComments] = useState(0);
+  const [pendingSuggestions, setPendingSuggestions] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, commentsRes] = await Promise.all([
+        const [statsRes, commentsRes, suggestionsRes] = await Promise.all([
           statsApi.getStats(),
-          commentsApi.listPending({ limit: 1 }).catch(() => ({ data: { total: 0 } }))
+          commentsApi.listPending({ limit: 1 }).catch(() => ({ data: { total: 0 } })),
+          correctionSuggestionsApi.list({ status: 'new', limit: 1 }).catch(() => ({ data: { total: 0 } }))
         ]);
         setStats(statsRes.data);
         setPendingComments(commentsRes.data?.total || 0);
+        setPendingSuggestions(suggestionsRes.data?.total || 0);
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -103,6 +106,26 @@ export default function DashboardPage() {
               </div>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/admin/comments?pending=true">
+                  Проверить <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {pendingSuggestions > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <PencilLine className="h-5 w-5 text-blue-600" />
+                <span className="font-medium text-blue-800">
+                  Новых предложений правок: {pendingSuggestions}
+                </span>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin/correction-suggestions">
                   Проверить <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

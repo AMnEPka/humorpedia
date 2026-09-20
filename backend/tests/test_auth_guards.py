@@ -21,6 +21,7 @@ PUBLIC_WRITE_ROUTES = {
     ("POST", "/api/auth/refresh"),   # сам проверяет токен из заголовка
     ("POST", "/api/auth/logout"),
     ("PUT", "/api/ratings/{entity_type}/{entity_id}"),
+    ("POST", "/api/correction-suggestions"),
 }
 
 # Чтение, закрытое авторизацией
@@ -32,6 +33,7 @@ PROTECTED_READ_ROUTES = [
     "/api/media",
     "/api/media/browse",
     "/api/comments/pending",
+    "/api/correction-suggestions",
     "/api/cache/stats",
     "/api/auth/me",
     "/api/polls",

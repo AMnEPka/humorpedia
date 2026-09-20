@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import {
   Users, FileText, Newspaper, HelpCircle, BookOpen, Tv, 
   UsersRound, Tags, MessageSquare, Image, LayoutTemplate,
-  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database, MapPin
+  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database, MapPin, PencilLine
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,7 @@ const menuItems = [
   { path: '/admin/media', icon: Image, label: 'Медиа' },
   { path: '/admin/tags', icon: Tags, label: 'Теги' },
   { path: '/admin/comments', icon: MessageSquare, label: 'Комментарии' },
+  { path: '/admin/correction-suggestions', icon: PencilLine, label: 'Предложения правок', editorOnly: true },
   { divider: true },
   { path: '/admin/users', icon: Users, label: 'Пользователи', adminOnly: true },
   { path: '/admin/templates', icon: LayoutTemplate, label: 'Шаблоны' },
@@ -37,7 +38,7 @@ export default function AdminLayout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isEditor } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -54,6 +55,7 @@ export default function AdminLayout({ children }) {
   const filteredMenuItems = menuItems.filter(item => {
     if (item.divider) return true;
     if (item.adminOnly && !isAdmin) return false;
+    if (item.editorOnly && !isEditor) return false;
     return true;
   });
 

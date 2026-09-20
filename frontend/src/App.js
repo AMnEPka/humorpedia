@@ -71,6 +71,7 @@ const SectionEditPage = React.lazy(() => import('./admin/pages/SectionEditPage')
 const MediaPage = React.lazy(() => import('./admin/pages/MediaPage'));
 const TagsPage = React.lazy(() => import('./admin/pages/TagsPage'));
 const CommentsPage = React.lazy(() => import('./admin/pages/CommentsPage'));
+const CorrectionSuggestionsPage = React.lazy(() => import('./admin/pages/CorrectionSuggestionsPage'));
 const UsersPage = React.lazy(() => import('./admin/pages/UsersPage'));
 const TemplatesPage = React.lazy(() => import('./admin/pages/TemplatesPage'));
 const TemplateEditPage = React.lazy(() => import('./admin/pages/TemplateEditPage'));
@@ -128,8 +129,8 @@ function WithTitle({ title, children }) {
 }
 
 // Protected route wrapper for admin (AdminLayout тоже lazy)
-function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, loading, isStaff, isAdmin, logout } = useAuth();
+function ProtectedRoute({ children, adminOnly = false, editorOnly = false }) {
+  const { user, loading, isStaff, isAdmin, isEditor, logout } = useAuth();
 
   if (loading) {
     return (
@@ -158,6 +159,17 @@ function ProtectedRoute({ children, adminOnly = false }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
         <p className="text-gray-700">Эта страница доступна только администратору.</p>
+        <Button type="button" variant="link" onClick={() => window.history.back()}>
+          Вернуться назад
+        </Button>
+      </div>
+    );
+  }
+
+  if (editorOnly && !isEditor) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
+        <p className="text-gray-700">Эта страница доступна администраторам и редакторам.</p>
         <Button type="button" variant="link" onClick={() => window.history.back()}>
           Вернуться назад
         </Button>
@@ -284,6 +296,7 @@ function AppRoutes() {
         
         {/* Admin - Comments */}
         <Route path="/admin/comments" element={<WithTitle title="Админка: Комментарии"><ProtectedRoute><CommentsPage /></ProtectedRoute></WithTitle>} />
+        <Route path="/admin/correction-suggestions" element={<WithTitle title="Админка: Предложения правок"><ProtectedRoute editorOnly><CorrectionSuggestionsPage /></ProtectedRoute></WithTitle>} />
         
         {/* Admin - Users */}
         <Route path="/admin/users" element={<WithTitle title="Админка: Пользователи"><ProtectedRoute><UsersPage /></ProtectedRoute></WithTitle>} />
