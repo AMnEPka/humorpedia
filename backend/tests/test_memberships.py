@@ -126,7 +126,25 @@ def test_legacy_name_link_and_slug_conflict_require_review():
     lookup.by_slug["other-anna"] = "p2"
     assert membership_link_reason(slug_conflict, lookup) == "slug_conflict"
     assert membership_review_status(name_only, lookup) == LINK_CANDIDATE
-    assert membership_link_reason({**name_only, "link_review_status": LINK_CONFIRMED}, lookup) is None
+    assert membership_link_reason({
+        **name_only, "link_review_status": LINK_CONFIRMED, "matched_by": "manual",
+    }, lookup) is None
+
+
+def test_slug_link_with_different_visible_name_requires_review():
+    lookup = PersonLookup([{"_id": "p1", "slug": "vadim-voronin", "full_name": "Вадим Воронин"}])
+    wrong_label = {
+        "person_id": "p1",
+        "person_name": "Антон Воронин",
+        "person_slug": "vadim-voronin",
+        "matched_by": "slug",
+        "link_review_status": LINK_CONFIRMED,
+    }
+
+    assert membership_link_reason(wrong_label, lookup) == "name_mismatch"
+    assert membership_review_status(wrong_label, lookup) == LINK_CANDIDATE
+    assert membership_link_reason({**wrong_label, "matched_by": "manual"}, lookup) is None
+    assert membership_review_status({**wrong_label, "matched_by": "manual"}, lookup) == LINK_CONFIRMED
 
 
 def test_reimport_keeps_legacy_candidate_public_until_review():

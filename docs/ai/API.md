@@ -144,6 +144,16 @@ POST `` ✏️ · GET `` · GET `/popular` · GET `/{id_or_slug}` · PUT `/{id}`
 | POST `` 👤 (не забанен) · GET `?resource_type&resource_id` · GET `/recent` · PUT `/{id}` 👤 автор или admin · DELETE `/{id}` 👤 автор или admin · POST `/{id}/like` 👤 · GET `/pending` 🧑‍⚖️ · POST `/{id}/approve` 🧑‍⚖️ · POST `/{id}/reject` 🧑‍⚖️ |
 |---|
 
+## correction_suggestions.py — `/correction-suggestions`
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `` 🔓 | анонимно предложить исправление: путь и название страницы, раздел, plain-text сообщение, необязательные источник и email; лимит 5/час на IP |
+| GET | `` ✏️ | очередь предложений; фильтр `status`, пагинация `skip/limit` |
+| PATCH | `/{suggestion_id}` ✏️ | перевести новое/взятое в работу предложение в `in_review`, `fixed` или `rejected`, сохранить комментарий редакции |
+
+Предложения не меняют контент автоматически и не сбрасывают публичный кэш. Honeypot `website` поглощает простые
+бот-запросы. Повторное решение уже обработанного предложения возвращает `409`.
+
 ## ratings.py — `/ratings`
 | Метод | Путь | Описание |
 |---|---|---|
@@ -201,7 +211,8 @@ GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + с�
 ## memberships.py — `/competitions` (составы, карьера человека)
 GET `/teams/{id_or_slug}/members` · POST `/memberships` ✏️ · PUT `/memberships/{id}` ✏️ · DELETE `/memberships/{id}` ✏️ · POST `/memberships/import-rosters?team=` 🛡 · GET `/membership-links/review` ✏️ · PATCH `/membership-links/review/{id}` ✏️ · GET `/people/{id_or_slug}/career`
 
-Очередь связей состава показывает кандидатов по совпадению имени, конфликты slug и отсутствующие цели исходных ссылок. `confirm` подтверждает предложенную
+Очередь связей состава показывает кандидатов по совпадению имени, конфликты slug, отличающееся от страницы имя в составе
+и отсутствующие цели исходных ссылок. `confirm` подтверждает предложенную
 страницу, `link` выбирает другую, `reject` снимает только ссылку и сохраняет строку участника. Карьера человека использует
 только сохранённые `person_id`, без обратного динамического связывания по имени.
 

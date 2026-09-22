@@ -21,6 +21,7 @@ PUBLIC_WRITE_ROUTES = {
     ("POST", "/api/auth/refresh"),   # сам проверяет токен из заголовка
     ("POST", "/api/auth/logout"),
     ("PUT", "/api/ratings/{entity_type}/{entity_id}"),
+    ("POST", "/api/correction-suggestions"),
 }
 
 # Чтение, закрытое авторизацией
@@ -32,6 +33,7 @@ PROTECTED_READ_ROUTES = [
     "/api/media",
     "/api/media/browse",
     "/api/comments/pending",
+    "/api/correction-suggestions",
     "/api/cache/stats",
     "/api/auth/me",
     "/api/polls",
@@ -81,6 +83,20 @@ def test_forged_token_rejected(client):
     forged = jwt.encode({"sub": "someone", "role": "admin"}, "wrong-secret", algorithm="HS256")
     response = client.post("/api/content/people", json={}, headers={"Authorization": f"Bearer {forged}"})
     assert response.status_code == 401
+
+
+def test_authenticated_get_response_is_not_browser_cached(client):
+    response = client.get("/api/health", headers={"Authorization": "Bearer opaque"})
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_anonymous_public_get_keeps_short_cache(client):
+    response = client.get("/api/health")
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "public, max-age=60, stale-while-revalidate=300"
 
 
 # ─── Роли (БД подменяется) ─────────────────────────────────────────────────────

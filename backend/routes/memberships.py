@@ -195,7 +195,7 @@ class MembershipLinkReviewIn(BaseModel):
 async def membership_links_review(
     q: str = "",
     status: Literal["pending", "confirmed", "rejected", "all"] = "pending",
-    reason: Optional[Literal["name_only", "slug_conflict", "slug_unresolved"]] = None,
+    reason: Optional[Literal["name_only", "slug_conflict", "slug_unresolved", "name_mismatch"]] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
 ):

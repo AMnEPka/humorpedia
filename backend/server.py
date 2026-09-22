@@ -223,6 +223,11 @@ async def create_indexes(db):
         await _ensure_index(db.comments, "parent_id")
         await _ensure_index(db.comments, "created_at")
 
+        # Public correction suggestions and the editorial queue
+        await _ensure_index(db.correction_suggestions, [("status", 1), ("created_at", -1)])
+        await _ensure_index(db.correction_suggestions, "page_path")
+        await _ensure_index(db.correction_suggestions, "created_at")
+
         # Polls: one immutable vote per user and poll. Result counts are derived
         # from this collection, so retries and concurrent requests stay safe.
         await _ensure_index(db.polls, "old_id", unique=True, sparse=True)
@@ -366,6 +371,7 @@ from routes.recommendations import router as recommendations_router
 from routes.polls import router as polls_router
 from routes.ratings import router as ratings_router
 from routes.related_news import router as related_news_router
+from routes.correction_suggestions import router as correction_suggestions_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -395,6 +401,7 @@ api_router.include_router(recommendations_router)
 api_router.include_router(polls_router)
 api_router.include_router(ratings_router)
 api_router.include_router(related_news_router)
+api_router.include_router(correction_suggestions_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
@@ -521,20 +528,24 @@ from services.cache import cache_service as _cache
 
 
 class CacheControlMiddleware(BaseHTTPMiddleware):
-    """Cache-Control для публичных GET-ответов (кроме /auth, /admin, /cache)."""
+    """Публичные GET кэшируются, авторизованные ответы браузер не переиспользует."""
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         if request.method == "GET" and response.status_code == 200:
             path = request.url.path
-            if "cache-control" not in response.headers and "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
-                # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
-                response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+            if "cache-control" not in response.headers:
+                if request.headers.get("Authorization"):
+                    response.headers["Cache-Control"] = "private, no-store"
+                elif "/auth/" not in path and "/admin/" not in path and "/cache/" not in path:
+                    # Публичный контент: кэшируем 60с, stale-while-revalidate 5 мин
+                    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
         return response
 
 
 # Записи, после которых не нужно сбрасывать кэш контента
 _CACHE_NEUTRAL_PREFIXES = (
     "/api/auth/", "/api/views/", "/api/cache/", "/api/comments", "/api/polls", "/api/ratings/",
+    "/api/correction-suggestions",
 )
 
 

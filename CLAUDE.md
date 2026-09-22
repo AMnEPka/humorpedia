@@ -20,6 +20,7 @@
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
 | [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
 | [docs/ai/tasks/team-projects.md](docs/ai/tasks/team-projects.md) | Автоматические проекты участников команды КВН с сохранённым ручным дополнением |
+| [docs/ai/tasks/correction-suggestions.md](docs/ai/tasks/correction-suggestions.md) | Публичные предложения исправлений и редакционная очередь |
 
 ## Стек
 

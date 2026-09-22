@@ -19,6 +19,7 @@ const reasonLabels = {
   name_only: 'Совпадение только по имени',
   slug_conflict: 'Конфликт slug',
   slug_unresolved: 'Страница из исходной ссылки не найдена',
+  name_mismatch: 'Имя в составе не совпадает со страницей',
 };
 
 function personTitle(person) {
@@ -95,23 +96,31 @@ function ReviewCard({ row, busy, onReview }) {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {suggestedPerson && row.review_status !== 'confirmed' && (
-              <Button disabled={busy || !id} onClick={() => onReview(id, { action: 'confirm' })}>
-                {row.review_status === 'rejected' ? 'Восстановить связь' : 'Подтвердить'}
-              </Button>
-            )}
-            <Button variant="outline" disabled={busy || !id} onClick={() => setChoosing(value => !value)}>
-              {choosing ? 'Скрыть выбор' : 'Выбрать другого'}
-            </Button>
-            {row.review_status !== 'rejected' && (
-              <Button
-                variant="outline"
-                className="text-red-700"
-                disabled={busy || !id}
-                onClick={() => onReview(id, { action: 'reject' })}
-              >
-                Некорректная связь — отвязать
-              </Button>
+            {busy ? (
+              <div role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Сохраняю решение…
+              </div>
+            ) : (
+              <>
+                {suggestedPerson && row.review_status !== 'confirmed' && (
+                  <Button disabled={!id} onClick={() => onReview(id, { action: 'confirm' })}>
+                    {row.review_status === 'rejected' ? 'Восстановить связь' : 'Подтвердить'}
+                  </Button>
+                )}
+                <Button variant="outline" disabled={!id} onClick={() => setChoosing(value => !value)}>
+                  {choosing ? 'Скрыть выбор' : 'Выбрать другого'}
+                </Button>
+                {row.review_status !== 'rejected' && (
+                  <Button
+                    variant="outline"
+                    className="text-red-700"
+                    disabled={!id}
+                    onClick={() => onReview(id, { action: 'reject' })}
+                  >
+                    Некорректная связь — отвязать
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -142,7 +151,7 @@ export default function MembershipLinksPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
-  const [version, setVersion] = useState(0);
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(query.trim()), 250);
@@ -152,6 +161,7 @@ export default function MembershipLinksPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
+    setNotice('');
     try {
       const response = await contentApi.listMembershipLinkReviews({
         q: search || undefined,
@@ -161,21 +171,29 @@ export default function MembershipLinksPage() {
         limit: PAGE_SIZE,
       });
       setData(response.data);
+      return true;
     } catch (err) {
       setError(getErrorMessage(err, 'Не удалось загрузить связи состава'));
+      return false;
     } finally {
       setLoading(false);
     }
   }, [reason, search, skip, status]);
 
-  useEffect(() => { load(); }, [load, version]);
+  useEffect(() => { load(); }, [load]);
 
   const review = async (id, payload) => {
     setBusyId(id);
     setError('');
+    setNotice('');
     try {
       await contentApi.reviewMembershipLink(id, payload);
-      setVersion(value => value + 1);
+      const reloaded = await load();
+      if (reloaded) {
+        setNotice('Решение сохранено, список обновлён.');
+      } else {
+        setError('Решение сохранено, но список не удалось обновить автоматически.');
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'Не удалось сохранить решение'));
     } finally {
@@ -197,7 +215,8 @@ export default function MembershipLinksPage() {
         </p>
       </div>
 
-      {error && <div role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-red-800">{error}</div>}
+      {error && <div role="alert" className="fixed bottom-4 right-4 z-50 max-w-md rounded border border-red-300 bg-red-50 p-3 text-red-800 shadow-lg">{error}</div>}
+      {notice && <div role="status" className="fixed bottom-4 right-4 z-50 max-w-md rounded border border-green-300 bg-green-50 p-3 text-green-900 shadow-lg">{notice}</div>}
 
       <Card>
         <CardContent className="pt-6 space-y-4">

@@ -308,6 +308,7 @@ class PersonLookup:
     def __init__(self, people: Iterable[dict] = ()):
         self.by_slug: dict[str, str] = {}
         self.by_key: dict[str, Optional[str]] = {}
+        self.keys_by_id: dict[str, set[str]] = {}
         for person in people:
             person_id = str(person["_id"])
             if person.get("slug"):
@@ -316,7 +317,9 @@ class PersonLookup:
                 match = _PERSON_LINK.search(url.strip("/"))
                 if match:
                     self.by_slug.setdefault(match.group(1).lower(), person_id)
-            for key in person_keys(person):
+            keys = person_keys(person)
+            self.keys_by_id[person_id] = keys
+            for key in keys:
                 # один ключ у разных людей — неоднозначно, по имени не связываем
                 self.by_key[key] = person_id if self.by_key.get(key, person_id) == person_id else None
 
@@ -340,8 +343,13 @@ def person_keys(person: dict) -> set[str]:
 
 def membership_link_reason(membership: dict, lookup: PersonLookup) -> Optional[str]:
     """Причина, по которой связь требует редакторской проверки."""
+    review_status = membership.get("link_review_status")
+    if review_status == LINK_REJECTED or (
+        review_status == LINK_CONFIRMED and membership.get("matched_by") == "manual"
+    ):
+        return None
     target_id = membership.get("candidate_person_id") or membership.get("person_id")
-    if not target_id or membership.get("link_review_status") in (LINK_CONFIRMED, LINK_REJECTED):
+    if not target_id:
         return None
     slug = (membership.get("person_slug") or "").lower()
     if not slug:
@@ -351,17 +359,22 @@ def membership_link_reason(membership: dict, lookup: PersonLookup) -> Optional[s
         return "slug_unresolved"
     if source_person_id != target_id:
         return "slug_conflict"
+    membership_name = name_key(membership.get("person_name") or "")
+    if membership_name and membership_name not in lookup.keys_by_id.get(str(target_id), set()):
+        return "name_mismatch"
     return None
 
 
 def membership_review_status(membership: dict, lookup: PersonLookup) -> str:
     explicit = membership.get("link_review_status")
-    if explicit in (LINK_CANDIDATE, LINK_CONFIRMED, LINK_REJECTED):
+    if explicit == LINK_REJECTED or (explicit == LINK_CONFIRMED and membership.get("matched_by") == "manual"):
         return explicit
     if membership.get("person_link_disabled"):
         return LINK_REJECTED
     if membership_link_reason(membership, lookup):
         return LINK_CANDIDATE
+    if explicit in (LINK_CANDIDATE, LINK_CONFIRMED):
+        return explicit
     if membership.get("person_id"):
         return LINK_CONFIRMED
     return "unresolved"

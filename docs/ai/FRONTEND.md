@@ -28,7 +28,8 @@ public/                        ПУБЛИЧНЫЙ САЙТ
   utils/sanitize.js            sanitizeHTML (DOMPurify), containsHTML
   utils/teamStorage.js         localStorage-хранилище данных команд (ключ humorpedia_teams, обновление раз в 24 ч)
   components/
-    Layout.jsx                 Header + <Outlet/> + Footer
+    Layout.jsx                 Header + <Outlet/> + lazy CorrectionSuggestionButton + Footer
+    CorrectionSuggestionButton.jsx  одна плавающая кнопка на любой публичной странице; выбор раздела, plain-text предложение, источник и email
     Header.jsx                 меню из /sections (in_main_menu), автокомплит поиска
     Footer.jsx
     ListPageHeader.jsx         единая панель заголовка/поиска для общих списков
@@ -59,9 +60,9 @@ public/                        ПУБЛИЧНЫЙ САЙТ
 admin/                         АДМИНКА
   hooks/useAuth.js             AuthProvider/useAuth: user из localStorage (admin_user), проверка /auth/me, тихий refresh каждые 6 ч; токен удаляется только при 401/403; STAFF_ROLES, isAdmin/isEditor/isModerator/isStaff
   utils/api.js                 axios `api` с Bearer из localStorage.admin_token и refresh-интерсептором (очередь запросов на время refresh);
-                               группы: authApi, contentApi, statsApi, usersApi, tagsApi, commentsApi, mediaApi, templatesApi, sectionsApi; getErrorMessage()
+                               группы: authApi, contentApi, statsApi, usersApi, tagsApi, commentsApi, correctionSuggestionsApi, mediaApi, templatesApi, sectionsApi; getErrorMessage()
   components/
-    AdminLayout.jsx            сайдбар навигации (пункты «Пользователи», «База данных» и «Читайте также» — adminOnly)
+    AdminLayout.jsx            сайдбар навигации (предложения правок — editorOnly; пользователи, БД и настройки рекомендаций — adminOnly)
     ModuleEditor.jsx           конструктор модулей страницы (dnd-kit), 1104 строки
     SeasonDataEditor.jsx       редактор season_data: стадии/игры/команды/баллы/конкурсы, копирование, dnd — 2665 строк, самый сложный компонент
   pages/RelatedContentSettingsPage.jsx  глобальные настройки «Читайте также»: включение, лимит, типы результатов и страницы показа
@@ -74,6 +75,7 @@ admin/                         АДМИНКА
                                DashboardPage, LoginPage, MediaPage, TagsPage, CommentsPage, UsersPage, MongoAdminPage (сырой доступ к коллекциям),
                                ShowAppearancesPage (проверка участников шоу и точечное создание черновиков людей),
                                MembershipLinksPage (очередь проверки связей состава: подтвердить, заменить или отвязать),
+                               CorrectionSuggestionsPage (очередь пользовательских предложений: взять в работу, исправлено, отклонить, mailto),
                                RelatedNewsSettingsPage (adminOnly: включение, свежесть, лимит и области применения)
 ```
 
@@ -97,7 +99,7 @@ admin/                         АДМИНКА
 | `/*` | **SectionDetailPage** (КВН, разделы, редиректы старых URL) |
 
 Админка (`ProtectedRoute` — пользователь залогинен И роль admin/editor/moderator; внутри `AdminLayout`):
-`/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/show-appearances`, `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/users`, `/admin/database`, `/admin/related-news` (adminOnly).
+`/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/show-appearances`, `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/correction-suggestions` (admin/editor), `/admin/users`, `/admin/database`, `/admin/related-news` (adminOnly).
 
 HomePage, SectionDetailPage и PublicLayout грузятся синхронно; остальное — `React.lazy`, админка — отдельным чанком.
 

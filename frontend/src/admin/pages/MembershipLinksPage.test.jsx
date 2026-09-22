@@ -101,6 +101,19 @@ test('показывает данные проверки и объясняет �
   expect(container.textContent).toContain('Ожидают: 1');
 });
 
+test('объясняет несовпадение имени в составе со страницей человека', async () => {
+  contentApi.listMembershipLinkReviews.mockResolvedValue({
+    data: {
+      ...response,
+      items: [{ ...response.items[0], reason: 'name_mismatch' }],
+    },
+  });
+
+  await renderPage();
+
+  expect(container.textContent).toContain('Имя в составе не совпадает со страницей');
+});
+
 test('подтверждает, отклоняет и вручную меняет страницу человека', async () => {
   await renderPage();
 
@@ -114,6 +127,7 @@ test('подтверждает, отклоняет и вручную меняе�
   await click('Выбрать Анну');
   expect(contentApi.reviewMembershipLink).toHaveBeenCalledWith('membership-1', { action: 'link', person_id: 'person-2' });
   expect(contentApi.listMembershipLinkReviews.mock.calls.length).toBeGreaterThan(1);
+  expect(container.querySelector('[role="status"]')?.textContent).toContain('Решение сохранено');
 });
 
 test('передаёт поиск, фильтры и следующую страницу в API', async () => {
