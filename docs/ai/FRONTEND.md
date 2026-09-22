@@ -42,7 +42,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     StageSection.jsx, GameTable.jsx   стадии и таблицы игр сезона КВН (из season_data)
     LeagueSeasonsNav.jsx       навигация по сезонам лиги
     ShowAppearances.jsx        «Участие в других проектах»: индивидуальная ссылка на шоу, командная — на команду
-    TeamProjects.jsx           единый блок проектов команды КВН: автоматические связи участников + ручной текстовый модуль
+    TeamProjects.jsx           единый блок индивидуальных проектов участников команды КВН + ручной текст, разделённые линией
     ArticleCard.jsx, NewsCard.jsx, MultiSelectWithSearch.jsx
     competitions/              TeamParticipations (участие команды в турнирах), TeamRoster (состав), PersonCareer («Команды КВН» и роли человека), labels.js
   pages/
@@ -50,7 +50,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     SectionDetailPage.jsx      CATCH-ALL `/*`: kvn/by-path → sections/path → redirects/lookup; при season_data отдаёт SeasonDetailPage; таблицы чемпионов лиг
     SeasonDetailPage.jsx       страница сезона КВН (стадии, игры, победители, жюри, prev/next)
     JuryStatsPage.jsx          статистика жюри Высшей лиги
-    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН и команды шоу (TeamDetailPage: состав, вычисляемые проекты с ручным дополнением, «Участие в турнирах»; для команды шоу — showTeamPath, подпись «Команда шоу «…»»)
+    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН и команды шоу (TeamDetailPage: состав, вычисляемые проекты с ручным дополнением, «Телевизионные лиги КВН»; для команды шоу — showTeamPath, подпись «Команда шоу «…»»)
     PersonDetailPage.jsx / PeopleListPage.jsx
     ShowDetailPage.jsx / ShowsListPage.jsx      шоу до 4 уровней вложенности; проверенные ссылки встроены в существующие карточки участников
     ArticleDetailPage / ArticlesListPage, NewsDetailPage / NewsListPage, QuizDetailPage / QuizzesListPage

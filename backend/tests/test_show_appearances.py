@@ -271,14 +271,15 @@ def test_team_projects_group_members_and_reuse_public_filters():
             'show_id': 's1', 'show_title': 'Проект', 'show_url': '/shows/project',
             'members': [
                 {'person_id': 'p1', 'person_name': 'Анна', 'person_url': '/people/anna',
-                 'caption': 'Победитель проекта «Проект» в составе команды «Ручной состав»',
-                 'appearance_url': '/shows/project/teams/cast'},
+                 'caption': 'Финалист проекта «Проект»',
+                 'appearance_url': '/shows/project'},
                 {'person_id': 'p2', 'person_name': 'Борис', 'person_url': '/people/boris',
                  'caption': 'Участник проекта «Проект»', 'appearance_url': '/shows/project'},
             ],
         },
     ]
     assert len(db.memberships.find_calls) == len(db.show_appearances.find_calls) == 1
+    assert db.show_appearances.find_calls[0]['team_id'] == {'$in': [None, '']}
     assert len(db.people.find_calls) == len(db.teams.find_calls) == 1
     assert len(db.shows.find_calls) == 2
 

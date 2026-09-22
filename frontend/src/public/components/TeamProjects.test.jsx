@@ -38,13 +38,22 @@ test('renders automatic projects and manual text in one section', () => {
           show_id: 'improv',
           show_title: 'Импровизация. Команды',
           show_url: '/shows/improv-teams',
-          members: [{
-            person_id: 'person',
-            person_name: 'Антон Остерников',
-            person_url: '/people/anton-osternikov',
-            caption: 'Участник проекта «Импровизация. Команды» в составе команды «Несносные»',
-            appearance_url: '/shows/improv-teams/teams/nesnosnye',
-          }],
+          members: [
+            {
+              person_id: 'person',
+              person_name: 'Антон Остерников',
+              person_url: '/people/anton-osternikov',
+              caption: 'Участник проекта «Импровизация. Команды»',
+              appearance_url: '/shows/improv-teams',
+            },
+            {
+              person_id: 'second-person',
+              person_name: 'Второй участник',
+              person_url: '/people/second-person',
+              caption: 'Финалист проекта «Импровизация. Команды»',
+              appearance_url: '/shows/improv-teams',
+            },
+          ],
         }]}
       />
     </MemoryRouter>
@@ -52,10 +61,33 @@ test('renders automatic projects and manual text in one section', () => {
 
   expect(html).toContain(TEAM_PROJECTS_TITLE);
   expect(html).toContain('href="/shows/improv-teams"');
-  expect(html).toContain('href="/people/anton-osternikov"');
-  expect(html).toContain('href="/shows/improv-teams/teams/nesnosnye"');
+  expect(html).not.toContain('href="/people/anton-osternikov"');
+  expect(html).toContain('Антон Остерников<span> — участник</span></span><span>, Второй участник');
   expect(html).toContain('Авторское дополнение');
+  expect(html).not.toContain('По составу команды');
+  expect(html).not.toContain('Дополнительная информация');
+  expect(html).toContain('border-t');
   expect((html.match(new RegExp(TEAM_PROJECTS_TITLE, 'g')) || [])).toHaveLength(1);
+});
+
+test('uses the project page label for a legacy team appearance link', () => {
+  const html = renderToStaticMarkup(
+    <MemoryRouter>
+      <TeamProjects items={[{
+        show_id: 'superliga',
+        show_title: 'Суперлига',
+        show_url: '/shows/superliga',
+        members: [{
+          person_id: 'person', person_name: 'Участник',
+          caption: 'Участник проекта «Суперлига»',
+          appearance_url: '/shows/superliga/teams/team',
+        }],
+      }]} />
+    </MemoryRouter>
+  );
+
+  expect(html).toContain('к странице проекта');
+  expect(html).not.toContain('к составу проекта');
 });
 
 test('keeps a manual-only section and hides a fully empty section', () => {

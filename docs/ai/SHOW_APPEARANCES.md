@@ -90,7 +90,8 @@ docker compose exec -T backend python scripts/sync_show_appearances.py --apply
   `show_url` всегда указывает на проект, `link_url` — на проект для индивидуальной записи
   и на страницу команды для командной.
 - `GET /api/show-appearances/teams/{id_or_slug}/projects` — проекты участников команды
-  КВН, сгруппированные по шоу; команды шоу этим маршрутом не обслуживаются.
+  КВН, сгруппированные по шоу; учитываются только индивидуальные записи без `team_id`,
+  поскольку командные участия уже показаны в блоке «Команда в других шоу».
 - `GET /api/show-appearances/review?q=&show_id=&unresolved=&skip=&limit=` — проверка.
 - `POST /api/show-appearances/sync` — пересчёт из локального контента.
 - `PATCH /api/show-appearances/review/{id}` — ручная связь/состав/достижение/исключение.

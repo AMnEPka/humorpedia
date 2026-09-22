@@ -47,33 +47,29 @@ export default function TeamProjects({ items = [], manualModules = [] }) {
       <CardContent className="space-y-5">
         {items.length > 0 && (
           <div>
-            {manual.length > 0 && (
-              <h3 className="mb-3 text-sm font-semibold text-gray-500">По составу команды</h3>
-            )}
             <ul className="space-y-4">
               {items.map((project) => (
                 <li key={project.show_id}>
                   <Link to={project.show_url} className="font-semibold text-blue-700 hover:underline">
                     {project.show_title}
                   </Link>
-                  <ul className="mt-1.5 space-y-1 pl-4 text-sm text-gray-700">
-                    {project.members.map((member) => (
-                      <li key={member.person_id}>
-                        <Link to={member.person_url} className="text-blue-700 hover:underline">
-                          {member.person_name}
-                        </Link>
+                  <p className="mt-1.5 pl-4 text-sm text-gray-700">
+                    {project.members.map((member, index) => (
+                      <span key={member.person_id}>
+                        {index > 0 && ', '}
+                        {member.person_name}
                         {member.caption && <span> — {projectMemberCaption(member)}</span>}
                         {isProjectTeamUrl(project, member) && (
                           <>
                             {' '}
                             <Link to={member.appearance_url} className="whitespace-nowrap text-blue-700 hover:underline">
-                              к составу проекта
+                              к странице проекта
                             </Link>
                           </>
                         )}
-                      </li>
+                      </span>
                     ))}
-                  </ul>
+                  </p>
                 </li>
               ))}
             </ul>
@@ -82,9 +78,6 @@ export default function TeamProjects({ items = [], manualModules = [] }) {
 
         {manual.length > 0 && (
           <div className={items.length > 0 ? 'border-t pt-4' : ''}>
-            {items.length > 0 && (
-              <h3 className="mb-3 text-sm font-semibold text-gray-500">Дополнительная информация</h3>
-            )}
             <div className="space-y-4">
               {manual.map((module) => (
                 <div

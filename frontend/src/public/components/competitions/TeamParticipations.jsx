@@ -42,7 +42,7 @@ export default function TeamParticipations({ teamSlug, teamName }) {
     <Card id="section-participations" className="scroll-mt-20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-amber-500" /> Участие в турнирах
+          <Trophy className="h-5 w-5 text-amber-500" /> Телевизионные лиги КВН
         </CardTitle>
         {championships.length > 0 && (
           <p className="text-sm text-gray-600">
