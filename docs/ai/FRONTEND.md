@@ -50,7 +50,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     SectionDetailPage.jsx      CATCH-ALL `/*`: kvn/by-path → sections/path → redirects/lookup; при season_data отдаёт SeasonDetailPage; таблицы чемпионов лиг
     SeasonDetailPage.jsx       страница сезона КВН (стадии, игры, победители, жюри, prev/next)
     JuryStatsPage.jsx          статистика жюри Высшей лиги
-    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН и команды шоу (TeamDetailPage: состав, вычисляемые проекты с ручным дополнением, «Участие в турнирах»; для команды шоу — showTeamPath, подпись «Команда шоу «…»»)
+    TeamDetailPage.jsx / TeamsListPage.jsx      команды КВН и команды шоу (TeamDetailPage: состав, вычисляемые проекты с ручным дополнением, «Телевизионные лиги КВН»; для команды шоу — showTeamPath, подпись «Команда шоу «…»»)
     PersonDetailPage.jsx / PeopleListPage.jsx
     ShowDetailPage.jsx / ShowsListPage.jsx      шоу до 4 уровней вложенности; проверенные ссылки встроены в существующие карточки участников
     ArticleDetailPage / ArticlesListPage, NewsDetailPage / NewsListPage, QuizDetailPage / QuizzesListPage

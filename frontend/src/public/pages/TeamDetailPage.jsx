@@ -24,7 +24,7 @@ import TeamProjects, {
   isTeamProjectsModule,
 } from '../components/TeamProjects';
 
-// Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Участие в турнирах»
+// Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Телевизионные лиги КВН»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
 
 export function teamTocItems(modules = [], mode = 'auto', projectsVisible = false) {
