@@ -1,7 +1,8 @@
-import React, { Suspense, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { usePageTitle } from '@/utils/pageTitle';
 import { AuthProvider, useAuth } from './admin/hooks/useAuth';
+import ScrollRestoration from './components/ScrollRestoration';
 
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -78,49 +79,6 @@ const RelatedNewsSettingsPage = React.lazy(() => import('./admin/pages/RelatedNe
 const RelatedContentSettingsPage = React.lazy(() => import('./admin/pages/RelatedContentSettingsPage'));
 const MongoAdminPage = React.lazy(() => import('./admin/pages/MongoAdminPage'));
 
-
-function ScrollRestoration() {
-  const location = useLocation();
-  const navigationType = useNavigationType();
-  const isFirstRenderRef = useRef(true);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const storageKey = `scroll:${location.key || location.pathname || ''}`;
-
-    // На самом первом рендере не трогаем скролл — даём браузеру самому
-    // восстановить позицию при F5/перезагрузке.
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
-    } else if (navigationType === 'POP') {
-      // Назад / вперёд по истории — восстанавливаем сохранённую позицию
-      const stored = sessionStorage.getItem(storageKey);
-      const y = stored !== null ? Number(stored) : 0;
-      window.scrollTo(0, Number.isFinite(y) ? y : 0);
-    } else {
-      // Обычные переходы по ссылкам — скроллим к началу страницы
-      window.scrollTo(0, 0);
-    }
-
-    const saveScroll = () => {
-      try {
-        const y = window.scrollY ?? window.pageYOffset ?? 0;
-        sessionStorage.setItem(storageKey, String(y));
-      } catch {
-        // Игнорируем ошибки доступа к sessionStorage (например, в приватном режиме)
-      }
-    };
-
-    window.addEventListener('beforeunload', saveScroll);
-    return () => {
-      saveScroll();
-      window.removeEventListener('beforeunload', saveScroll);
-    };
-  }, [location, navigationType]);
-
-  return null;
-}
 
 function WithTitle({ title, children }) {
   usePageTitle(title);
