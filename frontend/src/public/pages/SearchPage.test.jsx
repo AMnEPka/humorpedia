@@ -38,3 +38,20 @@ test('requests the expanded result limit for the full search page', async () => 
 
   expect(publicApi.search).toHaveBeenCalledWith('Гу', { limit: 100 });
 });
+
+test('filters by type and links a nested show by full_path', async () => {
+  publicApi.search.mockResolvedValue({ data: {
+    show: [{ _id: 's1', title: 'Сезон', slug: 'season-2', full_path: 'zvezdy-ntv/season-2' }],
+  } });
+  await act(async () => {
+    root.render(
+      <MemoryRouter initialEntries={['/search?q=%D0%97%D0%B2%D1%91%D0%B7%D0%B4%D1%8B&type=show']}>
+        <SearchPage />
+      </MemoryRouter>
+    );
+  });
+
+  expect(publicApi.search).toHaveBeenCalledWith('Звёзды', { limit: 100, types: 'show' });
+  expect(host.querySelector('a[href="/shows/zvezdy-ntv/season-2"]')).toBeTruthy();
+  expect(host.querySelector('[aria-pressed="true"]')?.textContent).toBe('Шоу');
+});

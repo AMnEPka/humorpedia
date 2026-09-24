@@ -163,8 +163,8 @@ function AppRoutes() {
           <Route path="/people/:slug" element={<WithTitle title="Человек"><PersonDetailPage /></WithTitle>} />
           
           {/* Teams with categories */}
-          <Route path="/teams" element={<WithTitle title="Команды"><Navigate to="/kvn/teams" replace /></WithTitle>} />
-          <Route path="/teams/:category" element={<WithTitle title="Команды"><Navigate to="/kvn/teams" replace /></WithTitle>} />
+          <Route path="/teams" element={<WithTitle title="Команды"><TeamsListPage /></WithTitle>} />
+          <Route path="/teams/:category" element={<WithTitle title="Команды"><TeamsListPage /></WithTitle>} />
           <Route path="/kvn/teams" element={<WithTitle title="Команды КВН"><TeamsListPage /></WithTitle>} />
           <Route path="/kvn/teams/:slug" element={<WithTitle title="Команда"><TeamDetailPage /></WithTitle>} />
           

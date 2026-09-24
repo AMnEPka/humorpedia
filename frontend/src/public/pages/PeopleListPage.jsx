@@ -110,7 +110,7 @@ export default function PeopleListPage() {
                   <FittedImage
                     src={personPhotoUrl(person)}
                     fallbackKey={person}
-                    alt={person.title}
+                    alt=""
                     className="aspect-square"
                   />
                   <CardContent className="p-3">

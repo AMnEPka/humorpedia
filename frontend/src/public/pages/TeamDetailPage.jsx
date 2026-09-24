@@ -18,6 +18,7 @@ import { teamLogoUrl } from '@/utils/media';
 import RelatedArticles from '../components/RelatedArticles';
 import RatingCard from '../components/RatingCard';
 import RelatedNews from '../components/RelatedNews';
+import { sharePage } from '../utils/share';
 import TeamProjects, {
   TEAM_PROJECTS_TITLE,
   hasManualTeamProjects,
@@ -119,6 +120,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
   const [teamProjects, setTeamProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
 
   usePageTitle(teamPageTitle(team) || (loading ? 'Команда' : (error ? 'Команда не найдена' : 'Команда')));
 
@@ -126,6 +128,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
     const fetchTeam = async () => {
       setLoading(true);
       setError('');
+      setShareMessage('');
       try {
         const res = showTeamPath ? await publicApi.getTeamByPath(showTeamPath) : await publicApi.getTeam(slug);
         setTeam(res.data);
@@ -303,7 +306,10 @@ export default function TeamDetailPage({ showTeamPath = null }) {
             {sidebarModules.find(m => m.type === 'tags_cloud') && team.tags?.length > 0 && (
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
                 {team.tags.map((tag, i) => (
-                  <Badge key={i} variant="secondary" className="bg-white/20 text-white">{tag}</Badge>
+                  <Link key={i} to={`/tags/${encodeURIComponent(tag)}`}
+                    className="rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+                    <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30 min-h-11 flex items-center">{tag}</Badge>
+                  </Link>
                 ))}
               </div>
             )}
@@ -472,9 +478,13 @@ export default function TeamDetailPage({ showTeamPath = null }) {
             </Card>
           )}
 
-          <Button variant="outline" className="w-full" onClick={() => navigator.share?.({ url: window.location.href, title: team.title })}>
+          <Button variant="outline" className="w-full" onClick={async () => {
+            try { setShareMessage(await sharePage(team.title) ? 'Ссылка скопирована' : ''); }
+            catch { setShareMessage('Не удалось скопировать ссылку'); }
+          }}>
             <Share2 className="mr-2 h-4 w-4" /> Поделиться
           </Button>
+          <span role="status" className="block text-sm text-gray-600">{shareMessage}</span>
 
           {/* Table of Contents */}
           <TableOfContents modules={contentModules} projectsVisible={projectsVisible} />

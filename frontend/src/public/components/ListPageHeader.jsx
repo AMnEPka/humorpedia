@@ -27,9 +27,9 @@ export default function ListPageHeader({
             placeholder={placeholder}
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            className="min-w-0 flex-1"
+            className="min-w-0 min-h-11 flex-1"
           />
-          <Button type="submit" size="icon" aria-label="Найти">
+          <Button type="submit" size="icon" aria-label="Найти" className="min-w-11 min-h-11">
             <Search className="h-4 w-4" />
           </Button>
         </form>}

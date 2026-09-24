@@ -11,7 +11,7 @@ const staticNavigation = [
   { name: 'Статьи', href: '/articles' },
   { name: 'Люди', href: '/people' },
   { name: 'КВН', href: '/kvn' },
-  { name: 'Команды КВН', href: '/kvn/teams' },
+  { name: 'Команды', href: '/teams' },
   { name: 'Шоу', href: '/shows' },
   { name: 'География', href: '/city' },
   { name: 'Квизы', href: '/quizzes' },
@@ -25,6 +25,8 @@ const contentTypeLabels = {
   article: 'Статья',
   news: 'Новость',
   section: 'Раздел',
+  city: 'Город',
+  quiz: 'Квиз',
 };
 
 export default function Header() {
@@ -33,6 +35,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionError, setSuggestionError] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [menuSections, setMenuSections] = useState([]);
   const searchRef = useRef(null);
@@ -72,6 +75,7 @@ export default function Header() {
     const query = searchQuery.trim();
     if (query.length >= 2) {
       setLoadingSuggestions(true);
+      setSuggestionError(false);
       let cancelled = false;
       const timer = setTimeout(() => {
         publicApi.searchAutocomplete(query)
@@ -86,6 +90,8 @@ export default function Header() {
             if (!cancelled) {
               console.error('Autocomplete error:', err);
               setSuggestions([]);
+              setSuggestionError(true);
+              setShowSuggestions(true);
             }
           })
           .finally(() => {
@@ -102,6 +108,7 @@ export default function Header() {
       setSuggestions([]);
       setShowSuggestions(false);
       setLoadingSuggestions(false);
+      setSuggestionError(false);
     }
   }, [searchQuery]);
 
@@ -161,7 +168,7 @@ export default function Header() {
                 to={item.href}
                 className={cn(
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  location.pathname.startsWith(item.href)
+                  (location.pathname.startsWith(item.href) || (item.href === '/teams' && location.pathname === '/kvn/teams'))
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 )}
@@ -199,7 +206,7 @@ export default function Header() {
                         setShowSuggestions(false);
                         setSearchQuery('');
                       }}
-                      className="ml-1"
+                      className="ml-1 min-w-11 min-h-11"
                     >
                       <X className="h-5 w-5" />
                     </Button>
@@ -207,20 +214,26 @@ export default function Header() {
                   
                   {/* Autocomplete suggestions */}
                   {showSuggestions && searchQuery.trim().length >= 2 && (
-                    <div className="absolute top-full mt-2 w-full sm:w-96 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto">
+                    <div className="absolute top-full mt-2 w-full sm:w-96 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto" aria-live="polite">
+                      {suggestionError && <p role="alert" className="px-4 py-3 text-sm text-red-700">Не удалось загрузить подсказки. Откройте полную выдачу.</p>}
+                      {!suggestionError && !loadingSuggestions && suggestions.length === 0 && (
+                        <p className="px-4 py-3 text-sm text-gray-600">Подсказок пока нет. Попробуйте полную выдачу.</p>
+                      )}
                       {suggestions.map((item) => (
                         <button
                           key={item.id}
                           onClick={() => handleSuggestionClick(item)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                          className="w-full min-h-11 text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 transition-colors"
                         >
                           <div className="flex items-start gap-3">
+                            {item.image && <img src={item.image} alt="" className="h-12 w-12 rounded object-cover flex-shrink-0" />}
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-gray-900 truncate">
                                 {item.title}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
                                 {contentTypeLabels[item.type] || item.type}
+                                {item.context && ` · ${item.context}`}
                               </p>
                             </div>
                           </div>
@@ -229,7 +242,7 @@ export default function Header() {
                       <button
                         type="button"
                         onClick={openSearchResults}
-                        className="w-full px-4 py-3 text-left text-sm font-medium text-blue-700 hover:bg-blue-50 border-t transition-colors"
+                        className="w-full min-h-11 px-4 py-3 text-left text-sm font-medium text-blue-700 hover:bg-blue-50 border-t transition-colors"
                       >
                         Показать все результаты по запросу «{searchQuery.trim()}»
                       </button>
@@ -242,7 +255,7 @@ export default function Header() {
                   size="icon"
                   aria-label="Открыть поиск"
                   onClick={() => setSearchOpen(true)}
-                  className="text-gray-600"
+                  className="text-gray-600 min-w-11 min-h-11"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
@@ -253,7 +266,9 @@ export default function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-gray-600"
+              aria-label={mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+              aria-expanded={mobileMenuOpen}
+              className="lg:hidden text-gray-600 min-w-11 min-h-11"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -271,8 +286,8 @@ export default function Header() {
                   to={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    location.pathname.startsWith(item.href)
+                    'min-h-11 flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    (location.pathname.startsWith(item.href) || (item.href === '/teams' && location.pathname === '/kvn/teams'))
                       ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   )}

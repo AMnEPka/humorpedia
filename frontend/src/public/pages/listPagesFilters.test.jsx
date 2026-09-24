@@ -51,10 +51,16 @@ test.each([
   expect(html).toContain(`placeholder="${placeholder}"`);
 });
 
-test('KVN teams list has no unrelated category tabs', () => {
+test('teams list highlights KVN and Stars first and omits removed categories', () => {
   const html = renderPage(TeamsListPage, '/kvn/teams');
 
-  expect(html).toContain('Команды КВН');
-  expect(html).not.toContain('Лига смеха');
-  expect(html).not.toContain('Импровизация');
+  expect(html).toContain('aria-label="Тип команд"');
+  expect(html).toContain('aria-current="page"');
+  expect(html.indexOf('href="/teams"')).toBeLessThan(html.indexOf('href="/teams/zvezdy-ntv"'));
+  expect(html.indexOf('href="/teams/zvezdy-ntv"')).toBeLessThan(html.indexOf('href="/teams/igra"'));
+  expect(html).toContain('Другие шоу:');
+  expect(html).toContain('href="/teams/liga-gorodov"');
+  expect(html).toContain('href="/teams/improv-teams"');
+  expect(html).not.toContain('href="/teams/superliga"');
+  expect(html).not.toContain('href="/teams/ls"');
 });

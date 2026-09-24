@@ -10,7 +10,7 @@ import re
 import uuid
 
 from utils.database import get_db
-from utils.search import literal_search_pattern, normalize_search_text
+from utils.search import literal_search_pattern, normalize_search_text, search_variants, edit_distance
 from services.crud import (
     generate_unique_slug, convert_objectids_to_strings,
 )
@@ -48,22 +48,21 @@ def _relevance_key(document: dict, fields: list[str], query: str, type_order: in
     best = (4, 10**9, 10**9, len(fields), "")
 
     for field_order, field in enumerate(fields):
-        value = _normalized_search_query(str(document.get(field) or ""))
-        haystack = value.casefold()
-        position = haystack.find(needle)
-        if position < 0:
-            continue
-
-        if haystack == needle:
-            match_kind = 0
-        elif position == 0:
-            match_kind = 1
-        elif re.search(rf"(?<!\w){re.escape(needle)}", haystack):
-            match_kind = 2
-        else:
-            match_kind = 3
-
-        best = min(best, (match_kind, position, len(haystack), field_order, haystack))
+        values = document.get(field) or []
+        for raw in values if isinstance(values, list) else [values]:
+            haystack = _normalized_search_query(str(raw)).casefold()
+            position = haystack.find(needle)
+            if position < 0:
+                continue
+            if haystack == needle:
+                match_kind = 0
+            elif position == 0:
+                match_kind = 1
+            elif re.search(rf"(?<!\w){re.escape(needle)}", haystack):
+                match_kind = 2
+            else:
+                match_kind = 3
+            best = min(best, (match_kind, position, len(haystack), field_order, haystack))
 
     return (
         best[0], best[1], type_order, best[3], best[4], best[2],
@@ -77,12 +76,150 @@ async def _find_ranked_matches(
     query: str,
     limit: int,
     projection: dict,
+    fuzzy: bool = True,
 ) -> list[dict]:
     """Fetch a bounded candidate set and return its most relevant matches."""
     candidate_limit = min(max(limit * 5, 100), 500)
     cursor = collection.find(_partial_search_query(query, fields), projection).limit(candidate_limit)
     items = await cursor.to_list(candidate_limit)
-    return sorted(items, key=lambda item: _relevance_key(item, fields, query))[:limit]
+    if items:
+        return sorted(items, key=lambda item: _relevance_key(item, fields, query))[:limit]
+
+    for variant in search_variants(query)[1:]:
+        cursor = collection.find(_partial_search_query(variant, fields), projection).limit(candidate_limit)
+        items = await cursor.to_list(candidate_limit)
+        if items:
+            return sorted(items, key=lambda item: _relevance_key(item, fields, variant))[:limit]
+
+    # Typo fallback only for long enough names, with a bounded prefix candidate set.
+    needle = _normalized_search_query(query)
+    if not fuzzy or len(needle) < 5 or len(needle) > 40 or len(needle.split()) > 3:
+        return []
+    prefix = re.escape(needle[:3])
+    typo_query = {'$and': [
+        {'status': {'$ne': 'archived'}},
+        {'$or': [{field: {'$regex': f'^{prefix}', '$options': 'i'}} for field in fields]},
+    ]}
+    cursor = collection.find(typo_query, projection).limit(candidate_limit)
+    candidates = await cursor.to_list(candidate_limit)
+    maximum = 1 if len(needle) < 9 else 2
+    matches = []
+    for item in candidates:
+        values = []
+        for field in fields:
+            raw = item.get(field) or []
+            values.extend(raw if isinstance(raw, list) else [raw])
+        distance = min((edit_distance(needle, part, maximum) for value in values
+                        for part in [_normalized_search_query(value), *_normalized_search_query(value).split()]),
+                       default=maximum + 1)
+        if distance <= maximum:
+            matches.append((distance, item))
+    return [item for _, item in sorted(matches, key=lambda row: (row[0], str(row[1].get('title') or '')))[:limit]]
+
+
+def _entity_name_query(term: str, fields: list[str]) -> dict:
+    """Match editorial names, aliases and short Russian inflection stems, never page HTML."""
+    variants = search_variants(term)
+    patterns = [literal_search_pattern(value) for value in variants]
+    words = _normalized_search_query(term).split()
+    if words and all(len(word) >= 4 for word in words):
+        patterns.append('.*'.join(re.escape(word[:max(3, len(word) - 2)]) for word in words))
+    return {'$and': [
+        {'status': {'$ne': 'archived'}},
+        {'$or': [{field: {'$regex': pattern, '$options': 'i'}}
+                 for field in fields for pattern in dict.fromkeys(patterns)]},
+    ]}
+
+
+async def _named_entities(db, collection: str, term: str, fields: list[str], limit: int = 20) -> list[dict]:
+    items = await getattr(db, collection).find(_entity_name_query(term, fields)).limit(100).to_list(100)
+    variants = search_variants(term)
+    ranked = sorted(items, key=lambda item: min(_relevance_key(item, fields, variant) for variant in variants))
+    exact = [item for item in ranked if min(_relevance_key(item, fields, variant)[0]
+                                             for variant in variants) == 0]
+    return (exact or ranked)[:limit]
+
+
+async def _visible_by_ids(db, collection: str, ids: list[str], limit: int) -> list[dict]:
+    if not ids:
+        return []
+    return await getattr(db, collection).find({
+        '_id': {'$in': list(dict.fromkeys(ids))}, 'status': {'$ne': 'archived'}
+    }, {'modules': 0}).limit(limit).to_list(limit)
+
+
+async def _structured_search(db, query: str, limit: int) -> Optional[dict[str, list[dict]]]:
+    """Resolve relationship phrases through saved IDs in domain collections."""
+    text = _normalized_search_query(query)
+    member = re.match(r'^(капитан|участники?|игроки?)\s+(?:команды\s+)?(.+)$', text)
+    if member:
+        role, team_name = member.groups()
+        teams = await _named_entities(db, 'teams', team_name, ['title', 'name', 'aliases', 'slug'])
+        team_ids = [team['_id'] for team in teams]
+        if not team_ids:
+            return {'person': []}
+        conditions = {'team_id': {'$in': team_ids}, 'person_id': {'$nin': [None, '']}}
+        if role == 'капитан':
+            conditions['roles'] = {'$regex': 'капитан', '$options': 'i'}
+        rows = await db.memberships.find(conditions, {'person_id': 1}).limit(200).to_list(200)
+        return {'person': await _visible_by_ids(db, 'people', [row['person_id'] for row in rows], limit)}
+
+    show_people = re.match(r'^(?:комики|участники?|люди)\s+шоу\s+(.+)$', text)
+    if show_people:
+        shows = await _named_entities(db, 'shows', show_people.group(1), ['title', 'name', 'aliases', 'slug', 'full_path'])
+        show_ids = [show['_id'] for show in shows]
+        if not show_ids:
+            return {'person': []}
+        rows = await db.show_appearances.find(
+            {'show_id': {'$in': show_ids}, 'person_id': {'$nin': [None, '']}, 'excluded': {'$ne': True}},
+            {'person_id': 1}).limit(300).to_list(300)
+        ids = [row['person_id'] for row in rows]
+        ids.extend(person_id for show in shows for person_id in show.get('participant_ids') or [])
+        return {'person': await _visible_by_ids(db, 'people', ids, limit)}
+
+    show_teams = re.match(r'^команды\s+шоу\s+(.+)$', text)
+    if show_teams:
+        shows = await _named_entities(db, 'shows', show_teams.group(1), ['title', 'name', 'aliases', 'slug', 'full_path'])
+        ids = [show['_id'] for show in shows]
+        teams = await db.teams.find({'show_id': {'$in': ids}, 'status': {'$ne': 'archived'}},
+                                    {'modules': 0}).limit(limit).to_list(limit)
+        await attach_show_info(db, teams)
+        return {'team': teams}
+
+    city_teams = re.match(r'^команды(?:\s+квн)?\s+из\s+(.+)$', text)
+    if city_teams:
+        cities = await _named_entities(db, 'cities', city_teams.group(1), ['title', 'name', 'aliases', 'slug'])
+        ids = [team_id for city in cities for team_id in city.get('related_team_ids') or []]
+        teams = await db.teams.find({'_id': {'$in': ids}, 'show_id': None,
+                                     'status': {'$ne': 'archived'}}, {'modules': 0}).limit(limit).to_list(limit)
+        await attach_show_info(db, teams)
+        return {'team': teams}
+
+    city_people = re.match(r'^(?:люди|комики)\s+из\s+(.+)$', text)
+    if city_people:
+        cities = await _named_entities(db, 'cities', city_people.group(1), ['title', 'name', 'aliases', 'slug'])
+        ids = [person_id for city in cities for person_id in city.get('related_person_ids') or []]
+        return {'person': await _visible_by_ids(db, 'people', ids, limit)}
+
+    league = re.match(r'^команды\s+(.+?)(?:\s+из\s+(.+))?$', text)
+    if league:
+        league_name, city_name = league.groups()
+        tournaments = await _named_entities(db, 'tournaments', league_name,
+                                             ['title', 'short_title', 'slug'])
+        if tournaments:
+            tournament_ids = [row['_id'] for row in tournaments]
+            participations = await db.participations.find(
+                {'tournament_id': {'$in': tournament_ids}, 'team_id': {'$nin': [None, '']}},
+                {'team_id': 1}).limit(1000).to_list(1000)
+            ids = [row['team_id'] for row in participations]
+            if city_name:
+                cities = await _named_entities(db, 'cities', city_name, ['title', 'name', 'aliases', 'slug'])
+                city_ids = {team_id for city in cities for team_id in city.get('related_team_ids') or []}
+                ids = [team_id for team_id in ids if team_id in city_ids]
+            teams = await _visible_by_ids(db, 'teams', ids, limit)
+            await attach_show_info(db, teams)
+            return {'team': teams}
+    return None
 
 router = APIRouter(prefix="/content", tags=["search"], dependencies=[Depends(require_editor_on_write)])
 
@@ -226,17 +363,24 @@ async def search_all(
     if len(query_text) < 2:
         raise HTTPException(status_code=422, detail="Поисковый запрос должен содержать минимум 2 символа")
 
-    search_types = [item.strip() for item in types.split(",")] if types else ["person", "team", "show", "article", "news", "wiki", "section"]
+    search_types = [item.strip() for item in types.split(",")] if types else [
+        "person", "team", "show", "city", "quiz", "article", "news", "wiki", "section"]
 
     collection_map = {
-        "person": ("people", ["full_name", "title"]),
-        "team": ("teams", ["name", "title"]),
-        "show": ("shows", ["name", "title"]),
+        "person": ("people", ["full_name", "title", "aliases", "slug"]),
+        "team": ("teams", ["name", "title", "aliases", "slug"]),
+        "show": ("shows", ["name", "title", "aliases", "slug", "full_path"]),
+        "city": ("cities", ["name", "title", "aliases", "slug"]),
+        "quiz": ("quizzes", ["title", "slug"]),
         "article": ("articles", ["title"]),
         "news": ("news", ["title"]),
         "wiki": ("wiki", ["title"]),
         "section": ("sections", ["title", "description"]),
     }
+
+    structured = await _structured_search(db, query_text, limit)
+    if structured is not None:
+        return {kind: items for kind, items in structured.items() if kind in search_types and items}
 
     results = {}
     for content_type in search_types:
@@ -247,7 +391,8 @@ async def search_all(
 
         # Draft pages are valid public results; only archived content is hidden.
         items = await _find_ranked_matches(
-            collection, fields, query_text, limit, {"modules": 0}
+            collection, fields, query_text, limit, {"modules": 0},
+            fuzzy=content_type in {"person", "team", "show", "city", "quiz"},
         )
         if content_type == "team":
             await attach_show_info(db, items)
@@ -255,6 +400,43 @@ async def search_all(
             results[content_type] = items
 
     return results
+
+
+def _suggestion(item: dict, content_type: str, fields: list[str], query: str, order: int) -> dict:
+    if content_type == 'section':
+        path = item.get('full_path') or '#'
+    elif content_type == 'team':
+        path = team_url(item)
+    elif content_type == 'show':
+        path = f"/shows/{item.get('full_path') or item.get('slug') or item['_id']}"
+    else:
+        prefix = {'person': 'people', 'city': 'city', 'quiz': 'quizzes',
+                  'article': 'articles', 'news': 'news'}.get(content_type, content_type)
+        path = f"/{prefix}/{item.get('slug') or item['_id']}"
+
+    media_key = {'person': 'photo', 'team': 'logo', 'show': 'poster',
+                 'city': 'poster', 'quiz': 'cover_image', 'article': 'cover_image',
+                 'news': 'cover_image'}.get(content_type)
+    media = item.get(media_key) if media_key else None
+    image = (media.get('thumbnail') or media.get('url')) if isinstance(media, dict) else media
+    if content_type == 'team':
+        context = (item.get('show') or {}).get('title') or (item.get('facts') or {}).get('Город') or 'КВН'
+    elif content_type == 'person':
+        context = ', '.join((item.get('bio') or {}).get('occupation') or [])
+        context = context or (item.get('seo') or {}).get('meta_description') or ''
+    elif content_type == 'show':
+        context = 'Раздел шоу' if item.get('parent_id') else ''
+    else:
+        context = item.get('excerpt') or item.get('description') or ''
+    context = re.sub(r'<[^>]+>', '', context)[:100].strip()
+    title = next((item.get(field) for field in fields if field not in {'aliases', 'slug', 'full_path'}
+                  and isinstance(item.get(field), str) and item.get(field)), item.get('title') or '')
+    rank = _relevance_key(item, fields, query, order)
+    entity = content_type in {'person', 'team', 'show', 'city', 'quiz'}
+    tier = 0 if entity and rank[0] == 0 else 1 if rank[0] == 0 else 2 if entity else 3
+    return {'id': str(item['_id']), 'title': title, 'type': content_type,
+            'slug': item.get('slug'), 'path': path, 'image': image, 'context': context,
+            '_relevance': (tier, *rank)}
 
 
 @router.get("/search/autocomplete", response_model=list)
@@ -270,11 +452,24 @@ async def search_autocomplete(
     if len(query_text) < 2:
         raise HTTPException(status_code=422, detail="Поисковый запрос должен содержать минимум 2 символа")
 
+    structured = await _structured_search(db, query_text, limit)
+    if structured is not None:
+        suggestions = []
+        for content_type, items in structured.items():
+            fields = ['full_name', 'title'] if content_type == 'person' else ['name', 'title']
+            for item in items:
+                suggestions.append(_suggestion(item, content_type, fields, query_text, 0))
+        for item in suggestions:
+            item.pop('_relevance')
+        return suggestions[:limit]
+
     suggestions = []
     collections_config = [
-        ("people", ["full_name", "title"], "person"),
-        ("teams", ["name", "title"], "team"),
-        ("shows", ["name", "title"], "show"),
+        ("people", ["full_name", "title", "aliases", "slug"], "person"),
+        ("teams", ["name", "title", "aliases", "slug"], "team"),
+        ("shows", ["name", "title", "aliases", "slug", "full_path"], "show"),
+        ("cities", ["name", "title", "aliases", "slug"], "city"),
+        ("quizzes", ["title", "slug"], "quiz"),
         ("articles", ["title"], "article"),
         ("news", ["title"], "news"),
         ("sections", ["title"], "section"),
@@ -285,32 +480,16 @@ async def search_autocomplete(
 
         projection = {
             "_id": 1, "slug": 1, "full_path": 1, "show_id": 1,
+            "photo": 1, "logo": 1, "poster": 1, "cover_image": 1,
+            "facts": 1, "bio": 1, "seo": 1, "excerpt": 1, "parent_id": 1,
             **{field: 1 for field in fields},
         }
-        items = await _find_ranked_matches(collection, fields, query_text, limit, projection)
+        items = await _find_ranked_matches(collection, fields, query_text, limit, projection,
+                                           fuzzy=content_type in {'person', 'team', 'show', 'city', 'quiz'})
 
         if content_type == "team":
             await attach_show_info(db, items)
-        for item in items:
-            if content_type == "section":
-                path = item.get("full_path")
-            elif content_type == "team":
-                path = item["url"]
-            elif content_type == "person":
-                path = f"/people/{item.get('slug', item['_id'])}"
-            elif content_type == "show":
-                path = f"/shows/{item.get('full_path') or item.get('slug', item['_id'])}"
-            else:
-                path = f"/{content_type}s/{item.get('slug', item['_id'])}"
-            suggestions.append({
-                "id": str(item["_id"]),
-                "title": next((item.get(field) for field in fields if item.get(field)), ""),
-                "type": content_type,
-                "slug": item.get("slug"),
-                "path": path,
-                "_relevance": _relevance_key(item, fields, query_text, type_order),
-                **({"show": item["show"]} if item.get("show") else {}),
-            })
+        suggestions.extend(_suggestion(item, content_type, fields, query_text, type_order) for item in items)
 
     suggestions.sort(key=lambda item: item["_relevance"])
     result = suggestions[:limit]

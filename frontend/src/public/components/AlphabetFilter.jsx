@@ -19,7 +19,7 @@ export default function AlphabetFilter({ selectedLetter, onLetterClick, availabl
           aria-pressed={selectedLetter === letter}
           onClick={() => onLetterClick(selectedLetter === letter ? '' : letter)}
           className={cn(
-            'w-8 h-8 text-sm font-medium rounded transition-colors',
+            'min-w-11 min-h-11 text-sm font-medium rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600',
             selectedLetter === letter
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -37,7 +37,7 @@ export default function AlphabetFilter({ selectedLetter, onLetterClick, availabl
             selectedLetter === OTHER_ALPHABET_FILTER ? '' : OTHER_ALPHABET_FILTER
           )}
           className={cn(
-            'px-2 h-8 text-sm font-medium rounded transition-colors whitespace-nowrap',
+            'px-2 min-h-11 text-sm font-medium rounded transition-colors whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600',
             selectedLetter === OTHER_ALPHABET_FILTER
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -50,7 +50,7 @@ export default function AlphabetFilter({ selectedLetter, onLetterClick, availabl
         <button
           type="button"
           onClick={() => onLetterClick('')}
-          className="px-3 h-8 text-sm font-medium rounded bg-red-100 text-red-600 hover:bg-red-200"
+          className="px-3 min-h-11 text-sm font-medium rounded bg-red-100 text-red-600 hover:bg-red-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
         >
           Сбросить
         </button>

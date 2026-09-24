@@ -8,10 +8,10 @@ Pydantic-модели — `backend/models/`. Они используются д�
 
 | Коллекция | Модель | Роуты | Особенности |
 |---|---|---|---|
-| `people` | `Person` | content_people | `full_name`, `photo`, `bio`, `facts{}`+`facts_order[]`, `primary_tag`, `foreign_agent`, связи `team_ids/show_ids/article_ids` |
+| `people` | `Person` | content_people | `full_name`, редакционные `aliases[]` для поиска, `photo`, `bio`, `facts{}`+`facts_order[]`, `primary_tag`, `foreign_agent`, связи `team_ids/show_ids/article_ids` |
 | `teams` | `Team` | content_teams | команды КВН и команды шоу: `show_id` (пусто у КВН), `full_path` (адрес команды шоу), `team_type` («kvn» или slug корневого шоу), `name`, `logo`, `aliases[]` (для сопоставления названий), `member_ids`, `old_urls[]` — см. «Команды шоу» |
 | `kvn` | `KVN` | content_kvn | иерархия: `id` (UUID, **отдельно от `_id`**), `parent_id`, `level` 0–4, `full_path`; `season_data`, `jury_cards`, `old_urls` |
-| `shows` | `Show` | content_shows | `facts{}`+`facts_order[]`, `social_links`, `poster` (MediaFile); иерархия: `parent_id` (= `_id` родителя), `full_path` (уникален), `level`, `order` — см. «Шоу» |
+| `shows` | `Show` | content_shows | `aliases[]` для поиска, `facts{}`+`facts_order[]`, `social_links`, `poster` (MediaFile); иерархия: `parent_id` (= `_id` родителя), `full_path` (уникален), `level`, `order` — см. «Шоу» |
 | `articles` | `Article` | content_articles | `excerpt`, `cover_image`, `author_*`, `featured`, `related_*_ids` |
 | `news` | `News` | content_news | `content` (HTML), `important`, явные связи `related_person_ids`, `related_team_ids`, `related_show_ids`, `related_article_ids` |
 | `quizzes` | `Quiz` | content_quizzes | вопросы и результаты — в модулях `quiz_questions` / `quiz_results` |

@@ -24,6 +24,7 @@ class Person(BaseContent):
     
     # Basic info
     full_name: str
+    aliases: List[str] = Field(default_factory=list)  # Редакционные варианты имени и псевдонимы для поиска
     foreign_agent: bool = False
     photo: Optional[MediaFile] = None
     bio: PersonBio = Field(default_factory=PersonBio)
@@ -48,6 +49,7 @@ class PersonCreate(BaseModel):
     title: str
     slug: str
     full_name: str
+    aliases: List[str] = Field(default_factory=list)
     foreign_agent: bool = False
     photo: Optional[MediaFile] = None
     bio: Optional[PersonBio] = None
@@ -66,6 +68,7 @@ class PersonUpdate(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
     full_name: Optional[str] = None
+    aliases: Optional[List[str]] = None
     foreign_agent: Optional[bool] = None
     photo: Optional[MediaFile] = None
     bio: Optional[PersonBio] = None
@@ -168,6 +171,7 @@ class Show(BaseContent):
 
     # Basic info
     name: str
+    aliases: List[str] = Field(default_factory=list)  # Редакционные варианты названия для поиска
     poster: Optional[MediaFile] = None
     facts: Dict[str, str] = Field(default_factory=dict)  # «Статус шоу», «Дата премьеры», … (таблица фактов)
     facts_order: List[str] = Field(default_factory=list)
@@ -196,6 +200,7 @@ class ShowCreate(BaseModel):
     title: str
     slug: str
     name: str
+    aliases: List[str] = Field(default_factory=list)
     poster: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None
@@ -215,6 +220,7 @@ class ShowUpdate(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
     name: Optional[str] = None
+    aliases: Optional[List[str]] = None
     poster: Optional[MediaFile] = None
     facts: Optional[Dict[str, str]] = None
     facts_order: Optional[List[str]] = None

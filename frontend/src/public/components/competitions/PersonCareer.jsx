@@ -10,31 +10,34 @@ export function kvnCareerTeams(teams = []) {
 }
 
 // Карьера человека: команды КВН из составов и роли в турнирах (жюри, ведущий, редактор).
-export default function PersonCareer({ personSlug }) {
+export default function PersonCareer({ personSlug, career }) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
+    if (career !== undefined) return undefined;
     let cancelled = false;
     setData(null);
     publicApi.getPersonCareer(personSlug)
       .then((res) => { if (!cancelled) setData(res.data); })
       .catch(() => { if (!cancelled) setData({ teams: [], roles: [] }); });
     return () => { cancelled = true; };
-  }, [personSlug]);
+  }, [personSlug, career]);
+
+  const visibleData = career !== undefined ? career : data;
 
   const roleGroups = useMemo(() => {
     const groups = new Map();
-    for (const row of data?.roles || []) {
+    for (const row of visibleData?.roles || []) {
       const key = `${row.role}:${row.tournament_id}`;
       if (!groups.has(key)) groups.set(key, { role: row.role, tournament: row.tournament, rows: [] });
       groups.get(key).rows.push(row);
     }
     return [...groups.values()];
-  }, [data]);
+  }, [visibleData]);
 
-  if (!data) return null;
+  if (!visibleData) return null;
 
-  return <PersonCareerContent teams={kvnCareerTeams(data.teams)} roleGroups={roleGroups} />;
+  return <PersonCareerContent teams={kvnCareerTeams(visibleData.teams || [])} roleGroups={roleGroups} />;
 }
 
 export function PersonCareerContent({ teams, roleGroups }) {

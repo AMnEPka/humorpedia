@@ -26,6 +26,7 @@ const emptyPerson = {
   title: '',
   slug: '',
   full_name: '',
+  aliases: [],
   foreign_agent: false,
   status: 'draft',
   photo: null,
@@ -68,6 +69,7 @@ export default function PersonEditPage() {
   const [success, setSuccess] = useState('');
   const [newFactKey, setNewFactKey] = useState('');
   const [newFactValue, setNewFactValue] = useState('');
+  const [aliasesText, setAliasesText] = useState('');
 
 
   // Функция для получения случайного паттерна
@@ -168,6 +170,7 @@ export default function PersonEditPage() {
           
           // Устанавливаем primary_tag по умолчанию в формате "Имя Фамилия"
           const primaryTag = response.data.primary_tag || swapNameOrder(response.data.title) || swapNameOrder(response.data.full_name) || null;
+          setAliasesText((response.data.aliases || []).join('\n'));
           
           setPerson({
             ...emptyPerson,
@@ -246,6 +249,7 @@ export default function PersonEditPage() {
       const personToSave = {
         ...person,
         facts: validFacts,
+        aliases: [...new Set(aliasesText.split('\n').map(value => value.trim()).filter(Boolean))],
         primary_tag: primaryTag
       };
 
@@ -449,6 +453,14 @@ export default function PersonEditPage() {
                   onChange={(photo) => setPerson(prev => ({ ...prev, photo }))}
                   label="Основная фотография"
                 />
+
+                <div className="space-y-2">
+                  <Label htmlFor="person-aliases">Псевдонимы и варианты имени</Label>
+                  <Textarea id="person-aliases" value={aliasesText}
+                    onChange={(e) => setAliasesText(e.target.value)}
+                    placeholder="По одному варианту в строке" rows={3} />
+                  <p className="text-xs text-muted-foreground">Используются в поиске; основное имя страницы не меняется.</p>
+                </div>
 
                 <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
                   <div className="space-y-1">

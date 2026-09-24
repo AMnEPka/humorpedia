@@ -21,6 +21,7 @@
 | [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
 | [docs/ai/tasks/team-projects.md](docs/ai/tasks/team-projects.md) | Автоматические проекты участников команды КВН с сохранённым ручным дополнением |
 | [docs/ai/tasks/correction-suggestions.md](docs/ai/tasks/correction-suggestions.md) | Публичные предложения исправлений и редакционная очередь |
+| [docs/ai/tasks/public-user-experience-plan.md](docs/ai/tasks/public-user-experience-plan.md) | План улучшения публичного поиска, каталога команд и мобильных карточек; статус реализации |
 
 ## Стек
 

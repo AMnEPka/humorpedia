@@ -90,7 +90,7 @@ async def create_show(data: ShowCreate):
 
     facts = data.facts or {}
     show = Show(
-        title=data.title, slug=data.slug, name=data.name, poster=data.poster,
+        title=data.title, slug=data.slug, name=data.name, aliases=data.aliases, poster=data.poster,
         facts=facts, facts_order=data.facts_order or list(facts), social_links=data.social_links or {},
         description=data.description,
         parent_id=parent["_id"] if parent else None, full_path=full_path,
@@ -112,7 +112,7 @@ async def list_shows(
     include_children: bool = Query(False, description="Include child shows")
 ):
     """List shows with pagination (excludes child shows by default)."""
-    query = build_query(status, tag, search, ["title", "name"], letter)
+    query = build_query(status, tag, search, ["title", "name", "aliases"], letter)
     availability_query = build_query(status, tag)
     if not include_children:
         query = {"$and": [query, ROOT_QUERY]} if query else ROOT_QUERY

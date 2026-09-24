@@ -43,7 +43,7 @@ async def create_person(data: PersonCreate):
         primary_tag = swap_name_order(title) or swap_name_order(full_name)
 
     person = Person(
-        title=title, slug=data.slug, full_name=full_name,
+        title=title, slug=data.slug, full_name=full_name, aliases=data.aliases,
         foreign_agent=data.foreign_agent,
         photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
         facts=data.facts or {}, facts_order=data.facts_order or [], primary_tag=primary_tag,
@@ -64,7 +64,7 @@ async def list_people(
     letter: Optional[str] = None
 ):
     """List people with pagination and filters."""
-    query = build_query(status, tag, search, ["title", "full_name"], letter)
+    query = build_query(status, tag, search, ["title", "full_name", "aliases"], letter)
     availability_query = build_query(status, tag)
     return await list_alphabetical_content(
         "people", skip, limit, query, ["title", "full_name"],
@@ -80,7 +80,8 @@ async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10
     query = {
         "$or": [
             {"full_name": {"$regex": search_pattern, "$options": "i"}},
-            {"title": {"$regex": search_pattern, "$options": "i"}}
+            {"title": {"$regex": search_pattern, "$options": "i"}},
+            {"aliases": {"$regex": search_pattern, "$options": "i"}}
         ]
     }
     cursor = db.people.find(query, {"_id": 1, "full_name": 1, "title": 1, "slug": 1}).limit(limit)

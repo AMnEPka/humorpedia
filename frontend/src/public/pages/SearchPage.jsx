@@ -17,6 +17,7 @@ const contentTypeLabels = {
   news: 'Новости',
   wiki: 'Вики',
   section: 'Разделы',
+  city: 'Города',
   quiz: 'Квизы'
 };
 
@@ -24,7 +25,8 @@ const getItemPath = (item, type) => {
   if (type === 'section') return item.full_path;
   if (type === 'person') return `/people/${item.slug || item._id}`;
   if (type === 'team') return teamUrl(item) || `/kvn/teams/${item._id}`;
-  if (type === 'show') return `/shows/${item.slug || item._id}`;
+  if (type === 'show') return `/shows/${item.full_path || item.slug || item._id}`;
+  if (type === 'city') return `/city/${item.slug || item._id}`;
   if (type === 'article') return `/articles/${item.slug || item._id}`;
   if (type === 'news') return `/news/${item.slug || item._id}`;
   if (type === 'quiz') return `/quizzes/${item.slug || item._id}`;
@@ -40,27 +42,32 @@ const getItemTitle = (item, type) => {
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const selectedType = searchParams.get('type') || '';
   
   const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState(query);
   const [totalResults, setTotalResults] = useState(0);
+  const [error, setError] = useState(false);
 
   usePageTitle(query ? `Поиск: ${query}` : 'Поиск');
 
   useEffect(() => {
     if (query && query.length >= 2) {
       setSearchInput(query); // Синхронизировать input с query из URL
-      performSearch(query);
+      performSearch(query, selectedType);
     } else {
       setSearchInput(query || ''); // Обновить input даже если query пустой
+      setResults({});
+      setTotalResults(0);
     }
-  }, [query]);
+  }, [query, selectedType]);
 
-  const performSearch = async (q) => {
+  const performSearch = async (q, type) => {
     setLoading(true);
+    setError(false);
     try {
-      const res = await publicApi.search(q, { limit: 100 });
+      const res = await publicApi.search(q, { limit: 100, ...(type ? { types: type } : {}) });
       setResults(res.data);
       
       // Calculate total
@@ -73,6 +80,7 @@ export default function SearchPage() {
       console.error('Search error:', err);
       setResults({});
       setTotalResults(0);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -81,7 +89,7 @@ export default function SearchPage() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchInput.trim().length >= 2) {
-      setSearchParams({ q: searchInput.trim() });
+      setSearchParams({ q: searchInput.trim(), ...(selectedType ? { type: selectedType } : {}) });
     }
   };
 
@@ -104,6 +112,15 @@ export default function SearchPage() {
             Найти
           </Button>
         </form>
+        {query && <nav aria-label="Фильтр по типу контента" className="flex flex-wrap gap-2 mt-4">
+          {[['', 'Все'], ...Object.entries(contentTypeLabels)].map(([type, label]) => (
+            <button key={type} type="button" aria-pressed={selectedType === type}
+              onClick={() => setSearchParams({ q: query, ...(type ? { type } : {}) })}
+              className={`min-h-11 rounded-lg border px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${selectedType === type ? 'border-blue-600 bg-blue-50 text-blue-800' : 'text-gray-700 hover:bg-gray-100'}`}>
+              {label}
+            </button>
+          ))}
+        </nav>}
       </div>
 
       {/* Loading */}
@@ -122,11 +139,19 @@ export default function SearchPage() {
       )}
 
       {/* Results */}
-      {!loading && query && (
+      {!loading && query && error && (
+        <div role="alert" className="text-center py-12 text-gray-600">
+          <p>Не удалось выполнить поиск. Проверьте соединение и попробуйте ещё раз.</p>
+          <Button variant="link" onClick={() => performSearch(query, selectedType)}>Повторить поиск</Button>
+        </div>
+      )}
+
+      {!loading && query && !error && (
         <div>
           {totalResults === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p>Ничего не найдено по запросу "{query}"</p>
+              {selectedType && <Button variant="link" onClick={() => setSearchParams({ q: query })}>Искать по всем типам</Button>}
             </div>
           ) : (
             <div className="space-y-6">
@@ -134,7 +159,7 @@ export default function SearchPage() {
                 Найдено результатов: <strong>{totalResults}</strong>
               </p>
 
-              {Object.entries(results).map(([type, items]) => (
+              {Object.entries(results).filter(([, items]) => Array.isArray(items) && items.length > 0).map(([type, items]) => (
                 <Card key={type}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

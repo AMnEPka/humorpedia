@@ -4,18 +4,20 @@ import { Clapperboard } from 'lucide-react';
 import { publicApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function ShowAppearances({ personId }) {
+export default function ShowAppearances({ personId, appearances }) {
   const [items, setItems] = useState([]);
   useEffect(() => {
+    if (appearances !== undefined) return undefined;
     let active = true;
     setItems([]);
     if (!personId) return undefined;
     const request = publicApi.getPersonShows(personId);
     request.then(({ data }) => { if (active) setItems(data.items || []); }).catch(() => {});
     return () => { active = false; };
-  }, [personId]);
-  if (!items.length) return null;
-  return <ShowAppearancesCard items={items} />;
+  }, [personId, appearances]);
+  const visibleItems = appearances !== undefined ? appearances : items;
+  if (!visibleItems.length) return null;
+  return <ShowAppearancesCard items={visibleItems} />;
 }
 
 export function ShowAppearancesCard({ items }) {

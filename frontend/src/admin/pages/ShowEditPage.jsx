@@ -18,6 +18,7 @@ import FactsEditor from '../components/FactsEditor';
 
 const emptyShow = {
   title: '', slug: '', name: '', status: 'draft',
+  aliases: [],
   poster: null, description: '',
   facts: {},  // Произвольные факты key-value
   facts_order: [],  // Порядок фактов
@@ -33,6 +34,7 @@ export default function ShowEditPage() {
   const isNew = id === 'new';
 
   const [show, setShow] = useState(emptyShow);
+  const [aliasesText, setAliasesText] = useState('');
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -85,6 +87,7 @@ export default function ShowEditPage() {
           social_links: res.data.social_links || {},
           seo: { ...emptyShow.seo, ...res.data.seo } 
         });
+        setAliasesText((res.data.aliases || []).join('\n'));
       }).catch(() => setError('Ошибка загрузки')).finally(() => setLoading(false));
     } else {
       // Для новой страницы устанавливаем случайный паттерн
@@ -107,6 +110,7 @@ export default function ShowEditPage() {
       if (show.title !== undefined) dataToSend.title = show.title;
       if (show.slug !== undefined) dataToSend.slug = show.slug;
       if (show.name !== undefined) dataToSend.name = show.name || ''; // Allow empty name
+      dataToSend.aliases = [...new Set(aliasesText.split('\n').map(alias => alias.trim()).filter(Boolean))];
       // Handle poster - convert string to MediaFile object if needed
       if (show.poster) {
         if (typeof show.poster === 'string') {
@@ -217,6 +221,10 @@ export default function ShowEditPage() {
                 <div className="space-y-2">
                   <Label>Заголовок страницы</Label>
                   <Input value={show.title} onChange={(e) => setShow(p => ({ ...p, title: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="show-aliases">Алиасы для поиска</Label>
+                  <Textarea id="show-aliases" value={aliasesText} onChange={(e) => setAliasesText(e.target.value)} rows={3} placeholder="Каждый вариант названия с новой строки" />
                 </div>
                 <div className="space-y-2">
                   <Label>URL (slug)</Label>

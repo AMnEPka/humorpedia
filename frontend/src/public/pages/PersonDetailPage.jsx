@@ -19,6 +19,7 @@ import FittedImage from '@/components/FittedImage';
 import RelatedArticles from '../components/RelatedArticles';
 import RatingCard from '../components/RatingCard';
 import RelatedNews from '../components/RelatedNews';
+import { sharePage } from '../utils/share';
 
 // Table of Contents component
 function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
@@ -93,12 +94,17 @@ export default function PersonDetailPage() {
   const [person, setPerson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [career, setCareer] = useState(null);
+  const [appearances, setAppearances] = useState([]);
+  const [shareMessage, setShareMessage] = useState('');
 
   usePageTitle(person?.title || (loading ? 'Человек' : (error ? 'Человек не найден' : 'Человек')));
 
   useEffect(() => {
     const fetchPerson = async () => {
       setLoading(true);
+      setError('');
+      setShareMessage('');
       try {
         const res = await publicApi.getPerson(slug);
         setPerson(res.data);
@@ -110,6 +116,20 @@ export default function PersonDetailPage() {
     };
     fetchPerson();
   }, [slug]);
+
+  useEffect(() => {
+    if (!person?._id) return undefined;
+    let active = true;
+    setCareer(null);
+    setAppearances([]);
+    publicApi.getPersonCareer(person.slug || person._id)
+      .then(({ data }) => { if (active) setCareer(data); })
+      .catch(() => { if (active) setCareer({ teams: [], roles: [] }); });
+    publicApi.getPersonShows(person._id)
+      .then(({ data }) => { if (active) setAppearances(data.items || []); })
+      .catch(() => { if (active) setAppearances([]); });
+    return () => { active = false; };
+  }, [person?._id, person?.slug]);
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
@@ -167,29 +187,51 @@ export default function PersonDetailPage() {
         <div className="lg:col-span-1 space-y-6 min-w-0">
           {/* Заголовок под фото */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-6 flex flex-col">
               {/* Poster Photo Module */}
               {sidebarModules.find(m => m.type === 'poster_photo') && (
                 <FittedImage
                   src={personPhotoUrl(person)}
                   fallbackKey={person}
-                  alt={person.photo?.alt || person.cover_image?.alt || person.full_name || person.title}
-                  className="aspect-square rounded-lg mb-4"
+                  alt=""
+                  className="aspect-square rounded-lg mb-4 order-3 lg:order-1"
                   loading="eager"
                 />
               )}
               
               {/* Name */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              <h1 className="text-2xl font-bold text-gray-900 mb-3 order-1 lg:order-2">
                 {person.title}{person.foreign_agent && <ForeignAgentMarker />}
               </h1>
+
+              <div className="lg:hidden mb-4 rounded-lg bg-blue-50 p-4 order-2 lg:order-3" aria-label="Кратко о человеке">
+                <p className="text-sm text-gray-800">
+                  {person.seo?.meta_description || person.bio?.occupation?.join(', ') || 'Биография и проекты — ниже на странице.'}
+                </p>
+                {(career?.teams?.length > 0 || appearances.length > 0) && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {(career?.teams || []).filter(({ team }) => !team?.show_id).slice(0, 2).map(({ team }) => (
+                      <Link key={team.id} to={team.url || `/kvn/teams/${team.slug}`}
+                        className="inline-flex min-h-11 items-center rounded bg-white px-3 text-sm text-blue-700 underline">
+                        {team.name}
+                      </Link>
+                    ))}
+                    {appearances.slice(0, 2).map(item => (
+                      <Link key={item.id} to={item.link_url || item.show_url}
+                        className="inline-flex min-h-11 items-center rounded bg-white px-3 text-sm text-blue-700 underline">
+                        {item.link_url && item.link_url !== item.show_url ? item.caption : (item.show_title || item.caption)}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {/* Social links */}
               {sidebarModules.find(m => m.type === 'social_links') && person.social_links && Object.keys(person.social_links).length > 0 && (
-                <div className="flex gap-3 mb-4">
+                <div className="flex gap-3 mb-4 order-4">
                   {person.social_links.vk && (
                     <a href={person.social_links.vk} target="_blank" rel="noopener noreferrer"
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors" title="VKontakte">
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-[#0077FF] hover:bg-[#0066DD] transition-colors" title="VKontakte">
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.596-.19 1.365 1.26 2.18 1.817.616.422 1.084.33 1.084.33l2.177-.03s1.137-.07.598-.964c-.044-.073-.314-.661-1.618-1.869-1.366-1.264-1.183-1.06.462-3.246.998-1.328 1.398-2.139 1.273-2.485-.12-.33-.856-.243-.856-.243l-2.453.015s-.182-.025-.317.056c-.132.078-.217.26-.217.26s-.39 1.04-.91 1.924c-1.097 1.867-1.536 1.966-1.716 1.85-.42-.271-.315-1.087-.315-1.666 0-1.812.275-2.568-.533-2.764-.27-.065-.467-.108-1.154-.115-.882-.009-1.628.003-2.05.209-.28.138-.497.443-.365.46.163.022.532.099.728.365.253.343.244 1.114.244 1.114s.145 2.132-.34 2.397c-.333.181-.788-.189-1.767-1.884-.502-.867-.88-1.826-.88-1.826s-.073-.179-.203-.275c-.158-.118-.378-.155-.378-.155l-2.334.015s-.35.01-.478.162c-.115.136-.009.417-.009.417s1.838 4.302 3.92 6.47c1.907 1.987 4.073 1.857 4.073 1.857l.988-.001z"/>
                       </svg>
@@ -197,7 +239,7 @@ export default function PersonDetailPage() {
                   )}
                   {person.social_links.telegram && (
                     <a href={person.social_links.telegram} target="_blank" rel="noopener noreferrer"
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#26A5E4] hover:bg-[#1E96D1] transition-colors" title="Telegram">
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-[#26A5E4] hover:bg-[#1E96D1] transition-colors" title="Telegram">
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                       </svg>
@@ -205,7 +247,7 @@ export default function PersonDetailPage() {
                   )}
                   {person.social_links.instagram && (
                     <a href={person.social_links.instagram} target="_blank" rel="noopener noreferrer"
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#FFDC80] via-[#F56040] to-[#C13584] hover:opacity-90 transition-opacity" title="Instagram">
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#FFDC80] via-[#F56040] to-[#C13584] hover:opacity-90 transition-opacity" title="Instagram">
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                       </svg>
@@ -213,7 +255,7 @@ export default function PersonDetailPage() {
                   )}
                   {person.social_links.youtube && (
                     <a href={person.social_links.youtube} target="_blank" rel="noopener noreferrer"
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FF0000] hover:bg-[#CC0000] transition-colors" title="YouTube">
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-[#FF0000] hover:bg-[#CC0000] transition-colors" title="YouTube">
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
@@ -221,13 +263,13 @@ export default function PersonDetailPage() {
                   )}
                   {person.social_links.website && (
                     <a href={person.social_links.website} target="_blank" rel="noopener noreferrer"
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-700 transition-colors" title="Сайт">
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-700 transition-colors" title="Сайт">
                       <Globe className="w-4 h-4 text-white" />
                     </a>
                   )}
                   {person.social_links.twitter && (
                     <a href={person.social_links.twitter} target="_blank" rel="noopener noreferrer"
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-black hover:bg-gray-800 transition-colors" title="X (Twitter)">
+                      className="w-11 h-11 flex items-center justify-center rounded-full bg-black hover:bg-gray-800 transition-colors" title="X (Twitter)">
                       <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                       </svg>
@@ -237,13 +279,17 @@ export default function PersonDetailPage() {
               )}
               
               {/* Share */}
-              <Button variant="outline" className="w-full mb-4" onClick={() => navigator.share?.({ url: window.location.href, title: person.title })}>
+              <Button variant="outline" className="w-full mb-4 order-5" onClick={async () => {
+                try { setShareMessage(await sharePage(person.title) ? 'Ссылка скопирована' : ''); }
+                catch { setShareMessage('Не удалось скопировать ссылку'); }
+              }}>
                 <Share2 className="mr-2 h-4 w-4" /> Поделиться
               </Button>
+              <span role="status" className="block text-sm text-gray-600 order-5">{shareMessage}</span>
 
               {/* Facts Table Module */}
               {sidebarModules.find(m => m.type === 'facts_table') && person.facts && Object.keys(person.facts).length > 0 && (
-                <Card>
+                <Card className="order-6">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Trophy className="h-5 w-5" /> Информация
@@ -361,8 +407,8 @@ export default function PersonDetailPage() {
           ))}
 
           {/* Команды КВН из составов и роли в турнирах */}
-          <PersonCareer personSlug={person.slug || person._id} />
-          <ShowAppearances personId={person._id || person.id} />
+          <PersonCareer personSlug={person.slug || person._id} career={career} />
+          <ShowAppearances personId={person._id || person.id} appearances={appearances} />
 
           {contentModules.slice(careerInsertIndex).map((module, i) => {
             const moduleIndex = careerInsertIndex + i;
