@@ -1,0 +1,199 @@
+[
+  {
+    "kind": "new_person",
+    "candidate_name": "Николай Андреев",
+    "slug": "nikolay-andreev",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://standupclub.ru/comedian/nikolaj-andreev",
+            "title": "Николай Андреев — Стендап Клуб",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Василий Медведев",
+    "slug": "vasiliy-medvedev",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://standupclub.ru/comedian/vasilij-medvedev",
+            "title": "Василий Медведев — Стендап Клуб",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Александр Киселев",
+    "slug": "aleksandr-kiselev",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://standupclub.ru/comedian/alexandr-kiselev",
+            "title": "Александр Киселев — Стендап Клуб",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Саша Борсук",
+    "slug": "sasha-borsuk",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://tv.standupclub.ru/comics/sasha-borsuk/",
+            "title": "Саша Борсук — Стендап Клуб TV",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Кирилл Ясенок",
+    "slug": "kirill-yasenok",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://tv.standupclub.ru/comics/kirill-yasenok/",
+            "title": "Кирилл Ясенок — Стендап Клуб TV",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Лука Хиникадзе",
+    "slug": "luka-hinikadze",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://tv.standupclub.ru/comics/luka-hinikadze/",
+            "title": "Лука Хиникадзе — Стендап Клуб TV",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Никита Дубровский",
+    "slug": "nikita-dubrovskiy",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://tv.standupclub.ru/comics/nikita-dubrovskiy/",
+            "title": "Никита Дубровский — Стендап Клуб TV",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "new_person",
+    "candidate_name": "Алексей Соловьев",
+    "slug": "aleksey-solovev",
+    "reason": "Стартовый кандидат: подтверждена деятельность комика, биография требует дополнительного исследования.",
+    "changes": [
+      {
+        "field": "bio.occupation",
+        "old_value": null,
+        "proposed_value": [
+          "стендап-комик"
+        ],
+        "sources": [
+          {
+            "url": "https://tv.standupclub.ru/comics/aleksey-solovev/",
+            "title": "Алексей Соловьев — Стендап Клуб TV",
+            "checked_at": "2026-09-25"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "update_person",
+    "person_id": "ee2d9b46-53e2-4b10-8552-65024a26c686",
+    "reason": "Официальный анонс нового сезона, отсутствующий в текущей биографии.",
+    "changes": [
+      {
+        "field": "module.411a8539-eba0-4d78-b5ab-6ef57bba4754.content",
+        "old_value": "<p>Станислав Старовойтов (род.11 октября 1982 года, Бакчар, Томская область) – стендап-комик, резидент шоу <a href=\"/proekty/standup\">«Stand Up»</a> на ТНТ, участник проектов <a href=\"/proekty/smeh-bez-pravil\">«Смех без правил»</a> и <a href=\"/proekty/ubojnaya-liga\">«Убойная лига»</a> в составе дуэта «Револьвер», актёр.</p>",
+        "proposed_value": "<p>Станислав Старовойтов (род.11 октября 1982 года, Бакчар, Томская область) – стендап-комик, резидент шоу <a href=\"/proekty/standup\">«Stand Up»</a> на ТНТ, участник проектов <a href=\"/proekty/smeh-bez-pravil\">«Смех без правил»</a> и <a href=\"/proekty/ubojnaya-liga\">«Убойная лига»</a> в составе дуэта «Револьвер», актёр.</p><p>В феврале 2026 года ТНТ анонсировал возвращение Стаса Старовойтова в новый сезон «Stand Up».</p>",
+        "sources": [
+          {
+            "url": "https://tnt-online.ru/news/legendy-vozvrashhaiutsia-na-tnt-startuet-supersezon-stand-up",
+            "title": "Легенды возвращаются: на ТНТ стартует суперсезон Stand Up",
+            "published_at": "2026-02-12",
+            "checked_at": "2026-09-25"
+          }
+        ],
+        "label": "Биография"
+      }
+    ]
+  }
+]

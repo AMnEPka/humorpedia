@@ -290,6 +290,12 @@ export const correctionSuggestionsApi = {
   review: (id, data) => api.patch(`/correction-suggestions/${id}`, data),
 };
 
+export const editorialProposalsApi = {
+  list: (params) => api.get('/editorial-proposals', { params }),
+  create: (data) => api.post('/editorial-proposals', data),
+  decide: (id, data) => api.post(`/editorial-proposals/${id}/decide`, data),
+};
+
 // Media API
 export const mediaApi = {
   uploadToSource: async (file, source, prefix = '') => {
