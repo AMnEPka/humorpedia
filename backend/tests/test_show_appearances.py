@@ -9,7 +9,7 @@ from fastapi import HTTPException
 import routes.show_appearances as appearance_routes
 import services.show_appearances as appearances
 from services.show_appearances import (
-    Tree, appearance_url, apply_participant_card_links, caption, choose, extract,
+    Tree, appearance_url, apply_participant_card_links, caption, choose, extract, link_participant_cards,
     public_team_projects, table_grid, text,
 )
 
@@ -194,6 +194,28 @@ class _Collection:
     def find(self, query, _projection=None):
         self.find_calls.append(query)
         return _Cursor([row for row in self.rows if _matches(row, query)])
+
+
+def test_participant_card_explicit_slug_links_existing_person_without_appearance():
+    show = {'_id': 'show', 'modules': [{'type': 'participants', 'data': {'items': [
+        {'name': 'Женя Синяков', 'person_slug': 'sinyakov-zhenya'},
+        {'name': 'Нет страницы', 'person_slug': 'missing'},
+        {'name': 'Архивный', 'person_slug': 'archived'},
+    ]}}]}
+    db = SimpleNamespace(
+        show_appearances=_Collection([]),
+        people=_Collection([
+            {'_id': 'one', 'slug': 'sinyakov-zhenya'},
+            {'_id': 'two', 'slug': 'archived', 'status': 'archived'},
+        ]),
+    )
+
+    asyncio.run(link_participant_cards(db, show))
+
+    items = show['modules'][0]['data']['items']
+    assert items[0]['person_url'] == '/people/sinyakov-zhenya'
+    assert 'person_url' not in items[1]
+    assert 'person_url' not in items[2]
 
 
 def test_team_projects_group_members_and_reuse_public_filters():

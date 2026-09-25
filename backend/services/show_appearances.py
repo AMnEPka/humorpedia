@@ -617,18 +617,27 @@ def apply_participant_card_links(modules, rows, people):
 
 
 async def link_participant_cards(db, show):
-    """Связать карточки только на страницах, попавших в согласованную синхронизацию."""
+    """Связать карточки по проверенному slug или синхронизированному участию."""
     modules = show.get('modules') or []
     if not any(m.get('type') == 'participants' for m in modules):
         return show
+    slugs = {item.get('person_slug') for module in modules if module.get('type') == 'participants'
+             for item in (module.get('data') or {}).get('items') or [] if item.get('person_slug')}
     rows = await db.show_appearances.find({
         'source_page_id': show['_id'], 'person_id': {'$ne': None}, 'excluded': {'$ne': True},
     }).to_list(None)
-    if not rows:
+    if not rows and not slugs:
         return show
-    people = await db.people.find({
-        '_id': {'$in': list({row['person_id'] for row in rows})}, 'status': {'$ne': 'archived'},
-    }, {'slug': 1}).to_list(None)
+    people = []
+    ids = {row['person_id'] for row in rows}
+    if ids:
+        people.extend(await db.people.find({
+            '_id': {'$in': list(ids)}, 'status': {'$ne': 'archived'},
+        }, {'slug': 1}).to_list(None))
+    if slugs:
+        people.extend(await db.people.find({
+            'slug': {'$in': list(slugs)}, 'status': {'$ne': 'archived'},
+        }, {'slug': 1}).to_list(None))
     apply_participant_card_links(modules, rows, people)
     return show
 
