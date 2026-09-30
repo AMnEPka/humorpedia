@@ -320,7 +320,7 @@ export default function EditorialProposalsPage() {
         {importResult && <p role="status" className="mt-2 text-sm">{importResult}</p>}
       </details>
       <div className="flex flex-wrap gap-2">
-        {KINDS.map(([value, label]) => <Button key={value} size="sm" variant={kind === value ? 'default' : 'outline'} onClick={() => { setKind(value); setStatus(''); setSkip(0); }}>{label}</Button>)}
+        {KINDS.map(([value, label]) => <Button key={value} size="sm" variant={kind === value ? 'default' : 'outline'} onClick={() => { setKind(value); setStatus(value === 'new_person' ? 'new' : ''); setSkip(0); }}>{label}</Button>)}
       </div>
       <div className="flex flex-wrap gap-2">
         {STATUSES.map(([value, label]) => <Button key={value} size="sm" variant={status === value ? 'secondary' : 'outline'} onClick={() => { setStatus(value); setSkip(0); }}>{label}</Button>)}

@@ -1,0 +1,59 @@
+{
+  "proposals": [
+    {
+      "kind": "new_person", "candidate_name": "Николай Андреев", "slug": "nikolay-andreev",
+      "reason": "Полная анкета вместо отозванной однострочной карточки; место рождения указано по профильному биографическому материалу и требует проверки редактором.",
+      "changes": [
+        {"field": "bio.birth_date", "proposed_value": "30.01.1990", "sources": [{"url": "https://glavstandup.ru/comedians/nikolay-andreev", "title": "GlavStandUp: Николай Андреев"}, {"url": "https://kassir.ru/artists/nikolaj-andreev", "title": "Kassir.ru: Николай Андреев"}]},
+        {"field": "bio.birth_place", "proposed_value": "Москва", "sources": [{"url": "https://glavstandup.ru/comedians/nikolay-andreev", "title": "GlavStandUp: Николай Андреев", "excerpt": "Место рождения: Москва"}]},
+        {"field": "module.biography.content", "label": "Биография", "proposed_value": "Николай Андреев — стендап-комик, изучавший философию. Он участвовал в интернет-шоу «Порараз Бирацца» и проекте «Разгоны». В своих выступлениях комик обращается к повседневным ситуациям и выстраивает из них длинные разговорные истории.", "sources": [{"url": "https://gostandup.ru/comedians/nikolay_andreev", "title": "GoStandup: Николай Андреев"}, {"url": "https://glavstandup.ru/comedians/nikolay-andreev", "title": "GlavStandUp: Николай Андреев"}]},
+        {"field": "appearance.3e6a0997-a6e3-4fdd-bdd2-7556ff3983aa", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://gostandup.ru/comedians/nikolay_andreev", "title": "GoStandup: участие в «Порараз Бирацца»"}]},
+        {"field": "appearance.4c650124-5c02-4d8b-98f6-2bada1862399", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://gostandup.ru/comedians/nikolay_andreev", "title": "GoStandup: выпуски «Разгонов» с Николаем Андреевым"}]}
+      ]
+    },
+    {
+      "kind": "new_person", "candidate_name": "Александр Киселев", "slug": "aleksandr-kiselev",
+      "reason": "Полная анкета вместо отозванной однострочной карточки; город и дату рождения подтверждают профильные страницы комика.",
+      "changes": [
+        {"field": "bio.birth_date", "proposed_value": "13.02.1990", "sources": [{"url": "https://gostandup.ru/comedians/aleksandr_kiselev", "title": "GoStandup: Александр Киселев"}, {"url": "https://live.mts.ru/persons/aleksandr_kiselev", "title": "МТС Live: Александр Киселёв"}]},
+        {"field": "bio.birth_place", "proposed_value": "Челябинск", "sources": [{"url": "https://live.mts.ru/persons/aleksandr_kiselev", "title": "МТС Live: Александр Киселёв", "excerpt": "Родился 13 февраля 1990 года в Челябинске"}, {"url": "https://gostandup.ru/comedians/aleksandr_kiselev", "title": "GoStandup: Александр Киселев"}]},
+        {"field": "module.biography.content", "label": "Биография", "proposed_value": "Александр Киселев начал выступать в Челябинске: играл в КВН и организовал местный проект Stand Up-74. Позже он участвовал в шоу «Разгоны» и «22 комика». В 2017 году фестиваль «Панчлайн» отметил его выступления наградой «Феномен».", "sources": [{"url": "https://chel.aif.ru/culture/showbusiness/1377246", "title": "АиФ Челябинск: интервью с Александром Киселёвым"}, {"url": "https://gostandup.ru/articles/festival_panchlayn_itogi", "title": "GoStandup: итоги фестиваля «Панчлайн»"}, {"url": "https://gostandup.ru/comedians/aleksandr_kiselev", "title": "GoStandup: проекты Александра Киселёва"}]},
+        {"field": "appearance.4c650124-5c02-4d8b-98f6-2bada1862399", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://gostandup.ru/comedians/aleksandr_kiselev", "title": "GoStandup: выпуски «Разгонов» с Александром Киселёвым"}]},
+        {"field": "appearance.becdb1d1-6417-4c20-b359-5e2536518ef7", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://gostandup.ru/comedians/aleksandr_kiselev", "title": "GoStandup: выступление в «22 комика»"}]}
+      ]
+    },
+    {
+      "kind": "new_person", "candidate_name": "Кирилл Ясенок", "slug": "kirill-yasenok",
+      "reason": "Полная анкета вместо отозванной однострочной карточки; биографические данные приведены по профильному материалу на проверку редактору.",
+      "changes": [
+        {"field": "bio.birth_date", "proposed_value": "25.08.1991", "sources": [{"url": "https://glavstandup.ru/comedians/kirill-yasenok", "title": "GlavStandUp: Кирилл Ясенок"}]},
+        {"field": "bio.birth_place", "proposed_value": "Жуковский", "sources": [{"url": "https://glavstandup.ru/comedians/kirill-yasenok", "title": "GlavStandUp: Кирилл Ясенок", "excerpt": "Место рождения: г. Жуковский"}]},
+        {"field": "module.biography.content", "label": "Биография", "proposed_value": "Кирилл Ясенок начал выступать в КВН ещё школьником и позже играл за команду Бауманского университета. В 2014 году он попробовал стендап, затем участвовал в «Открытом микрофоне» на ТНТ. Комик также выступал в выпусках проекта «Разгоны» Стендап Клуба на Трубной.", "sources": [{"url": "https://glavstandup.ru/comedians/kirill-yasenok", "title": "GlavStandUp: биография Кирилла Ясенка"}, {"url": "https://tv.standupclub.ru/comics/kirill-yasenok/", "title": "Стендап Клуб на Трубной TV: Кирилл Ясенок"}]},
+        {"field": "appearance.1827eac7-af09-4caa-9075-55183cfb4619", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://glavstandup.ru/comedians/kirill-yasenok", "title": "GlavStandUp: участие в «Открытом микрофоне»"}]},
+        {"field": "appearance.4c650124-5c02-4d8b-98f6-2bada1862399", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://tv.standupclub.ru/comics/kirill-yasenok/", "title": "Стендап Клуб на Трубной TV: выпуски «Разгонов»"}]}
+      ]
+    },
+    {
+      "kind": "new_person", "candidate_name": "Лука Хиникадзе", "slug": "luka-hinikadze",
+      "reason": "Полная анкета вместо отозванной однострочной карточки; сведения о детстве ограничены публичным интервью и редакционной биографией.",
+      "changes": [
+        {"field": "bio.birth_date", "proposed_value": "03.09.1994", "sources": [{"url": "https://srsly.ru/person/show/16462/", "title": "SRSLY: Лука Хиникадзе"}, {"url": "https://standupscore.com/comedians/luka-khinikadze", "title": "StandupScore: Лука Хиникадзе"}]},
+        {"field": "bio.birth_place", "proposed_value": "Москва", "sources": [{"url": "https://sputnik-georgia.ru/20180425/Ulybka-i-skalpel-beseda-s-gruzinskim-vrachom-stendaperom-240195107.html", "title": "Sputnik Грузия: интервью с Лукой Хиникадзе", "published_at": "2018-04-25", "excerpt": "Лука родился в Москве, но детство провёл в Батуми"}]},
+        {"field": "module.biography.content", "label": "Биография", "proposed_value": "Лука Хиникадзе родился в Москве и провёл детство в Батуми. Он получил медицинское образование и работал ЛОР-хирургом, параллельно выступая как стендап-комик. Лука участвовал в шоу «22 комика» и в выпусках «Разгонов» Стендап Клуба на Трубной.", "sources": [{"url": "https://sputnik-georgia.ru/20180425/Ulybka-i-skalpel-beseda-s-gruzinskim-vrachom-stendaperom-240195107.html", "title": "Sputnik Грузия: интервью с Лукой Хиникадзе", "published_at": "2018-04-25"}, {"url": "https://srsly.ru/person/show/16462/", "title": "SRSLY: биография и участие в «22 комика»"}, {"url": "https://tv.standupclub.ru/comics/luka-hinikadze/", "title": "Стендап Клуб на Трубной TV: Лука Хиникадзе"}]},
+        {"field": "appearance.becdb1d1-6417-4c20-b359-5e2536518ef7", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://srsly.ru/person/show/16462/", "title": "SRSLY: участие в «22 комика»"}]},
+        {"field": "appearance.4c650124-5c02-4d8b-98f6-2bada1862399", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://tv.standupclub.ru/video/224/razgony-172-vasiliy-medvedev-luka-hinikadze-eldar-guseynov-jenya-honyakov-timur-hamadullin/", "title": "Стендап Клуб на Трубной TV: «Разгоны» №172"}]}
+      ]
+    },
+    {
+      "kind": "new_person", "candidate_name": "Алексей Соловьев", "slug": "aleksey-solovev",
+      "reason": "Полная анкета вместо отозванной однострочной карточки; сведения о рождении сверены с интервью и страницами комика.",
+      "changes": [
+        {"field": "bio.birth_date", "proposed_value": "01.09.1999", "sources": [{"url": "https://gostandup.ru/comedians/aleksey_solovev", "title": "GoStandup: Алексей Соловьев"}, {"url": "https://www.afisha.ru/people/aleksey-solovev-751345/concerts/", "title": "Афиша: Алексей Соловьев"}]},
+        {"field": "bio.birth_place", "proposed_value": "Елабуга", "sources": [{"url": "https://standupmsk.com/comedians/aleksej-solovev", "title": "Stand Up Msk: Алексей Соловьев", "excerpt": "Родился в сентябре 1999 года в Елабуге"}, {"url": "https://m.business-gazeta.ru/article/643910", "title": "БИЗНЕС Online: интервью с комиком из Елабуги"}]},
+        {"field": "module.biography.content", "label": "Биография", "proposed_value": "Алексей Соловьев родился в Елабуге и начал выступать на открытых микрофонах в Татарстане. Позже он стал резидентом московского Стендап Клуба на Трубной. Среди его записанных выступлений — сольный номер в Outside Stand Up и выпуски проекта «Разгоны».", "sources": [{"url": "https://m.business-gazeta.ru/article/643910", "title": "БИЗНЕС Online: интервью с Алексеем Соловьевым"}, {"url": "https://gostandup.ru/comedians/aleksey_solovev", "title": "GoStandup: выступление в Outside Stand Up"}, {"url": "https://tv.standupclub.ru/comics/aleksey-solovev/", "title": "Стендап Клуб на Трубной TV: Алексей Соловьев"}]},
+        {"field": "appearance.94107ca9-7848-483e-b1f4-2531ed0dd04b", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://gostandup.ru/comedians/aleksey_solovev", "title": "GoStandup: номер в Outside Stand Up"}]},
+        {"field": "appearance.4c650124-5c02-4d8b-98f6-2bada1862399", "proposed_value": {"achievement": "participant"}, "sources": [{"url": "https://tv.standupclub.ru/video/205/razgony-171-sergey-orlov-dima-koval-sasha-maloy-dinara-kurbanova-aleksey-solovev/", "title": "Стендап Клуб на Трубной TV: «Разгоны» №171"}]}
+      ]
+    }
+  ]
+}

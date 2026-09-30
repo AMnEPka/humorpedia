@@ -78,6 +78,7 @@ test('sparse candidate shows missing facts and cannot create a page', async () =
   });
   await click('Новые люди');
   expect(host.textContent).toContain('Николай Андреев');
+  expect(editorialProposalsApi.list).toHaveBeenLastCalledWith({ kind: 'new_person', status: 'new', skip: 0, limit: 20 });
   expect(editorialProposalsApi.decide).not.toHaveBeenCalled();
   const choice = host.querySelector('[aria-label="Решение: Профессии"] button');
   await act(async () => { choice.click(); });
