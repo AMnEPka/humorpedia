@@ -129,6 +129,7 @@ function ProposalCard({ item, onSaved }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const isNew = item.kind === 'new_person';
+  const missingRequirements = item.missing_requirements || [];
   const pendingChanges = (item.changes || []).filter((change) => isEditable(change.status));
   const active = pendingChanges.length > 0;
 
@@ -165,6 +166,10 @@ function ProposalCard({ item, onSaved }) {
     if (!decisions.length) { setError('Выберите хотя бы одно решение'); return; }
     if (isNew && decisions.length !== pendingChanges.length) {
       setError('Для новой страницы выберите решение по каждому факту');
+      return;
+    }
+    if (isNew && decisions.some((entry) => entry.decision === 'accept') && missingRequirements.length) {
+      setError('Недостаточно подтверждённых сведений для новой страницы. Дополните исследование и загрузите полную карточку.');
       return;
     }
     if (isNew && decisions.some((entry) => entry.decision === 'accept') && (!person.title.trim() || !person.full_name.trim() || !person.slug.trim())) {
@@ -206,7 +211,13 @@ function ProposalCard({ item, onSaved }) {
 
         {isNew && active && !item.created_person_id && (
           <div className="rounded-lg border bg-amber-50 p-4 space-y-3">
-            <p className="text-sm">Новая страница появится на сайте после решения по всем фактам и принятия хотя бы одного. Проверьте совпадения и заполните данные человека перед сохранением.</p>
+            <p className="text-sm">Страница создаётся после решения по всем фактам и проверки полноты анкеты. Проверьте совпадения и данные человека.</p>
+            {missingRequirements.length > 0 && (
+              <div className="text-sm" role="status">
+                <strong>Кандидат пока не готов к созданию страницы. Требуется:</strong>
+                <ul className="mt-1 list-disc pl-5">{missingRequirements.map((requirement) => <li key={requirement}>{requirement}</li>)}</ul>
+              </div>
+            )}
             {matches.length > 0 && (
               <div className="text-sm">
                 <strong>Похожие страницы:</strong>{' '}
@@ -232,7 +243,7 @@ function ProposalCard({ item, onSaved }) {
           />
         ))}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        {active && <Button disabled={busy} onClick={submit}>{busy ? 'Сохранение…' : isNew && Object.values(choices).includes('accept') && !item.created_person_id ? 'Сохранить решения и создать страницу' : 'Сохранить решения'}</Button>}
+        {active && <Button disabled={busy} onClick={submit}>{busy ? 'Сохранение…' : isNew && Object.values(choices).includes('accept') && !item.created_person_id && !missingRequirements.length ? 'Сохранить решения и создать страницу' : 'Сохранить решения'}</Button>}
       </CardContent>
     </Card>
   );

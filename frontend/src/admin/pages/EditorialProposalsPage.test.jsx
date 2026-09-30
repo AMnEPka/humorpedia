@@ -69,10 +69,11 @@ test('sends edited acceptance and rejection as separate decisions', async () => 
   });
 });
 
-test('new candidate stays outside people until an explicit accepted decision', async () => {
+test('sparse candidate shows missing facts and cannot create a page', async () => {
   editorialProposalsApi.list.mockResolvedValue({ data: { items: [], total: 0 } });
   await renderProposal({
     _id: 'candidate-1', kind: 'new_person', candidate_name: 'Николай Андреев', slug: 'nikolay-andreev', status: 'new',
+    missing_requirements: ['дата рождения (ДД.ММ или ДД.ММ.ГГГГ)', 'город рождения', 'биография: минимум два предложения и 100 символов', 'участие минимум в двух разных проектах/шоу'],
     changes: [{ id: 'occupation-1', field: 'bio.occupation', old_value: null, proposed_value: ['стендап-комик'], status: 'pending', sources: [{ url: 'https://example.org/comedian', title: 'Клуб' }] }],
   });
   await click('Новые люди');
@@ -80,8 +81,24 @@ test('new candidate stays outside people until an explicit accepted decision', a
   expect(editorialProposalsApi.decide).not.toHaveBeenCalled();
   const choice = host.querySelector('[aria-label="Решение: Профессии"] button');
   await act(async () => { choice.click(); });
+  expect(host.textContent).toContain('Кандидат пока не готов к созданию страницы');
+  await click('Сохранить решения');
+  expect(editorialProposalsApi.decide).not.toHaveBeenCalled();
+  expect(host.textContent).toContain('Недостаточно подтверждённых сведений');
+});
+
+test('candidate marked complete by API can be sent for creation', async () => {
+  editorialProposalsApi.list.mockResolvedValue({ data: { items: [], total: 0 } });
+  await renderProposal({
+    _id: 'candidate-2', kind: 'new_person', candidate_name: 'Николай Андреев', slug: 'nikolay-andreev', status: 'new',
+    missing_requirements: [],
+    changes: [{ id: 'occupation-1', field: 'bio.occupation', old_value: null, proposed_value: ['стендап-комик'], status: 'pending', sources: [{ url: 'https://example.org/comedian', title: 'Клуб' }] }],
+  });
+  await click('Новые люди');
+  const choice = host.querySelector('[aria-label="Решение: Профессии"] button');
+  await act(async () => { choice.click(); });
   await click('Сохранить решения и создать страницу');
-  expect(editorialProposalsApi.decide).toHaveBeenCalledWith('candidate-1', {
+  expect(editorialProposalsApi.decide).toHaveBeenCalledWith('candidate-2', {
     decisions: [{ change_id: 'occupation-1', decision: 'accept' }],
     person: { title: 'Николай Андреев', full_name: 'Николай Андреев', slug: 'nikolay-andreev' },
   });

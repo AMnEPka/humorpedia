@@ -13,9 +13,10 @@ from pymongo.errors import DuplicateKeyError
 
 from models.content import Person, PersonBio, PersonCreate, PersonUpdate
 from models.editorial_proposal import (
-    EditorialDecisionRequest, EditorialProposalCreate, utc_iso,
+    EditorialDecisionRequest, EditorialPersonIdentity, EditorialProposalCreate, utc_iso,
 )
 from services.crud import create_content
+from services.editorial_quality import missing_candidate_requirements
 from services.memberships import PersonLookup, name_key
 from utils.auth import require_editor
 from utils.database import get_db
@@ -33,6 +34,14 @@ MISSING = object()
 def _wire(document: dict) -> dict:
     result = deepcopy(document)
     result["id"] = str(result.get("_id") or result.get("id") or "")
+    if result.get("kind") == "new_person" and not result.get("created_person_id"):
+        identity = result.get("person_identity") or {}
+        full_name = identity.get("full_name") or identity.get("name") or result.get("candidate_name")
+        available = [
+            (change, (change.get("decision") or {}).get("edited_value", change.get("proposed_value")))
+            for change in result.get("changes", []) if change.get("status") != "rejected"
+        ]
+        result["missing_requirements"] = missing_candidate_requirements(full_name, available)
     return result
 
 
@@ -75,7 +84,13 @@ def _person_update_plan(person: dict, change: dict, value):
         if not isinstance(value, str):
             raise HTTPException(422, "Значение facts должно быть строкой")
         facts[key] = value
-        _validate_with_http(PersonUpdate, {"facts": facts})
+        modules = deepcopy(person.get("modules") or [])
+        if not any(module.get("type") == "facts_table" for module in modules):
+            modules.append({"id": str(uuid.uuid4()), "type": "facts_table", "order": len(modules),
+                            "visible": True, "data": {}})
+            compare["modules"] = person.get("modules") or []
+            update["modules"] = modules
+        _validate_with_http(PersonUpdate, {"facts": facts, "modules": modules})
         compare[f"facts.{key}"] = old_value
         update[f"facts.{key}"] = value
     elif field.startswith("module."):
@@ -83,13 +98,21 @@ def _person_update_plan(person: dict, change: dict, value):
         modules = deepcopy(person.get("modules") or [])
         module = next((entry for entry in modules if str(entry.get("id")) == module_id), None)
         if module is None:
-            return None, "Модуль из предложения больше не существует"
-        data = module.setdefault("data", {})
-        if data.get("content", MISSING) != old_value:
-            return None, "Содержимое модуля изменилось после исследования"
-        if not isinstance(value, str):
-            raise HTTPException(422, "Содержимое модуля должно быть строкой")
-        data["content"] = value
+            if old_value is not None:
+                return None, "Модуль из предложения больше не существует"
+            if not isinstance(value, str):
+                raise HTTPException(422, "Содержимое модуля должно быть строкой")
+            title = change.get("label") or "Биография"
+            modules.append({"id": module_id, "type": "text_block", "title": title,
+                            "order": len(modules), "visible": True,
+                            "data": {"title": title, "content": value}})
+        else:
+            data = module.setdefault("data", {})
+            if data.get("content", MISSING) != old_value:
+                return None, "Содержимое модуля изменилось после исследования"
+            if not isinstance(value, str):
+                raise HTTPException(422, "Содержимое модуля должно быть строкой")
+            data["content"] = value
         _validate_with_http(PersonUpdate, {"modules": modules})
         # Pydantic checks the existing module contract; persist the original copy so legacy fields survive.
         compare["modules"] = person.get("modules") or []
@@ -354,16 +377,23 @@ async def _create_new_person(db, proposal: dict, identity, accepted_changes: lis
             content = module_data.get("content")
             if not isinstance(content, str):
                 raise HTTPException(422, "Для нового человека модуль должен содержать content")
+            module_title = module_data.get("title") or change.get("label")
             modules.append({"id": module_id, "type": module_data.get("type", "text_block"),
-                            "title": module_data.get("title"), "order": len(modules),
-                            "visible": True, "data": {"content": content}})
+                            "title": module_title, "order": len(modules),
+                            "visible": True, "data": {"title": module_title, "content": content}})
         elif field.startswith("appearance."):
             appearance_changes.append((change, value))
         else:
             raise HTTPException(422, f"Недопустимое поле новой страницы: {field}")
+    missing = missing_candidate_requirements(full_name, accepted_changes)
+    if missing:
+        raise HTTPException(422, "Новая страница не готова: " + "; ".join(missing))
+    facts.setdefault("Дата рождения", bio["birth_date"])
+    facts.setdefault("Место рождения", bio["birth_place"])
+    modules.append({"id": str(uuid.uuid4()), "type": "facts_table", "order": len(modules), "visible": True, "data": {}})
     payload = _validate_with_http(PersonCreate, {
         "title": title, "full_name": full_name, "slug": slug,
-        "bio": bio, "facts": facts, "modules": modules, "status": "draft",
+        "bio": bio, "facts": facts, "facts_order": list(facts), "modules": modules, "status": "draft",
     })
     linked_proposal = {**proposal, "person_id": person_id}
     for change, value in appearance_changes:
@@ -414,6 +444,32 @@ async def decide_editorial_proposal(
                 saved = (change.get("decision") or {}).get("edited_value", change.get("proposed_value"))
                 if decision["edited_value"] != saved:
                     raise HTTPException(409, "Изменение уже принято с другим значением")
+
+    # A one-fact candidate is a research lead, not a publishable person page.
+    # Check the complete proposed outcome before persisting any final decision.
+    if proposal["kind"] == "new_person" and not proposal.get("created_person_id"):
+        planned = []
+        has_pending = False
+        has_conflict = False
+        for change in proposal["changes"]:
+            decision = decisions.get(change["id"])
+            if change["status"] == "conflict":
+                has_conflict = True
+            elif change["status"] == "accepted":
+                planned.append((change, (change.get("decision") or {}).get("edited_value", change.get("proposed_value"))))
+            elif change["status"] == "pending":
+                if decision is None:
+                    has_pending = True
+                elif decision["decision"] == "accept":
+                    planned.append((change, _proposed_value(change, decision)))
+        if not has_pending and not has_conflict and planned:
+            identity = data.person
+            if identity is None and proposal.get("person_identity"):
+                identity = EditorialPersonIdentity.model_validate(proposal["person_identity"])
+            full_name = (identity.full_name or identity.name) if identity else None
+            missing = missing_candidate_requirements(full_name, planned)
+            if missing:
+                raise HTTPException(422, "Новая страница не готова: " + "; ".join(missing))
 
     # Validate every update_person acceptance before the first content write. A
     # malformed later decision must not leave earlier facts applied invisibly.
@@ -509,7 +565,6 @@ async def decide_editorial_proposal(
         elif any(change["status"] == "accepted" for change in proposal["changes"]):
             identity = data.person
             if identity is None and proposal.get("person_identity"):
-                from models.editorial_proposal import EditorialPersonIdentity
                 identity = EditorialPersonIdentity.model_validate(proposal["person_identity"])
             try:
                 accepted_for_new = [

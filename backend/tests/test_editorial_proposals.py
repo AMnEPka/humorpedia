@@ -150,6 +150,19 @@ def _proposal(**overrides):
     return data
 
 
+def _complete_candidate_changes():
+    source = [{"url": "https://example.org/interview", "title": "Интервью"}]
+    return [
+        {"id": "birth-date", "field": "bio.birth_date", "proposed_value": "17.04", "sources": source},
+        {"id": "birth-place", "field": "bio.birth_place", "proposed_value": "Москва", "sources": source},
+        {"id": "biography", "field": "module.biography.content", "label": "Биография",
+         "proposed_value": "Комик начал выступать на сцене в родном городе и работал с несколькими творческими коллективами. Позднее он участвовал в телевизионных проектах и продолжил выступать перед публикой.",
+         "sources": source},
+        {"id": "show-one", "field": "appearance.show-1", "proposed_value": {"achievement": "participant"}, "sources": source},
+        {"id": "show-two", "field": "appearance.show-2", "proposed_value": {"achievement": "participant"}, "sources": source},
+    ]
+
+
 def test_editorial_routes_require_editor_for_reads_and_writes():
     app = FastAPI()
     app.include_router(route.router, prefix="/api")
@@ -326,8 +339,44 @@ def test_module_validation_preserves_legacy_module_fields(editorial_client):
     assert module["unknown_top_level"] == "keep"
 
 
+def test_accept_can_add_sourced_biography_module(editorial_client):
+    client, db = editorial_client
+    card = client.post("/api/editorial-proposals", json=_proposal(changes=[{
+        "id": "new-biography", "field": "module.researched-biography.content", "label": "Биография",
+        "old_value": None, "proposed_value": "Проверенный биографический текст.",
+        "sources": [{"url": "https://example.org/interview", "title": "Интервью"}],
+    }])).json()
+
+    result = client.post(f"/api/editorial-proposals/{card['id']}/decide", json={
+        "decisions": [{"change_id": "new-biography", "decision": "accept"}],
+    })
+
+    assert result.status_code == 200
+    module = db.people.docs["p1"]["modules"][0]
+    assert module["type"] == "text_block"
+    assert module["data"] == {"title": "Биография", "content": "Проверенный биографический текст."}
+
+
+def test_accepted_fact_is_visible_on_page_without_existing_facts_module(editorial_client):
+    client, db = editorial_client
+    card = client.post("/api/editorial-proposals", json=_proposal(changes=[{
+        "id": "birth-place", "field": "facts.Место рождения", "old_value": None,
+        "proposed_value": "Москва", "sources": [{"url": "https://example.org/bio", "title": "Биография"}],
+    }])).json()
+
+    result = client.post(f"/api/editorial-proposals/{card['id']}/decide", json={
+        "decisions": [{"change_id": "birth-place", "decision": "accept"}],
+    })
+
+    assert result.status_code == 200
+    assert db.people.docs["p1"]["facts"]["Место рождения"] == "Москва"
+    assert db.people.docs["p1"]["modules"][0]["type"] == "facts_table"
+
+
 def test_new_person_is_created_only_after_final_batch(monkeypatch, editorial_client):
     client, db = editorial_client
+    db.shows.docs["show-1"] = {"_id": "show-1", "slug": "show-one", "title": "Первое шоу"}
+    db.shows.docs["show-2"] = {"_id": "show-2", "slug": "show-two", "title": "Второе шоу"}
     created_people = []
 
     async def fake_create_content(_collection, person, _tags):
@@ -342,36 +391,56 @@ def test_new_person_is_created_only_after_final_batch(monkeypatch, editorial_cli
     monkeypatch.setattr(content_people, "_link_person_everywhere", no_link)
     proposal = _proposal(
         kind="new_person", person_id=None, candidate_name="Новый комик", candidate_slug="novyi-komik",
-        changes=[
-            {"id": "name-fact", "field": "facts.role", "proposed_value": "комик",
-             "sources": [{"url": "https://example.org/role", "title": "Роль"}]},
-            {"id": "bio-fact", "field": "bio.birth_place", "proposed_value": "Москва",
-             "sources": [{"url": "https://example.org/bio", "title": "Биография"}]},
-        ],
+        changes=_complete_candidate_changes(),
     )
     card = client.post("/api/editorial-proposals", json=proposal).json()
 
     partial = client.post(f"/api/editorial-proposals/{card['id']}/decide", json={
         "person": {"name": "Новый комик", "slug": "novyi-komik"},
-        "decisions": [{"change_id": "name-fact", "decision": "accept"}],
+        "decisions": [{"change_id": "birth-date", "decision": "accept"}],
     })
     assert partial.status_code == 200
     assert not created_people
     assert not db.people.docs.get("new-person")
 
     final = client.post(f"/api/editorial-proposals/{card['id']}/decide", json={
-        "decisions": [{"change_id": "bio-fact", "decision": "accept"}],
+        "decisions": [{"change_id": change["id"], "decision": "accept"}
+                      for change in _complete_candidate_changes() if change["id"] != "birth-date"],
     })
 
     assert final.status_code == 200
     assert len(created_people) == 1
     assert created_people[0].status.value == "draft"
+    assert created_people[0].bio.birth_date == "17.04"
+    assert created_people[0].facts["Место рождения"] == "Москва"
+    assert any(module.type == "facts_table" for module in created_people[0].modules)
+    assert len(db.show_appearances.docs) == 2
     assert final.json()["created_person"]["id"] == "new-person"
+
+
+def test_sparse_candidate_cannot_be_created_or_partly_accepted(editorial_client):
+    client, db = editorial_client
+    card = client.post("/api/editorial-proposals", json=_proposal(
+        kind="new_person", person_id=None, candidate_name="Новый комик", slug="novyi-komik",
+        changes=[{"id": "only-show", "field": "appearance.show-1", "proposed_value": {"achievement": "participant"},
+                  "sources": [{"url": "https://example.org/show", "title": "Афиша"}]}],
+    )).json()
+    assert "дата рождения (ДД.ММ или ДД.ММ.ГГГГ)" in card["missing_requirements"]
+
+    response = client.post(f"/api/editorial-proposals/{card['id']}/decide", json={
+        "person": {"title": "Новый комик", "full_name": "Новый комик", "slug": "novyi-komik"},
+        "decisions": [{"change_id": "only-show", "decision": "accept"}],
+    })
+
+    assert response.status_code == 422
+    assert not db.people.docs.get(card["id"])
+    assert db.editorial_proposals.docs[card["id"]]["changes"][0]["status"] == "pending"
 
 
 def test_new_person_appearance_failure_keeps_created_id_and_retry_recovers(monkeypatch, editorial_client):
     client, db = editorial_client
     db.shows.docs["show-1"] = {"_id": "show-1", "slug": "show", "title": "Шоу"}
+    db.shows.docs["show-2"] = {"_id": "show-2", "slug": "show-two", "title": "Второе шоу"}
     created = []
 
     async def fake_create_content(_collection, person, _tags):
@@ -396,26 +465,23 @@ def test_new_person_appearance_failure_keeps_created_id_and_retry_recovers(monke
     monkeypatch.setattr(route, "_apply_appearance", fail_once)
     card = client.post("/api/editorial-proposals", json=_proposal(
         kind="new_person", person_id=None, candidate_name="Новый комик", slug="novyi-komik",
-        changes=[{
-            "id": "show-change", "field": "appearance.show-1", "proposed_value": {"achievement": "participant"},
-            "sources": [{"url": "https://example.org/show", "title": "Состав шоу"}],
-        }],
+        changes=_complete_candidate_changes(),
     )).json()
     decisions = {
         "person": {"title": "Новый комик", "full_name": "Новый комик", "slug": "novyi-komik"},
-        "decisions": [{"change_id": "show-change", "decision": "accept"}],
+        "decisions": [{"change_id": change["id"], "decision": "accept"} for change in _complete_candidate_changes()],
     }
 
     failed = client.post(f"/api/editorial-proposals/{card['id']}/decide", json=decisions)
     assert failed.status_code == 500
     saved = db.editorial_proposals.docs[card["id"]]
     assert saved["created_person_id"] == created[0].id
-    assert saved["changes"][0]["status"] == "accepted"
+    assert all(change["status"] == "accepted" for change in saved["changes"])
 
     monkeypatch.setattr(route, "_apply_appearance", apply_appearance)
     recovered = client.post(f"/api/editorial-proposals/{card['id']}/decide", json=decisions)
     assert recovered.status_code == 200
     assert len(created) == 1
-    row = next(iter(db.show_appearances.docs.values()))
-    assert row["source"] == "editorial"
+    assert len(db.show_appearances.docs) == 2
+    assert all(row["source"] == "editorial" for row in db.show_appearances.docs.values())
     assert recovered.json()["created_person_id"] == created[0].id
