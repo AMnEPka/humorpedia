@@ -9,7 +9,7 @@ from pymongo.errors import DuplicateKeyError
 
 from models.season_import import SeasonImport
 from services.competitions import TeamLookup, legacy_to_season, build_participations
-from services.season_import import apply_import, build_season_data, digest, match_teams, preview_import
+from services.season_import import apply_import, build_season_data, digest, match_teams, package_fingerprint, preview_import
 
 
 def payload():
@@ -91,7 +91,9 @@ def test_aliases_city_history_and_ambiguous_matches():
 
 
 def test_structured_results_roundtrip_and_crosslinks():
-    package = SeasonImport.model_validate(payload())
+    data = payload()
+    data["editorial_notes"] = "Проверить расхождение источников; passed пока false"
+    package = SeasonImport.model_validate(data)
     refs = {"a": {"team_id": "a-id", "slug": "ne-kipishuy", "name": "НК", "city": "Астана"},
             "b": {"team_id": "b-id", "slug": "new", "name": "Новая", "city": "Омск"}}
     sd = build_season_data(package, refs, "Высшая лига")
@@ -100,11 +102,19 @@ def test_structured_results_roundtrip_and_crosslinks():
                               {"_id": "t", "slug": "vl-kvn", "show": "kvn"},
                               TeamLookup([TEAMS[0], {"_id": "b-id", "slug": "new"}]))
     game = season["stages"][0]["games"][0]
+    assert sd["editorial_notes"] == data["editorial_notes"]
+    assert season["extra"]["editorial_notes"] == data["editorial_notes"]
     assert game["results"][0]["team_id"] == "a-id"
     assert game["results"][0]["name"] == "НК"
     assert game["results"][1]["scores"] == {}  # неизвестные оценки не становятся нулями
     assert season["winners"] == []
     assert len([row for row in build_participations(season) if row["kind"] == "game"]) == 2
+
+
+def test_empty_editorial_notes_preserve_existing_package_fingerprint():
+    package = SeasonImport.model_validate(payload())
+    old_payload = package.model_dump(mode="json", exclude={"editorial_notes"})
+    assert package_fingerprint(package) == digest(old_payload)
 
 
 @pytest.mark.anyio
@@ -150,7 +160,7 @@ async def test_creation_uses_bulk_import_and_complete_page(monkeypatch):
 async def test_repeat_import_preserves_editor_changes(monkeypatch):
     from services import season_import
     package = SeasonImport.model_validate(payload())
-    page = {"_id": "page", "season_data": {"import_source": {"fingerprint": digest(package.model_dump(mode="json"))},
+    page = {"_id": "page", "season_data": {"import_source": {"fingerprint": package_fingerprint(package)},
                                           "intro_html": "Ручная правка"}}
     sync = AsyncMock()
     monkeypatch.setattr(season_import, "sync_from_kvn_page", sync)

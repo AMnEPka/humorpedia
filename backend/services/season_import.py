@@ -40,6 +40,13 @@ def digest(value) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
 
 
+def package_fingerprint(package: SeasonImport) -> str:
+    payload = package.model_dump(mode="json")
+    if not payload.get("editorial_notes"):
+        payload.pop("editorial_notes", None)
+    return digest(payload)
+
+
 def match_teams(package: SeasonImport, existing: list[dict]) -> tuple[list[dict], list[str]]:
     by_name = defaultdict(dict)
     by_slug = {team["slug"]: team for team in existing}
@@ -96,7 +103,7 @@ async def preview_import(db, package: SeasonImport) -> dict:
                                            "aliases": 1, "facts": 1, "city": 1, "status": 1}).to_list(None)
     rows, errors = match_teams(package, existing)
     page = await db.kvn.find_one({"slug": package.slug})
-    fingerprint = digest(package.model_dump(mode="json"))
+    fingerprint = package_fingerprint(package)
     unchanged = bool(page and (page.get("season_data") or {}).get("import_source", {}).get("fingerprint") == fingerprint)
     if page and not unchanged:
         errors.append("Сезон с этим адресом уже существует. Измените его в редакторе; импорт не перезаписывает страницы.")
@@ -125,8 +132,9 @@ def build_season_data(package: SeasonImport, refs: dict, league_name: str) -> di
               "league_name": league_name, "intro_html": package.intro_html, "host": package.host,
               "editors": package.editors, "teams": list(refs.values()), "stages": stages,
               "winners": [refs[key] for key in package.winners],
-              "extra": {"import_source": {"url": str(package.source_url), "as_of": package.as_of.isoformat(),
-                                           "fingerprint": digest(package.model_dump(mode="json"))}}}
+              "extra": {"editorial_notes": package.editorial_notes,
+                        "import_source": {"url": str(package.source_url), "as_of": package.as_of.isoformat(),
+                                          "fingerprint": package_fingerprint(package)}}}
     return season_to_legacy(season)
 
 

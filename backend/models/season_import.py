@@ -59,6 +59,7 @@ class SeasonImport(ImportModel):
     as_of: date
     status: Literal["draft", "published"] = "published"
     intro_html: str = ""
+    editorial_notes: str = ""
     host: str = ""
     editors: list[str] = Field(default_factory=list)
     teams: list[ImportTeam] = Field(min_length=1, max_length=300)
