@@ -11,6 +11,7 @@ import { LeagueSeasonsNav, normalizeLeagueSeasons } from '../components/LeagueSe
 import { sanitizeHTML, containsHTML } from '../utils/sanitize';
 import { usePageTitle } from '@/utils/pageTitle';
 import { teamStorage } from '../utils/teamStorage';
+import { seasonParticipantLabel } from '../utils/seasonParticipant';
 
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
@@ -562,24 +563,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
               // Поддерживаем как старый формат (строка), так и новый (объект с name и slug)
               const winnerSlug = typeof winner === 'string' ? winner : (winner.slug || '');
               
-              // Используем полное название из базы данных, если оно загружено
-              let winnerName;
-              let winnerCity = '';
-              
-              if (winnerSlug && teamNames[winnerSlug]) {
-                // Используем название из базы данных
-                winnerName = teamNames[winnerSlug].name;
-                winnerCity = teamNames[winnerSlug].city || '';
-              } else {
-                // Fallback на данные из сезона
-                winnerName = typeof winner === 'string' ? winner : winner.name;
-                winnerCity = typeof winner === 'object' && winner !== null ? (winner.city || '') : '';
-              }
-              
-              // Формируем полное название с городом, если город есть и его еще нет в названии
-              if (winnerCity && !winnerName.includes(`(${winnerCity})`)) {
-                winnerName = `${winnerName} (${winnerCity})`;
-              }
+              const winnerName = seasonParticipantLabel(winner, teamNames[winnerSlug]);
               
               return (
                 <Badge key={idx} variant="default" className="bg-yellow-600 text-white">
@@ -609,24 +593,7 @@ export default function SeasonDetailPage({ seasonData: initialSeasonData = null 
               // Поддерживаем старый формат (строка) и новый (объект)
               const teamSlug = typeof team === 'string' ? team : (team.slug || '');
               
-              // Используем полное название из базы данных, если оно загружено
-              let teamName;
-              let teamCity = '';
-              
-              if (teamSlug && teamNames[teamSlug]) {
-                // Используем название из базы данных
-                teamName = teamNames[teamSlug].name;
-                teamCity = teamNames[teamSlug].city || '';
-              } else {
-                // Fallback на данные из сезона
-                teamName = typeof team === 'string' ? team : (team.name || team.slug || '');
-                teamCity = typeof team === 'object' && team !== null ? (team.city || '') : '';
-              }
-              
-              // Формируем полное название с городом, если город есть и его еще нет в названии
-              if (teamCity && !teamName.includes(`(${teamCity})`)) {
-                teamName = `${teamName} (${teamCity})`;
-              }
+              const teamName = seasonParticipantLabel(team, teamNames[teamSlug]);
               
               return (
                 <Badge key={idx} variant="outline" asChild>

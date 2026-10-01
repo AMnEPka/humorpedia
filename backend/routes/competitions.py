@@ -4,6 +4,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.competition import SeasonUpdate
+from models.season_import import SeasonImportRequest
+from services.season_import import apply_import, preview_import
 from services.competitions import (
     SHOW_KVN, apply_season_update, load_team_lookup, save_season, sync_kvn_pages, unresolved_participants,
 )
@@ -67,6 +69,17 @@ async def get_tournament(show: str, slug: str):
 
 
 # ─── Сезоны ────────────────────────────────────────────────────────────────────
+
+@router.post("/seasons/import/preview")
+async def preview_season_import(data: SeasonImportRequest):
+    return await preview_import(await get_db(), data.package)
+
+
+@router.post("/seasons/import")
+async def import_season(data: SeasonImportRequest):
+    if not data.preview_token:
+        raise HTTPException(422, "Сначала проверьте пакет сезона")
+    return await apply_import(await get_db(), data.package, data.preview_token)
 
 @router.get("/seasons/by-page/{page_id}")
 async def get_season_by_page(page_id: str):
