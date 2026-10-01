@@ -1,0 +1,408 @@
+{
+  "expected_content_hashes": {
+    "b7de6daf-90c4-4243-8dd8-9b866192db18": "7980596b9d407aa39f7a2da81f5926add4d380cd4552c901e51be35917a071db",
+    "c0d6daef-9322-4b1f-b9b7-6303a8c27252": "aed7562a93b3101b32b3be866e95369a1a4445a1e40c572efa42504a5d1e0d33",
+    "19d95dfd-83b7-4ed3-a307-e6b0be22d0d2": "f18f797e4fd4a4f739f75e963df7a6264f85d80a458bf2803cb0b2e1046481be",
+    "4e52fad9-a31a-41d6-b590-6a61171ff61a": "6fe61a6752a44560085a252ffb65d3883de6a694debed486b030b740a3db813e",
+    "d0cf47be-ba17-4d4c-b4fe-7d8b8c2b30a1": "3a72adf13759fc37af0098d86d45a2d217e5dfeafb10224e5897c9c5ef6425d2"
+  },
+  "schema_version": 1,
+  "as_of": "2026-10-01",
+  "show_id": "a778bf34-cb28-4526-a065-dac7cb120708",
+  "season_id": "8b8d4b2f-5cfb-46fd-b372-e629d4386d7c",
+  "teams_page_id": "a7e33084-33db-45a7-818f-421c458cab44",
+  "sources": {
+    "announcement": "https://t.me/s/show_zvezdy?before=1152",
+    "overview": "https://kick-or-die.ru/2026/09/shou-zvezdy-3-sezon-kogda-vyjdet-v-efir-komandy-uchastniki-zhyuri/",
+    "festival2": "https://uz.kursiv.media/2026-09-13/olga-kartunkova-i-krasno-belye-vybyli-iz-shou-zvezdy-posle-vtorogo-festivalya/",
+    "festival3": "https://uz.kursiv.media/2026-09-20/napoleony-pokinuli-zvezdy-a-kamyzyaki-sami-otkazalis-ot-borby/",
+    "sportcast": "https://sport24.ru/lifestyle/news-878414-vasya-pelmen-i-reper-st-vystupili-za-komandu-fanatov-spartaka-v-otbore-na-shou-zvezdy",
+    "actors": "https://rutube.ru/video/2c4b567428f8b277204a61ee67025696/",
+    "yanger": "https://t.me/s/youungeer1?before=1808",
+    "guest": "https://t.me/s/show_zvezdy?before=1209"
+  },
+  "judges": [
+    "Филипп Киркоров",
+    "Гарик Харламов",
+    "Юрий Стоянов",
+    "Олеся Иванченко",
+    "Артемий Лебедев"
+  ],
+  "teams": [
+    {
+      "slug": "regions",
+      "name": "Регионы",
+      "stars": [
+        "Денис Дорохов"
+      ],
+      "festival": 2,
+      "guest": false
+    },
+    {
+      "slug": "komanda-mechty",
+      "name": "Команда мечты",
+      "stars": [
+        "Иван Абрамов"
+      ],
+      "festival": 1,
+      "guest": false
+    },
+    {
+      "slug": "astana",
+      "name": "Астана",
+      "stars": [
+        "Анатолий Цой",
+        "Натан"
+      ],
+      "festival": 1,
+      "guest": false
+    },
+    {
+      "slug": "druzya",
+      "name": "Друзья",
+      "stars": [
+        "Гурам Амарян"
+      ],
+      "festival": 1,
+      "guest": false,
+      "new": true,
+      "members": [
+        "Карина Мейханаджян"
+      ],
+      "description": "Юмористическая команда третьего сезона шоу «Звёзды» на НТВ. Звезда коллектива — стендап-комик Гурам Амарян; вместе с ним выступает Карина Мейханаджян.",
+      "cast_complete": false,
+      "cast_source": "https://kick-or-die.ru/2026/09/shou-zvezdy-3-sezon-kogda-vyjdet-v-efir-komandy-uchastniki-zhyuri/"
+    },
+    {
+      "slug": "pereehavshie",
+      "name": "Переехавшие",
+      "stars": [
+        "Тимати",
+        "Дмитрий Журавлёв"
+      ],
+      "festival": 1,
+      "guest": false
+    },
+    {
+      "slug": "bortsy",
+      "name": "Борцы",
+      "stars": [
+        "Наташа Королёва",
+        "Тарзан"
+      ],
+      "festival": 2,
+      "guest": false
+    },
+    {
+      "slug": "napoleon",
+      "name": "Наполеоны",
+      "stars": [
+        "Митя Фомин",
+        "Иосиф Пригожин"
+      ],
+      "festival": 3,
+      "guest": false
+    },
+    {
+      "slug": "parni",
+      "name": "Парни",
+      "stars": [
+        "Илья Соболев"
+      ],
+      "festival": 3,
+      "guest": false,
+      "new": true,
+      "members": [
+        "Кирилл Мазур",
+        "Егор Свирский",
+        "Саша Ваш",
+        "Максим Савченко",
+        "Никита Андриенко",
+        "Карим Курмангалиев"
+      ],
+      "description": "«Парни» дебютировали в третьем сезоне шоу «Звёзды» с Ильёй Соболевым. Коллектив объединил стендап-комиков, актёров юмористических проектов и пародиста; в анонсе сезона он назывался «Молодёжь».",
+      "aliases": [
+        "Молодёжь"
+      ],
+      "cast_complete": false,
+      "cast_source": "https://kick-or-die.ru/2026/09/shou-zvezdy-3-sezon-kogda-vyjdet-v-efir-komandy-uchastniki-zhyuri/"
+    },
+    {
+      "slug": "aktery",
+      "name": "Актёры",
+      "stars": [
+        "Вячеслав Чепурченко"
+      ],
+      "festival": 2,
+      "guest": false,
+      "new": true,
+      "members": [
+        "Дарья Мельникова",
+        "Сергей Беляев",
+        "Алиса Курбатова"
+      ],
+      "description": "Актёрская команда третьего сезона шоу «Звёзды». Её звезда — Вячеслав Чепурченко; на одной сцене с ним выступают коллеги по кино и театру.",
+      "cast_complete": false,
+      "cast_source": "https://kick-or-die.ru/2026/09/shou-zvezdy-3-sezon-kogda-vyjdet-v-efir-komandy-uchastniki-zhyuri/",
+      "additional_cast_source": "https://rutube.ru/video/2c4b567428f8b277204a61ee67025696/"
+    },
+    {
+      "slug": "krasno-belye",
+      "name": "Красно-белые",
+      "stars": [
+        "Ольга Картункова"
+      ],
+      "festival": 2,
+      "guest": false,
+      "new": true,
+      "members": [
+        "ST",
+        "Андрей Атлас",
+        "Наташа Паршенкова",
+        "Иван Траоре",
+        "Денис Сундуков",
+        "Семён Молоканов",
+        "Павел Кольцов",
+        "Дмитрий Волгин",
+        "Василий Камоцкий"
+      ],
+      "description": "Команда болельщиков московского «Спартака», дебютировавшая в третьем сезоне шоу «Звёзды». Со звездой Ольгой Картунковой в коллектив вошли музыканты, актёры, комики и спортсмен Василий Камоцкий.",
+      "cast_complete": false,
+      "cast_source": "https://sport24.ru/lifestyle/news-878414-vasya-pelmen-i-reper-st-vystupili-za-komandu-fanatov-spartaka-v-otbore-na-shou-zvezdy"
+    },
+    {
+      "slug": "pauki-pustyni",
+      "name": "Пауки пустыни",
+      "stars": [
+        "Тимур Родригез"
+      ],
+      "festival": 3,
+      "guest": false,
+      "new": true,
+      "members": [
+        "Дмитрий Грачёв",
+        "Андрей Скороход",
+        "Александр Пташенчук",
+        "Антон Остерников",
+        "Дмитрий Колчин",
+        "Айдар Гараев"
+      ],
+      "description": "Юмористическая команда третьего сезона шоу «Звёзды», собравшая участников КВН и телевизионных комедийных проектов. Её звезда — Тимур Родригез; в предсезонном анонсе коллектив назывался «Опытные».",
+      "aliases": [
+        "Опытные"
+      ],
+      "cast_complete": false,
+      "cast_source": "https://uz.kursiv.media/2026-09-20/napoleony-pokinuli-zvezdy-a-kamyzyaki-sami-otkazalis-ot-borby/"
+    },
+    {
+      "slug": "kamyzyaki",
+      "name": "Камызяки",
+      "stars": [
+        "Лёша Янгер"
+      ],
+      "festival": 3,
+      "guest": true,
+      "new": true,
+      "members": [
+        "Денис Дорохов"
+      ],
+      "appearance_guests": [
+        "Екатерина Мизулина"
+      ],
+      "description": "«Камызяки» выступили специальным гостем третьего фестивального выпуска шоу «Звёзды». Звездой команды стал Лёша Янгер. Коллектив ограничился фестивальным номером и не участвовал в отборе в дуэли.",
+      "cast_complete": false,
+      "cast_source": "https://kick-or-die.ru/2026/09/shou-zvezdy-3-sezon-kogda-vyjdet-v-efir-komandy-uchastniki-zhyuri/",
+      "star_source": "https://t.me/s/youungeer1?before=1808",
+      "guest_source": "https://t.me/s/show_zvezdy?before=1209",
+      "related_team_ids": [
+        "cbcc978d-a6c3-4264-8c19-b26c8d3a24a2",
+        "00ccdefd-58fa-44b1-b3e4-bd3b9fdeee7b"
+      ]
+    }
+  ],
+  "festivals": [
+    {
+      "number": 1,
+      "date": "2026-09-05",
+      "source": "https://kick-or-die.ru/2026/09/shou-zvezdy-3-sezon-kogda-vyjdet-v-efir-komandy-uchastniki-zhyuri/",
+      "official_source": "https://t.me/s/show_zvezdy?before=1157",
+      "results": [
+        {
+          "slug": "astana",
+          "total": 19,
+          "scores": [
+            4,
+            4,
+            4,
+            4,
+            3
+          ],
+          "passed": true
+        },
+        {
+          "slug": "komanda-mechty",
+          "total": 16,
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            4
+          ],
+          "passed": true
+        },
+        {
+          "slug": "pereehavshie",
+          "total": 10,
+          "scores": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ],
+          "passed": true
+        },
+        {
+          "slug": "druzya",
+          "total": 5,
+          "scores": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "date": "2026-09-12",
+      "source": "https://uz.kursiv.media/2026-09-13/olga-kartunkova-i-krasno-belye-vybyli-iz-shou-zvezdy-posle-vtorogo-festivalya/",
+      "official_source": "https://t.me/s/show_zvezdy?before=1190",
+      "results": [
+        {
+          "slug": "aktery",
+          "total": 20,
+          "scores": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
+          "passed": true
+        },
+        {
+          "slug": "regions",
+          "total": 14,
+          "scores": [
+            3,
+            3,
+            3,
+            2,
+            3
+          ],
+          "passed": true
+        },
+        {
+          "slug": "bortsy",
+          "total": 10,
+          "scores": [
+            2,
+            1,
+            2,
+            3,
+            2
+          ],
+          "passed": true
+        },
+        {
+          "slug": "krasno-belye",
+          "total": 6,
+          "scores": [
+            1,
+            2,
+            1,
+            1,
+            1
+          ],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "date": "2026-09-19",
+      "source": "https://uz.kursiv.media/2026-09-20/napoleony-pokinuli-zvezdy-a-kamyzyaki-sami-otkazalis-ot-borby/",
+      "official_source": "https://t.me/s/show_zvezdy?before=1209",
+      "guests": [
+        "kamyzyaki"
+      ],
+      "results": [
+        {
+          "slug": "parni",
+          "total": 13,
+          "scores": [
+            3,
+            2,
+            3,
+            2,
+            3
+          ],
+          "passed": true
+        },
+        {
+          "slug": "pauki-pustyni",
+          "total": 12,
+          "scores": [
+            2,
+            3,
+            2,
+            3,
+            2
+          ],
+          "passed": true
+        },
+        {
+          "slug": "napoleon",
+          "total": 5,
+          "scores": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "passed": false
+        }
+      ]
+    }
+  ],
+  "duels": [
+    [
+      "komanda-mechty",
+      "bortsy"
+    ],
+    [
+      "astana",
+      "parni"
+    ],
+    [
+      "aktery",
+      "regions"
+    ],
+    [
+      "pereehavshie",
+      "pauki-pustyni"
+    ]
+  ],
+  "notes": [
+    "Составы новых команд содержат известных по источникам участников; полнота не заявляется.",
+    "Камызяки — специальный гость без баллов и без заявки на проход. Екатерина Мизулина — гость номера, не подтверждённая вторая звезда.",
+    "Иосиф Пригожин и Митя Фомин сохранены как объявленные звёзды Наполеонов; дополнительные роли не устанавливаются.",
+    "Алиса Курбатова: написание взято из первичного интервью Юмор FM, вторичная публикация содержит вариант Курбанова."
+  ]
+}
