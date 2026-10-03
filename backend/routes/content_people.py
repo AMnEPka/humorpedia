@@ -1,7 +1,7 @@
 """Person routes — CRUD + search + linked content."""
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 import re
-from utils.auth import require_editor_on_write
+from utils.auth import EDITOR_ROLES, get_current_user, require_editor_on_write
 from typing import Optional
 
 from models.base import ContentStatus
@@ -56,6 +56,7 @@ async def create_person(data: PersonCreate):
 
 @router.get("/people", response_model=dict)
 async def list_people(
+    request: Request,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     status: Optional[ContentStatus] = None,
@@ -64,8 +65,16 @@ async def list_people(
     letter: Optional[str] = None
 ):
     """List people with pagination and filters."""
+    user = await get_current_user(request)
+    editor = bool(user and user.get("role") in EDITOR_ROLES)
+    if not editor and status == ContentStatus.ARCHIVED:
+        raise HTTPException(status_code=404, detail="People not found")
+    visible = {} if editor else {"status": {"$ne": ContentStatus.ARCHIVED.value}}
     query = build_query(status, tag, search, ["title", "full_name", "aliases"], letter)
     availability_query = build_query(status, tag)
+    if visible:
+        query = {"$and": [query, visible]} if query else visible
+        availability_query = {"$and": [availability_query, visible]} if availability_query else visible
     return await list_alphabetical_content(
         "people", skip, limit, query, ["title", "full_name"],
         availability_query=availability_query,
@@ -73,7 +82,7 @@ async def list_people(
 
 
 @router.get("/people/search", response_model=list)
-async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10, ge=1, le=50)):
+async def search_people(request: Request, q: str = Query(..., min_length=2), limit: int = Query(10, ge=1, le=50)):
     """Search people by name for editor assistance."""
     db = await get_db()
     search_pattern = literal_search_pattern(q)
@@ -84,15 +93,22 @@ async def search_people(q: str = Query(..., min_length=2), limit: int = Query(10
             {"aliases": {"$regex": search_pattern, "$options": "i"}}
         ]
     }
+    user = await get_current_user(request)
+    if not user or user.get("role") not in EDITOR_ROLES:
+        query = {"$and": [query, {"status": {"$ne": ContentStatus.ARCHIVED.value}}]}
     cursor = db.people.find(query, {"_id": 1, "full_name": 1, "title": 1, "slug": 1}).limit(limit)
     people = await cursor.to_list(limit)
     return [{"id": p["_id"], "name": p.get("full_name") or p.get("title", ""), "slug": p.get("slug")} for p in people]
 
 
 @router.get("/people/{id_or_slug}", response_model=dict)
-async def get_person(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
+async def get_person(id_or_slug: str, request: Request, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get person by ID or slug."""
     person = await get_by_id_or_slug("people", id_or_slug, "Person not found")
+    if person.get("status") == ContentStatus.ARCHIVED.value:
+        user = await get_current_user(request)
+        if not user or user.get("role") not in EDITOR_ROLES:
+            raise HTTPException(status_code=404, detail="Person not found")
     if not raw:
         await LinkResolver.resolve_document(person)
         await decorate_document(person)

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { contentApi } from '../utils/api';
+import SeasonImportDialog from '../components/SeasonImportDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -217,7 +218,10 @@ export default function KVNListPage() {
           <h1 className="text-3xl font-bold">КВН</h1>
           <p className="text-muted-foreground">Управление страницами КВН ({total} всего)</p>
         </div>
-        <Button asChild><Link to="/admin/kvn/new"><Plus className="mr-2 h-4 w-4" /> Добавить</Link></Button>
+        <div className="flex gap-2">
+          <SeasonImportDialog onImported={fetchKvn} />
+          <Button asChild><Link to="/admin/kvn/new"><Plus className="mr-2 h-4 w-4" /> Добавить</Link></Button>
+        </div>
       </div>
 
       <Card>

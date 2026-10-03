@@ -228,6 +228,10 @@ async def create_indexes(db):
         await _ensure_index(db.correction_suggestions, "page_path")
         await _ensure_index(db.correction_suggestions, "created_at")
 
+        # Editor-reviewed research proposals; fingerprint makes repeated imports idempotent.
+        await _ensure_index(db.editorial_proposals, "fingerprint", unique=True)
+        await _ensure_index(db.editorial_proposals, [("status", 1), ("updated_at", -1)])
+
         # Polls: one immutable vote per user and poll. Result counts are derived
         # from this collection, so retries and concurrent requests stay safe.
         await _ensure_index(db.polls, "old_id", unique=True, sparse=True)
@@ -372,6 +376,7 @@ from routes.polls import router as polls_router
 from routes.ratings import router as ratings_router
 from routes.related_news import router as related_news_router
 from routes.correction_suggestions import router as correction_suggestions_router
+from routes.editorial_proposals import router as editorial_proposals_router
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -402,6 +407,7 @@ api_router.include_router(polls_router)
 api_router.include_router(ratings_router)
 api_router.include_router(related_news_router)
 api_router.include_router(correction_suggestions_router)
+api_router.include_router(editorial_proposals_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────

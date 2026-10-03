@@ -459,6 +459,7 @@ class KVN(BaseContent):
     
     # Basic info
     name: str
+    season_data: Dict[str, Any] = Field(default_factory=dict)
     poster: Optional[MediaFile] = None
     description: Optional[str] = None  # HTML
     
@@ -490,6 +491,7 @@ class KVNCreate(BaseModel):
     title: str
     slug: str
     name: str
+    season_data: Optional[Dict[str, Any]] = None
     poster: Optional[MediaFile] = None
     description: Optional[str] = None
     parent_id: Optional[str] = None  # For child KVN pages

@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import {
   Users, FileText, Newspaper, HelpCircle, BookOpen, Tv, 
   UsersRound, Tags, MessageSquare, Image, LayoutTemplate,
-  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database, MapPin, PencilLine
+  Home, Menu, X, LogOut, ChevronDown, Settings, FolderTree, Database, MapPin, PencilLine, ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +25,7 @@ const menuItems = [
   { path: '/admin/tags', icon: Tags, label: 'Теги' },
   { path: '/admin/comments', icon: MessageSquare, label: 'Комментарии' },
   { path: '/admin/correction-suggestions', icon: PencilLine, label: 'Предложения правок', editorOnly: true },
+  { path: '/admin/editorial-proposals', icon: ClipboardCheck, label: 'Редакционные находки', editorOnly: true },
   { divider: true },
   { path: '/admin/users', icon: Users, label: 'Пользователи', adminOnly: true },
   { path: '/admin/templates', icon: LayoutTemplate, label: 'Шаблоны' },

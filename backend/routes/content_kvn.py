@@ -461,6 +461,7 @@ async def create_kvn(data: KVNCreate):
         title=data.title,
         slug=data.slug,
         name=data.name,
+        season_data=data.season_data or {},
         poster=data.poster,
         description=data.description,
         parent_id=data.parent_id,

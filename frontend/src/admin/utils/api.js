@@ -180,6 +180,8 @@ export const contentApi = {
   listKvnHierarchy: () => api.get('/content/kvn-hierarchy'),
   getKvn: (id) => api.get(`/content/kvn/${id}`, { params: { raw: true } }),
   createKvn: (data) => api.post('/content/kvn', data),
+  previewSeasonImport: (data) => api.post('/competitions/seasons/import/preview', data),
+  importSeason: (data) => api.post('/competitions/seasons/import', data),
   updateKvn: (id, data) => api.put(`/content/kvn/${id}`, data),
   deleteKvn: (id) => api.delete(`/content/kvn/${id}`),
   getKvnJuryStats: (params) => api.get('/content/kvn/jury-stats', { params }),
@@ -288,6 +290,12 @@ export const commentsApi = {
 export const correctionSuggestionsApi = {
   list: (params) => api.get('/correction-suggestions', { params }),
   review: (id, data) => api.patch(`/correction-suggestions/${id}`, data),
+};
+
+export const editorialProposalsApi = {
+  list: (params) => api.get('/editorial-proposals', { params }),
+  create: (data) => api.post('/editorial-proposals', data),
+  decide: (id, data) => api.post(`/editorial-proposals/${id}/decide`, data),
 };
 
 // Media API
