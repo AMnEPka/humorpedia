@@ -1,0 +1,4 @@
+#!/bin/sh
+# The third argument distinguishes a branch checkout from checkout of files.
+[ "$3" = "1" ] || exit 0
+exec "$(dirname "$0")/run"

@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+root=$(git rev-parse --show-toplevel)
+primary=$(git config --local --get humorpedia.devRoot)
+[ "$root" = "$primary" ] || exit 0
+shell=$(git config --local --get humorpedia.devPowerShell)
+# Only explicit installation updates the script automatically executed by Git.
+script="$(dirname "$0")/dev-sync.ps1"
+echo "Synchronizing Docker with the current checkout..."
+if "$shell" -NoProfile -ExecutionPolicy Bypass -File "$script" -ProjectRoot "$root" -Auto; then
+    exit 0
+else
+    echo "Docker sync FAILED. Git checkout/merge already happened; fix the error and run dev-sync.ps1." >&2
+    exit 1
+fi
