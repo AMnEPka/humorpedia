@@ -9,7 +9,7 @@
 Браузер
   │  SPA (React 19, CRA/CRACO)
   │  dev: :3000 → прокси /api /media /images /uploads → backend:8001
-  │  prod: nginx (статика билда) :3000→80; API по REACT_APP_BACKEND_URL (вшит в билд)
+  │  cloud-шаблон: nginx (статика билда) :3000→80; API по REACT_APP_BACKEND_URL (вшит в билд)
   ▼
 FastAPI (backend/server.py) :8001
   ├── /api/*          роутеры из backend/routes/
@@ -18,7 +18,7 @@ FastAPI (backend/server.py) :8001
   └── /images/*       StaticFiles  ← /app/images (docker volume images_volume, картинки сайта, напр. /images/kvn-team/x.jpg)
   │
   ▼
-MongoDB 6 (база humorpedia), один Motor-клиент из utils/database.py
+Единственный действующий стенд: локальный Compose с MongoDB 8.0.32 (база humorpedia). Cloud Compose — неиспользуемый шаблон с MongoDB 8.0.32. Один Motor-клиент из utils/database.py.
 ```
 
 Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGINS`; для точного списка origins разрешены credentials, при `*` — нет) → `SlowAPIMiddleware` (default 1000/мин на IP; `/auth/login` 20/мин, `/auth/register` 10/час, рейтинг 10/мин) → `CacheSyncMiddleware` (сверка поколения кэша перед GET, сброс кэша во всех воркерах после успешной записи; ratings — cache-neutral) → `CacheControlMiddleware` (обычные GET 200 → `public, max-age=60, stale-while-revalidate=300`; персонализированный рейтинг принудительно `private, no-store`).
@@ -46,7 +46,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 ├── BACKUP_SYSTEM.md, RESTORE_BACKUP.md   бэкап/восстановление Mongo
 ├── PERFORMANCE_OPTIMIZATIONS.md  что сделано для нагрузки (lazy, text-индексы, rate limit, pool)
 ├── docker-compose.yml            dev: mongodb(--auth) + backend(uvicorn reload) + frontend(yarn start, polling/HMR)
-├── docker-compose-cloud.yml      prod: mongodb(--auth, порт не публикуется) + backend(gunicorn 4×UvicornWorker) + backup(раз в сутки) + frontend(nginx); требует .env
+├── docker-compose-cloud.yml      неиспользуемый шаблон: mongodb(--auth, порт не публикуется) + backend(gunicorn 4×UvicornWorker) + backup(раз в сутки) + frontend(nginx); требует .env
 ├── uploads/2025/12, 2026/01      несколько загруженных картинок
 │
 ├── backend/
@@ -158,8 +158,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── OPEN_QUESTIONS.md         недостающие данные по лигам
 │   └── update_kvn_pages.py       md → HTML → PUT /api/content/kvn (сохраняет системные модули, заменяет text_block); dry-run по умолчанию, --apply
 │
-└── backup/                       Dockerfile + backup.sh (mongodump → tar.gz, хранит KEEP_LAST_N) + run-loop.sh (BACKUP_INTERVAL)
-                                  подключён в docker-compose-cloud.yml (раз в сутки, 14 архивов); в dev-compose отсутствует
+└── backup/                       Dockerfile + backup.sh (mongodump → tar.gz, хранит KEEP_LAST_N) + restore.sh + run-loop.sh (BACKUP_INTERVAL)
+                                  предусмотрен в неиспользуемом docker-compose-cloud.yml (раз в сутки, 14 архивов); в локальном Compose отсутствует
 ```
 
 ## 3. Переменные окружения

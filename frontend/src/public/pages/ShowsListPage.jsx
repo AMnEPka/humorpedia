@@ -8,6 +8,9 @@ import { contentImageUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import ListPageHeader from '../components/ListPageHeader';
 import AlphabetFilter from '../components/AlphabetFilter';
+import CatalogFilters from '../components/CatalogFilters';
+
+const sortOptions = [{ value: 'popular', label: 'По популярности' }];
 
 export default function ShowsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,36 +18,42 @@ export default function ShowsListPage() {
   const [total, setTotal] = useState(0);
   const [availableLetters, setAvailableLetters] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const query = searchParams.get('q') || '';
   const letter = searchParams.get('letter') || '';
-  
-  const page = parseInt(searchParams.get('page') || '1');
+  const sort = searchParams.get('sort') || '';
+  const page = Math.max(1, Number.parseInt(searchParams.get('page'), 10) || 1);
   const limit = 12;
 
   useEffect(() => {
+    let cancelled = false;
     const fetchShows = async () => {
       setLoading(true);
+      setError(false);
       try {
         const res = await publicApi.getShows({ 
           skip: (page - 1) * limit,
           limit,
           search: query || undefined,
           letter: letter || undefined,
+          sort: sort || undefined,
         });
+        if (cancelled) return;
         setShows(res.data.items || []);
         setTotal(res.data.total || 0);
         if (Array.isArray(res.data.available_letters)) {
           setAvailableLetters(res.data.available_letters);
         }
       } catch (err) {
-        console.error('Error fetching shows:', err);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchShows();
-  }, [page, query, letter]);
+    return () => { cancelled = true; };
+  }, [page, query, letter, sort]);
 
   useEffect(() => setSearch(query), [query]);
 
@@ -93,14 +102,19 @@ export default function ShowsListPage() {
         />
       </ListPageHeader>
 
+      <CatalogFilters key={searchParams.toString()} searchParams={searchParams} setSearchParams={setSearchParams}
+        fields={[{ name: 'sort', label: 'Порядок', defaultLabel: 'По алфавиту', options: sortOptions }]} />
+
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
+      ) : error ? (
+        <p role="alert" className="py-12 text-center text-gray-600">Не удалось загрузить шоу. Обновите страницу и попробуйте ещё раз.</p>
       ) : shows.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <Tv className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Нет шоу</p>
+          <p>{query || letter ? 'По этим условиям шоу не найдены.' : 'В каталоге пока нет шоу.'}</p>
         </div>
       ) : (
         <>

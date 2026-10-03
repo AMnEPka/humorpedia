@@ -8,7 +8,7 @@
 > Проверки прав — FastAPI-зависимости из `backend/utils/auth.py`. Роутеры контента, `/sections`, `/cities`, `/tags`, `/redirects` подключены с `require_editor_on_write`: чтение открыто, любой POST/PUT/PATCH/DELETE — ✏️. Тест `backend/tests/test_auth_guards.py` обходит все маршруты и падает, если запись доступна без токена.
 
 Соглашения:
-- Списки возвращают `{items, total, skip, limit}` (через `services/crud.list_content`; поле `modules` в списках исключено), параметры `skip`, `limit` (≤100), `status`, `tag`, `search`, иногда `letter`. Алфавитные списки дополнительно возвращают `available_letters`; значение `letter=other` объединяет названия с латинской буквы, цифры или символа.
+- Списки возвращают `{items, total, skip, limit}` (через `services/crud.list_content`; поле `modules` в списках исключено), параметры `skip`, `limit` (≤100), `status`, `tag`, `search`, иногда `letter`. Алфавитные списки дополнительно возвращают `available_letters`; значение `letter=other` объединяет названия с латинской буквы, цифры или символа. Каталоги людей и команд также возвращают `filters` с вариантами `{value, label}`.
 - `GET .../{id_or_slug}` ищет по `_id` или `slug`; `PUT/DELETE .../{id}` — по `_id` (для КВН — по `id`, затем `_id`).
 - Ответы с `response_model=dict` — сырые документы Mongo (`_id` — строка UUID).
 
@@ -44,7 +44,7 @@
 | Метод | Путь | Описание |
 |---|---|---|
 | POST | `/people` ✏️ | создать; если нет `primary_tag` — берётся из title с переставленными словами («Имя Фамилия» → «Фамилия Имя») |
-| GET | `/people` | список, фильтры `status, tag, search, letter`, сортировка по title |
+| GET | `/people` | список; `status, tag, search, letter, city, role, team, show, sort=popular`; город — связь с городом или поле анкеты, роль — `bio.occupation`/`memberships.roles`, команда и шоу — структурированные связи; по умолчанию сортировка по title |
 | GET | `/people/search?q=` | быстрый поиск для селекторов `[{id, name, slug}]` |
 | GET | `/people/{id_or_slug}?raw=` | документ; ссылки проверяются, ссылки на людей с `foreign_agent=true` получают динамическую звёздочку и `foreign_agent_notice`; `raw=true` — как в данных (админка) |
 | PUT | `/people/{id}` ✏️ | обновить (services/crud.update_content) |
@@ -57,7 +57,7 @@
 | POST | `/teams/bulk-create` ✏️ | массово создать команды (со scaffold модулей) |
 | POST | `/teams/restore-logos` 🛡 | восстановить логотипы из старых полей |
 | POST | `/teams` ✏️ | создать; `show_id` — команда шоу (адрес и `team_type` вычисляются, заготовки КВН не добавляются) |
-| GET | `/teams` | список (кэш 2 мин), фильтры `status, team_type, tag, search, letter, show_id`; `team_type=kvn` — команды КВН (в т.ч. без `team_type`), `team_type={slug шоу}` — команды шоу; у элементов `url` и `show` |
+| GET | `/teams` | список (кэш 2 мин); `status, team_type, tag, search, letter, show_id, city, league, year, show, sort=popular`; лига и год проверяются по одному участию в сезоне, `show` разрешается по ID/slug/названию; `team_type=kvn` — команды КВН (в т.ч. без `team_type`), `team_type={slug шоу}` — команды шоу; у элементов `url` и `show` |
 | GET | `/teams/by-path/{шоу}/teams/{slug}` | команда шоу по адресу (публичная страница `/shows/…/teams/{slug}`): + `show`, `breadcrumbs`, ссылки проверяются |
 | GET | `/teams/{id_or_slug}?raw=` | документ (кэш 5 мин), без записи при чтении; slug — только команды КВН (команду шоу — по `_id`); ссылки проверяются, `raw=true` — без обработки и кэша (админка); + `show`, `url` |
 | POST | `/teams/{id_or_slug}/refresh` ✏️ | self-healing: scaffold фактов/модулей, авто-модуль «Список игр команды» из season_data, логотип, primary_tag |
@@ -79,7 +79,7 @@
 | DELETE | `/kvn/{id}` ✏️ | удалить |
 
 ### Шоу (`content_shows.py`, коллекция `shows`)
-POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`) · GET `/shows` (только корневые, `include_children=true` — все) · GET `/shows/by-path/{path}` (+ `children`, `breadcrumbs`, ссылки проверяются) · GET `/shows/{_id|full_path}/children` · GET `/shows/{id_or_slug}?raw=` (ссылки проверяются, `raw=true` — для админки) · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
+POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`) · GET `/shows` (только корневые, `include_children=true` — все; `sort=popular` — по просмотрам) · GET `/shows/by-path/{path}` (+ `children`, `breadcrumbs`, ссылки проверяются) · GET `/shows/{_id|full_path}/children` · GET `/shows/{id_or_slug}?raw=` (ссылки проверяются, `raw=true` — для админки) · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
 
 ### Статьи / Новости / Квизы / Вики
 Одинаковый CRUD через `services/crud.py`:

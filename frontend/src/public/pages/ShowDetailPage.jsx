@@ -240,10 +240,12 @@ function ShowPage({ fullPath }) {
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAllTags, setShowAllTags] = useState(false);
 
   usePageTitle(show?.title || (loading ? 'Шоу' : (error ? 'Шоу не найдено' : 'Шоу')));
 
   useEffect(() => {
+    setShowAllTags(false);
     if (!fullPath) {
       setError('Шоу не найдено');
       setLoading(false);
@@ -293,6 +295,8 @@ function ShowPage({ fullPath }) {
   }
 
   const facts = show.facts || {};
+  const hasPoster = sidebarModules.some(m => m.type === 'poster_photo');
+  const hasTags = sidebarModules.some(m => m.type === 'tags_cloud') && show.tags?.length > 0;
 
   // Строим breadcrumb из full_path
   const buildBreadcrumbs = () => {
@@ -331,10 +335,10 @@ function ShowPage({ fullPath }) {
 
       {/* Hero */}
       <div className="mb-8">
-        <div className="flex items-start gap-6">
+        <div className={`grid ${hasPoster ? 'grid-cols-[6rem_minmax(0,1fr)]' : 'grid-cols-1'} items-start gap-x-4 gap-y-4 sm:flex sm:gap-6`}>
           {/* Poster - рендерится если есть модуль poster_photo */}
-          {sidebarModules.find(m => m.type === 'poster_photo') && (
-            <div className="w-32 sm:w-48 flex-shrink-0">
+          {hasPoster && (
+            <div className="w-24 sm:w-48 flex-shrink-0">
               <FittedImage
                 src={contentImageUrl(show, show.poster)}
                 fallbackKey={show}
@@ -346,23 +350,33 @@ function ShowPage({ fullPath }) {
           )}
 
           {/* Title & Description */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-4xl font-bold mb-4">{show.title}</h1>
+          <div className="contents sm:block sm:flex-1 sm:min-w-0">
+            <h1 className={`${hasPoster ? 'self-center' : ''} min-w-0 text-2xl sm:text-4xl font-bold sm:mb-4`}>{show.title}</h1>
             {show.description && (
               <div 
-                className="text-lg text-gray-700 leading-relaxed mb-4"
+                className={`${hasPoster ? 'col-span-2' : ''} text-lg text-gray-700 leading-relaxed sm:mb-4`}
                 dangerouslySetInnerHTML={{ __html: show.description }}
               />
             )}
             
             {/* Tags - рендерятся если есть модуль tags_cloud */}
-            {sidebarModules.find(m => m.type === 'tags_cloud') && show.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {show.tags.map(tag => (
-                  <Link key={tag} to={`/tags/${encodeURIComponent(tag)}`}>
+            {hasTags && (
+              <div className={`${hasPoster ? 'col-span-2' : ''} flex flex-wrap items-center gap-2 sm:mt-4`}>
+                {show.tags.map((tag, index) => (
+                  <Link key={tag} to={`/tags/${encodeURIComponent(tag)}`} className={index >= 6 && !showAllTags ? 'hidden sm:inline-flex' : undefined}>
                     <Badge variant="secondary" className="cursor-pointer hover:bg-gray-300">{tag}</Badge>
                   </Link>
                 ))}
+                {show.tags.length > 6 && (
+                  <button
+                    type="button"
+                    className="min-h-11 px-2 text-sm font-medium text-blue-600 hover:underline sm:hidden"
+                    aria-expanded={showAllTags}
+                    onClick={() => setShowAllTags(value => !value)}
+                  >
+                    {showAllTags ? 'Свернуть теги' : `Показать все теги (${show.tags.length})`}
+                  </button>
+                )}
               </div>
             )}
           </div>

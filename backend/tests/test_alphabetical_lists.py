@@ -45,6 +45,18 @@ def test_alphabetical_pipeline_uses_first_non_empty_display_field():
     assert "$cond" in serialized
 
 
+def test_popular_sort_keeps_alphabetical_ties_before_pagination():
+    pipeline = build_alphabetical_pipeline({}, 24, 24, ["title", "name"], sort="popular")
+
+    assert pipeline[3]["$sort"] == {
+        "views": -1,
+        "_alphabet_sort_group": 1,
+        "_alphabet_sort_value": 1,
+        "_id": 1,
+    }
+    assert pipeline[4] == {"$skip": 24}
+
+
 def test_alphabetical_pipeline_requires_a_display_field():
     with pytest.raises(ValueError):
         build_alphabetical_pipeline({}, 0, 10, [])

@@ -8,43 +8,62 @@ import { personPhotoUrl } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import ListPageHeader from '../components/ListPageHeader';
 import AlphabetFilter from '../components/AlphabetFilter';
+import CatalogFilters from '../components/CatalogFilters';
+
+const sortOptions = [{ value: 'popular', label: 'По популярности' }];
 
 export default function PeopleListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [people, setPeople] = useState([]);
   const [total, setTotal] = useState(0);
   const [availableLetters, setAvailableLetters] = useState(null);
+  const [filterOptions, setFilterOptions] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const query = searchParams.get('q') || '';
   const letter = searchParams.get('letter') || '';
-  
-  const page = parseInt(searchParams.get('page') || '1');
+  const city = searchParams.get('city') || '';
+  const role = searchParams.get('role') || '';
+  const team = searchParams.get('team') || '';
+  const show = searchParams.get('show') || '';
+  const sort = searchParams.get('sort') || '';
+  const page = Math.max(1, Number.parseInt(searchParams.get('page'), 10) || 1);
   const limit = 24;
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPeople = async () => {
       setLoading(true);
+      setError(false);
       try {
         const res = await publicApi.getPeople({ 
           skip: (page - 1) * limit,
           limit,
           search: query || undefined,
           letter: letter || undefined,
+          city: city || undefined,
+          role: role || undefined,
+          team: team || undefined,
+          show: show || undefined,
+          sort: sort || undefined,
         });
+        if (cancelled) return;
         setPeople(res.data.items || []);
         setTotal(res.data.total || 0);
+        setFilterOptions(res.data.filters || {});
         if (Array.isArray(res.data.available_letters)) {
           setAvailableLetters(res.data.available_letters);
         }
       } catch (err) {
-        console.error('Error fetching people:', err);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchPeople();
-  }, [page, query, letter]);
+    return () => { cancelled = true; };
+  }, [page, query, letter, city, role, team, show, sort]);
 
   useEffect(() => setSearch(query), [query]);
 
@@ -93,13 +112,24 @@ export default function PeopleListPage() {
         />
       </ListPageHeader>
 
+      <CatalogFilters key={searchParams.toString()} searchParams={searchParams} setSearchParams={setSearchParams}
+        fields={[
+          { name: 'city', label: 'Город', options: filterOptions.cities || [] },
+          { name: 'role', label: 'Роль / деятельность', options: filterOptions.roles || [] },
+          { name: 'team', label: 'Команда', type: 'text', placeholder: 'Название команды' },
+          { name: 'show', label: 'Шоу', options: filterOptions.shows || [] },
+          { name: 'sort', label: 'Порядок', defaultLabel: 'По алфавиту', options: sortOptions },
+        ]} />
+
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
+      ) : error ? (
+        <p role="alert" className="py-12 text-center text-gray-600">Не удалось загрузить людей. Обновите страницу и попробуйте ещё раз.</p>
       ) : people.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          <p>Никого не найдено</p>
+          <p>{query || letter || city || role || team || show ? 'По этим условиям люди не найдены.' : 'В каталоге пока нет людей.'}</p>
         </div>
       ) : (
         <>

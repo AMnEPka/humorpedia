@@ -6,7 +6,7 @@
 """
 from fastapi import APIRouter, HTTPException, Query, Depends
 from utils.auth import require_editor_on_write
-from typing import Optional
+from typing import Optional, Literal
 from datetime import datetime, timezone
 import logging
 
@@ -109,7 +109,8 @@ async def list_shows(
     tag: Optional[str] = None,
     search: Optional[str] = None,
     letter: Optional[str] = None,
-    include_children: bool = Query(False, description="Include child shows")
+    include_children: bool = Query(False, description="Include child shows"),
+    sort: Optional[Literal["popular"]] = None,
 ):
     """List shows with pagination (excludes child shows by default)."""
     query = build_query(status, tag, search, ["title", "name", "aliases"], letter)
@@ -123,6 +124,7 @@ async def list_shows(
     return await list_alphabetical_content(
         "shows", skip, limit, query, ["title", "name"],
         availability_query=availability_query,
+        sort=sort,
     )
 
 

@@ -64,3 +64,10 @@ test('teams list highlights KVN and Stars first and omits removed categories', (
   expect(html).not.toContain('href="/teams/superliga"');
   expect(html).not.toContain('href="/teams/ls"');
 });
+
+test('team category links keep compatible catalog filters in the URL', () => {
+  const html = renderPage(TeamsListPage, '/teams?q=Прима&city=Томск&league=vl-kvn&page=2');
+
+  expect(html).toContain('href="/teams/zvezdy-ntv?q=%D0%9F%D1%80%D0%B8%D0%BC%D0%B0&amp;city=%D0%A2%D0%BE%D0%BC%D1%81%D0%BA"');
+  expect(html).not.toContain('league=vl-kvn');
+});

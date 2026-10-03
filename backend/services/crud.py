@@ -465,6 +465,7 @@ def build_alphabetical_pipeline(
     limit: int,
     sort_fields: list[str],
     exclude_modules: bool = True,
+    sort: str | None = None,
 ) -> list[dict]:
     """Build a stable Cyrillic -> Latin -> other-symbols list pipeline."""
     if not sort_fields:
@@ -503,6 +504,7 @@ def build_alphabetical_pipeline(
             }
         }},
         {"$sort": {
+            **({"views": -1} if sort == "popular" else {}),
             "_alphabet_sort_group": 1,
             "_alphabet_sort_value": 1,
             "_id": 1,
@@ -587,6 +589,7 @@ async def list_alphabetical_content(
     sort_fields: list[str] = None,
     exclude_modules: bool = True,
     availability_query: dict = None,
+    sort: str | None = None,
 ):
     """List content alphabetically before pagination using Russian collation."""
     db = await get_db()
@@ -599,6 +602,7 @@ async def list_alphabetical_content(
         limit,
         sort_fields or ["title", "name"],
         exclude_modules,
+        sort,
     )
     cursor = collection.aggregate(
         pipeline,

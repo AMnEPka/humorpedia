@@ -2,7 +2,7 @@
 
 **Отвечать пользователю на русском.**
 
-Энциклопедия российского юмора и КВН (прод: https://humorpedia.ru). Переезд со старого сайта на MODX (дамп MySQL `humorbd.sql`)
+Энциклопедия российского юмора и КВН. Переезд со старого сайта на MODX (дамп MySQL `humorbd.sql`)
 на собственный стек. Репозиторий: https://github.com/AMnEPka/humorpedia, основная ветка `main`.
 
 Подробные справочники (читать по необходимости, а не целиком):
@@ -23,13 +23,14 @@
 | [docs/ai/tasks/correction-suggestions.md](docs/ai/tasks/correction-suggestions.md) | Публичные предложения исправлений и редакционная очередь |
 | [docs/ai/tasks/editorial-research.md](docs/ai/tasks/editorial-research.md) | Ручной редакционный процесс по обновлению и созданию страниц комиков, API, админка и стартовый пакет |
 | [docs/ai/tasks/public-user-experience-plan.md](docs/ai/tasks/public-user-experience-plan.md) | План улучшения публичного поиска, каталога команд и мобильных карточек; статус реализации |
+| [docs/ai/tasks/mongodb-upgrade.md](docs/ai/tasks/mongodb-upgrade.md) | Поэтапное обновление единственного локального стенда MongoDB и проверка резервных копий |
 
 ## Стек
 
 - **Backend**: Python 3.11, FastAPI 0.110, Motor (async MongoDB), Pydantic v2, PyJWT + bcrypt, slowapi, cachetools. Точка входа `backend/server.py`.
 - **Frontend**: React 19 + CRA через CRACO, React Router 7, Tailwind + shadcn/ui (Radix), TipTap/react-quill (редакторы), dnd-kit, axios. Алиас `@` → `frontend/src`. Пакетный менеджер — **yarn**.
-- **БД**: MongoDB 6, база `humorpedia`. Отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`.
-- **Инфра**: `docker-compose.yml` (dev, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (прод: gunicorn ×4 воркера, nginx-статика фронта).
+- **БД**: единственный действующий стенд — локальный Compose с MongoDB 8.0.32. База `humorpedia`: отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`.
+- **Инфра**: `docker-compose.yml` (локальный стенд, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (неиспользуемый шаблон будущего развёртывания: MongoDB 8.0.32, gunicorn ×4 воркера, nginx-статика фронта).
 
 ## Запуск
 
@@ -65,7 +66,7 @@ frontend/src/
   components/ui/      shadcn/ui — не редактировать без нужды
 migration/            импорт из MODX-дампа (people, kvn, shows), парсеры HTML, JSON-маппинги
 content/              markdown-тексты страниц КВН/лиг + скрипт update_kvn_pages.py (заливка через API)
-backup/               контейнер mongodump (подключён только в docker-compose-cloud.yml)
+backup/               контейнер mongodump/mongorestore (подключён только в docker-compose-cloud.yml)
 ```
 
 ## Ключевые доменные правила

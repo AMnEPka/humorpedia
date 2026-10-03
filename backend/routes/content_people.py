@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
 import re
 from utils.auth import EDITOR_ROLES, get_current_user, require_editor_on_write
-from typing import Optional
+from typing import Optional, Literal
 
 from models.base import ContentStatus
 from models.content import Person, PersonCreate, PersonUpdate
@@ -15,6 +15,7 @@ from services.crud import (
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
 from services.memberships import link_person, unlink_person
+from services.catalog_filters import combine_query, person_conditions, people_filter_options
 
 router = APIRouter(prefix="/content", tags=["people"], dependencies=[Depends(require_editor_on_write)])
 
@@ -62,23 +63,33 @@ async def list_people(
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
     search: Optional[str] = None,
-    letter: Optional[str] = None
+    letter: Optional[str] = None,
+    city: Optional[str] = Query(None, max_length=100),
+    role: Optional[str] = Query(None, max_length=100),
+    team: Optional[str] = Query(None, max_length=100),
+    show: Optional[str] = Query(None, max_length=100),
+    sort: Optional[Literal["popular"]] = None,
 ):
     """List people with pagination and filters."""
+    db = await get_db()
     user = await get_current_user(request)
     editor = bool(user and user.get("role") in EDITOR_ROLES)
     if not editor and status == ContentStatus.ARCHIVED:
         raise HTTPException(status_code=404, detail="People not found")
     visible = {} if editor else {"status": {"$ne": ContentStatus.ARCHIVED.value}}
-    query = build_query(status, tag, search, ["title", "full_name", "aliases"], letter)
-    availability_query = build_query(status, tag)
-    if visible:
-        query = {"$and": [query, visible]} if query else visible
-        availability_query = {"$and": [availability_query, visible]} if availability_query else visible
-    return await list_alphabetical_content(
+    conditions = await person_conditions(db, city=city, role=role, team=team, show=show)
+    query = combine_query(
+        build_query(status, tag, search, ["title", "full_name", "aliases"], letter),
+        visible, *conditions,
+    )
+    availability_query = combine_query(build_query(status, tag), visible, *conditions)
+    result = await list_alphabetical_content(
         "people", skip, limit, query, ["title", "full_name"],
         availability_query=availability_query,
+        sort=sort,
     )
+    result["filters"] = await people_filter_options(db, combine_query(build_query(status, tag), visible))
+    return result
 
 
 @router.get("/people/search", response_model=list)
