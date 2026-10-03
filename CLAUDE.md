@@ -24,6 +24,7 @@
 | [docs/ai/tasks/editorial-research.md](docs/ai/tasks/editorial-research.md) | Ручной редакционный процесс по обновлению и созданию страниц комиков, API, админка и стартовый пакет |
 | [docs/ai/tasks/public-user-experience-plan.md](docs/ai/tasks/public-user-experience-plan.md) | План улучшения публичного поиска, каталога команд и мобильных карточек; статус реализации |
 | [docs/ai/tasks/mongodb-upgrade.md](docs/ai/tasks/mongodb-upgrade.md) | Поэтапное обновление единственного локального стенда MongoDB и проверка резервных копий |
+| [docs/ai/tasks/docker-branch-sync.md](docs/ai/tasks/docker-branch-sync.md) | Автоматическая синхронизация стенда с веткой, возврат на main после PR и проверка workflow |
 
 ## Стек
 
@@ -35,10 +36,12 @@
 ## Запуск
 
 ```bash
-powershell -ExecutionPolicy Bypass -File .\scripts\dev-sync.ps1  # новая/переключённая ветка
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-hooks.ps1  # один раз в основной папке
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-status.ps1 # папка/ветка и состояние стенда
+powershell -ExecutionPolicy Bypass -File .\scripts\dev-finish.ps1 -PullRequest <номер> # после merge PR
 docker compose up -d               # повторный запуск уже синхронизированного dev-стека
 ```
-- **Local-first обязателен**: после создания/переключения ветки основной агент сначала запускает `scripts/dev-sync.ps1`; подробные правила — [AGENTS.md](AGENTS.md). Скрипт пересобирает образы, синхронизирует именованный `frontend_node_modules`, поднимает стек и ждёт готовности :8001/:3000.
+- **Local-first обязателен**: hooks в основной папке после переключения/локального merge вызывают `scripts/dev-sync.ps1 -Auto`; при отсутствии/ошибке hooks основной агент выполняет полный sync до редактирования. После удалённого merge PR обязательно вызвать `scripts/dev-finish.ps1`. Синхронизация проверяет реальные mounts и :8001/:3000, а образы и `frontend_node_modules` обновляет при изменении входных файлов. Дополнительные worktree не управляют стендом. Подробные правила — [AGENTS.md](AGENTS.md), команды — [DOCKER_DEV.md](DOCKER_DEV.md).
 - В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси CRA (`REACT_APP_USE_API_PROXY=true`, см. `frontend/craco.config.js`). Python-код автоматически перезапускает Uvicorn, изменения `frontend/src` пересобираются polling-наблюдателем с HMR. После правок зависимостей, Dockerfile или Compose повторить полный `dev-sync.ps1`.
 - Swagger: http://localhost:8001/docs.
 - При старте бэкенд создаёт индексы (каждый независимо), первого админа из `ADMIN_EMAIL`/`ADMIN_PASSWORD` (только если админов в БД нет; вручную — `python init_admin.py --email … [--reset]`) и запускает батч-счётчик просмотров. `backend/start.sh` перед стартом зовёт `scripts/restore_backup.py` (восстанавливает БД из бэкапа, если она пустая).
