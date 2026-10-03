@@ -88,7 +88,7 @@ admin/                         АДМИНКА
 | `/news`, `/news/:slug` | NewsListPage, NewsDetailPage |
 | `/articles`, `/articles/:slug` | ArticlesListPage, ArticleDetailPage |
 | `/people`, `/people/:slug` | PeopleListPage, PersonDetailPage |
-| `/teams`, `/teams/:category` | редирект на `/kvn/teams` |
+| `/teams`, `/teams/:category` | общий каталог: команды КВН по умолчанию, затем команды выбранного шоу |
 | `/kvn/teams`, `/kvn/teams/:slug` | TeamsListPage, TeamDetailPage |
 | `/shows/{шоу}/teams/:slug` | ShowDetailPage → TeamDetailPage (адрес с предпоследним сегментом `teams` — команда шоу, `utils/teams.js`) |
 | `/shows[/:parentSlug[/:childSlug[/:grandchildSlug[/:greatGrandchildSlug]]]]` | ShowsListPage / ShowDetailPage |
@@ -97,6 +97,8 @@ admin/                         АДМИНКА
 | `/contacts`, `/policy`, `/search`, `/tags/:tag` | статические / поиск |
 | `/kvn/vl-kvn/vl-jury` | JuryStatsPage |
 | `/*` | **SectionDetailPage** (КВН, разделы, редиректы старых URL) |
+
+Каталоги людей, команд и шоу хранят поиск, букву, фильтры и страницу в URL. `CatalogFilters.jsx` применяет фасеты без потери `q`/`letter` и сбрасывает `page` при изменении условий; категории команд сохраняют совместимые параметры. Люди: город, роль/деятельность, команда, шоу и популярность. Команды: город, для КВН — лига и год участия, популярность. Шоу: популярность.
 
 Админка (`ProtectedRoute` — пользователь залогинен И роль admin/editor/moderator; внутри `AdminLayout`):
 `/admin/login`, `/admin`, `/admin/{people|teams|shows|kvn|articles|news|quizzes|wiki|cities|sections|templates}` и `/:id` (id = `new` для создания), `/admin/show-appearances`, `/admin/media`, `/admin/tags`, `/admin/comments`, `/admin/correction-suggestions` (admin/editor), `/admin/users`, `/admin/database`, `/admin/related-news` (adminOnly).

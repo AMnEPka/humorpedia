@@ -15,6 +15,7 @@ jest.mock('../utils/api', () => ({
 
 let host;
 let root;
+const originalMatchMedia = window.matchMedia;
 
 beforeEach(() => {
   host = document.createElement('div');
@@ -28,6 +29,8 @@ afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
   document.body.innerHTML = '';
+  window.matchMedia = originalMatchMedia;
+  jest.useRealTimers();
   jest.clearAllMocks();
 });
 
@@ -51,4 +54,43 @@ test('opens a plain-text correction form for the current page', async () => {
   expect(document.body.querySelector('textarea')).not.toBeNull();
   expect(document.body.querySelector('input[type="email"]')).not.toBeNull();
   expect(document.body.querySelector('[contenteditable="true"]')).toBeNull();
+});
+
+test('reveals the label on the first mobile tap and opens the form on the second', async () => {
+  window.matchMedia = jest.fn().mockReturnValue({ matches: true });
+  await act(async () => {
+    root.render(
+      <MemoryRouter>
+        <CorrectionSuggestionButton />
+      </MemoryRouter>
+    );
+  });
+
+  const trigger = host.querySelector('button[aria-label="Предложить исправление"]');
+  expect(trigger.querySelector('span').className).toContain('hidden');
+  await act(async () => trigger.click());
+  expect(trigger.querySelector('span').className).not.toContain('hidden');
+  expect(document.body.querySelector('textarea')).toBeNull();
+
+  await act(async () => trigger.click());
+  expect(document.body.querySelector('textarea')).not.toBeNull();
+});
+
+test('collapses the mobile label after five seconds', async () => {
+  jest.useFakeTimers();
+  window.matchMedia = jest.fn().mockReturnValue({ matches: true });
+  await act(async () => {
+    root.render(
+      <MemoryRouter>
+        <CorrectionSuggestionButton />
+      </MemoryRouter>
+    );
+  });
+
+  const trigger = host.querySelector('button[aria-label="Предложить исправление"]');
+  await act(async () => trigger.click());
+  expect(trigger.querySelector('span').className).not.toContain('hidden');
+  await act(async () => jest.advanceTimersByTime(5000));
+  expect(trigger.querySelector('span').className).toContain('hidden');
+  expect(document.body.querySelector('textarea')).toBeNull();
 });

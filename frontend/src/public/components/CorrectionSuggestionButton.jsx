@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CheckCircle2, Loader2, PencilLine } from 'lucide-react';
 
@@ -51,6 +51,23 @@ export default function CorrectionSuggestionButton() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [ticketId, setTicketId] = useState('');
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!mobileExpanded) return undefined;
+    const timeout = window.setTimeout(() => setMobileExpanded(false), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [mobileExpanded]);
+
+  const handleTriggerClick = () => {
+    const isMobile = window.matchMedia?.('(max-width: 639px)').matches ?? window.innerWidth < 640;
+    if (isMobile && !mobileExpanded) {
+      setMobileExpanded(true);
+      return;
+    }
+    setMobileExpanded(false);
+    setOpen(true);
+  };
 
   const reset = () => {
     setForm(emptyForm);
@@ -107,12 +124,12 @@ export default function CorrectionSuggestionButton() {
     <>
       <Button
         type="button"
-        className="fixed bottom-4 right-4 z-40 rounded-full shadow-lg sm:bottom-6 sm:right-6"
-        onClick={() => setOpen(true)}
+        className={`fixed bottom-4 right-4 z-40 h-11 rounded-full shadow-lg sm:bottom-6 sm:right-6 sm:h-9 ${mobileExpanded ? 'w-auto px-4' : 'w-11 p-0 sm:w-auto sm:px-4'}`}
+        onClick={handleTriggerClick}
         aria-label="Предложить исправление"
       >
-        <PencilLine className="mr-2 h-4 w-4" />
-        Предложить исправление
+        <PencilLine className={`h-4 w-4 shrink-0 ${mobileExpanded ? 'mr-2' : 'sm:mr-2'}`} />
+        <span className={mobileExpanded ? '' : 'hidden sm:inline'}>Предложить исправление</span>
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>

@@ -2581,6 +2581,17 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
               placeholder="Краткое текстовое описание для превью"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="season-editorial-notes">Редакционные заметки</Label>
+            <Textarea
+              id="season-editorial-notes"
+              value={data.editorial_notes || ''}
+              onChange={(e) => onChange({ ...data, editorial_notes: e.target.value })}
+              rows={6}
+              placeholder="Источники, расхождения и вопросы для редактора"
+            />
+            <p className="text-xs text-muted-foreground">Не отображаются на публичной странице сезона.</p>
+          </div>
         </CardContent>
       </Card>
 

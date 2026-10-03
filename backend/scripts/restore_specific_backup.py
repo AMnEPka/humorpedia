@@ -19,9 +19,28 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://mongodb:27017')
+MONGO_URL = os.environ.get('MONGO_URL')
+MONGO_HOST = os.environ.get('MONGO_HOST', 'mongodb')
+MONGO_PORT = os.environ.get('MONGO_PORT', '27017')
+MONGO_USER = os.environ.get('MONGO_USER')
+MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
+MONGO_AUTH_SOURCE = os.environ.get('MONGO_AUTH_SOURCE', 'admin')
 DB_NAME = os.environ.get('DB_NAME', 'humorpedia')
 BACKUP_DIR = Path(os.environ.get('BACKUP_DIR', '/app/backups'))
+
+
+def mongo_connection_args(binary):
+    if MONGO_URL:
+        return [MONGO_URL] if binary == 'mongosh' else ['--uri', MONGO_URL]
+
+    args = ['--host', MONGO_HOST, '--port', MONGO_PORT]
+    if MONGO_USER and MONGO_PASSWORD is not None:
+        args.extend([
+            '--username', MONGO_USER,
+            '--password', MONGO_PASSWORD,
+            '--authenticationDatabase', MONGO_AUTH_SOURCE,
+        ])
+    return args
 
 
 def restore_from_backup(backup_path, force=False):
@@ -79,24 +98,16 @@ def restore_from_backup(backup_path, force=False):
                     shutil.rmtree(extract_dir)
                 return False
         
-        # Извлекаем хост и порт из MONGO_URL
-        mongo_host = MONGO_URL.replace('mongodb://', '').split('/')[0]
-        if ':' in mongo_host:
-            host, port = mongo_host.split(':')
-        else:
-            host = mongo_host
-            port = '27017'
-        
-        logger.info(f"Восстановление БД {DB_NAME} на хост {host}:{port}...")
+        logger.info(f"Восстановление БД {DB_NAME}...")
         if force:
-            logger.warning("⚠️  ВНИМАНИЕ: БД будет полностью перезаписана!")
+            logger.warning("Коллекции из архива будут заменены; другие коллекции сохранятся")
         
         # Ждем, пока MongoDB будет готов
         logger.info("Ожидание готовности MongoDB...")
         max_retries = 30
         for i in range(max_retries):
             try:
-                cmd_test = ['mongosh', '--host', host, '--port', port, '--eval', 'db.adminCommand("ping")']
+                cmd_test = ['mongosh', *mongo_connection_args('mongosh'), '--eval', 'db.adminCommand("ping")']
                 result = subprocess.run(
                     cmd_test,
                     capture_output=True,
@@ -118,8 +129,7 @@ def restore_from_backup(backup_path, force=False):
         # Выполняем mongorestore
         cmd = [
             'mongorestore',
-            '--host', host,
-            '--port', port,
+            *mongo_connection_args('mongorestore'),
             '--db', DB_NAME,
         ]
         
@@ -128,7 +138,7 @@ def restore_from_backup(backup_path, force=False):
         
         cmd.append(str(dump_dir))
         
-        logger.info(f"Выполнение команды: {' '.join(cmd)}")
+        logger.info("Выполнение mongorestore для БД %s", DB_NAME)
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -145,7 +155,11 @@ def restore_from_backup(backup_path, force=False):
         return True
         
     except subprocess.CalledProcessError as e:
-        logger.error(f"Ошибка при восстановлении БД: {e.stderr}")
+        error = e.stderr or str(e)
+        for secret in (MONGO_PASSWORD, MONGO_URL):
+            if secret:
+                error = error.replace(secret, '***')
+        logger.error("Ошибка при восстановлении БД: %s", error)
         if extract_dir.exists():
             shutil.rmtree(extract_dir)
         return False
@@ -169,13 +183,13 @@ def main():
     parser.add_argument(
         '--force',
         action='store_true',
-        help='Принудительное восстановление (перезаписать существующую БД)'
+        help='Заменить существующие коллекции из архива'
     )
     
     args = parser.parse_args()
     
     logger.info("Запуск восстановления БД из бэкапа")
-    logger.info(f"БД: {DB_NAME}, URL: {MONGO_URL}")
+    logger.info("БД: %s", DB_NAME)
     logger.info(f"Файл бэкапа: {args.backup_file}")
     
     # Преобразуем путь к бэкапу

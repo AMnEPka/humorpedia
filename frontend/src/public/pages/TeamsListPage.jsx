@@ -9,6 +9,7 @@ import { teamLogoUrl } from '@/utils/media';
 import { teamSubtitle, teamUrl } from '@/utils/teams';
 import ListPageHeader from '../components/ListPageHeader';
 import AlphabetFilter from '../components/AlphabetFilter';
+import CatalogFilters from '../components/CatalogFilters';
 
 const categories = [
   { slug: 'kvn', title: 'Команды КВН', featured: true },
@@ -17,6 +18,7 @@ const categories = [
   { slug: 'liga-gorodov', title: 'Лига Городов', retro: true },
   { slug: 'improv-teams', title: 'Импровизация. Команды', retro: true },
 ];
+const sortOptions = [{ value: 'popular', label: 'По популярности' }];
 
 export default function TeamsListPage() {
   const { category: categoryParam } = useParams();
@@ -26,11 +28,18 @@ export default function TeamsListPage() {
   const [teams, setTeams] = useState([]);
   const [total, setTotal] = useState(0);
   const [availableLetters, setAvailableLetters] = useState(null);
+  const [filterOptions, setFilterOptions] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const query = searchParams.get('q') || '';
   const letter = searchParams.get('letter') || '';
+  const city = searchParams.get('city') || '';
+  const league = searchParams.get('league') || '';
+  const year = searchParams.get('year') || '';
+  const activeLeague = categorySlug === 'kvn' ? league : '';
+  const activeYear = categorySlug === 'kvn' ? year : '';
+  const sort = searchParams.get('sort') || '';
   const page = Math.max(1, Number.parseInt(searchParams.get('page'), 10) || 1);
   const limit = 24;
 
@@ -42,15 +51,19 @@ export default function TeamsListPage() {
     publicApi.getTeamsByCategory(categorySlug, {
       skip: (page - 1) * limit, limit,
       search: query || undefined, letter: letter || undefined,
+      city: city || undefined, league: activeLeague || undefined,
+      year: activeYear || undefined,
+      sort: sort || undefined,
     }).then(res => {
       if (cancelled) return;
       setTeams(res.data.items || []);
       setTotal(res.data.total || 0);
       setAvailableLetters(res.data.available_letters || null);
+      setFilterOptions(res.data.filters || {});
     }).catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [categorySlug, page, query, letter]);
+  }, [categorySlug, page, query, letter, city, activeLeague, activeYear, sort]);
 
   useEffect(() => setSearch(query), [query]);
 
@@ -61,6 +74,12 @@ export default function TeamsListPage() {
     else params.delete(name);
     params.delete('page');
     setSearchParams(params);
+  };
+  const categoryHref = slug => {
+    const params = new URLSearchParams(searchParams);
+    ['page', 'letter', 'league', 'year'].forEach(name => params.delete(name));
+    const path = slug === 'kvn' ? '/teams' : `/teams/${slug}`;
+    return `${path}${params.toString() ? `?${params}` : ''}`;
   };
 
   if (!category) return <Navigate to="/teams" replace />;
@@ -80,7 +99,7 @@ export default function TeamsListPage() {
       <nav aria-label="Тип команд" className="flex flex-wrap gap-2 mb-6">
         <div className="grid w-full grid-cols-2 gap-3">
           {categories.filter(item => item.featured).map(item => (
-            <Link key={item.slug} to={item.slug === 'kvn' ? '/teams' : `/teams/${item.slug}`}
+            <Link key={item.slug} to={categoryHref(item.slug)}
               aria-current={category.slug === item.slug ? 'page' : undefined}
               className={`flex min-h-20 items-center justify-center rounded-xl border-2 px-3 py-4 text-center text-base font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 sm:text-lg ${category.slug === item.slug ? 'border-blue-600 bg-blue-50 text-blue-900' : 'border-blue-200 bg-white text-blue-800 hover:border-blue-500 hover:bg-blue-50'}`}>
               {item.title}
@@ -90,7 +109,7 @@ export default function TeamsListPage() {
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-sm">
           <span className="text-gray-500">Другие шоу:</span>
           {categories.filter(item => !item.featured).map(item => (
-            <Link key={item.slug} to={`/teams/${item.slug}`}
+            <Link key={item.slug} to={categoryHref(item.slug)}
               aria-current={category.slug === item.slug ? 'page' : undefined}
               className={`inline-flex min-h-11 items-center rounded px-1 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${category.slug === item.slug ? 'font-semibold text-blue-800 underline' : 'text-gray-600 hover:text-blue-700 hover:underline'}`}>
               {item.title}<span className="ml-1 text-xs text-gray-500">ретро</span>
@@ -98,6 +117,16 @@ export default function TeamsListPage() {
           ))}
         </div>
       </nav>
+
+      <CatalogFilters key={`${categorySlug}:${searchParams}`} searchParams={searchParams} setSearchParams={setSearchParams}
+        fields={[
+          { name: 'city', label: 'Город', type: 'text', placeholder: 'Например, Томск' },
+          ...(categorySlug === 'kvn' ? [
+            { name: 'league', label: 'Лига', options: filterOptions.leagues || [] },
+            { name: 'year', label: 'Год участия', options: filterOptions.years || [] },
+          ] : []),
+          { name: 'sort', label: 'Порядок', defaultLabel: 'По алфавиту', options: sortOptions },
+        ]} />
 
       <div className="mb-8">
         <AlphabetFilter selectedLetter={letter}
@@ -113,8 +142,8 @@ export default function TeamsListPage() {
         <p role="alert" className="py-12 text-center text-gray-600">Не удалось загрузить команды. Обновите страницу и попробуйте ещё раз.</p>
       ) : teams.length === 0 ? (
         <div className="text-center py-12 text-gray-600">
-          <p>{query || letter ? 'По этим условиям команды не найдены.' : 'В этом разделе пока нет команд.'}</p>
-          {(query || letter) && <Button variant="link" onClick={() => setSearchParams({})}>Сбросить фильтры</Button>}
+          <p>{query || letter || city || activeLeague || activeYear ? 'По этим условиям команды не найдены.' : 'В этом разделе пока нет команд.'}</p>
+          {(query || letter || city || activeLeague || activeYear || sort) && <Button variant="link" onClick={() => setSearchParams({})}>Сбросить фильтры</Button>}
         </div>
       ) : (
         <>

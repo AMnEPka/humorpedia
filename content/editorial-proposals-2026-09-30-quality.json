@@ -1,0 +1,97 @@
+{
+  "proposals": [
+    {
+      "kind": "update_person",
+      "person_id": "c10a1650-d1d4-5372-8219-d86b07f25ea1",
+      "reason": "Анкета Никиты Дубровского архивирована из-за нехватки сведений. После утверждения даты, города, биографии и фактов редактор может проверить два уже связанных шоу и вернуть статус draft.",
+      "changes": [
+        {
+          "id": "nikita-birth-date",
+          "field": "bio.birth_date",
+          "old_value": null,
+          "proposed_value": "24.09.1992",
+          "sources": [{"url": "https://gostandup.ru/comedians/nikita_dubrovskiy", "title": "GoStandup: Никита Дубровский", "excerpt": "Дата рождения 24.09.1992"}]
+        },
+        {
+          "id": "nikita-birth-place",
+          "field": "bio.birth_place",
+          "old_value": null,
+          "proposed_value": "Таганрог",
+          "sources": [{"url": "https://gostandup.ru/articles/nominaciya_luchshiy_solnyy_koncert_festivalya_panchlayn_2025_nikita_dubrovskiy", "title": "GoStandup: номинация «Лучший сольный концерт»", "published_at": "2025-07-31", "excerpt": "Никита родился в 1992 году в Таганроге"}]
+        },
+        {
+          "id": "nikita-birth-date-fact",
+          "field": "facts.Дата рождения",
+          "old_value": null,
+          "proposed_value": "24 сентября 1992 года",
+          "sources": [{"url": "https://gostandup.ru/comedians/nikita_dubrovskiy", "title": "GoStandup: Никита Дубровский", "excerpt": "Дата рождения 24.09.1992"}]
+        },
+        {
+          "id": "nikita-birth-place-fact",
+          "field": "facts.Место рождения",
+          "old_value": null,
+          "proposed_value": "Таганрог",
+          "sources": [{"url": "https://gostandup.ru/articles/nominaciya_luchshiy_solnyy_koncert_festivalya_panchlayn_2025_nikita_dubrovskiy", "title": "GoStandup: номинация «Лучший сольный концерт»", "published_at": "2025-07-31"}]
+        },
+        {
+          "id": "nikita-biography",
+          "field": "module.researched-biography.content",
+          "label": "Биография",
+          "old_value": null,
+          "proposed_value": "Никита Дубровский родился в Таганроге. После школы он переехал в Санкт-Петербург, где начал выступать на открытых микрофонах. Комик дошёл до финала «Comedy Баттл», затем выступал в Stand Up на ТНТ и участвовал в разговорных проектах «Разгоны» и «Споры».",
+          "sources": [{"url": "https://gostandup.ru/articles/nominaciya_luchshiy_solnyy_koncert_festivalya_panchlayn_2025_nikita_dubrovskiy", "title": "GoStandup: номинация «Лучший сольный концерт»", "published_at": "2025-07-31"}]
+        }
+      ]
+    },
+    {
+      "kind": "update_person",
+      "person_id": "fed31443-4c48-531c-b2f2-c34c3913578d",
+      "reason": "Анкета Василия Медведева архивирована из-за нехватки сведений. Предложены дата, город рождения, биография и второе шоу «Разгоны». После утверждения редактор проверяет связи и возвращает статус draft.",
+      "changes": [
+        {
+          "id": "vasiliy-birth-date",
+          "field": "bio.birth_date",
+          "old_value": null,
+          "proposed_value": "29.09.1994",
+          "sources": [{"url": "https://www.afisha.ru/people/vasiliy-medvedev-714940/", "title": "Афиша: Василий Медведев", "excerpt": "Дата рождения 29.09.1994"}]
+        },
+        {
+          "id": "vasiliy-birth-place",
+          "field": "bio.birth_place",
+          "old_value": null,
+          "proposed_value": "Москва",
+          "sources": [{"url": "https://www.kinopoisk.ru/name/6399561/", "title": "Кинопоиск: Василий Медведев", "excerpt": "Место рождения: Москва, Россия"}]
+        },
+        {
+          "id": "vasiliy-birth-date-fact",
+          "field": "facts.Дата рождения",
+          "old_value": null,
+          "proposed_value": "29 сентября 1994 года",
+          "sources": [{"url": "https://www.afisha.ru/people/vasiliy-medvedev-714940/", "title": "Афиша: Василий Медведев"}]
+        },
+        {
+          "id": "vasiliy-birth-place-fact",
+          "field": "facts.Место рождения",
+          "old_value": null,
+          "proposed_value": "Москва",
+          "sources": [{"url": "https://www.kinopoisk.ru/name/6399561/", "title": "Кинопоиск: Василий Медведев"}]
+        },
+        {
+          "id": "vasiliy-biography",
+          "field": "module.researched-biography.content",
+          "label": "Биография",
+          "old_value": null,
+          "proposed_value": "Василий Медведев — стендап-комик Stand-Up Club #1. В интервью он рассказал, что заинтересовался выступлениями комиков, когда участвовал в КВН, и тогда же написал первые шутки. Позже он выступал на английском языке в Москве и участвовал в фестивале искусств в Эдинбурге.",
+          "sources": [{"url": "https://disgustingmen.com/lichnosti/medvedev-standup-comedy/", "title": "Disgusting Men: интервью с Василием Медведевым", "published_at": "2018-05-21"}]
+        },
+        {
+          "id": "vasiliy-razgony",
+          "field": "appearance.4c650124-5c02-4d8b-98f6-2bada1862399",
+          "old_value": null,
+          "proposed_value": {"achievement": "participant", "appearances": 0},
+          "sources": [{"url": "https://tv.standupclub.ru/comics/vasiliy-medvedev/", "title": "Стендап Клуб на Трубной TV: видео Василия Медведева", "excerpt": "В списке есть выпуски проекта «Разгоны» с Василием Медведевым"}]
+        }
+      ]
+    }
+  ]
+}

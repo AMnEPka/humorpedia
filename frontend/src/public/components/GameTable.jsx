@@ -8,9 +8,19 @@ import { formatDecimalTrim } from '@/utils/number';
 import { cleanTeamName } from '@/utils/team';
 import { teamStorage } from '../utils/teamStorage';
 
+function resultPlace(value) {
+  const place = Number(value);
+  return Number.isInteger(place) && place > 0 ? place : null;
+}
+
 export function GameTable({ game, stageName = '' }) {
   const { name, date, date_raw, teams = [], contests = [], jury = [], host = '', notes = '', is_cancelled = false, video_links = [] } = game;
   const [teamNames, setTeamNames] = useState({}); // Кэш названий команд по slug
+  const orderedTeams = [...teams].sort((a, b) => {
+    const left = resultPlace(a.place) ?? Infinity;
+    const right = resultPlace(b.place) ?? Infinity;
+    return left === right ? 0 : left - right;
+  });
   
   // Определяем, является ли это финалом
   const isFinal = stageName.toLowerCase().includes('финал') && !stageName.toLowerCase().includes('1/8') && 
@@ -138,7 +148,7 @@ export function GameTable({ game, stageName = '' }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teams.map((team, idx) => {
+              {orderedTeams.map((team, idx) => {
                 const isPassed = team.passed || team.is_winner;
                 const isWinner = team.is_winner;
                 const isAdditional = team.is_additional;  // Добор
@@ -152,7 +162,7 @@ export function GameTable({ game, stageName = '' }) {
                     key={idx} 
                     className={bgColor}
                   >
-                    <TableCell className="font-medium">{team.place || idx + 1}</TableCell>
+                    <TableCell className="font-medium">{resultPlace(team.place) ?? '—'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {team.team_slug ? (

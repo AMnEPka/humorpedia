@@ -1,8 +1,8 @@
-# Продакшен. Перед запуском создайте .env рядом с этим файлом (шаблон — .env.example).
+# Шаблон будущего развёртывания. Перед запуском создайте .env рядом с этим файлом (шаблон — .env.example).
 # Обязательные переменные: JWT_SECRET, MONGO_INITDB_ROOT_PASSWORD.
 services:
   mongodb:
-    image: mongo:6
+    image: mongo:8.0.32
     container_name: humorpedia-mongodb
     # Порт наружу НЕ публикуется: база доступна только контейнерам внутри сети compose.
     # Для отладки с хоста: ports: ["127.0.0.1:27017:27017"]

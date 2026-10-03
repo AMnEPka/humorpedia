@@ -28,6 +28,7 @@ from services.cache import cache_service
 from services.views_counter import views_counter
 from services.competitions import sync_kvn_pages
 from services.memberships import import_team_rosters
+from services.catalog_filters import team_conditions, teams_filter_options
 from services.show_teams import (
     KVN_ONLY, attach_related_teams, attach_show_info, check_team_slug_free, get_team_show, kvn_team_query,
     split_team_path, sync_related_teams, team_id_or_kvn_slug_query, team_placement,
@@ -756,10 +757,15 @@ async def list_teams(
     search: Optional[str] = None,
     letter: Optional[str] = None,
     show_id: Optional[str] = Query(None, description="команды шоу (_id шоу)"),
+    city: Optional[str] = Query(None, max_length=100),
+    league: Optional[str] = Query(None, max_length=100),
+    year: Optional[int] = Query(None, ge=1900, le=2100),
+    show: Optional[str] = Query(None, max_length=100),
+    sort: Optional[Literal["popular"]] = None,
 ):
     """List teams with pagination and filters"""
     # ─── Кэш: проверяем ──────────────────────────────────────────────
-    cache_key = f"tl:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}:{show_id}"
+    cache_key = f"tl:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}:{show_id}:{city}:{league}:{year}:{show}:{sort}"
     cached = cache_service.get_team_list(cache_key)
     if cached is not None:
         return cached
@@ -780,6 +786,7 @@ async def list_teams(
     if show_id:
         conditions.append({"show_id": show_id})
 
+    conditions.extend(await team_conditions(db, city=city, league=league, year=year, show=show))
     availability_conditions = list(conditions)
 
     # Поиск подстроки (без учёта регистра) по name, title, slug и aliases
@@ -805,11 +812,13 @@ async def list_teams(
     result = await list_alphabetical_content(
         "teams", skip, limit, query, ["title", "name"],
         availability_query=availability_query,
+        sort=sort,
     )
     items = result["items"]
     await attach_show_info(db, items)
 
     result["items"] = items
+    result["filters"] = await teams_filter_options(db, kvn=team_type == "kvn")
 
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
     cache_service.set_team_list(cache_key, result)

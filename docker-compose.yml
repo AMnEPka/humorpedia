@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:6
+    image: mongo:8.0.32
     container_name: humorpedia-mongodb
     # SECURITY:
     # - Do NOT publish 27017 to the internet.
