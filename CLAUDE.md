@@ -22,6 +22,7 @@
 | [docs/ai/tasks/team-projects.md](docs/ai/tasks/team-projects.md) | Автоматические проекты участников команды КВН с сохранённым ручным дополнением |
 | [docs/ai/tasks/correction-suggestions.md](docs/ai/tasks/correction-suggestions.md) | Публичные предложения исправлений и редакционная очередь |
 | [docs/ai/tasks/editorial-research.md](docs/ai/tasks/editorial-research.md) | Ручной редакционный процесс по обновлению и созданию страниц комиков, API, админка и стартовый пакет |
+| [docs/ai/tasks/editorial-quotes.md](docs/ai/tasks/editorial-quotes.md) | Разовая нормализация редакционных кавычек, согласованные исключения, снимок данных и проверки |
 | [docs/ai/tasks/public-user-experience-plan.md](docs/ai/tasks/public-user-experience-plan.md) | План улучшения публичного поиска, каталога команд и мобильных карточек; статус реализации |
 | [docs/ai/tasks/mongodb-upgrade.md](docs/ai/tasks/mongodb-upgrade.md) | Поэтапное обновление единственного локального стенда MongoDB и проверка резервных копий |
 | [docs/ai/tasks/docker-branch-sync.md](docs/ai/tasks/docker-branch-sync.md) | Автоматическая синхронизация стенда с веткой, возврат на main после PR и проверка workflow |
