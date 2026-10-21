@@ -1,5 +1,4 @@
 """Повторяемое создание обычной страницы из предварительно проверенного пакета."""
-from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import os
 from pathlib import Path
@@ -140,16 +139,31 @@ async def create_document(db, doc, page):
     return await create_show_record(db, ShowCreate.model_validate(payload), document_id=doc['target_id'], page_package_id=doc['_id'])
 
 
+async def owned_import_query(db, doc):
+    """Проверить исходного владельца перед следующим этапом записи."""
+    token = doc.get('lease_token')
+    if not token:
+        raise HTTPException(409, 'Владение импортом потеряно; обновите состояние пакета')
+    query = {'_id': doc['_id'], 'status': 'applying', 'lease_token': token}
+    if not await db.page_package_imports.find_one(query, {'_id': 1}):
+        raise HTTPException(409, 'Владение импортом потеряно; обновите состояние пакета')
+    return query
+
+
 async def finish_import(db, doc, target, actor, warnings=()):
-    """A published document is the commit point; recovery never rewrites it."""
+    """Публикация — точка фиксации: восстановление завершает только журнал."""
+    query = await owned_import_query(db, doc)
     prefix = {'person': '/people/', 'team': '/kvn/teams/', 'show': '/shows/'}[doc['kind']]
     result = {'id': doc['target_id'], 'url': prefix + (target.get('full_path') or target['slug']),
               'edit_url': f"/admin/{COLLECTIONS[doc['kind']]}/{doc['target_id']}"}
     from services.cache import cache_service
     await cache_service.invalidate_everywhere(db)
-    await db.page_package_imports.update_one({'_id': doc['_id']}, {'$set': {
+    completed = await db.page_package_imports.update_one(query, {'$set': {
         'status': 'applied', 'result': result, 'applied_at': now(), 'applied_by': actor,
-        'error': '', 'warnings': list(warnings), 'conflicts': []}})
+        'error': '', 'warnings': list(warnings), 'conflicts': []},
+        '$unset': {'lease_token': '', 'lease_until': ''}})
+    if not completed.matched_count:
+        raise HTTPException(409, 'Владение импортом потеряно; завершение не записано')
     return await get_import(db, doc['_id'])
 
 
@@ -187,31 +201,36 @@ async def apply(db, package_id, data, actor):
         raise HTTPException(409, 'Пакет изменился после предпросмотра')
     if doc['status'] == 'applied':
         return doc
-    collection = db[COLLECTIONS[doc['kind']]]
-    target = await collection.find_one({'_id': doc['target_id']})
-    if target and target.get('page_package_id') == doc['_id'] and target.get('page_package_state') == 'published':
-        return await finish_import(db, doc, target, actor, doc.get('warnings', []))
-    omitted = set(data.omit_relations)
-    if omitted - {r['id'] for r in doc['relations']}:
-        raise ValueError('Неизвестная исключаемая связь')
-    conflicts, warnings, resolved = await analyze(db, doc, omitted)
-    if conflicts:
-        raise HTTPException(409, '; '.join(conflicts))
-    if any(row.get('target') and not target for row, target in resolved):
-        raise HTTPException(409, 'Не все связи сопоставлены. Исключите отсутствующие связи или добавьте целевые страницы.')
-    # Атомарное владение заданием. После аварии повтор возможен по истечении lease.
+
+    # Истечение прежнего lease не разрешает перехват: старый worker мог ещё писать.
+    # После аварии claim освобождает оператор только после остановки прежнего worker.
     token = str(uuid.uuid4())
-    stamp = now()
-    claimed = await db.page_package_imports.find_one_and_update({'_id': doc['_id'], '$or': [
-        {'status': {'$in': ['preview', 'error']}}, {'status': 'applying', 'lease_until': {'$lt': stamp}}]},
+    claimed = await db.page_package_imports.find_one_and_update(
+        {'_id': doc['_id'], 'status': {'$in': ['preview', 'error']}},
         {'$set': {'status': 'applying', 'lease_token': token,
-                  'lease_until': (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()}}, return_document=ReturnDocument.AFTER)
+                  'claimed_at': now(), 'claimed_by': actor},
+         '$unset': {'lease_until': ''}}, return_document=ReturnDocument.AFTER)
     if not claimed:
         latest = await get_import(db, package_id)
         if latest['status'] == 'applied':
             return latest
-        raise HTTPException(409, 'Этот импорт уже выполняется. Дождитесь результата.')
+        raise HTTPException(409, 'Этот импорт уже выполняется. После аварии требуется освобождение оператором.')
+    doc = claimed
     try:
+        await owned_import_query(db, doc)
+        collection = db[COLLECTIONS[doc['kind']]]
+        target = await collection.find_one({'_id': doc['target_id']})
+        if target and target.get('page_package_id') == doc['_id'] and target.get('page_package_state') == 'published':
+            return await finish_import(db, doc, target, actor, doc.get('warnings', []))
+        omitted = set(data.omit_relations)
+        if omitted - {r['id'] for r in doc['relations']}:
+            raise ValueError('Неизвестная исключаемая связь')
+        conflicts, warnings, resolved = await analyze(db, doc, omitted)
+        if conflicts:
+            raise HTTPException(409, '; '.join(conflicts))
+        if any(row.get('target') and not target for row, target in resolved):
+            raise HTTPException(409, 'Не все связи сопоставлены. Исключите отсутствующие связи или добавьте целевые страницы.')
+        await owned_import_query(db, doc)
         reservation = {'_id': doc['entity_key'], 'package_id': doc['_id'], 'target_id': doc['target_id'], 'omit_relations': sorted(omitted)}
         await db.page_package_entities.update_one({'_id': doc['entity_key']}, {'$setOnInsert': reservation}, upsert=True)
         owner = await db.page_package_entities.find_one({'_id': doc['entity_key']})
@@ -223,7 +242,9 @@ async def apply(db, package_id, data, actor):
         package = unpack_page((storage() / doc['_id'] / 'package.zip').read_bytes())
         if sha256(json_bytes(package['manifest'])).hexdigest() != doc['hash']:
             raise ValueError('Файл пакета изменился после проверки')
+        await owned_import_query(db, doc)
         mapping = await copy_assets(db, doc, actor)
+        await owned_import_query(db, doc)
         page = remap_assets(doc['page'], mapping)
         collection = db[COLLECTIONS[doc['kind']]]
         target = await collection.find_one({'_id': doc['target_id']})
@@ -234,6 +255,7 @@ async def apply(db, package_id, data, actor):
               or target.get('status') != 'archived' or target.get('page_package_manual_change')
               or target.get('updated_at') != target.get('page_package_initial_updated_at')):
             raise HTTPException(409, 'Состояние созданной страницы изменено редактором')
+        await owned_import_query(db, doc)
         await apply_relations(db, doc, resolved, actor)
         # Согласование состава не должно задублировать ручные записи.
         if doc['kind'] == 'team':
@@ -246,6 +268,7 @@ async def apply(db, package_id, data, actor):
             from services.show_appearances import link_participant_cards
             linked = await link_participant_cards(db, await collection.find_one({'_id': doc['target_id']}))
             await collection.update_one({'_id': doc['target_id'], 'status': 'archived'}, {'$set': {'modules': linked['modules']}})
+        await owned_import_query(db, doc)
         published = await collection.find_one_and_update({
             '_id': doc['target_id'], 'status': 'archived', 'page_package_state': 'preparing',
             'updated_at': target['updated_at'], 'page_package_manual_change': {'$ne': True}}, {'$set': {
@@ -256,6 +279,8 @@ async def apply(db, package_id, data, actor):
         await finish_import(db, doc, published, actor, warnings)
     except Exception as exc:
         message = str(exc.detail) if isinstance(exc, HTTPException) else 'Импорт прерван; исправьте причину и повторите применение'
-        await db.page_package_imports.update_one({'_id': doc['_id'], 'lease_token': token}, {'$set': {'status': 'error', 'error': message}})
+        await db.page_package_imports.update_one(
+            {'_id': doc['_id'], 'status': 'applying', 'lease_token': token},
+            {'$set': {'status': 'error', 'error': message}, '$unset': {'lease_token': '', 'lease_until': ''}})
         raise
     return await get_import(db, package_id)

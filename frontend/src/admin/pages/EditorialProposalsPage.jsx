@@ -180,6 +180,7 @@ function ProposalCard({ item, onSaved }) {
     setBusy(true);
     try {
       await editorialProposalsApi.decide(item._id, {
+        ...(Number.isInteger(item.revision) ? { expected_revision: item.revision } : {}),
         decisions,
         ...(isNew && decisions.some((entry) => entry.decision === 'accept') ? { person } : {}),
       });

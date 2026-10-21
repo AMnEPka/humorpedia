@@ -1,4 +1,5 @@
 """Editorial proposal API tests using an in-memory Mongo-shaped fake."""
+import asyncio
 from copy import deepcopy
 from types import SimpleNamespace
 
@@ -106,6 +107,15 @@ class _Collection:
                 _set_path(doc, path, [])
                 items = _get_path(doc, path)
             items.append(deepcopy(value))
+        for path, value in update.get("$inc", {}).items():
+            _set_path(doc, path, (_get_path(doc, path) or 0) + value)
+        for path in update.get("$unset", {}):
+            parts = path.split(".")
+            target = doc
+            for part in parts[:-1]:
+                target = target.get(part, {}) if isinstance(target, dict) else {}
+            if isinstance(target, dict):
+                target.pop(parts[-1], None)
         return _Result(1, int(doc != before))
 
 
@@ -218,6 +228,21 @@ def test_accept_applies_only_after_editor_decision_and_audits(editorial_client):
     assert db.people.docs["p1"]["editorial_audit"][0]["old_value"] == "старое"
     assert result.json()["changes"][0]["status"] == "accepted"
     assert result.json()["status"] == "accepted"
+
+
+def test_stale_expected_revision_conflicts_before_person_side_effect(editorial_client):
+    client, db = editorial_client
+    card = client.post("/api/editorial-proposals", json=_proposal()).json()
+
+    response = client.post(f"/api/editorial-proposals/{card['id']}/decide", json={
+        "expected_revision": 999,
+        "decisions": [{"change_id": "change-1", "decision": "accept"}],
+    })
+
+    assert response.status_code == 409
+    assert db.people.docs["p1"]["facts"]["show"] == "старое"
+    saved = db.editorial_proposals.docs[card["id"]]
+    assert saved["changes"][0]["status"] == "pending"
 
 
 def test_old_value_conflict_does_not_overwrite_person(editorial_client):

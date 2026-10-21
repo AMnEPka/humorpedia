@@ -47,6 +47,71 @@ Worker нужно запускать из обычного PowerShell польз
 
 API: `/api/page-builder/drafts` (CRUD заготовок, assets, generate, cancel, accept, export), `/api/page-packages/capabilities`, `/preview`, `/{id}`, `/{id}/assets/{asset_id}`, `/{id}/apply`. Закрытые маршруты используют `require_editor`. Приватные ответы/изображения не кэшируются публично.
 
-Проверки: `pytest tests/test_page_builder.py tests/test_page_packages.py`; интеграция отдельной временной MongoDB — `PAGE_PACKAGE_INTEGRATION=1 pytest tests/test_page_package_import.py`; worker — `python -m unittest discover -s scripts/page-builder -p test_worker.py`; frontend — обычный Jest suite и `yarn build`.
+Проверки: `pytest tests/test_page_builder.py tests/test_page_packages.py`; интеграция отдельной временной MongoDB — `PAGE_PACKAGE_INTEGRATION=1 pytest tests/test_page_package_import.py tests/test_page_package_concurrency.py tests/test_page_package_recovery.py tests/test_workflow_recovery_integration.py`; operator recovery — `pytest tests/test_workflow_claim_recovery.py`; worker — `python -m unittest discover -s scripts/page-builder -p test_worker.py`; frontend — обычный Jest suite и `yarn build`.
 
 Статус конкретной реализации и проверок: [local-page-builder-status.md](tasks/local-page-builder-status.md).
+
+## Отчёт private storage (R7, без удаления)
+
+Из каталога `backend` в подготовленном окружении с подключением к нужной MongoDB:
+
+```sh
+python scripts/report_page_package_storage.py --db-name <имя-БД> --package-dir <закрытый-каталог-пакетов>
+```
+
+Подключение задаётся через `MONGO_URL` либо `MONGO_HOST` и штатные переменные авторизации;
+имя БД и каталог обязательны. Команда только читает `page_package_imports` и дерево файлов.
+Секреты в командную строку не передавать.
+
+JSON содержит `unreferenced_files`, `missing_package_files`, `unsafe_entries`, `invalid_records`.
+Файлы пакетов со статусом error/applying сохраняются в ожидаемом наборе: они нужны для повтора.
+Ссылки и Windows reparse points не обходятся; отсутствующий каталог не создаётся.
+Результат зависит от снимка БД и файлов: сверять при остановленных writers.
+Кандидат в `unreferenced_files` не доказывает, что файл можно удалить. Удаляющей команды в этом этапе нет.
+
+## Восстановление зависшего импорта и редакционного claim
+
+Решение R7 согласовано 21.10.2026: автоматического перехвата ZIP по времени нет.
+Статус applying занят, даже если у старой записи lease_until уже истёк.
+Второй apply получает 409, в том числе после публикации страницы до завершения журнала.
+Успех атомарно сохраняет applied и снимает token; обработанная ошибка переводит только собственный
+applying в error и снимает token, после чего обычный повтор разрешён.
+Поздняя ошибка не возвращает applied в error. Повтор после публикации завершает только журнал
+и сохраняет ручные правки страницы и связей.
+
+После необработанной остановки процесса claim остаётся. Для его освобождения:
+
+1. Остановить прежние backend workers и другие writers выбранного окружения; убедиться,
+   что процессы и их незавершённые операции больше не могут писать. Закрытие вкладки,
+   HTTP timeout и истёкший lease этого не доказывают. При обновлении со старого протокола
+   сначала остановить старые workers; смешанный запуск версий не поддерживается.
+2. В отдельном операторском runtime с тем же подключением к MongoDB, без HTTP worker,
+   выполнить dry-run из каталога backend. Подключение задаётся через окружение,
+   имя БД обязательно. Запускать только для заранее выбранной цели.
+3. Сверить ID, status и полный operational token из JSON. Для применения нужны
+   точный token, явное подтверждение остановки, оператор и причина.
+4. После успеха возобновить workers и повторить apply обычным API/админкой.
+   Если журнальная запись уже applied, освобождение не требуется.
+   Если версия/владелец изменились между чтением и записью, CAS отказывает без снятия нового claim.
+
+Пример для подготовленного операторского окружения (подставить значения):
+
+```sh
+python scripts/recover_workflow_claim.py --db-name ИМЯ_БД --kind page-package --id UUID_ИМПОРТА
+python scripts/recover_workflow_claim.py --db-name ИМЯ_БД --kind page-package --id UUID_ИМПОРТА --apply --expected-token ТОКЕН_ИЗ_ОТЧЁТА --confirm-worker-stopped --actor "Имя оператора" --reason "Причина остановки"
+```
+
+Без --apply команда только читает запись. Без полного набора подтверждений CLI отказывает
+до подключения к БД. Флаг --confirm-worker-stopped фиксирует заявление оператора:
+команда сама не определяет, остановлен ли старый процесс. Проверка token перед шагом
+не останавливает уже начатую запись; гарантия опирается на реальную остановку workers.
+
+Для редакционного предложения используются те же параметры с --kind editorial и ID предложения.
+ZIP переводится из applying в error; редакционный decision_claim снимается с увеличением revision.
+Старой карточке после этого нужен новый GET, иначе expected_revision даёт 409.
+В обоих случаях один атомарный CAS сохраняет claim_recovery_audit с previous_token, actor, reason и at.
+Страницы, файлы, memberships, appearances и резервирование page_package_entities команда не меняет.
+Внутренние токены и recovery audit не входят в HTTP-карточки; operational token доступен оператору в CLI.
+
+Удаление незавершённой страницы, резервации или private-файлов не заменяет этот протокол.
+Правила относятся к подготовленному коду R7; в этой задаче основной стенд и VPS не обновлялись.

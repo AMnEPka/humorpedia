@@ -44,7 +44,7 @@ function click(label) {
 
 test('sends edited acceptance and rejection as separate decisions', async () => {
   await renderProposal({
-    _id: 'proposal-1', kind: 'update_person', person_id: 'person-1', person_title: 'Комик', status: 'new',
+    _id: 'proposal-1', revision: 7, kind: 'update_person', person_id: 'person-1', person_title: 'Комик', status: 'new',
     changes: [
       { id: 'bio-1', field: 'bio.birth_place', old_value: '', proposed_value: 'Москва', status: 'pending', sources: [{ url: 'https://example.org/interview', title: 'Интервью' }] },
       { id: 'fact-1', field: 'facts.Профессия', old_value: 'Актёр', proposed_value: 'Комик', status: 'pending', sources: [{ url: 'https://example.org/profile', title: 'Профиль' }] },
@@ -63,6 +63,7 @@ test('sends edited acceptance and rejection as separate decisions', async () => 
   await click('Сохранить решения');
 
   expect(editorialProposalsApi.decide).toHaveBeenCalledWith('proposal-1', {
+    expected_revision: 7,
     decisions: [
       { change_id: 'bio-1', decision: 'accept', edited_value: 'Санкт-Петербург' },
       { change_id: 'fact-1', decision: 'reject' },

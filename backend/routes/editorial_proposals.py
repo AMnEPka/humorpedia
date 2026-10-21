@@ -16,6 +16,7 @@ from models.editorial_proposal import (
     EditorialDecisionRequest, EditorialPersonIdentity, EditorialProposalCreate, utc_iso,
 )
 from services.crud import create_content
+from services import editorial_decisions
 from services.editorial_quality import missing_candidate_requirements
 from services.memberships import PersonLookup, name_key
 from utils.auth import require_editor
@@ -33,6 +34,9 @@ MISSING = object()
 
 def _wire(document: dict) -> dict:
     result = deepcopy(document)
+    result.pop("decision_claim", None)
+    result.pop("claim_recovery_audit", None)
+    result["revision"] = editorial_decisions.proposal_revision(result)
     result["id"] = str(result.get("_id") or result.get("id") or "")
     if result.get("kind") == "new_person" and not result.get("created_person_id"):
         identity = result.get("person_identity") or {}
@@ -188,6 +192,7 @@ async def create_proposal(db, payload: EditorialProposalCreate | dict, actor: st
         **data,
         "changes": [{**change, "status": "pending"} for change in data["changes"]],
         "status": "new",
+        "revision": 0,
         "fingerprint": fingerprint,
         "created_by": actor,
         "created_at": now,
@@ -246,14 +251,27 @@ async def _persist_proposal_progress(db, proposal: dict) -> None:
     else:
         proposal["status"] = "conflict"
     proposal["updated_at"] = utc_iso()
-    await db.editorial_proposals.update_one(
-        {"_id": proposal["_id"]},
-        {"$set": {key: value for key, value in proposal.items() if key != "_id"}},
-    )
+    await editorial_decisions.persist_progress(db, proposal)
 
 
 def _proposed_value(change: dict, decision: dict):
     return decision.get("edited_value") if "edited_value" in decision else change.get("proposed_value")
+
+
+def _ensure_applied_person_value(person: dict, proposal: dict, change: dict, value) -> bool:
+    """Проверить, что повтор совпадает с единственной сохранённой записью аудита."""
+    idempotency_key = f"{proposal['_id']}:{change['id']}"
+    if idempotency_key not in person.get("_editorial_change_ids", []):
+        return False
+    evidence = [
+        row for row in person.get("editorial_audit", [])
+        if row.get("proposal_id") == proposal["_id"] and row.get("change_id") == change["id"]
+    ]
+    if len(evidence) != 1 or "value" not in evidence[0]:
+        raise HTTPException(409, "Изменение уже применено, но его исходное значение нельзя подтвердить")
+    if evidence[0]["value"] != value:
+        raise HTTPException(409, "Изменение уже применено с другим значением")
+    return True
 
 
 async def _apply_person_value(db, proposal: dict, change: dict, value, actor: str) -> bool:
@@ -265,7 +283,7 @@ async def _apply_person_value(db, proposal: dict, change: dict, value, actor: st
     idempotency_key = f"{proposal['_id']}:{change['id']}"
     applied_ids = person.get("_editorial_change_ids", [])
     if idempotency_key in applied_ids:
-        return True
+        return _ensure_applied_person_value(person, proposal, change, value)
 
     plan, conflict_reason = _person_update_plan(person, change, value)
     if conflict_reason:
@@ -426,6 +444,20 @@ async def decide_editorial_proposal(
     if not proposal:
         raise HTTPException(404, "Предложение не найдено")
     actor = str(user.get("_id") or user.get("id") or "editor")
+    revision = editorial_decisions.ensure_expected_revision(proposal, data.expected_revision)
+    claim = await editorial_decisions.claim_decision(db, proposal, actor, revision)
+    # Сохраняем снимок, по которому получен claim; повторное чтение могло бы
+    # подменить владельца на другой запрос.
+    proposal["revision"] = revision
+    proposal["decision_claim"] = claim
+    try:
+        return await _decide_claimed_proposal(db, proposal, data, actor)
+    finally:
+        await editorial_decisions.release_decision(db, proposal_id, claim["token"])
+
+
+async def _decide_claimed_proposal(db, proposal: dict, data: EditorialDecisionRequest, actor: str):
+    await editorial_decisions.ensure_claim_owned(db, proposal)
     changes = {change["id"]: change for change in proposal["changes"]}
     decisions = {decision.change_id: decision.model_dump(exclude_unset=True) for decision in data.decisions}
     if len(decisions) != len(data.decisions):
@@ -481,11 +513,16 @@ async def decide_editorial_proposal(
         applied_ids = person.get("_editorial_change_ids", [])
         for change_id, decision in decisions.items():
             change = changes[change_id]
-            if decision["decision"] != "accept" or change["status"] in {"accepted", "rejected"}:
+            if change["status"] in {"accepted", "rejected"}:
                 continue
+            value = _proposed_value(change, decision) if decision["decision"] == "accept" else None
             if f"{proposal['_id']}:{change_id}" in applied_ids:
+                if decision["decision"] != "accept":
+                    raise HTTPException(409, "Изменение уже применено и не может быть отклонено")
+                _ensure_applied_person_value(person, proposal, change, value)
                 continue
-            value = _proposed_value(change, decision)
+            if decision["decision"] != "accept":
+                continue
             if change["field"].startswith("appearance."):
                 _prepared, conflict_reason = await _validate_appearance(db, proposal, change, value)
                 if conflict_reason:

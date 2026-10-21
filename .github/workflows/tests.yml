@@ -70,7 +70,10 @@ jobs:
             backend/requirements.txt
             backend/requirements-dev.txt
       - run: pip install -r requirements.txt -r requirements-dev.txt
-      - run: pytest -q tests/test_page_package_import.py tests/test_season_write_integration.py tests/test_readiness_integration.py -rs
+      - run: >-
+          pytest -q tests/test_page_package_import.py tests/test_page_package_concurrency.py
+          tests/test_page_package_recovery.py tests/test_workflow_recovery_integration.py
+          tests/test_season_write_integration.py tests/test_readiness_integration.py -rs
       - run: python -m unittest discover -s ../scripts/vps-test -p test_restore_files.py
 
   frontend:

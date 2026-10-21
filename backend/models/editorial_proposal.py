@@ -81,6 +81,7 @@ class EditorialPersonIdentity(BaseModel):
 class EditorialDecisionRequest(BaseModel):
     decisions: list[EditorialDecision] = Field(min_length=1, max_length=100)
     person: Optional[EditorialPersonIdentity] = None
+    expected_revision: Optional[int] = Field(default=None, ge=0)
 
 
 def utc_iso() -> str:
