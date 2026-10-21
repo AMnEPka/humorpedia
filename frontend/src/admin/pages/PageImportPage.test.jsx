@@ -43,6 +43,24 @@ function button(label) {
   return found;
 }
 
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
+async function chooseZip(name) {
+  const input = host.querySelector('input[type="file"]');
+  const file = new File(['package'], name, { type: 'application/zip' });
+  Object.defineProperty(input, 'files', { configurable: true, value: [file] });
+  await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })));
+  return file;
+}
+
 test('previews an uploaded package without creating a page', async () => {
   await render();
   const input = host.querySelector('input[type="file"]');
@@ -93,4 +111,91 @@ test('shows recoverable import errors and allows retrying the same reviewed pack
   expect(pagePackagesApi.apply).toHaveBeenCalledTimes(2);
   expect(pagePackagesApi.apply).toHaveBeenLastCalledWith('package-1', { hash: 'hash-1', reviewed: true, omit_relations: [] });
   expect(host.textContent).toContain('Страница импортирована');
+});
+
+test('locks ZIP selection until preview completes, then allows a new package', async () => {
+  const pending = deferred();
+  const secondPreview = { ...preview, id: 'package-2', hash: 'hash-2', page: { ...preview.page, title: 'Второй комик' } };
+  pagePackagesApi.preview.mockReturnValueOnce(pending.promise).mockResolvedValueOnce({ data: secondPreview });
+  await render();
+  await chooseZip('a.zip');
+  await act(async () => button('Проверить архив').click());
+
+  const input = host.querySelector('input[type="file"]');
+  expect(input.disabled).toBe(true);
+  expect(pagePackagesApi.apply).not.toHaveBeenCalled();
+  await act(async () => pending.resolve({ data: preview }));
+  expect(input.disabled).toBe(false);
+
+  const secondFile = await chooseZip('b.zip');
+  expect(host.textContent).not.toContain('Предпросмотр страницы:');
+  await act(async () => button('Проверить архив').click());
+  expect(pagePackagesApi.preview).toHaveBeenLastCalledWith(secondFile);
+  expect(host.textContent).toContain('Второй комик');
+  expect(button('Создать и опубликовать').disabled).toBe(true);
+  await act(async () => host.querySelector('input[aria-label="Я проверил страницу и связи"]').click());
+  await act(async () => button('Создать и опубликовать').click());
+  expect(pagePackagesApi.apply).toHaveBeenCalledWith('package-2', { hash: 'hash-2', reviewed: true, omit_relations: [] });
+});
+
+test('unlocks ZIP selection after a failed preview', async () => {
+  const pending = deferred();
+  pagePackagesApi.preview.mockReturnValueOnce(pending.promise);
+  await render();
+  await chooseZip('a.zip');
+  await act(async () => button('Проверить архив').click());
+  const input = host.querySelector('input[type="file"]');
+  expect(input.disabled).toBe(true);
+
+  await act(async () => pending.reject(new Error('Preview failed')));
+  expect(input.disabled).toBe(false);
+  expect(host.querySelector('[role="alert"]').textContent).toContain('Не удалось проверить архив');
+  const secondFile = await chooseZip('b.zip');
+  await act(async () => button('Проверить архив').click());
+  expect(pagePackagesApi.preview).toHaveBeenLastCalledWith(secondFile);
+  expect(host.textContent).toContain('Предпросмотр страницы: Комик');
+});
+
+test('locks ZIP selection while applying the reviewed package', async () => {
+  const pending = deferred();
+  pagePackagesApi.apply.mockReturnValueOnce(pending.promise);
+  await render();
+  await chooseZip('a.zip');
+  await act(async () => button('Проверить архив').click());
+  await act(async () => host.querySelector('input[aria-label="Я проверил страницу и связи"]').click());
+  await act(async () => button('Создать и опубликовать').click());
+  expect(host.querySelector('input[type="file"]').disabled).toBe(true);
+
+  await act(async () => pending.resolve({ data: { ...preview, status: 'applied', result: { edit_url: '/admin/people/page-1' } } }));
+  expect(host.textContent).toContain('Страница импортирована');
+  expect(host.querySelector('input[type="file"]')).toBeNull();
+  expect(host.querySelector('a[href="/admin/people/page-1"]')).not.toBeNull();
+});
+
+test.each(['success', 'failure'])('locks ZIP selection through apply recovery %s, then allows another ZIP', async (outcome) => {
+  const applying = deferred();
+  const recovery = deferred();
+  pagePackagesApi.apply.mockReturnValueOnce(applying.promise);
+  pagePackagesApi.getPreview.mockReturnValueOnce(recovery.promise);
+  await render();
+  await chooseZip('a.zip');
+  await act(async () => button('Проверить архив').click());
+  await act(async () => host.querySelector('input[aria-label="Я проверил страницу и связи"]').click());
+  await act(async () => button('Создать и опубликовать').click());
+
+  await act(async () => applying.reject(new Error('Apply failed')));
+  expect(pagePackagesApi.getPreview).toHaveBeenCalledWith('package-1');
+  const input = host.querySelector('input[type="file"]');
+  expect(input.disabled).toBe(true);
+  await act(async () => {
+    if (outcome === 'success') recovery.resolve({ data: { ...preview, status: 'error', error: 'Повторите импорт' } });
+    else recovery.reject(new Error('Recovery failed'));
+  });
+  expect(input.disabled).toBe(false);
+  const secondFile = await chooseZip('b.zip');
+  expect(host.querySelector('input[aria-label="Я проверил страницу и связи"]')).toBeNull();
+  await act(async () => button('Проверить архив').click());
+  expect(pagePackagesApi.preview).toHaveBeenLastCalledWith(secondFile);
+  expect(button('Создать и опубликовать').disabled).toBe(true);
+  expect(pagePackagesApi.apply).toHaveBeenCalledTimes(1);
 });
