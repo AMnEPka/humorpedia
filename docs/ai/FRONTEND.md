@@ -67,8 +67,10 @@ admin/                         АДМИНКА
                                группы: authApi, contentApi, statsApi, usersApi, tagsApi, commentsApi, correctionSuggestionsApi, mediaApi, templatesApi, sectionsApi; getErrorMessage()
   components/
     AdminLayout.jsx            сайдбар навигации (предложения правок — editorOnly; пользователи, БД и настройки рекомендаций — adminOnly)
-    ModuleEditor.jsx           конструктор модулей страницы (dnd-kit), 1104 строки
-    SeasonDataEditor.jsx       редактор season_data: стадии/игры/команды/баллы/конкурсы, копирование, dnd — 2665 строк, самый сложный компонент
+    ModuleEditor.jsx           координатор списка модулей, добавления и dnd-kit; props modules/onChange прежние
+    module-editor/             ModuleEditDialog с локальным draft, ModuleFieldsEditor и конкретные формы; operations.js для JSON/table/timeline/DnD
+    SeasonDataEditor.jsx       координатор season_data, раскрытия, callbacks и подтверждения шаблона
+    season-editor/             StageEditor → GameEditor → TeamResultEditor; operations.js для immutable преобразований и identity
   pages/RelatedContentSettingsPage.jsx  глобальные настройки «Читайте также»: включение, лимит, типы результатов и страницы показа
     RichTextEditor.jsx         TipTap (таблицы, цвета, выравнивание) + LinkInserter
     LinkInserter.jsx           поиск контента и вставка внутренней ссылки (/content/search-for-links)

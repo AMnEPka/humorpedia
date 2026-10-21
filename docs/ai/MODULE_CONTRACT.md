@@ -1,6 +1,6 @@
 # Контракт модулей страниц
 
-Обновлено 2026-10-21: R9; исходный контракт 2026-09-18, этап 0 `legacy-modules-gap-plan.md`, ветка `codex/module-contract`.
+Обновлено 2026-10-21: R9/R10; исходный контракт 2026-09-18, этап 0 `legacy-modules-gap-plan.md`, ветка `codex/module-contract`.
 
 Канонический реестр: `backend/models/module_contract.json`. Backend выдаёт его через
 `GET /api/templates/modules/types`; frontend использует копию `frontend/src/moduleContract.json`.
@@ -11,6 +11,10 @@
 сохранение старых импортированных полей и метаданных важнее введения несовместимой строгой валидации
 в этом этапе. Документирующие схемы `GalleryData`, `TimelineData`, `TableData`, `ParticipantsData`
 и `TVAppearancesData` приведены к фактическому формату форм.
+
+## Редактор R10
+
+ModuleEditor координирует список и DnD; module-editor/ModuleEditDialog хранит отдельный draft, а ModuleFieldsEditor выбирает прежние формы. Неизвестные совместимые data сохраняются. Закрытие диалога, включая Escape, сохраняет draft через прежний onChange. Table headers нормализуются внутри draft, timeline items переводится в events только при правке. ModuleDataFields остаётся fallback; реестр и формат API не менялись. [Приёмка и ограничения R10](tasks/r10-editor-decomposition-2026-10-21.md).
 
 ## Типы и владельцы
 

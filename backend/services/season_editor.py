@@ -17,15 +17,18 @@ def season_editor_data(season):
     return data
 
 
-def _select(raw, old, used, *, game=False):
+def _select(raw, old, used, *, game=False, reserved=None):
     marker = raw.get('_canonical_id')
-    if marker:
+    if marker is not None and marker != '':
+        if not isinstance(marker, str):
+            raise HTTPException(422, 'Некорректный или повторный идентификатор этапа/игры')
         matches = [item for item in old if item.get('id') == marker]
         if len(matches) != 1 or marker in used:
             raise HTTPException(422, 'Некорректный или повторный идентификатор этапа/игры')
         return matches[0]
     # Older clients lack sidecars. Match only unambiguous identities; never use position.
-    candidates = [item for item in old if item.get('id') not in used]
+    reserved = reserved or set()
+    candidates = [item for item in old if item.get('id') not in used and item.get('id') not in reserved]
     if game and raw.get('id'):
         found = [item for item in candidates if (item.get('legacy_id') or item.get('id')) == raw['id']]
         if len(found) == 1:
@@ -72,6 +75,17 @@ def apply_editor_update(season, data, lookup):
             raise HTTPException(422, 'Некорректная игра сезона')
         raw_games.append(deepcopy(games))
     raw_stages = deepcopy(raw_stages)
+    # Reserve explicit identities before name/legacy fallback can match an earlier new copy.
+    reserved_stage_ids = {
+        stage['_canonical_id'] for stage in raw_stages
+        if isinstance(stage.get('_canonical_id'), str) and stage['_canonical_id']
+    }
+    reserved_game_ids = {
+        game['_canonical_id']
+        for games in raw_games
+        for game in games
+        if isinstance(game.get('_canonical_id'), str) and game['_canonical_id']
+    }
     for stage in source.get('stages') or []:
         stage.pop('_canonical_id', None)
         for game in stage.get('games') or []:
@@ -97,13 +111,13 @@ def apply_editor_update(season, data, lookup):
     all_games = [game for stage in season.get('stages') or [] for game in stage.get('games') or []]
     stages = []
     for raw, new_stage, games in zip(raw_stages, converted['stages'], raw_games):
-        original = _select(raw, season.get('stages') or [], used_stages)
+        original = _select(raw, season.get('stages') or [], used_stages, reserved=reserved_stage_ids)
         stage_id = original['id'] if original else str(uuid.uuid4())
         used_stages.add(stage_id)
         merged = {**deepcopy(original or {}), **new_stage, 'id': stage_id}
         merged_games = []
         for raw_game, new_game in zip(games, new_stage['games']):
-            old_game = _select(raw_game, all_games, used_games, game=True)
+            old_game = _select(raw_game, all_games, used_games, game=True, reserved=reserved_game_ids)
             game_id = old_game['id'] if old_game else str(uuid.uuid4())
             used_games.add(game_id)
             new_game['results'] = _retain_references(new_game['results'], (old_game or {}).get('results') or [], all_old_refs)

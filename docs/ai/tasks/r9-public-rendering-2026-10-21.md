@@ -1,6 +1,6 @@
 # R9: публичный рендеринг
 
-Обновлено: 2026-10-21. Ветка codex/local-page-builder, HEAD до изменений R9: b67aacb73da477863ea1a739068ef4308d41ad63. Статус: принято; подготовлено к отдельной публикации по поручению пользователя.
+Обновлено: 2026-10-21. Ветка codex/local-page-builder, HEAD до изменений R9: b67aacb73da477863ea1a739068ef4308d41ad63. Статус: опубликовано отдельным коммитом df6e0191938a8b484579fb3b4aa92b1efe74fe9b. Итоговый CI после исправлений helper/browser smoke — [39655534921](https://github.com/AMnEPka/humorpedia/actions/runs/39655534921), все пять jobs прошли на 43d61dd. [Причины и исправления CI](ci-workflow-recovery-2026-10-21.md).
 
 CI и R8 опубликованы раздельно: 5d369dd и b67aacb. [GitHub Actions на итоговом SHA](https://github.com/AMnEPka/humorpedia/actions/runs/39611516778) завершился успешно: backend, frontend, mongodb-integration, windows-tools, browser-smoke.
 

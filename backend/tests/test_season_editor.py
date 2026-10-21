@@ -77,3 +77,73 @@ def test_editor_does_not_rebind_existing_canonical_team_when_slug_lookup_is_ambi
     assert saved['teams'][0]['team_id']=='historical-id'
     assert saved['winners'][0]['team_id']=='historical-id'
     assert saved['stages'][0]['games'][0]['results'][0]['team_id']=='historical-id'
+
+
+def test_new_copy_before_same_name_canonical_copy_gets_new_identity():
+    season = fixture_season()
+    existing_copy = deepcopy(season['stages'][0]['games'][0])
+    existing_copy.update({
+        'id': 'canonical-copy',
+        'legacy_id': None,
+        'had_legacy_id': False,
+        'name': 'One (копия)',
+        'extra': {'origin': 'kept'},
+        'results': [{'person_id': 'person', 'team_id': None, 'name': 'Person', 'extra': {'note': 'kept'}}],
+    })
+    season['stages'][0]['games'].append(existing_copy)
+
+    data = season_editor_data(season)
+    existing_raw = data['stages'][0]['games'][1]
+    new_copy = deepcopy(existing_raw)
+    new_copy.pop('_canonical_id')
+    new_copy.pop('id', None)
+    data['stages'][0]['games'].insert(1, new_copy)
+
+    saved = apply_editor_update(season, data, TeamLookup([]))
+    games = saved['stages'][0]['games']
+    original_game = next(game for game in games if game['name'] == 'One')
+    copies = [game for game in games if game['name'] == 'One (копия)']
+
+    assert original_game['id'] == season['stages'][0]['games'][0]['id']
+    assert len(copies) == 2
+    assert copies[1]['id'] == 'canonical-copy'
+    assert copies[0]['id'] != 'canonical-copy'
+    assert copies[1]['extra'] == {'origin': 'kept'}
+    assert copies[1]['results'][0]['person_id'] == 'person'
+    assert copies[1]['results'][0]['extra'] == {'note': 'kept'}
+
+
+def test_new_same_name_stage_cannot_claim_a_later_explicit_stage_id():
+    season = fixture_season()
+    season['stages'][0]['private_extension'] = {'keep': True}
+    before = deepcopy(season)
+    data = season_editor_data(season)
+    data['stages'].insert(0, {'name': data['stages'][0]['name'], 'games': []})
+
+    saved = apply_editor_update(season, data, TeamLookup([]))
+    assert saved['stages'][0]['id'] not in {stage['id'] for stage in season['stages']}
+    assert saved['stages'][1]['id'] == season['stages'][0]['id']
+    assert saved['stages'][1]['private_extension'] == {'keep': True}
+    assert saved['stages'][1]['games'][0]['id'] == season['stages'][0]['games'][0]['id']
+    assert season == before
+
+
+@pytest.mark.parametrize('marker', ['foreign', ['foreign'], {'id': 'foreign'}])
+@pytest.mark.parametrize('kind', ['stage', 'game'])
+def test_invalid_sidecars_remain_422_while_reserving_ids(marker, kind):
+    season = fixture_season()
+    data = season_editor_data(season)
+    target = data['stages'][0] if kind == 'stage' else data['stages'][0]['games'][0]
+    target['_canonical_id'] = marker
+    with pytest.raises(HTTPException) as error:
+        apply_editor_update(season, data, TeamLookup([]))
+    assert error.value.status_code == 422
+
+
+def test_duplicate_explicit_game_id_is_still_rejected():
+    season = fixture_season()
+    data = season_editor_data(season)
+    data['stages'][1]['games'].append(deepcopy(data['stages'][0]['games'][0]))
+    with pytest.raises(HTTPException) as error:
+        apply_editor_update(season, data, TeamLookup([]))
+    assert error.value.status_code == 422

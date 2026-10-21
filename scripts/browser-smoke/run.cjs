@@ -95,6 +95,7 @@ async function main() {
     await anonymous.close();
     await require('./seasons.cjs')({ browser, context, base, output, status });
     await require('./modules.cjs')({ browser, context, base, output, status });
+    await require('./editors.cjs')({ context, base, output, status });
     assert.deepEqual(browserErrors, [], 'В браузере возникли необработанные ошибки');
     console.log('PASS: анонимный поиск, карточка и возврат назад');
     console.log('Browser smoke passed; artifacts: ' + output);
