@@ -123,3 +123,31 @@
 - На Windows: `scripts/page-builder/test_worker.py` — **16 passed**; `scripts/test-dev-workflow.ps1` — exit 0 на изолированных Git-fixture; module contract `--check` — exit 0.
 - Живой `dev-status.ps1`: frontend/backend доступны, Mongo healthy, mount указывает на этот checkout, зависимости совпадают с последним успешным sync. Live OpenAPI содержит поле версии в обеих моделях; чтение сезона 2018 через frontend proxy возвращает `season_data` и `updated_at`. Ручное UI-сохранение сезона, login/logout/истёкшая сессия и браузерный CI smoke не выполнялись.
 - Изменения 24СМИ/других источников сохранены. Полные тесты включают их текущие файлы; результаты не являются отдельной приёмкой параллельной функциональности. Следующий незакрытый пункт R4 — браузерный smoke на изолированных данных и запуск hosted pipeline после публикации.
+
+## Публикация R2–R4 и продолжение browser smoke
+
+21.10.2026 три пакета с документацией опубликованы в `origin/codex/local-page-builder`:
+`e050fd7` (R2), `5c5b945` (R3), `a6a5d5e` (R4). `ls-remote` подтвердил полный удалённый HEAD
+`a6a5d5e78503a862d3cb0657f8ed06a471f7b435`. Общие `admin/utils/api.js` и `docs/ai/API.md`
+разделены по фрагментам; все изменения импорта источников остались вне этих коммитов.
+
+Экспорт точного HEAD без dirty-файлов проверен отдельно в `/tmp` существующих контейнеров:
+backend с ZIP/season integration — **878 passed**, frontend — **242 passed / 45 suites**,
+строгий `CI=true` production build — exit 0. Отличие от общего дерева выше — параллельные файлы импорта.
+
+Следующий пакет `scripts/browser-smoke` и CI job выделен в отдельный коммит с документацией поверх `a6a5d5e`:
+
+- Настоящий Chromium/Chrome прошёл вход, создание/редактуру синтетической заготовки, iframe preview,
+  скачивание ZIP, загрузку file input, preflight без публикации, apply, обычный редактор с сохранением,
+  публичный preview и анонимный поиск → карточка → назад. Codex worker в этом тесте не нужен.
+- Используется production build `a6a5d5e` и экспорт того же HEAD backend, без параллельных файлов.
+  Один временный backend на loopback 18001 использует случайную `humorpedia_browser_test_*` БД
+  и отдельные uploads/private-каталоги. Основной стек не перезапускался.
+- Отказ запуска на общей БД проверен до импорта приложения; после штатного завершения чтение списка Mongo
+  подтвердило **0** оставшихся browser test БД, временных контейнеров также нет.
+- Node/Python/PowerShell syntax и YAML нового job проверены. Playwright **1.62.1** подтверждён npm registry;
+  использован уже доступный runtime и установленный Chrome. Зависимости приложения не менялись.
+- Повторный запуск и границы проверки — [README browser smoke](../../../scripts/browser-smoke/README.md).
+  Реальный системный file picker, истёкшая сессия и hosted GitHub Actions этим прогоном не проверены.
+  Открытого PR у ветки нет; существующий workflow запускается только для PR и push в `main`, поэтому
+  публикация ветки сама по себе hosted pipeline не запустила.

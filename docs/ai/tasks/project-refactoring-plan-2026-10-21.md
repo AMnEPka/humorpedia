@@ -297,7 +297,7 @@ flowchart LR
 
 - [x] Добавлен `mongodb-integration` с Mongo healthcheck, `PAGE_PACKAGE_INTEGRATION=1` и `SEASON_WRITE_INTEGRATION=1`. Очистка ограничена собственными `humorpedia_package_test_*` / `humorpedia_season_test_*` базами; обе интеграции реально выполнены локально.
 - [x] Добавлен Windows job для worker и dev-workflow, frontend build с `CI=true`; существующая проверка module contract сохранена. Четыре предупреждения hooks устранены адресно; найденный цикл выбора команды без списка сезона воспроизведён и исправлен. Локальные worker (16 тестов), PowerShell dev-workflow, полный frontend и строгая сборка прошли.
-- [ ] Добавить минимальный браузерный smoke: поиск → карточка → назад; редактура → preview; ZIP → preflight → apply → обычная форма. Использовать изолированные данные, не общую локальную базу.
+- [x] Добавлен browser smoke `scripts/browser-smoke`: поиск → карточка → назад; редактура → iframe preview; настоящий ZIP → preflight → apply → обычная форма и публичный preview. Локально пройден в Chromium/Chrome на отдельной временной БД с production build точного HEAD; БД и контейнер после остановки отсутствуют. CI job подготовлен, hosted run ещё не выполнен. Зависимости приложения не менялись; Playwright 1.62.1 — отдельный тестовый инструмент.
 - [ ] Приёмка: чистый checkout проходит полный pipeline на GitHub Actions. Локальные проверки текущего общего дерева прошли; hosted pipeline ещё не запускался. Не считать Jest проверкой файлового picker и nginx.
 
 ### R5. Подготовить эксплуатацию нового импорта
