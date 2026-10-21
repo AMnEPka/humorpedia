@@ -281,6 +281,17 @@ export const editorialProposalsApi = {
   decide: (id, data) => api.post(`/editorial-proposals/${id}/decide`, data),
 };
 
+export const editorialImportsApi = {
+  list: (params) => api.get('/editorial-imports', { params }),
+  importUrls: (urls) => api.post('/editorial-imports/import', { urls }),
+  scan: (data = { days: 3, limit: 100 }) => api.post('/editorial-imports/scan', data),
+  getSettings: (sourceId = '24smi') => api.get('/editorial-imports/settings', { params: { source_id: sourceId } }),
+  updateSettings: (data) => api.put('/editorial-imports/settings', data),
+  update: (id, data) => api.patch(`/editorial-imports/${id}`, data),
+  approve: (id, data) => api.post(`/editorial-imports/${id}/approve`, data),
+  reject: (id, data) => api.post(`/editorial-imports/${id}/reject`, data),
+};
+
 // Local page builder and reviewed page-package import.
 export const pageBuilderApi = {
   capabilities: () => api.get('/page-packages/capabilities'),

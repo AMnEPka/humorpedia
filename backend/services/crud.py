@@ -16,6 +16,7 @@ from services.tags import tag_service
 from services.content_visibility import require_visible, visible_query
 
 logger = logging.getLogger(__name__)
+_NO_EXPECTED_VERSION = object()
 
 
 # ---------------------------------------------------------------------------
@@ -328,6 +329,7 @@ async def update_content(
     not_found_msg: str,
     *,
     published_status=None,
+    expected_updated_at=_NO_EXPECTED_VERSION,
 ):
     """Universal update handler.
 
@@ -340,6 +342,8 @@ async def update_content(
     current_item = await collection.find_one({"_id": item_id})
     if not current_item:
         raise HTTPException(status_code=404, detail=not_found_msg)
+    if expected_updated_at is not _NO_EXPECTED_VERSION and current_item.get('updated_at') != expected_updated_at:
+        raise HTTPException(status_code=409, detail='Страница изменилась после подготовки предложения')
 
     old_primary_tag = current_item.get("primary_tag")
 
@@ -395,8 +399,13 @@ async def update_content(
     elif "tags" in update_data:
         await tag_service.sync_tags(update_data["tags"])
 
-    result = await collection.update_one({"_id": item_id}, {"$set": update_data})
+    write_query = {"_id": item_id}
+    if expected_updated_at is not _NO_EXPECTED_VERSION:
+        write_query['updated_at'] = expected_updated_at
+    result = await collection.update_one(write_query, {"$set": update_data})
     if result.matched_count == 0:
+        if expected_updated_at is not _NO_EXPECTED_VERSION:
+            raise HTTPException(status_code=409, detail='Страница изменилась во время утверждения')
         raise HTTPException(status_code=404, detail=not_found_msg)
 
     # Update tags everywhere if primary_tag changed

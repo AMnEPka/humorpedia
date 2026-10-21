@@ -11,6 +11,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 import os
+import asyncio
 import logging
 import shutil
 from pathlib import Path
@@ -89,6 +90,8 @@ async def lifespan(app: FastAPI):
     # Запускаем батчевый счётчик просмотров
     from services.views_counter import views_counter
     await views_counter.start(db)
+    from services.source_import_scheduler import scheduler_loop, stop_tasks
+    source_scheduler = asyncio.create_task(scheduler_loop(db), name='source-import-scheduler')
 
     db_name = os.environ.get('DB_NAME', 'humorpedia')
     logger.info(f"Connected to MongoDB: {db_name}")
@@ -97,6 +100,9 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down...")
+    source_scheduler.cancel()
+    await asyncio.gather(source_scheduler, return_exceptions=True)
+    await stop_tasks()
     await views_counter.stop()
     await close_db()
 
@@ -231,6 +237,8 @@ async def create_indexes(db):
         # Editor-reviewed research proposals; fingerprint makes repeated imports idempotent.
         await _ensure_index(db.editorial_proposals, "fingerprint", unique=True)
         await _ensure_index(db.editorial_proposals, [("status", 1), ("updated_at", -1)])
+        await _ensure_index(db.editorial_imports, [("status", 1), ("updated_at", -1)])
+        await _ensure_index(db.editorial_imports, "source.url")
 
         # Polls: one immutable vote per user and poll. Result counts are derived
         # from this collection, so retries and concurrent requests stay safe.
@@ -377,6 +385,7 @@ from routes.ratings import router as ratings_router
 from routes.related_news import router as related_news_router
 from routes.correction_suggestions import router as correction_suggestions_router
 from routes.editorial_proposals import router as editorial_proposals_router
+from routes.editorial_imports import router as editorial_imports_router
 from routes.page_packages import router as page_packages_router
 from services.page_builder import enabled as page_builder_enabled
 
@@ -410,6 +419,7 @@ api_router.include_router(ratings_router)
 api_router.include_router(related_news_router)
 api_router.include_router(correction_suggestions_router)
 api_router.include_router(editorial_proposals_router)
+api_router.include_router(editorial_imports_router)
 api_router.include_router(page_packages_router)
 if page_builder_enabled():
     from routes.page_builder import router as page_builder_router
