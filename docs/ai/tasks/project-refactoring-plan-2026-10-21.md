@@ -76,6 +76,8 @@ GET /api/content/wiki/hidden             → 200, status=archived
 
 ### F2. P1: очередь запросов при отказе refresh остаётся незавершённой
 
+Исправлена очередь refresh, добавлены шесть регрессионных тестов. Общий API base и redirect lookup остаются отдельной частью R2. Ниже — исходное воспроизведение.
+
 В [admin/utils/api.js](../../../frontend/src/admin/utils/api.js), строки 81–116, ожидающие запросы имеют только callback успеха. При неудаче refresh первый запрос отклоняется, остальные не получают ни результат, ни ошибку; очередь не очищается. Синтетический запуск текущего interceptor с двумя 401 дал `first=rejected, second=pending`. Редирект на login выполняется и обычно маскирует проблему, но не делает транспортный контракт корректным. Повторный запрос подписчика также не помечается `_retry`.
 
 **Следствие:** нужен один общий результат refresh для всех ожидающих запросов, ограничение повтора и тесты отказа/сети/повторного 401. Одновременно есть отдельный обход общего API-клиента: [SectionDetailPage.jsx](../../../frontend/src/public/pages/SectionDetailPage.jsx), строки 15, 118, использует только build-time URL для redirect lookup, тогда как обычный клиент поддерживает `window.__BACKEND_URL__` и proxy. Сбой на VPS в этом аудите не воспроизводился.
@@ -269,7 +271,7 @@ flowchart LR
 **Файлы:** `frontend/src/admin/utils/api.js`, `public/utils/api.js`, `utils/media.js`, `public/pages/SectionDetailPage.jsx`. Новые: `utils/apiBase.js`, `admin/utils/api.test.js`.
 
 - [ ] Вынести `getApiBase()` с текущим порядком proxy → runtime config → build-time config → fallback; согласованно использовать при redirect lookup и работе с media.
-- [ ] Заменить очередь callback одним разделяемым Promise refresh либо очередью с resolve/reject. Любой ожидающий запрос завершается, все повторные запросы помечаются `_retry`, новый refresh после отказа возможен без старых подписчиков.
+- [x] Заменить очередь callback одним разделяемым Promise refresh либо очередью с resolve/reject. Любой ожидающий запрос завершается, все повторные запросы помечаются `_retry`, новый refresh после отказа возможен без старых подписчиков.
 - [ ] Тесты: 2 параллельных 401 + успех; отказ refresh; сеть без response; повторный 401; login/refresh не зацикливаются; runtime config при отсутствующем build URL; old URL через общий клиент.
 - [ ] Приёмка: `yarn test --watchAll=false --runInBand`, production build, ручные login/logout/истёкшая сессия и переход по legacy URL в выбранном тестовом окружении.
 

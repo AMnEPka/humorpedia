@@ -27,17 +27,7 @@ api.interceptors.request.use((config) => {
 });
 
 // --- Token refresh logic ---
-let isRefreshing = false;
-let refreshSubscribers = [];
-
-function onTokenRefreshed(newToken) {
-  refreshSubscribers.forEach((cb) => cb(newToken));
-  refreshSubscribers = [];
-}
-
-function addRefreshSubscriber(cb) {
-  refreshSubscribers.push(cb);
-}
+let refreshPromise = null;
 
 /**
  * Attempt to refresh the token via /auth/refresh.
@@ -62,6 +52,29 @@ async function tryRefreshToken() {
   }
 }
 
+function handleRefreshFailure() {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  if (typeof window !== 'undefined') {
+    const path = window.location?.pathname || '';
+    const isAdminArea = path === '/admin' || path.startsWith('/admin/');
+    const isLoginPage = path === '/admin/login';
+    if (isAdminArea && !isLoginPage) {
+      window.location.assign('/admin/login');
+    }
+  }
+}
+
+function startTokenRefresh() {
+  refreshPromise = tryRefreshToken()
+    .then((newToken) => {
+      if (!newToken) handleRefreshFailure();
+      return newToken;
+    })
+    .finally(() => { refreshPromise = null; });
+  return refreshPromise;
+}
+
 // Handle auth errors — smart: retry with refresh, distinguish network from 401
 api.interceptors.response.use(
   (response) => response,
@@ -78,42 +91,16 @@ api.interceptors.response.use(
     const url = originalRequest?.url || '';
     const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
 
-    if (error.response.status === 401 && !isAuthEndpoint && !originalRequest._retry) {
-      // Try to refresh the token before giving up
-      if (!isRefreshing) {
-        isRefreshing = true;
-        const newToken = await tryRefreshToken();
-        isRefreshing = false;
-
-        if (newToken) {
-          onTokenRefreshed(newToken);
-          // Retry the original request with new token
-          originalRequest._retry = true;
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        }
-
-        // Refresh failed — token is truly invalid
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        if (typeof window !== 'undefined') {
-          const path = window.location?.pathname || '';
-          const isAdminArea = path === '/admin' || path.startsWith('/admin/');
-          const isLoginPage = path === '/admin/login';
-          if (isAdminArea && !isLoginPage) {
-            window.location.assign('/admin/login');
-          }
-        }
-        return Promise.reject(error);
+    if (error.response.status === 401 && !isAuthEndpoint && originalRequest && !originalRequest._retry) {
+      // Mark every original request before waiting, so a retry 401 cannot refresh again.
+      originalRequest._retry = true;
+      const sharedRefresh = refreshPromise || startTokenRefresh();
+      const newToken = await sharedRefresh;
+      if (newToken) {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
       }
-
-      // Another request hit 401 while refresh is in progress — wait for it
-      return new Promise((resolve) => {
-        addRefreshSubscriber((newToken) => {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          resolve(api(originalRequest));
-        });
-      });
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
