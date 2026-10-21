@@ -1,6 +1,7 @@
 """Quiz routes — CRUD."""
-from fastapi import APIRouter, Query, Depends
-from utils.auth import require_editor_on_write
+from fastapi import APIRouter, Query, Depends, Request
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived
 from typing import Optional
 
 from models.base import ContentStatus
@@ -42,17 +43,20 @@ async def list_quizzes(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    request: Request = None,
 ):
     """List quizzes with pagination."""
     query = build_query(status, tag, search, ["title"])
-    return await list_content("quizzes", skip, limit, query, sort_field="published_at")
+    editor = await editor_can_view_archived(request, get_current_user)
+    return await list_content("quizzes", skip, limit, query, sort_field="published_at", editor=editor)
 
 
 @router.get("/quizzes/{id_or_slug}", response_model=dict)
-async def get_quiz(id_or_slug: str):
+async def get_quiz(id_or_slug: str, request: Request = None):
     """Get quiz by ID or slug."""
-    quiz = await get_by_id_or_slug("quizzes", id_or_slug, "Quiz not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    quiz = await get_by_id_or_slug("quizzes", id_or_slug, "Quiz not found", editor=editor)
     await LinkResolver.resolve_document(quiz)
     return quiz
 

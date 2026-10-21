@@ -828,7 +828,7 @@ async def list_teams(
         sort=sort,
     )
     items = result["items"]
-    await attach_show_info(db, items)
+    await attach_show_info(db, items, include_archived=editor)
 
     result["items"] = items
     result["filters"] = await teams_filter_options(db, kvn=team_type == "kvn")
@@ -849,7 +849,8 @@ async def _find_team(db, id_or_slug: str) -> dict:
 
 async def _add_show_context(db, team: dict, include_archived: bool = False) -> dict:
     """Шоу команды и хлебные крошки (шоу → страница-список «Команды …», если есть)."""
-    await attach_show_info(db, [team])
+    team.pop("breadcrumbs", None)
+    await attach_show_info(db, [team], include_archived=include_archived)
     if not team.get("show"):
         return team
     crumbs = []
@@ -884,7 +885,7 @@ async def get_team_by_path(path: str, request: Request = None):
     editor = await editor_can_view_archived(request, get_current_user)
     db = await get_db()
     cache_key = "path:" + path
-    cached = cache_service.get_team(cache_key)
+    cached = cache_service.get_team(cache_key) if not editor else None
     if cached is not None:
         if cached.get("status") == ContentStatus.ARCHIVED.value and not editor:
             raise HTTPException(status_code=404, detail="Team not found")
@@ -898,9 +899,9 @@ async def get_team_by_path(path: str, request: Request = None):
     require_visible(team, editor, "Team not found")
     views_counter.increment("teams", team["_id"])
     await _add_show_context(db, team, include_archived=editor)
-    await attach_related_teams(db, team)
+    await attach_related_teams(db, team, public=not editor)
     await LinkResolver.resolve_document(team)
-    if team.get("status") != ContentStatus.ARCHIVED.value:
+    if not editor and team.get("status") != ContentStatus.ARCHIVED.value:
         cache_service.set_team(cache_key, team)
     return team
 
@@ -912,12 +913,12 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
     db = await get_db()
     if raw:
         team = require_visible(await _find_team(db, id_or_slug), editor, "Team not found")
-        await attach_show_info(db, [team])
-        await attach_related_teams(db, team, public=False)
+        await attach_show_info(db, [team], include_archived=editor)
+        await attach_related_teams(db, team, public=not editor)
         return team
 
     # ─── Кэш: проверяем ──────────────────────────────────────────────
-    cached = cache_service.get_team(id_or_slug)
+    cached = cache_service.get_team(id_or_slug) if not editor else None
     if cached is not None:
         if cached.get("status") == ContentStatus.ARCHIVED.value and not editor:
             raise HTTPException(status_code=404, detail="Team not found")
@@ -929,14 +930,14 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
     team = require_visible(await _find_team(db, id_or_slug), editor, "Team not found")
     views_counter.increment("teams", team["_id"])
     await _add_show_context(db, team, include_archived=editor)
-    await attach_related_teams(db, team)
+    await attach_related_teams(db, team, public=not editor)
 
     # Ссылки в тексте: актуальные адреса, на отсутствующие страницы — текстом
     await LinkResolver.resolve_document(team)
 
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
     team_slug = team.get("slug", id_or_slug)
-    if team.get("status") != ContentStatus.ARCHIVED.value:
+    if not editor and team.get("status") != ContentStatus.ARCHIVED.value:
         cache_service.set_team(team_slug, team)
         if team_slug != id_or_slug:
             cache_service.set_team(id_or_slug, team)

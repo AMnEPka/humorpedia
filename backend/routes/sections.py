@@ -1,6 +1,7 @@
 """Sections/Projects API routes - hierarchical content structure"""
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
-from utils.auth import require_editor_on_write
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived, require_visible, visible_query
 from typing import Optional, List
 from datetime import datetime, timezone
 
@@ -189,6 +190,8 @@ async def list_sections(
             {"description": {"$regex": search_pattern, "$options": "i"}}
         ]
     
+    editor = await editor_can_view_archived(request, get_current_user)
+    query = visible_query(query, editor)
     total = await db.sections.count_documents(query)
     cursor = db.sections.find(query, {"modules": 0}).skip(skip).limit(limit).sort("order", 1)
     items = await cursor.to_list(limit)
@@ -210,6 +213,8 @@ async def get_sections_tree(request: Request, status: Optional[ContentStatus] = 
     if status:
         query["status"] = status.value
     
+    editor = await editor_can_view_archived(request, get_current_user)
+    query = visible_query(query, editor)
     # Get all sections
     all_sections = await db.sections.find(query).sort("order", 1).to_list(1000)
     
@@ -258,16 +263,16 @@ async def get_section(id_or_slug: str, request: Request, increment_views: bool =
     if not section:
         section = await db.sections.find_one({"full_path": id_or_slug})
     
-    if not section:
-        raise HTTPException(status_code=404, detail="Section not found")
-    
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(section, editor, "Section not found")
+
     # Increment views (батч)
     if increment_views:
         from services.views_counter import views_counter
         views_counter.increment("sections", section["_id"])
     
     # Get children count
-    children_count = await db.sections.count_documents({"parent_id": section["_id"]})
+    children_count = await db.sections.count_documents(visible_query({"parent_id": section["_id"]}, editor))
     section["children_count"] = children_count
     
     # Get breadcrumbs
@@ -275,7 +280,7 @@ async def get_section(id_or_slug: str, request: Request, increment_views: bool =
     if section.get("parent_id"):
         current_parent_id = section["parent_id"]
         while current_parent_id:
-            parent = await db.sections.find_one({"_id": current_parent_id})
+            parent = await db.sections.find_one(visible_query({"_id": current_parent_id}, editor))
             if parent:
                 breadcrumbs.insert(0, {
                     "id": parent["_id"],
@@ -304,12 +309,13 @@ async def get_section_children(
     
     # Verify parent exists
     parent = await db.sections.find_one({"_id": section_id})
-    if not parent:
-        raise HTTPException(status_code=404, detail="Section not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(parent, editor, "Section not found")
     
     query = {"parent_id": section_id}
     if status:
         query["status"] = status.value
+    query = visible_query(query, editor)
     
     total = await db.sections.count_documents(query)
     cursor = db.sections.find(query, {"modules": 0}).skip(skip).limit(limit).sort("order", 1)
@@ -454,8 +460,8 @@ async def get_section_by_path(path: str, request: Request):
         section = await db.kvn.find_one({"slug": path_without_slash})
         collection_name = "kvn"
     
-    if not section:
-        raise HTTPException(status_code=404, detail="Section or KVN page not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(section, editor, "Section or KVN page not found")
     
     # Increment views (батч)
     from services.views_counter import views_counter
@@ -465,9 +471,9 @@ async def get_section_by_path(path: str, request: Request):
     # For KVN, parent_id references the 'id' field, not '_id'
     if collection_name == "kvn":
         section_id = section.get("id")
-        children_count = await db.kvn.count_documents({"parent_id": section_id}) if section_id else 0
+        children_count = await db.kvn.count_documents(visible_query({"parent_id": section_id}, editor)) if section_id else 0
     else:
-        children_count = await db[collection_name].count_documents({"parent_id": section["_id"]})
+        children_count = await db[collection_name].count_documents(visible_query({"parent_id": section["_id"]}, editor))
     section["children_count"] = children_count
     
     # Get breadcrumbs
@@ -475,10 +481,10 @@ async def get_section_by_path(path: str, request: Request):
     if section.get("parent_id"):
         current_parent_id = section["parent_id"]
         while current_parent_id:
-            parent = await db[collection_name].find_one({"id": current_parent_id})
+            parent = await db[collection_name].find_one(visible_query({"id": current_parent_id}, editor))
             if not parent:
                 # Try by _id if id didn't work
-                parent = await db[collection_name].find_one({"_id": current_parent_id})
+                parent = await db[collection_name].find_one(visible_query({"_id": current_parent_id}, editor))
             if parent:
                 breadcrumbs.insert(0, {
                     "id": parent.get("id") or str(parent["_id"]),
@@ -496,7 +502,7 @@ async def get_section_by_path(path: str, request: Request):
         section_id = section.get("id")
         if section_id:
             children = await db.kvn.find(
-                {"parent_id": section_id},
+                visible_query({"parent_id": section_id}, editor),
                 {"_id": 0}
             ).sort("title", 1).to_list(100)
             section["children"] = children

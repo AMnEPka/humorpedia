@@ -180,7 +180,7 @@ async def get_show_children(parent_slug: str, request: Request = None):
 async def get_show(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)"), request: Request = None):
     """Get show by ID or slug."""
     editor = await editor_can_view_archived(request, get_current_user)
-    show = require_visible(await get_by_id_or_slug("shows", id_or_slug, "Show not found"), editor, "Show not found")
+    show = require_visible(await get_by_id_or_slug("shows", id_or_slug, "Show not found", editor=editor), editor, "Show not found")
     if not raw:
         await link_participant_cards(await get_db(), show)
         await LinkResolver.resolve_document(show, LINK_FIELDS)

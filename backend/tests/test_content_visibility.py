@@ -77,7 +77,7 @@ def test_lists_exclude_archived_for_public_and_keep_them_for_editors(monkeypatch
     monkeypatch.setattr(content_teams, "attach_show_info", lambda *_args: None)
 
     # Team details attachment is async, unlike the small sync replacement above.
-    async def attach_team_info(*_args):
+    async def attach_team_info(*_args, **_kwargs):
         return None
 
     monkeypatch.setattr(content_teams, "attach_show_info", attach_team_info)

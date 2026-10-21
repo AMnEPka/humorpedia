@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Iterable, Optional
 
 from fastapi import HTTPException
+from services.content_visibility import visible_query
 
 TEAMS_SEGMENT = "teams"
 KVN_TEAM_TYPE = "kvn"
@@ -91,16 +92,17 @@ async def team_placement(db, show: Optional[dict], slug: str) -> dict:
     return {"show_id": show["_id"], "full_path": team_full_path(show, slug), "team_type": root.get("slug") or KVN_TEAM_TYPE}
 
 
-async def attach_show_info(db, items: Iterable[dict]) -> None:
+async def attach_show_info(db, items: Iterable[dict], *, include_archived: bool = False) -> None:
     """Добавить командам шоу `show: {id, title, full_path}` и `url` (для поиска, списков, страниц людей)."""
     items = [i for i in items if isinstance(i, dict)]
     show_ids = {i["show_id"] for i in items if i.get("show_id")}
     shows = {}
     if show_ids:
-        async for s in db.shows.find({"_id": {"$in": list(show_ids)}}, {"title": 1, "name": 1, "full_path": 1, "slug": 1}):
+        async for s in db.shows.find(visible_query({"_id": {"$in": list(show_ids)}}, include_archived), {"title": 1, "name": 1, "full_path": 1, "slug": 1}):
             shows[s["_id"]] = {"id": s["_id"], "title": s.get("title") or s.get("name"),
                                "full_path": s.get("full_path") or s.get("slug")}
     for item in items:
+        item.pop("show", None)
         if item.get("show_id") and item["show_id"] in shows:
             item["show"] = shows[item["show_id"]]
         item["url"] = team_url(item)
@@ -139,7 +141,7 @@ async def attach_related_teams(db, team: dict, public: bool = True) -> None:
         query["status"] = {"$ne": "archived"}
     items = await db.teams.find(query, {"name": 1, "title": 1, "slug": 1, "show_id": 1, "full_path": 1, "status": 1,
                                         "facts": 1}).to_list(None)
-    await attach_show_info(db, items)
+    await attach_show_info(db, items, include_archived=not public)
     order = {i: n for n, i in enumerate(ids)}
     team["related_teams"] = [
         {"id": t["_id"], "name": t.get("name") or t.get("title"), "url": t["url"], "show": t.get("show"),

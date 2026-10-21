@@ -13,6 +13,7 @@ import re
 from utils.database import get_db
 from utils.search import literal_search_pattern
 from services.tags import tag_service
+from services.content_visibility import require_visible, visible_query
 
 logger = logging.getLogger(__name__)
 
@@ -416,7 +417,7 @@ async def delete_content(collection_name: str, item_id: str, not_found_msg: str)
     return {"id": item_id, "deleted": True}
 
 
-async def get_by_id_or_slug(collection_name: str, id_or_slug: str, not_found_msg: str, increment_views: bool = True):
+async def get_by_id_or_slug(collection_name: str, id_or_slug: str, not_found_msg: str, increment_views: bool = True, *, editor: bool = False):
     """Universal get by ID or slug handler."""
     db = await get_db()
     collection = getattr(db, collection_name)
@@ -427,8 +428,7 @@ async def get_by_id_or_slug(collection_name: str, id_or_slug: str, not_found_msg
         query = {"$or": [{"_id": id_or_slug}, {"slug": id_or_slug}]}
 
     item = await collection.find_one(query)
-    if not item:
-        raise HTTPException(status_code=404, detail=not_found_msg)
+    require_visible(item, editor, not_found_msg)
 
     if increment_views:
         from services.views_counter import views_counter
@@ -447,13 +447,15 @@ async def list_content(
     query: dict = None,
     sort_field: str = "created_at",
     sort_order: int = -1,
-    exclude_modules: bool = True
+    exclude_modules: bool = True,
+    *,
+    editor: bool = False,
 ):
     """Universal list handler."""
     db = await get_db()
     collection = getattr(db, collection_name)
 
-    query = query or {}
+    query = visible_query(query, editor)
     projection = {"modules": 0} if exclude_modules else None
 
     total = await collection.count_documents(query)

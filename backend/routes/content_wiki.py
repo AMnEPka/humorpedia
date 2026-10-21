@@ -1,6 +1,7 @@
 """Wiki routes — CRUD."""
-from fastapi import APIRouter, Query, Depends
-from utils.auth import require_editor_on_write
+from fastapi import APIRouter, Query, Depends, Request
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived
 from typing import Optional
 
 from models.base import ContentType, ContentStatus
@@ -31,17 +32,20 @@ async def list_wiki(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    request: Request = None,
 ):
     """List wiki pages with pagination."""
     query = build_query(status, tag, search, ["title"])
-    return await list_content("wiki", skip, limit, query, "title", 1)
+    editor = await editor_can_view_archived(request, get_current_user)
+    return await list_content("wiki", skip, limit, query, "title", 1, editor=editor)
 
 
 @router.get("/wiki/{id_or_slug}", response_model=dict)
-async def get_wiki(id_or_slug: str):
+async def get_wiki(id_or_slug: str, request: Request = None):
     """Get wiki page by ID or slug."""
-    return await get_by_id_or_slug("wiki", id_or_slug, "Wiki page not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    return await get_by_id_or_slug("wiki", id_or_slug, "Wiki page not found", editor=editor)
 
 
 @router.put("/wiki/{id}", response_model=dict)

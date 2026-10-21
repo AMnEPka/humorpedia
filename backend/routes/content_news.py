@@ -1,6 +1,7 @@
 """News routes — CRUD."""
-from fastapi import APIRouter, Query, Depends
-from utils.auth import require_editor_on_write
+from fastapi import APIRouter, Query, Depends, Request
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived
 from typing import Optional
 
 from models.base import ContentStatus
@@ -39,17 +40,20 @@ async def list_news(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[ContentStatus] = None,
     tag: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    request: Request = None,
 ):
     """List news with pagination."""
     query = build_query(status, tag, search, ["title"])
-    return await list_content("news", skip, limit, query)
+    editor = await editor_can_view_archived(request, get_current_user)
+    return await list_content("news", skip, limit, query, editor=editor)
 
 
 @router.get("/news/{id_or_slug}", response_model=dict)
-async def get_news_item(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)")):
+async def get_news_item(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)"), request: Request = None):
     """Get news by ID or slug."""
-    news = await get_by_id_or_slug("news", id_or_slug, "News not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    news = await get_by_id_or_slug("news", id_or_slug, "News not found", editor=editor)
     if not raw:
         await LinkResolver.resolve_document(news)
         await decorate_document(news)

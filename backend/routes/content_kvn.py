@@ -1,6 +1,7 @@
 """KVN routes — CRUD + hierarchy + seasons + jury stats."""
-from fastapi import APIRouter, HTTPException, Query, Depends
-from utils.auth import require_editor_on_write
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived, require_visible, visible_query
 from typing import Optional
 from datetime import datetime, timezone
 import re
@@ -64,7 +65,7 @@ def extract_year_from_slug(slug: str) -> int:
     return 0
 
 
-async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
+async def find_adjacent_seasons(db, current_season: dict, *, editor: bool = False) -> tuple[str, str]:
     """
     Находит соседние сезоны для текущего сезона.
     
@@ -85,9 +86,9 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         # Приоритет 1: пытаемся получить из родительского ресурса (самый надежный способ)
         parent_id = current_season.get("parent_id")
         if parent_id:
-            parent = await db.kvn.find_one({"id": parent_id})
+            parent = await db.kvn.find_one(visible_query({"id": parent_id}, editor))
             if not parent:
-                parent = await db.kvn.find_one({"_id": parent_id})
+                parent = await db.kvn.find_one(visible_query({"_id": parent_id}, editor))
             if parent:
                 league_slug = get_league_slug_from_parent(parent)
         
@@ -113,18 +114,18 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
     # Ищем сезоны в той же лиге
     # Вариант 1 (самый надежный): ищем по season_data.year напрямую
     if not prev_season_slug:
-        prev_season = await db.kvn.find_one({
+        prev_season = await db.kvn.find_one(visible_query({
             "season_data.year": prev_year,
             "season_data.league_slug": league_slug
-        }, {"slug": 1})
+        }, editor), {"slug": 1})
         if prev_season:
             prev_season_slug = prev_season.get("slug", "")
     
     if not next_season_slug:
-        next_season = await db.kvn.find_one({
+        next_season = await db.kvn.find_one(visible_query({
             "season_data.year": next_year,
             "season_data.league_slug": league_slug
-        }, {"slug": 1})
+        }, editor), {"slug": 1})
         if next_season:
             next_season_slug = next_season.get("slug", "")
     
@@ -140,12 +141,12 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
                 continue
             
             # Ищем сезоны с годом в full_path или slug
-            candidates = await db.kvn.find({
+            candidates = await db.kvn.find(visible_query({
                 "$or": [
                     {"full_path": {"$regex": f"kvn/{escaped_league}/.*{target_year}"}},
                     {"slug": {"$regex": f".*{target_year}"}}
                 ]
-            }, {"slug": 1, "season_data": 1, "full_path": 1, "parent_id": 1}).to_list(20)
+            }, editor), {"slug": 1, "season_data": 1, "full_path": 1, "parent_id": 1}).to_list(20)
             
             for candidate in candidates:
                 # Проверяем, что это действительно сезон нужного года
@@ -181,7 +182,7 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
         if parent_id:
             # Ищем все сезоны той же лиги
             all_seasons = await db.kvn.find(
-                {"parent_id": parent_id},
+                visible_query({"parent_id": parent_id}, editor),
                 {"slug": 1, "season_data": 1, "full_path": 1}
             ).to_list(1000)
             
@@ -227,9 +228,9 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
             ]
             
             for pattern in patterns:
-                seasons = await db.kvn.find({
+                seasons = await db.kvn.find(visible_query({
                     "full_path": {"$regex": pattern}
-                }, {"slug": 1, "season_data": 1, "full_path": 1}).to_list(10)
+                }, editor), {"slug": 1, "season_data": 1, "full_path": 1}).to_list(10)
                 
                 # Проверяем каждый найденный сезон, чтобы убедиться, что год совпадает
                 for season in seasons:
@@ -261,16 +262,18 @@ async def find_adjacent_seasons(db, current_season: dict) -> tuple[str, str]:
 async def get_kvn_jury_stats(
     league_slug: str = "vl-kvn",
     min_year: Optional[int] = None,
-    max_year: Optional[int] = None
+    max_year: Optional[int] = None,
+    request: Request = None,
 ):
     """
     Get jury statistics for KVN seasons.
     Returns aggregated data about all jury members with their game counts and details.
     """
     db = await get_db()
+    editor = await editor_can_view_archived(request, get_current_user)
     
     # Get all teams from teams collection (without filtering by team_type)
-    all_teams_from_db = await db.teams.find(KVN_ONLY, {"slug": 1, "name": 1, "title": 1}).to_list(None)
+    all_teams_from_db = await db.teams.find(visible_query(KVN_ONLY, editor), {"slug": 1, "name": 1, "title": 1}).to_list(None)
     team_slug_to_name = {}
     all_team_slugs = set()
     for team in all_teams_from_db:
@@ -296,7 +299,7 @@ async def get_kvn_jury_stats(
         query["season_data.year"] = year_filter
     
     # Get all seasons for the league
-    seasons = await db.kvn.find(query).to_list(1000)
+    seasons = await db.kvn.find(visible_query(query, editor)).to_list(1000)
     
     # Aggregate jury statistics
     jury_stats = {}  # jury_name -> { games_count, games: [...], years: set(), teams: set() }
@@ -546,7 +549,8 @@ async def list_kvn(
     limit: int = Query(20, ge=1, le=100),
     search: Optional[str] = None,
     status: Optional[ContentStatus] = None,
-    include_children: bool = False
+    include_children: bool = False,
+    request: Request = None,
 ):
     """List KVN pages"""
     db = await get_db()
@@ -566,6 +570,8 @@ async def list_kvn(
     if not include_children:
         query["parent_id"] = None  # Only root pages
     
+    editor = await editor_can_view_archived(request, get_current_user)
+    query = visible_query(query, editor)
     count = await db.kvn.count_documents(query)
     cursor = db.kvn.find(query, {"_id": 0}).sort("title", 1).skip(skip).limit(limit)
     items = await cursor.to_list(limit)
@@ -573,27 +579,28 @@ async def list_kvn(
     return {"items": items, "total": count, "skip": skip, "limit": limit}
 
 @router.get("/kvn/by-path/{path:path}", response_model=dict)
-async def get_kvn_by_path(path: str):
+async def get_kvn_by_path(path: str, request: Request = None):
     """Get KVN page by full path with children and breadcrumbs"""
     path_clean = path.lstrip("/")
+    editor = await editor_can_view_archived(request, get_current_user)
+    db = await get_db()
 
     # ─── Кэш: проверяем ───────────────────────────────────────────────
-    cached = cache_service.get_kvn(path_clean)
+    cached = cache_service.get_kvn(path_clean) if not editor else None
     if cached is not None:
         doc_id, response = cached
+        current = await db.kvn.find_one({"_id": doc_id}, {"status": 1})
+        require_visible(current, editor, "KVN page not found")
         views_counter.increment("kvn", doc_id)
         return response
 
-    db = await get_db()
-    
     # Try both with and without leading slash
     kvn = await db.kvn.find_one({"full_path": path_clean})
     if not kvn:
         kvn = await db.kvn.find_one({"full_path": f"/{path_clean}"})
     if not kvn:
         kvn = await db.kvn.find_one({"slug": path_clean})
-    if not kvn:
-        raise HTTPException(status_code=404, detail="KVN page not found")
+    require_visible(kvn, editor, "KVN page not found")
     
     # Increment views (батч — без записи в DB)
     views_counter.increment("kvn", kvn["_id"])
@@ -602,7 +609,7 @@ async def get_kvn_by_path(path: str):
     section_id = kvn.get("id")
     if section_id:
         children = await db.kvn.find(
-            {"parent_id": section_id},
+            visible_query({"parent_id": section_id}, editor),
             {"_id": 0}
         ).sort("title", 1).to_list(100)
         kvn["children"] = children
@@ -611,7 +618,7 @@ async def get_kvn_by_path(path: str):
     
     # Get breadcrumbs (с кэшем)
     kvn_id = kvn.get("id", "")
-    cached_bc = cache_service.get_breadcrumbs(kvn_id) if kvn_id else None
+    cached_bc = cache_service.get_breadcrumbs(kvn_id) if kvn_id and not editor else None
     if cached_bc is not None:
         breadcrumbs = cached_bc
     else:
@@ -619,7 +626,7 @@ async def get_kvn_by_path(path: str):
         if kvn.get("parent_id"):
             current_parent_id = kvn["parent_id"]
             while current_parent_id:
-                parent = await db.kvn.find_one({"id": current_parent_id})
+                parent = await db.kvn.find_one(visible_query({"id": current_parent_id}, editor))
                 if parent:
                     breadcrumbs.insert(0, {
                         "id": parent.get("id"),
@@ -629,7 +636,7 @@ async def get_kvn_by_path(path: str):
                     current_parent_id = parent.get("parent_id")
                 else:
                     break
-        if kvn_id:
+        if kvn_id and not editor:
             cache_service.set_breadcrumbs(kvn_id, breadcrumbs)
     
     kvn["breadcrumbs"] = breadcrumbs
@@ -637,7 +644,7 @@ async def get_kvn_by_path(path: str):
     # Автоматически определяем соседние сезоны
     # Пытаемся найти соседние сезоны, даже если season_data отсутствует
     # (можем извлечь год и лигу из slug или full_path)
-    prev_season_slug, next_season_slug = await find_adjacent_seasons(db, kvn)
+    prev_season_slug, next_season_slug = await find_adjacent_seasons(db, kvn, editor=editor)
     
     # Обновляем season_data с найденными соседними сезонами
     if kvn.get("season_data"):
@@ -657,6 +664,21 @@ async def get_kvn_by_path(path: str):
             "prev_season": prev_season_slug or "",
             "next_season": next_season_slug or ""
         }
+
+    # Сохранённые вручную ссылки тоже подчиняются публичной видимости.
+    # Меняем только ответ, а не данные сезона в БД.
+    if not editor and kvn.get("season_data"):
+        adjacent_slugs = [kvn["season_data"].get(key) for key in ("prev_season", "next_season")]
+        adjacent_slugs = [slug for slug in adjacent_slugs if slug]
+        if adjacent_slugs:
+            archived = await db.kvn.find({
+                "slug": {"$in": adjacent_slugs},
+                "status": ContentStatus.ARCHIVED.value,
+            }, {"slug": 1}).to_list(None)
+            archived_slugs = {season["slug"] for season in archived}
+            for key in ("prev_season", "next_season"):
+                if kvn["season_data"].get(key) in archived_slugs:
+                    kvn["season_data"][key] = ""
     
     # Загружаем данные команд из сезона
     team_data = {}
@@ -696,7 +718,7 @@ async def get_kvn_by_path(path: str):
         # Загружаем данные команд одним запросом
         if team_slugs:
             teams_cursor = db.teams.find(
-                {"slug": {"$in": list(team_slugs)}, **KVN_ONLY},
+                visible_query({"slug": {"$in": list(team_slugs)}, **KVN_ONLY}, editor),
                 {
                     "slug": 1,
                     "name": 1,
@@ -730,39 +752,42 @@ async def get_kvn_by_path(path: str):
     doc_id = kvn.pop("_id", None)
 
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
-    cache_service.set_kvn(path_clean, (doc_id, kvn))
+    if not editor:
+        cache_service.set_kvn(path_clean, (doc_id, kvn))
 
     return kvn
 
 
 @router.get("/kvn/{parent_slug}/children", response_model=dict)
-async def get_kvn_children(parent_slug: str):
+async def get_kvn_children(parent_slug: str, request: Request = None):
     """Get children of a KVN page"""
-    # ─── Кэш ──────────────────────────────────────────────────────────
-    cached = cache_service.get_kvn_children(parent_slug)
-    if cached is not None:
-        return cached
-
     db = await get_db()
     parent = await db.kvn.find_one({"slug": parent_slug})
-    if not parent:
-        raise HTTPException(status_code=404, detail="Parent KVN page not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(parent, editor, "Parent KVN page not found")
+
+    # Only public responses belong in the shared cache.
+    cached = cache_service.get_kvn_children(parent_slug) if not editor else None
+    if cached is not None:
+        return cached
     
     parent_id = parent.get("id")
     children = await db.kvn.find(
-        {"parent_id": parent_id},
+        visible_query({"parent_id": parent_id}, editor),
         {"_id": 0}
     ).sort("title", 1).to_list(100)
     
     result = {"items": children, "total": len(children), "parent": parent.get("title")}
-    cache_service.set_kvn_children(parent_slug, result)
+    if not editor:
+        cache_service.set_kvn_children(parent_slug, result)
     return result
 
 
 @router.get("/kvn/{id_or_slug}", response_model=dict)
-async def get_kvn(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
+async def get_kvn(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)"), request: Request = None):
     """Get KVN page by ID or slug"""
-    kvn = await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    kvn = await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found", editor=editor)
     if not raw:
         await LinkResolver.resolve_document(kvn, ("modules", "facts", "season_data", "jury_cards"))
     return kvn
@@ -770,7 +795,8 @@ async def get_kvn(id_or_slug: str, raw: bool = Query(False, description="без 
 
 @router.get("/kvn-hierarchy", response_model=dict)
 async def get_kvn_hierarchy(
-    status: Optional[ContentStatus] = None
+    status: Optional[ContentStatus] = None,
+    request: Request = None,
 ):
     """Get all KVN pages with hierarchy for admin panel"""
     db = await get_db()
@@ -779,6 +805,8 @@ async def get_kvn_hierarchy(
     if status:
         query["status"] = status.value
     
+    editor = await editor_can_view_archived(request, get_current_user)
+    query = visible_query(query, editor)
     # We need _id to update records without 'id' field, so don't exclude it
     all_kvn = await db.kvn.find(query).sort([("level", 1), ("title", 1)]).to_list(1000)
     
@@ -1108,7 +1136,7 @@ async def update_kvn(id: str, data: KVNUpdate):
         updated_doc = await db.kvn.find_one({"_id": kvn_id})
         if updated_doc:
             # Пересчитываем соседние сезоны для обновленного сезона
-            prev_season_slug, next_season_slug = await find_adjacent_seasons(db, updated_doc)
+            prev_season_slug, next_season_slug = await find_adjacent_seasons(db, updated_doc, editor=True)
             
             # Обновляем season_data с новыми соседними сезонами
             if updated_doc.get("season_data"):
@@ -1129,7 +1157,7 @@ async def update_kvn(id: str, data: KVNUpdate):
             if old_prev_season:
                 prev_season_doc = await db.kvn.find_one({"slug": old_prev_season})
                 if prev_season_doc:
-                    prev_prev_slug, prev_next_slug = await find_adjacent_seasons(db, prev_season_doc)
+                    prev_prev_slug, prev_next_slug = await find_adjacent_seasons(db, prev_season_doc, editor=True)
                     if prev_season_doc.get("season_data"):
                         prev_season_doc["season_data"]["prev_season"] = prev_prev_slug or ""
                         prev_season_doc["season_data"]["next_season"] = prev_next_slug or ""
@@ -1147,7 +1175,7 @@ async def update_kvn(id: str, data: KVNUpdate):
             if old_next_season:
                 next_season_doc = await db.kvn.find_one({"slug": old_next_season})
                 if next_season_doc:
-                    next_prev_slug, next_next_slug = await find_adjacent_seasons(db, next_season_doc)
+                    next_prev_slug, next_next_slug = await find_adjacent_seasons(db, next_season_doc, editor=True)
                     if next_season_doc.get("season_data"):
                         next_season_doc["season_data"]["prev_season"] = next_prev_slug or ""
                         next_season_doc["season_data"]["next_season"] = next_next_slug or ""
@@ -1183,7 +1211,7 @@ async def update_kvn(id: str, data: KVNUpdate):
                             season_to_update["season_data"]["next_season"] = new_slug
                         
                         # Пересчитываем соседние сезоны для этого сезона
-                        prev_slug, next_slug = await find_adjacent_seasons(db, season_to_update)
+                        prev_slug, next_slug = await find_adjacent_seasons(db, season_to_update, editor=True)
                         season_to_update["season_data"]["prev_season"] = prev_slug or ""
                         season_to_update["season_data"]["next_season"] = next_slug or ""
                         

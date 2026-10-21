@@ -121,10 +121,11 @@ async def search_people(request: Request, q: str = Query(..., min_length=2), lim
 @router.get("/people/{id_or_slug}", response_model=dict)
 async def get_person(id_or_slug: str, request: Request, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
     """Get person by ID or slug."""
-    person = await get_by_id_or_slug("people", id_or_slug, "Person not found")
+    user = await get_current_user(request)
+    editor = bool(user and user.get("role") in EDITOR_ROLES)
+    person = await get_by_id_or_slug("people", id_or_slug, "Person not found", editor=editor)
     if person.get("status") == ContentStatus.ARCHIVED.value:
-        user = await get_current_user(request)
-        if not user or user.get("role") not in EDITOR_ROLES:
+        if not editor:
             raise HTTPException(status_code=404, detail="Person not found")
     if not raw:
         await LinkResolver.resolve_document(person)

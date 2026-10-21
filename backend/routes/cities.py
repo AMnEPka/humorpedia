@@ -1,6 +1,7 @@
 """Cities API routes - CRUD for geography/cities"""
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
-from utils.auth import require_editor_on_write
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived, require_visible, visible_query
 from typing import Optional
 from datetime import datetime, timezone
 import logging
@@ -110,6 +111,9 @@ async def list_cities(
     if letter:
         query["title"] = {"$regex": alphabet_letter_pattern(letter), "$options": "i"}
     
+    editor = await editor_can_view_archived(request, get_current_user)
+    query = visible_query(query, editor)
+    availability_query = visible_query(availability_query, editor)
     if sort_by == "title" and sort_order >= 0:
         return await list_alphabetical_content(
             "cities", skip, limit, query, ["name", "title"],
@@ -139,9 +143,9 @@ async def get_city(
     if not city:
         city = await db.cities.find_one({"slug": id_or_slug})
     
-    if not city:
-        raise HTTPException(status_code=404, detail="City not found")
-    
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(city, editor, "City not found")
+
     # Increment views (батч)
     if increment_views:
         from services.views_counter import views_counter
@@ -208,15 +212,15 @@ async def get_city_related_people(
     db = await get_db()
     
     city = await db.cities.find_one({"_id": city_id})
-    if not city:
-        raise HTTPException(status_code=404, detail="City not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(city, editor, "City not found")
     
     person_ids = city.get("related_person_ids", [])
     if not person_ids:
         return {"items": [], "total": 0}
     
     people = await db.people.find(
-        {"_id": {"$in": person_ids}},
+        visible_query({"_id": {"$in": person_ids}}, editor),
         {"modules": 0}
     ).limit(limit).to_list(limit)
     
@@ -233,17 +237,17 @@ async def get_city_related_teams(
     db = await get_db()
     
     city = await db.cities.find_one({"_id": city_id})
-    if not city:
-        raise HTTPException(status_code=404, detail="City not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(city, editor, "City not found")
     
     team_ids = city.get("related_team_ids", [])
     teams = []
     if team_ids:
         teams = await db.teams.find(
-            {"_id": {"$in": team_ids}},
+            visible_query({"_id": {"$in": team_ids}}, editor),
             {"modules": 0}
         ).limit(limit).to_list(limit)
-        await attach_show_info(db, teams)
+        await attach_show_info(db, teams, include_archived=editor)
 
     mentions = city.get("related_team_mentions") or []
     remaining = max(0, limit - len(teams))

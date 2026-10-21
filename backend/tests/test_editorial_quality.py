@@ -48,7 +48,7 @@ def test_archived_person_is_hidden_from_anonymous_api_but_editor_can_open(monkey
         observed_queries.append(query)
         return {"items": [], "total": 0}
 
-    async def fake_get(_collection, _identifier, _error):
+    async def fake_get(_collection, _identifier, _error, **_kwargs):
         return archived.copy()
 
     monkeypatch.setattr(content_people, "get_db", fake_db)

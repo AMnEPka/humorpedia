@@ -1,6 +1,7 @@
 """Search, resolve-link, and duplicate routes."""
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
-from utils.auth import require_editor_on_write
+from utils.auth import get_current_user, require_editor_on_write
+from services.content_visibility import editor_can_view_archived, require_visible
 from typing import Optional
 from datetime import datetime, timezone
 
@@ -303,7 +304,7 @@ async def search_content_for_links(
 
 
 @router.get("/{content_type}/{id_or_slug}/resolve-link")
-async def resolve_content_link(content_type: str, id_or_slug: str):
+async def resolve_content_link(content_type: str, id_or_slug: str, request: Request = None):
     """Получить актуальный URL для контента."""
     db = await get_db()
 
@@ -324,8 +325,8 @@ async def resolve_content_link(content_type: str, id_or_slug: str):
         query = {"$or": [{"_id": id_or_slug}, {"id": id_or_slug}, {"slug": id_or_slug}]}
     doc = await collection.find_one(query)
 
-    if not doc:
-        raise HTTPException(status_code=404, detail="Content not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    require_visible(doc, editor, "Content not found")
 
     if content_type == 'kvn':
         full_path = doc.get('full_path') or doc.get('slug')
