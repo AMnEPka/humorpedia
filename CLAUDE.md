@@ -16,7 +16,9 @@
 | [docs/ai/SHOW_APPEARANCES.md](docs/ai/SHOW_APPEARANCES.md) | Участие в выбранных шоу без перечисления сезонов, основной дуэт/команда, достижения, ручной выбор новых людей |
 | [docs/ai/FRONTEND.md](docs/ai/FRONTEND.md) | Маршруты React, страницы, ключевые компоненты, API-клиенты |
 | [docs/ai/MODULE_CONTRACT.md](docs/ai/MODULE_CONTRACT.md) | Реестр модулей, редакторы, владельцы публичного рендера и контрактные проверки |
+| [docs/ai/PAGE_BUILDER.md](docs/ai/PAGE_BUILDER.md) | Локальный конструктор через Codex CLI, редактируемые страницы и ZIP-перенос в админку |
 | [docs/ai/KNOWN_ISSUES.md](docs/ai/KNOWN_ISSUES.md) | Найденные баги, дыры безопасности, техдолг |
+| [docs/ai/tasks/project-refactoring-plan-2026-10-21.md](docs/ai/tasks/project-refactoring-plan-2026-10-21.md) | Аудит проекта и последних обновлений: подтверждённые дефекты, схема рефакторинга, приоритеты и проверки; план без реализации |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
 | [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
 | [docs/ai/tasks/team-projects.md](docs/ai/tasks/team-projects.md) | Автоматические проекты участников команды КВН с сохранённым ручным дополнением |
@@ -26,13 +28,15 @@
 | [docs/ai/tasks/public-user-experience-plan.md](docs/ai/tasks/public-user-experience-plan.md) | План улучшения публичного поиска, каталога команд и мобильных карточек; статус реализации |
 | [docs/ai/tasks/mongodb-upgrade.md](docs/ai/tasks/mongodb-upgrade.md) | Поэтапное обновление единственного локального стенда MongoDB и проверка резервных копий |
 | [docs/ai/tasks/docker-branch-sync.md](docs/ai/tasks/docker-branch-sync.md) | Автоматическая синхронизация стенда с веткой, возврат на main после PR и проверка workflow |
+| [docs/ai/tasks/vps-test-deployment.md](docs/ai/tasks/vps-test-deployment.md) | Тестовый VPS с публичным HTTPS: защита, проверки и ограничения |
+| [docs/deployment/vps-test-operations.md](docs/deployment/vps-test-operations.md) | Доступ к VPS, тестовый администратор, обслуживание и резервные копии |
 
 ## Стек
 
 - **Backend**: Python 3.11, FastAPI 0.110, Motor (async MongoDB), Pydantic v2, PyJWT + bcrypt, slowapi, cachetools. Точка входа `backend/server.py`.
 - **Frontend**: React 19 + CRA через CRACO, React Router 7, Tailwind + shadcn/ui (Radix), TipTap/react-quill (редакторы), dnd-kit, axios. Алиас `@` → `frontend/src`. Пакетный менеджер — **yarn**.
-- **БД**: единственный действующий стенд — локальный Compose с MongoDB 8.0.32. База `humorpedia`: отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`.
-- **Инфра**: `docker-compose.yml` (локальный стенд, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (неиспользуемый шаблон будущего развёртывания: MongoDB 8.0.32, gunicorn ×4 воркера, nginx-статика фронта).
+- **БД**: локальный Compose с MongoDB 8.0.32 и отдельная копия на тестовом VPS (04.10.2026); Mongo не опубликована наружу. База `humorpedia`: отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`. Локальная и VPS-БД не синхронизируются автоматически.
+- **Инфра**: `docker-compose.yml` (локальный стенд, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (неиспользуемый общий шаблон); фактический малый VPS использует `scripts/vps-test/compose.yml`: gunicorn ×1, nginx, Mongo8.0.32 с отдельным seccomp-профилем, Docker-web только на loopback. Host nginx открывает `https://77.105.139.231` без общего пароля; Let's Encrypt shortlived IP-сертификат продлевает systemd timer. Старый хостинг/DNS/почта не переключены.
 
 ## Запуск
 
