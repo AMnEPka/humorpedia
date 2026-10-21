@@ -56,11 +56,18 @@ else
 fi
 
 docker start "$container_id" >/dev/null
+# mongosh writes config/telemetry under HOME. The image uses /data/db by default;
+# racing entrypoint's initial chown with those lock files can kill mongod.
+mongo_ready() {
+  timeout 2s docker exec --user mongodb --env HOME=/tmp "$container_id" \
+    mongosh --norc --quiet --eval 'db.adminCommand("ping").ok' >/dev/null 2>&1
+}
+
 deadline=$((SECONDS + 60))
 published_port=''
 while (( SECONDS < deadline )); do
   published_port="$(docker port "$container_id" 27017/tcp 2>/dev/null | sed -n '1s/.*://p' || true)"
-  if [[ "$published_port" =~ ^[0-9]+$ ]] && timeout 2s docker exec "$container_id" mongosh --quiet --eval 'db.adminCommand("ping").ok' >/dev/null 2>&1; then
+  if [[ "$published_port" =~ ^[0-9]+$ ]] && mongo_ready; then
     break
   fi
   running="$(docker inspect --format '{{.State.Running}}' "$container_id" 2>/dev/null || true)"
@@ -71,7 +78,7 @@ while (( SECONDS < deadline )); do
   sleep 1
 done
 
-if [[ ! "$published_port" =~ ^[0-9]+$ ]] || ! timeout 2s docker exec "$container_id" mongosh --quiet --eval 'db.adminCommand("ping").ok' >/dev/null 2>&1; then
+if [[ ! "$published_port" =~ ^[0-9]+$ ]] || ! mongo_ready; then
   printf 'MongoDB не стала готова за 60 секунд\n' >&2
   exit 1
 fi

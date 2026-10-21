@@ -19,3 +19,12 @@ MongoDB запускается после checkout через scripts/ci/start-m
 До коммита: actionlint, bash -n, реальный helper на изолированной Mongo и random loopback порту. После push проверен [run 39611516778](https://github.com/AMnEPka/humorpedia/actions/runs/39611516778) на b67aacb: completed/success. Все пять jobs прошли; MongoDB стартовала на hosted runner и интеграция/browser smoke дошли до тестов. Исправление CI опубликовано отдельным коммитом 5d369dd.
 
 Проверка перед публикацией: actionlint с ShellCheck, bash -n и реальный helper прошли. Дополнительно разделены присваивание SMOKE_RUN_ID и export (SC2155), чтобы ошибка генератора не маскировалась export. Mongo ответила на ping на отдельном random loopback порту; основной стек не перезапускался.
+
+## Проверка публикации R9: 21.10.2026
+
+R9 опубликован отдельным коммитом df6e019. В [run 39653188277](https://github.com/AMnEPka/humorpedia/actions/runs/39653188277) backend/frontend/windows-tools прошли, найдены два отдельных дефекта CI:
+
+- Mongo readiness запускал mongosh от root с HOME=/data/db из официального образа. Во время стартового find/chown исчез lock-файл .mongodb/mongosh/am-unknown.json.lock; entrypoint завершился до тестов. Локальный запуск прежнего helper подтвердил запись shell-state в каталог данных. Проба теперь запускается пользователем mongodb с HOME=/tmp, вне каталогов chown; версия Mongo и seccomp не меняются.
+- Browser smoke успешно прокручивал iframe, но требовал top<120 px либо ровно нижний край страницы. Linux Chromium с другими scroll margins/scrollbar не удовлетворял пиксельному условию: артефакт показывает видимый целевой якорь. Тест теперь сбрасывает scroll перед кликом и требует, чтобы весь целевой элемент оказался внутри viewport его собственного документа. Прежний ошибочный global-document TOC по-прежнему не проходит мобильный сценарий.
+
+Изменения helper/test оформляются отдельным CI-коммитом, R9 не переписывается. Результат повторного hosted CI фиксируется в задаче R10 после push.

@@ -69,13 +69,14 @@ module.exports = async function runModuleSmoke({ browser, context, base, output,
       const button = kind === 'person'
         ? scope.getByRole('button', { name: /2031.*R9 event/ })
         : scope.getByRole('button', { name: 'R9 title B', exact: true });
+      await scope.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
       await button.click();
       await scope.waitForFunction(id => {
-        const top = document.getElementById(id)?.getBoundingClientRect().top;
-        const maxScroll = document.scrollingElement.scrollHeight - innerHeight;
-        // Near the end of a short iframe page, scrollIntoView reaches the bottom first.
-        return top !== undefined && top > -5 && (top < 120 ||
-          (scrollY >= maxScroll - 1 && top < innerHeight));
+        const target = document.getElementById(id)?.getBoundingClientRect();
+        const viewport = document.documentElement.clientHeight;
+        // CSS scroll margins and scrollbar height vary across Chromium platforms.
+        // The navigation contract is a visible target inside its own document.
+        return target && target.top >= -1 && target.bottom <= viewport + 1;
       }, target, { timeout: 5000 });
     }
     const layout = await scope.evaluate(() => ({
