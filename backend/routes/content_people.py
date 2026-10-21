@@ -5,23 +5,21 @@ from utils.auth import EDITOR_ROLES, get_current_user, require_editor_on_write
 from typing import Optional, Literal
 
 from models.base import ContentStatus
-from models.content import Person, PersonCreate, PersonUpdate
+from models.content import PersonCreate, PersonUpdate
 from utils.database import get_db
+from services import content_commands
+from services.content_commands import _without_legacy_marker
 from utils.search import literal_search_pattern
 from services.crud import (
-    check_slug_unique, create_content, update_content,
+    update_content,
     delete_content, get_by_id_or_slug, list_alphabetical_content, build_query,
 )
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
-from services.memberships import link_person, unlink_person
+from services.memberships import unlink_person
 from services.catalog_filters import combine_query, person_conditions, people_filter_options
 
 router = APIRouter(prefix="/content", tags=["people"], dependencies=[Depends(require_editor_on_write)])
-
-
-def _without_legacy_marker(value: Optional[str]) -> Optional[str]:
-    return re.sub(r"\s*\*+\s*", " ", value).strip() if value else value
 
 
 @router.post("/people", response_model=dict)
@@ -30,35 +28,8 @@ async def create_person(data: PersonCreate):
 
 
 async def create_person_record(data: PersonCreate, *, document_id=None, defer_links=False, page_package_id=None):
-    """Create a new person."""
-    await check_slug_unique("people", data.slug)
-
-    def swap_name_order(name):
-        if not name:
-            return name
-        parts = name.strip().split()
-        if len(parts) == 2:
-            return f"{parts[1]} {parts[0]}"
-        return name
-
-    title = _without_legacy_marker(data.title) if data.foreign_agent else data.title
-    full_name = _without_legacy_marker(data.full_name) if data.foreign_agent else data.full_name
-    primary_tag = _without_legacy_marker(data.primary_tag) if data.foreign_agent else data.primary_tag
-    if not primary_tag:
-        primary_tag = swap_name_order(title) or swap_name_order(full_name)
-
-    person = Person(
-        **({'id': document_id} if document_id else {}),
-        title=title, slug=data.slug, full_name=full_name, aliases=data.aliases,
-        foreign_agent=data.foreign_agent,
-        photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
-        facts=data.facts or {}, facts_order=data.facts_order or [], primary_tag=primary_tag,
-        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
-    )
-    result = await create_content("people", person, data.tags, **({'page_package_id': page_package_id} if page_package_id else {}))
-    if not defer_links:
-        await _link_person_everywhere(result["id"])
-    return result
+    """Совместимая обёртка над доменной операцией создания."""
+    return await content_commands.create_person_record(await get_db(), data, document_id=document_id, defer_links=defer_links, page_package_id=page_package_id)
 
 
 @router.get("/people", response_model=dict)
@@ -158,10 +129,5 @@ async def delete_person(id: str):
 
 
 async def _link_person_everywhere(person_id: str) -> None:
-    """Связать человека с записями составов, где он упомянут по slug старого сайта или однозначному имени."""
-    db = await get_db()
-    person = await db.people.find_one({"_id": person_id})
-    if person:
-        await link_person(db, person)
-        from services.show_appearances import link_new_person
-        await link_new_person(db, person)
+    """Совместимая обёртка для обновления человека и служебных клиентов."""
+    await content_commands.link_person_everywhere(await get_db(), person_id)

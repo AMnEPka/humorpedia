@@ -28,7 +28,7 @@ class TagService:
     """Centralized service for tag operations"""
     
     @staticmethod
-    async def sync_tags(tags: Optional[List[str]]) -> None:
+    async def sync_tags(tags: Optional[List[str]], *, db=None) -> None:
         """
         Sync content tags to the tags collection.
         Creates new tags if they don't exist, increments usage count if they do.
@@ -36,7 +36,7 @@ class TagService:
         if not tags:
             return
         
-        db = await get_db()
+        db = db if db is not None else await get_db()
         
         for tag_name in tags:
             tag_name = tag_name.strip()

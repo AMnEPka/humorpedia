@@ -11,9 +11,11 @@ from datetime import datetime, timezone
 import logging
 
 from models.base import ContentStatus
-from models.content import Show, ShowCreate, ShowUpdate
+from models.content import ShowCreate, ShowUpdate
 from utils.database import get_db
-from services.crud import create_content, delete_content, get_by_id_or_slug, list_alphabetical_content, build_query
+from services import content_commands
+from services.content_commands import _full_path, _get_parent, _check_path_free
+from services.crud import delete_content, get_by_id_or_slug, list_alphabetical_content, build_query
 from services.tags import tag_service
 from services.link_resolver import LinkResolver
 from services.show_teams import move_show_teams
@@ -28,29 +30,6 @@ router = APIRouter(prefix="/content", tags=["shows"], dependencies=[Depends(requ
 ROOT_QUERY = {"$or": [{"parent_id": None}, {"parent_id": ""}, {"parent_id": {"$exists": False}}]}
 PUBLIC_STATUS = {"status": {"$ne": "archived"}}
 LINK_FIELDS = ("modules", "facts", "description")
-
-
-def _full_path(parent: Optional[dict], slug: str) -> str:
-    return f"{parent['full_path'].strip('/')}/{slug}" if parent else slug
-
-
-async def _get_parent(db, parent_id: Optional[str]) -> Optional[dict]:
-    if not parent_id:
-        return None
-    parent = await db.shows.find_one({"_id": parent_id})
-    if not parent:
-        raise HTTPException(status_code=400, detail="Родительское шоу не найдено")
-    if not parent.get("full_path"):
-        raise HTTPException(status_code=400, detail="У родительского шоу не задан путь (full_path)")
-    return parent
-
-
-async def _check_path_free(db, full_path: str, exclude_id: Optional[str] = None) -> None:
-    query = {"full_path": full_path}
-    if exclude_id:
-        query["_id"] = {"$ne": exclude_id}
-    if await db.shows.find_one(query, {"_id": 1}) or await db.teams.find_one({"full_path": full_path}, {"_id": 1}):
-        raise HTTPException(status_code=400, detail=f"Адрес /shows/{full_path} уже занят")
 
 
 async def _move_descendants(db, show_id: str, full_path: str, level: int) -> None:
@@ -93,24 +72,8 @@ async def create_show(data: ShowCreate):
 
 
 async def create_show_record(data: ShowCreate, *, document_id=None, page_package_id=None):
-    """Create a new show."""
-    db = await get_db()
-    parent = await _get_parent(db, data.parent_id)
-    full_path = _full_path(parent, data.slug)
-    await _check_path_free(db, full_path)
-
-    facts = data.facts or {}
-    show = Show(
-        **({'id': document_id} if document_id else {}),
-        title=data.title, slug=data.slug, name=data.name, aliases=data.aliases, poster=data.poster,
-        facts=facts, facts_order=data.facts_order or list(facts), social_links=data.social_links or {},
-        description=data.description,
-        parent_id=parent["_id"] if parent else None, full_path=full_path,
-        level=(parent.get("level", 0) + 1) if parent else 0, order=data.order or 0,
-        modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
-        related_person_ids=data.related_person_ids or []
-    )
-    return await create_content("shows", show, data.tags, **({'page_package_id': page_package_id} if page_package_id else {}))
+    """Совместимая обёртка над доменной операцией создания."""
+    return await content_commands.create_show_record(await get_db(), data, document_id=document_id, page_package_id=page_package_id)
 
 
 @router.get("/shows", response_model=dict)

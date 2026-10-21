@@ -23,9 +23,9 @@ _NO_EXPECTED_VERSION = object()
 #  Slug helpers
 # ---------------------------------------------------------------------------
 
-async def check_slug_unique(collection_name: str, slug: str, exclude_id: str = None):
+async def check_slug_unique(collection_name: str, slug: str, exclude_id: str = None, *, db=None):
     """Check if slug is unique in collection"""
-    db = await get_db()
+    db = db if db is not None else await get_db()
     collection = getattr(db, collection_name)
     query = {"slug": slug}
     if exclude_id:
@@ -100,7 +100,8 @@ async def sync_primary_tag_to_tags(doc: dict) -> dict:
 async def check_primary_tag_duplicate(
     collection_name: str,
     primary_tag: Optional[str],
-    exclude_id: str = None
+    exclude_id: str = None,
+    *, db=None,
 ) -> None:
     """Raise 400 if primary_tag is already taken by another person/team (case-insensitive)."""
     if not primary_tag:
@@ -108,7 +109,7 @@ async def check_primary_tag_duplicate(
     if collection_name not in ["people", "teams"]:
         return
 
-    db = await get_db()
+    db = db if db is not None else await get_db()
     collection = getattr(db, collection_name)
     query = {"primary_tag": {"$regex": f"^{re.escape(primary_tag)}$", "$options": "i"}}
     if exclude_id:
@@ -270,6 +271,7 @@ async def create_content(
     *,
     published_status=None,
     page_package_id=None,
+    db=None,
 ):
     """Universal create handler.
 
@@ -278,8 +280,9 @@ async def create_content(
         model_instance: Pydantic model instance to insert
         tags: Tags to sync (fallback: doc["tags"])
         published_status: If set and matches data.status, set published_at
+        db: Явная БД workflow; без неё сохраняется прежний get_db().
     """
-    db = await get_db()
+    db = db if db is not None else await get_db()
     collection = getattr(db, collection_name)
 
     doc = model_instance.model_dump(by_alias=True)
@@ -302,7 +305,7 @@ async def create_content(
     # Проверка на дубликаты primary_tag для людей и команд
     primary_tag = doc.get("primary_tag")
     if primary_tag and collection_name in ["people", "teams"]:
-        await check_primary_tag_duplicate(collection_name, primary_tag)
+        await check_primary_tag_duplicate(collection_name, primary_tag, db=db)
 
     # Синхронизация primary_tag в tags для людей и команд
     if collection_name in ["people", "teams"]:
@@ -313,7 +316,7 @@ async def create_content(
     # Sync tags
     final_tags = doc.get("tags", [])
     if final_tags:
-        await tag_service.sync_tags(final_tags)
+        await tag_service.sync_tags(final_tags, db=db)
 
     await collection.insert_one(doc)
 

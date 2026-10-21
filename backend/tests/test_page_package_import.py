@@ -238,3 +238,46 @@ def test_portable_relations_resolve_target_ids_and_remain_editable(integration):
     participant = next(m for m in imported['modules'] if m['type'] == 'participants')['data']['items'][0]
     assert participant['person_url'] == '/people/' + draft['page']['slug']
     assert 'person_id' not in participant
+
+
+@pytest.mark.parametrize('kind,path', [('person', 'people'), ('team', 'teams'), ('show', 'shows')])
+def test_direct_create_and_zip_import_keep_same_domain_fields(integration, kind, path):
+    client, db, _ = integration
+    draft, _assets = package(kind)
+    draft['assets'] = []
+    draft['page'][MEDIA_FIELDS[kind]] = None
+    response = client.post('/api/content/' + path, json={**draft['page'], 'status': 'published'})
+    assert response.status_code == 200, response.text
+    direct_id = response.json()['id']
+
+    async def read_then_remove_direct():
+        assert db.name.startswith('humorpedia_package_test_')
+        record = await db[path].find_one({'_id': direct_id})
+        await db[path].delete_one({'_id': direct_id})
+        return record
+    direct = client.portal.call(read_then_remove_direct)
+    response = client.post('/api/page-packages/preview', files={'file': ('page.zip', pack_page(draft, {}))})
+    assert response.status_code == 200, response.text
+    preview = response.json()
+    response = client.post('/api/page-packages/' + preview['id'] + '/apply',
+                           json={'hash': preview['hash'], 'reviewed': True})
+    assert response.status_code == 200, response.text
+
+    async def imported_record():
+        return await db[path].find_one({'_id': response.json()['result']['id']})
+    imported = client.portal.call(imported_record)
+
+    def domain_fields(record):
+        record = deepcopy(record)
+        for key in list(record):
+            if key in ('_id', 'created_at', 'updated_at', 'updated_by') or key.startswith('page_package_'):
+                record.pop(key)
+        # Сравниваем и новые UUID модулей, и ссылки roster_import на эти UUID.
+        module_ids = {module['id']: index for index, module in enumerate(record.get('modules', []))}
+        for module in record.get('modules', []):
+            module['id'] = module_ids[module['id']]
+        for roster in record.get('roster_import', []):
+            roster['module_id'] = module_ids.get(roster['module_id'], roster['module_id'])
+        return record
+
+    assert domain_fields(imported) == domain_fields(direct)

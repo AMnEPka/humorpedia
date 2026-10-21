@@ -379,16 +379,16 @@ def test_new_person_is_created_only_after_final_batch(monkeypatch, editorial_cli
     db.shows.docs["show-2"] = {"_id": "show-2", "slug": "show-two", "title": "Второе шоу"}
     created_people = []
 
-    async def fake_create_content(_collection, person, _tags):
+    async def fake_create_content(_collection, person, _tags, *, db):
         created_people.append(person)
         return {"id": "new-person", "slug": person.slug}
 
-    async def no_link(_person_id):
+    async def no_link(_db, _person_id):
         return None
 
-    from routes import content_people
+    from services import content_commands
     monkeypatch.setattr(route, "create_content", fake_create_content)
-    monkeypatch.setattr(content_people, "_link_person_everywhere", no_link)
+    monkeypatch.setattr(content_commands, "link_person_everywhere", no_link)
     proposal = _proposal(
         kind="new_person", person_id=None, candidate_name="Новый комик", candidate_slug="novyi-komik",
         changes=_complete_candidate_changes(),
@@ -443,16 +443,16 @@ def test_new_person_appearance_failure_keeps_created_id_and_retry_recovers(monke
     db.shows.docs["show-2"] = {"_id": "show-2", "slug": "show-two", "title": "Второе шоу"}
     created = []
 
-    async def fake_create_content(_collection, person, _tags):
+    async def fake_create_content(_collection, person, _tags, *, db):
         created.append(person)
         return {"id": person.id, "slug": person.slug}
 
-    async def no_link(_person_id):
+    async def no_link(_db, _person_id):
         return None
 
-    from routes import content_people
+    from services import content_commands
     monkeypatch.setattr(route, "create_content", fake_create_content)
-    monkeypatch.setattr(content_people, "_link_person_everywhere", no_link)
+    monkeypatch.setattr(content_commands, "link_person_everywhere", no_link)
     apply_appearance = route._apply_appearance
     attempts = {"count": 0}
 

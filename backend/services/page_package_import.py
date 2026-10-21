@@ -128,16 +128,16 @@ async def copy_assets(db, doc, actor):
     return mapping
 
 
-async def create_document(doc, page):
+async def create_document(db, doc, page):
     payload = {**page, 'status': 'archived'}
     if doc['kind'] == 'person':
-        from routes.content_people import create_person_record
-        return await create_person_record(PersonCreate.model_validate(payload), document_id=doc['target_id'], defer_links=True, page_package_id=doc['_id'])
+        from services.content_commands import create_person_record
+        return await create_person_record(db, PersonCreate.model_validate(payload), document_id=doc['target_id'], defer_links=True, page_package_id=doc['_id'])
     if doc['kind'] == 'team':
-        from routes.content_teams import create_team_record
-        return await create_team_record(TeamCreate.model_validate(payload), document_id=doc['target_id'], defer_links=True, page_package_id=doc['_id'])
-    from routes.content_shows import create_show_record
-    return await create_show_record(ShowCreate.model_validate(payload), document_id=doc['target_id'], page_package_id=doc['_id'])
+        from services.content_commands import create_team_record
+        return await create_team_record(db, TeamCreate.model_validate(payload), document_id=doc['target_id'], defer_links=True, page_package_id=doc['_id'])
+    from services.content_commands import create_show_record
+    return await create_show_record(db, ShowCreate.model_validate(payload), document_id=doc['target_id'], page_package_id=doc['_id'])
 
 
 async def finish_import(db, doc, target, actor, warnings=()):
@@ -228,7 +228,7 @@ async def apply(db, package_id, data, actor):
         collection = db[COLLECTIONS[doc['kind']]]
         target = await collection.find_one({'_id': doc['target_id']})
         if not target:
-            await create_document(doc, page)
+            await create_document(db, doc, page)
             target = await collection.find_one({'_id': doc['target_id']})
         elif (target.get('page_package_id') != doc['_id'] or target.get('page_package_state') != 'preparing'
               or target.get('status') != 'archived' or target.get('page_package_manual_change')
@@ -240,8 +240,8 @@ async def apply(db, package_id, data, actor):
             from services.memberships import import_team_rosters
             await import_team_rosters(db, await collection.find_one({'_id': doc['target_id']}))
         elif doc['kind'] == 'person':
-            from routes.content_people import _link_person_everywhere
-            await _link_person_everywhere(doc['target_id'])
+            from services.content_commands import link_person_everywhere
+            await link_person_everywhere(db, doc['target_id'])
         elif doc['kind'] == 'show':
             from services.show_appearances import link_participant_cards
             linked = await link_participant_cards(db, await collection.find_one({'_id': doc['target_id']}))

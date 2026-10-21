@@ -408,10 +408,10 @@ async def _create_new_person(db, proposal: dict, identity, accepted_changes: lis
             id=person_id, title=payload.title, full_name=payload.full_name, slug=payload.slug, aliases=payload.aliases,
             bio=payload.bio or {}, facts=payload.facts or {}, facts_order=payload.facts_order or [],
             modules=payload.modules, tags=payload.tags, seo=payload.seo or {}, status=payload.status,
-        ), payload.tags)
-    # Keep the existing people links in sync using the same helper as the CRUD route.
-    from routes.content_people import _link_person_everywhere
-    await _link_person_everywhere(result["id"])
+        ), payload.tags, db=db)
+    # Сохраняем связи через ту же доменную операцию, что и обычный CRUD.
+    from services.content_commands import link_person_everywhere
+    await link_person_everywhere(db, result["id"])
     return {"id": result["id"], "slug": result["slug"]}, appearance_changes
 
 

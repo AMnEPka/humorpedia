@@ -18,7 +18,7 @@
 
 **Продолжение 21.10.2026, исходный HEAD `405f05f`:** F1–F3 и гонка ZIP опубликованы; поверх этого HEAD выполнены общий API base (R2), обязательная версия HTTP-записи сезона (R3) и основные CI-проверки R4. Каждый пакет включает код и документацию отдельным коммитом. Ручная приёмка сессии, браузерный CI smoke и GitHub Actions остаются открытыми. Подробные результаты — в том же отчёте.
 
-**Продолжение R5 от 21.10.2026:** подготовка и локальная приёмка завершены в отдельном worktree `.codex/worktrees/r5-zip-operations/humorpedia` ветки `codex/local-page-builder`, исходный HEAD `85f4fd1`. Основной checkout сохранён на `main` (`ca46155`), импорт источников не менялся. По поручению пользователя R5 оформляется отдельным коммитом с документацией и публикуется в ту же ветку; на VPS ничего не выкладывалось. Подробности — в [отчёте](initial-refactoring-fixes-2026-10-21.md#r5-эксплуатация-zip-в-отдельном-worktree).
+**Продолжение R5 от 21.10.2026:** подготовка и локальная приёмка завершены в отдельном worktree `.codex/worktrees/r5-zip-operations/humorpedia` ветки `codex/local-page-builder`, исходный HEAD `85f4fd1`. Основной checkout сохранён на `main` (`ca46155`), импорт источников не менялся. R5 опубликован отдельным коммитом `a91b156` с документацией в `origin/codex/local-page-builder`; на VPS ничего не выкладывалось. Подробности — в [отчёте](initial-refactoring-fixes-2026-10-21.md#r5-эксплуатация-zip-в-отдельном-worktree).
 
 ## 1. Оценка проекта
 
@@ -317,10 +317,11 @@ flowchart LR
 
 **Создать:** `backend/services/content_commands.py`, `tests/test_content_commands.py`. **Изменить:** `content_people/content_teams/content_shows`, `editorial_proposals`, `page_package_import`.
 
-- [ ] Сначала перенести существующие `create_person_record`, `create_team_record`, `create_show_record`, `_link_person_everywhere` с сохранением сигнатур и поведения. На первом шаге допустимы совместимые обёртки в routes.
-- [ ] Разделить запись основного документа и явно вызываемые link/sync-операции, сохранив опции `document_id`, `defer_links`, `page_package_id` там, где они уже предусмотрены. Передача `db` должна быть явной внутри workflow.
-- [ ] Перевести importer и editorial service на новые функции; устранить импорт `services → routes` для этих сценариев. Не переносить весь CRUD в новые классы ради структуры.
-- [ ] Приёмка: одинаковые данные при обычном API и ZIP-импорте; прежние auth guards и 9 integration-тестов проходят; связи и кэш обновляются как раньше.
+- [x] Перенесены `create_person_record`, `create_team_record`, `create_show_record` и `link_person_everywhere` в `services/content_commands.py`; прежние функции в routes остались совместимыми обёртками. Нужные scaffold/hierarchy helpers переиспользуются из сервиса, прежние route-имена доступны.
+- [x] Запись через CRUD и последующие link/sync-операции используют явный `db`, включая проверку slug/primary_tag и синхронизацию тегов. Сохранены `document_id`, `defer_links`, `page_package_id`, порядок связывания и инвалидации кэша. Старые CRUD/tag вызовы без `db` совместимы.
+- [x] ZIP importer и `editorial_proposals` используют доменные операции без импорта routes. Особый состав полей новой редакционной персоны сохранён. `services/editorial_imports.py` и остальные файлы 24СМИ не менялись по границе задачи; их прежняя совместимая route-обёртка сохранена.
+- [x] Локальная приёмка на `a91b156` + diff R6: 7 новых unit cases RED → GREEN; полный backend **974 passed / 15 skipped**, включая прежние 9 ZIP integration и 3 новые сверки полей обычного API ↔ ZIP. Auth guards и редакционные предложения прошли. Независимое ревью не нашло Critical/Important; HTTP smoke отдельного Uvicorn проверил 3 типа: анонимный POST 401, editor create/read и ZIP preview/apply/edit/read 200, readiness 200.
+- [x] По поручению пользователя R6 оформляется отдельным коммитом с документацией и публикуется в ветку рефакторинга. Hosted CI и приёмка после возможного объединения/выкладки не выполнялись; основной стенд остаётся на main.
 
 ### R7. Укрепить переходы состояний
 
