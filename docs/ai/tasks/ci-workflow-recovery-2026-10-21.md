@@ -16,6 +16,6 @@ MongoDB запускается после checkout через scripts/ci/start-m
 
 ## Проверки и публикация
 
-До коммита: actionlint, bash -n, реальный helper на изолированной Mongo и random loopback порту. Результаты hosted CI будут записаны после push; локальный запуск не доказывает работу на ядре hosted runner.
+До коммита: actionlint, bash -n, реальный helper на изолированной Mongo и random loopback порту. После push проверен [run 39611516778](https://github.com/AMnEPka/humorpedia/actions/runs/39611516778) на b67aacb: completed/success. Все пять jobs прошли; MongoDB стартовала на hosted runner и интеграция/browser smoke дошли до тестов. Исправление CI опубликовано отдельным коммитом 5d369dd.
 
 Проверка перед публикацией: actionlint с ShellCheck, bash -n и реальный helper прошли. Дополнительно разделены присваивание SMOKE_RUN_ID и export (SC2155), чтобы ошибка генератора не маскировалась export. Mongo ответила на ping на отдельном random loopback порту; основной стек не перезапускался.

@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, CheckCircle2, XCircle, ArrowRight, RotateCcw, Share2, Trophy } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Share2, Trophy } from 'lucide-react';
 import { usePageTitle } from '@/utils/pageTitle';
 import FittedImage from '@/components/FittedImage';
 import { contentImageUrl } from '@/utils/media';
 import { sanitizeHTML } from '../utils/sanitize';
 import { ModuleList } from '../components/ModuleRenderer';
+import PageLoading from '../components/PageLoading';
 
 export function getQuizModuleData(modules = []) {
   const questionsModule = modules.find(module => module.type === 'quiz_questions' && module.visible !== false);
@@ -177,13 +178,7 @@ export default function QuizDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoading height="min-h-[400px]" color="text-primary" />;
 
   if (error || !quiz) {
     return (

@@ -12,7 +12,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "image",
@@ -34,7 +39,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "text_block",
@@ -59,7 +69,12 @@
       "TeamDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "timeline",
@@ -77,7 +92,12 @@
       "TeamDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "tags",
@@ -99,7 +119,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "table",
@@ -121,7 +146,12 @@
       "ModuleRenderer",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "gallery",
@@ -144,7 +174,12 @@
       "ModuleRenderer",
       "TeamDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "video",
@@ -163,7 +198,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "quote",
@@ -179,7 +219,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "poll",
@@ -193,7 +238,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": false
+    }
   },
   {
     "type": "poster_photo",
@@ -210,7 +260,12 @@
       "TeamDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "system",
+      "placement": "sidebar",
+      "preview": true
+    }
   },
   {
     "type": "facts_table",
@@ -227,7 +282,12 @@
       "TeamDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "system",
+      "placement": "sidebar",
+      "preview": true
+    }
   },
   {
     "type": "tags_cloud",
@@ -244,7 +304,12 @@
       "TeamDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "system",
+      "placement": "sidebar",
+      "preview": true
+    }
   },
   {
     "type": "social_links",
@@ -261,7 +326,12 @@
       "TeamDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "system",
+      "placement": "sidebar",
+      "preview": true
+    }
   },
   {
     "type": "rating_widget",
@@ -276,7 +346,12 @@
       "PersonDetailPage",
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "system",
+      "placement": "sidebar",
+      "preview": false
+    }
   },
   {
     "type": "team_members",
@@ -289,7 +364,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "tv_appearances",
@@ -302,7 +382,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "games_list",
@@ -315,7 +400,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "episodes_list",
@@ -328,7 +418,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "participants",
@@ -341,7 +436,12 @@
     "owners": [
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "entity",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "best_articles",
@@ -356,7 +456,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "interesting",
@@ -371,7 +476,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "random_page",
@@ -386,7 +496,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": false
+    }
   },
   {
     "type": "quiz_questions",
@@ -399,7 +514,12 @@
     "owners": [
       "QuizDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "quiz",
+      "placement": "content",
+      "preview": false
+    }
   },
   {
     "type": "quiz_results",
@@ -412,7 +532,12 @@
     "owners": [
       "QuizDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "quiz",
+      "placement": "content",
+      "preview": false
+    }
   },
   {
     "type": "first_league_champions",
@@ -426,7 +551,12 @@
       "SectionDetailPage:LeagueSeasonsPage"
     ],
     "schema": "PageModule",
-    "page_scope": "league"
+    "page_scope": "league",
+    "rendering": {
+      "owner": "entity",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "vl_league_champions",
@@ -440,7 +570,12 @@
       "SectionDetailPage:LeagueSeasonsPage"
     ],
     "schema": "PageModule",
-    "page_scope": "league"
+    "page_scope": "league",
+    "rendering": {
+      "owner": "entity",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "table_of_contents",
@@ -451,7 +586,12 @@
     "owners": [
       "Page-level TOC independent of marker"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "system",
+      "placement": "page",
+      "preview": true
+    }
   },
   {
     "type": "person_card",
@@ -462,7 +602,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "related_links",
@@ -473,7 +618,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "html",
@@ -484,7 +634,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "divider",
@@ -495,7 +650,12 @@
     "owners": [
       "ModuleRenderer"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "generic",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "text",
@@ -506,7 +666,12 @@
     "owners": [
       "PersonDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "entity",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "cast_list",
@@ -517,7 +682,12 @@
     "owners": [
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "entity",
+      "placement": "content",
+      "preview": true
+    }
   },
   {
     "type": "seasons_list",
@@ -528,6 +698,11 @@
     "owners": [
       "ShowDetailPage"
     ],
-    "schema": "PageModule"
+    "schema": "PageModule",
+    "rendering": {
+      "owner": "entity",
+      "placement": "content",
+      "preview": true
+    }
   }
 ]

@@ -10,6 +10,7 @@ import EmojiRating from '@/components/EmojiRating';
 import { ExternalLink } from 'lucide-react';
 import FittedImage from '@/components/FittedImage';
 import { contentImageUrl } from '@/utils/media';
+import { isSidebarModule } from '@/moduleContract';
 
 /**
  * Модуль фото/постера
@@ -662,5 +663,5 @@ export function renderSystemModule(module, data, className = '') {
  * Проверяет, является ли модуль системным (для сайдбара)
  */
 export function isSystemModule(moduleType) {
-  return ['poster_photo', 'facts_table', 'rating_widget', 'tags_cloud', 'social_links'].includes(moduleType);
+  return isSidebarModule(moduleType);
 }

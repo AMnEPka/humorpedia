@@ -1,17 +1,18 @@
 import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Users, MapPin, Trophy, Share2, Calendar, List } from 'lucide-react';
+import { Users, MapPin, Trophy, Share2, Calendar, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import publicApi from '../utils/api';
-import { 
-  isSystemModule 
-} from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
 import TeamParticipations from '../components/competitions/TeamParticipations';
 import TeamRoster from '../components/competitions/TeamRoster';
 import CommonModuleRenderer from '../components/ModuleRenderer';
+import { selectPageModules } from '../components/moduleSelection';
+import TextModuleCard from '../components/TextModuleCard';
+import PageLoading from '../components/PageLoading';
+import { scrollToModule } from '../components/moduleNavigation';
 import { teamPageTitle, teamSubtitle } from '@/utils/teams';
 import FittedImage from '@/components/FittedImage';
 import { teamLogoUrl } from '@/utils/media';
@@ -102,13 +103,6 @@ function TableOfContents({ modules, mode = 'auto', projectsVisible = false }) {
 
   if (items.length === 0) return null;
 
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -121,7 +115,7 @@ function TableOfContents({ modules, mode = 'auto', projectsVisible = false }) {
           {items.map((item, i) => (
             <button
               key={i}
-              onClick={() => scrollToSection(item.id)}
+              onClick={(event) => scrollToModule(event, item.id)}
               className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
             >
               {item.label}
@@ -203,19 +197,9 @@ export default function TeamDetailPage({ showTeamPath = null, preview = false, p
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
-  const sidebarModules = useMemo(() => {
-    if (!team?.modules) return [];
-    return team.modules
-      .filter(m => m.visible !== false && isSystemModule(m.type) && (!preview || !['rating_widget', 'poll', 'random_page'].includes(m.type)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [team?.modules, preview]);
-
-  const contentModules = useMemo(() => {
-    if (!team?.modules) return [];
-    return team.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type) && !isGamesTableModule(m) && (!preview || !['poll', 'random_page', 'quiz_questions', 'quiz_results'].includes(m.type)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [team?.modules, preview]);
+  const { sidebarModules, contentModules } = useMemo(() => (
+    selectPageModules(team?.modules, { preview, excludeContent: isGamesTableModule })
+  ), [team?.modules, preview]);
 
   const manualProjectModules = useMemo(() => {
     if (team?.show_id) return [];
@@ -265,13 +249,7 @@ export default function TeamDetailPage({ showTeamPath = null, preview = false, p
     return entries;
   }, [team?.facts, team?.facts_order]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoading />;
 
   if (error || !team) {
     return (
@@ -635,23 +613,11 @@ export function ModuleRenderer({ module }) {
 
   switch (module.type) {
     case 'text_block':
-      return (
-        <Card id={`section-${module.id}`} className="scroll-mt-20">
-          {module.data?.title && (
-            <CardHeader>
-              <CardTitle>{module.data.title}</CardTitle>
-            </CardHeader>
-          )}
-          <CardContent>
-            <style>{contentStyles}</style>
-            <div 
-              className="prose prose-blue max-w-none overflow-x-auto break-words"
-              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
-            />
-          </CardContent>
-        </Card>
-      );
-    
+      return <TextModuleCard id={'section-' + module.id} className="scroll-mt-20"
+        title={module.data?.title} styles={contentStyles}
+        bodyClassName="prose prose-blue max-w-none overflow-x-auto break-words"
+        content={module.data?.content || ''} />;
+
     case 'timeline':
       const timelineEvents = module.data?.events || module.data?.items || [];
       return (

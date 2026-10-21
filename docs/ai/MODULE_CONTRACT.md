@@ -1,6 +1,6 @@
 # Контракт модулей страниц
 
-Проверено 2026-09-18, этап 0 `legacy-modules-gap-plan.md`, ветка `codex/module-contract`.
+Обновлено 2026-10-21: R9; исходный контракт 2026-09-18, этап 0 `legacy-modules-gap-plan.md`, ветка `codex/module-contract`.
 
 Канонический реестр: `backend/models/module_contract.json`. Backend выдаёт его через
 `GET /api/templates/modules/types`; frontend использует копию `frontend/src/moduleContract.json`.
@@ -56,6 +56,20 @@
 | `text` | special | `ModuleEditor` | PersonDetailPage |  |
 | `cast_list` | special | `ModuleEditor` | ShowDetailPage |  |
 | `seasons_list` | special | `ModuleEditor` | ShowDetailPage |  |
+
+## Правила рендеринга R9
+
+Каждая запись backend JSON имеет добавочное поле rendering:
+
+- owner: generic / system / entity / quiz. Generic — общий renderer, включая его динамические виджеты; entity — доменный адаптер. Конкретные владельцы и переопределения для text_block/timeline/table/gallery остаются в owners.
+- placement: content / sidebar / page. table_of_contents — page: его маркер не включает и не выключает оглавление. Он не становится sidebar-блоком.
+- preview: false только у rating_widget, poll, random_page, quiz_questions и quiz_results. Остальные модули сохраняют прежние правила.
+
+Сезон — владелец целой страницы: season_data направляет SectionDetailPage в SeasonDetailPage. Отдельного типа модуля season нет, архивные modules сезона остаются без публичного рендера. Новые поля реестра не меняют формат PageModule и не расширяют разрешённый набор ZIP/конструктора.
+
+moduleContract.js читает metadata; isSystemModule использует тот же sidebar helper. selectVisibleModules сохраняет visible!==false и стабильный order, не меняя исходный массив; selectPageModules объединяет sidebar/content и preview-фильтр. null/undefined modules означают пустой список. Неизвестные типы, включая имена из Object.prototype, идут в диагностический renderer.
+
+Person/Team/Show используют общий TextModuleCard с прежними якорями, HTML, CSS и нормализацией на стороне страницы. Хронологии, участники, составы, проекты команд, игры, collapsible show text/table остаются доменными. PageLoading используется у пяти detail-страниц с прежней высотой и цветом. TOC вызывает scrollToModule с ownerDocument кнопки, поэтому работает также внутри iframe конструктора.
 
 ## Форматы и совместимость
 

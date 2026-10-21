@@ -200,3 +200,7 @@ Commit/push не выполнялись: remote ref по-прежнему R7 `85
 ## Подготовка публикации
 
 По поручению пользователя CI оформлен отдельным коммитом 5d369dd; [диагностика CI](ci-workflow-recovery-2026-10-21.md). R8 и документация оформляются следующим отдельным коммитом. Перед ним повторно пройдены 1058 backend / 15 skipped, 266 frontend / 47 suites и CI production build. Проверка hosted CI на опубликованном SHA выполняется перед началом реализации R9; окончательные SHA и run будут сохранены в задаче R9. Основной checkout остаётся на main; импорт источников и VPS не меняются.
+
+## Публикация и hosted CI
+
+21.10.2026: R8 и документация опубликованы отдельным коммитом b67aacb73da477863ea1a739068ef4308d41ad63 после CI-коммита 5d369dd. Remote codex/local-page-builder подтверждён на том же SHA. [GitHub Actions](https://github.com/AMnEPka/humorpedia/actions/runs/39611516778) — success: backend, frontend, Mongo integration, Windows tools и browser smoke. Последующее состояние R9 ведётся [отдельно](r9-public-rendering-2026-10-21.md); сведения о неопубликованном R8 выше — исторические контрольные точки.

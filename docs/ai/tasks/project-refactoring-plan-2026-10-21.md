@@ -347,15 +347,18 @@ flowchart LR
 - [x] Read-only отчёт на отдельной копии: 122 проекции и metadata совпадают; 406 round-trip различий в 107 сезонах — только отсутствующий пустой stage.comment. Данные не менялись, хеши шести коллекций совпали. [Все сезоны и ограничения](r8-season-reconciliation-2026-10-21.md). Содержательные конфликты на другой цели по-прежнему требуют редакторского решения.
 - [x] Общий workflow: выбран и реализован журнал на прежней standalone Mongo, durable claims, versioned save и безопасный retry; legacy-адаптер требует версии страницы и сезона.
 - [x] Редактор переведён на canonical API с editor_data/ID sidecars; проекции строятся из сохранённого сезона. Bootstrap missing-only, reverse overwrite существующего сезона удалён; служебные writers обновлены/legacy --apply заблокирован.
-- [x] Локальная приёмка: 1058 backend / 266 frontend, CI build, реальный browser smoke и SIGKILL→409→operator recovery→retry200; двойной rebuild 122 сезонов сохраняет канонику/версии и 9276 связей. Projection/metadata diff=0; 406 прежних missing/empty stage.comment round-trip различий отдельно учтены. [Протокол, CI-причины и ограничения](r8-canonical-seasons-2026-10-21.md). Hosted CI после исправления не запускался; R8 ещё не опубликован.
+- [x] Локальная приёмка: 1058 backend / 266 frontend, CI build, реальный browser smoke и SIGKILL→409→operator recovery→retry200; двойной rebuild 122 сезонов сохраняет канонику/версии и 9276 связей. Projection/metadata diff=0; 406 прежних missing/empty stage.comment round-trip различий отдельно учтены. [Протокол, CI-причины и ограничения](r8-canonical-seasons-2026-10-21.md). CI и R8 опубликованы раздельно: 5d369dd и b67aacb. [Hosted CI на b67aacb](https://github.com/AMnEPka/humorpedia/actions/runs/39611516778) прошёл все пять jobs.
 
 ### R9. Упорядочить публичный рендеринг
 
 **Файлы:** `moduleContract.json`, `public/components/ModuleRenderer.jsx`, `public/pages/{Person,Team,Show,Section}DetailPage.jsx`, существующие contract-тесты; новые общие компоненты только для реально повторяемых блоков.
 
-- [ ] Зафиксировать владельца каждого типа: generic / system / entity / season / quiz. Backend JSON остаётся единственным редактируемым реестром.
-- [ ] Извлечь общие renderer-функции и состояние загрузки; оставить отдельные доменные секции. Preview конструктора использует тот же публичный renderer.
-- [ ] Приёмка: порядок, `visible`, заголовки, TOC, gallery/video, unknown module, season_data и quiz не теряются и не дублируются; страницы и preview проверены на 390 и 1120 px. Не создавать «универсальную страницу» с десятками флагов.
+- [x] Зафиксировать владельца каждого типа: generic / system / entity / season / quiz. Backend JSON остаётся единственным редактируемым реестром.
+- [x] Извлечь общие renderer-функции и состояние загрузки; оставить отдельные доменные секции. Preview конструктора использует тот же публичный renderer.
+- [x] Приёмка: порядок, `visible`, заголовки, TOC, gallery/video, unknown module, season_data и quiz не теряются и не дублируются; страницы и preview проверены на 390 и 1120 px. Не создавать «универсальную страницу» с десятками флагов.
+
+
+Реализовано и принято локально: 309 frontend / 55 backend contract, production build, реальный browser smoke 390/1120. TOC preview исправлен через ownerDocument. R9 подготовлен к отдельному коммиту по поручению пользователя; [протокол и границы проверки](r9-public-rendering-2026-10-21.md).
 
 ### R10. Разделить крупные редакторы
 

@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, Calendar, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
+import { Calendar, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,11 @@ import publicApi from '../utils/api';
 import PersonCareer from '../components/competitions/PersonCareer';
 import ShowAppearances from '../components/ShowAppearances';
 import CommonModuleRenderer from '../components/ModuleRenderer';
+import { selectPageModules } from '../components/moduleSelection';
+import TextModuleCard from '../components/TextModuleCard';
+import PageLoading from '../components/PageLoading';
+import { scrollToModule } from '../components/moduleNavigation';
 import { 
-  isSystemModule,
   addAgeToDate
 } from '@/components/SystemModules';
 import { usePageTitle } from '@/utils/pageTitle';
@@ -55,13 +58,6 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
 
   if (items.length === 0) return null;
 
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <Card className="mt-6">
       <CardHeader className="pb-2">
@@ -74,7 +70,7 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
           {items.map((item, i) => (
             <button
               key={i}
-              onClick={() => scrollToSection(item.id)}
+              onClick={(event) => scrollToModule(event, item.id)}
               className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors flex items-start gap-2"
             >
               <span className="text-blue-600 font-medium whitespace-nowrap">{item.label}</span>
@@ -160,30 +156,14 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
-  const sidebarModules = useMemo(() => {
-    if (!person?.modules) return [];
-    return person.modules
-      .filter(m => m.visible !== false && isSystemModule(m.type) && (!preview || !['rating_widget', 'poll', 'random_page'].includes(m.type)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [person?.modules, preview]);
-
-  const contentModules = useMemo(() => {
-    if (!person?.modules) return [];
-    return person.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type) && (!preview || !['poll', 'random_page', 'quiz_questions', 'quiz_results'].includes(m.type)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [person?.modules, preview]);
+  const { sidebarModules, contentModules } = useMemo(() => (
+    selectPageModules(person?.modules, { preview })
+  ), [person?.modules, preview]);
 
   const timelineModuleIndex = contentModules.findIndex(module => module.type === 'timeline');
   const careerInsertIndex = timelineModuleIndex === -1 ? contentModules.length : timelineModuleIndex;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoading />;
 
   if (error || !person) {
     return (
@@ -582,22 +562,9 @@ export function ModuleRenderer({ module, index, personId }) {
       );
     
     case 'text_block':
-      return (
-        <Card id={`section-${index}`}>
-          {module.data?.title && (
-            <CardHeader>
-              <CardTitle>{module.data.title}</CardTitle>
-            </CardHeader>
-          )}
-          <CardContent>
-            <div 
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: normalizeRichText(module.data?.content || '') }}
-            />
-          </CardContent>
-        </Card>
-      );
-    
+      return <TextModuleCard id={'section-' + index} title={module.data?.title}
+        content={normalizeRichText(module.data?.content || '')} />;
+
     default:
       return <CommonModuleRenderer module={module} personId={personId} />;
   }

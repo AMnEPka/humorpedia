@@ -1,12 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Loader2, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import publicApi from '../utils/api';
 import ModuleRenderer, { ModuleList } from '../components/ModuleRenderer';
+import PageLoading from '../components/PageLoading';
 import RelatedArticles from '../components/RelatedArticles';
 import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
@@ -352,13 +353,7 @@ export default function SectionDetailPage() {
     </div>
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoading />;
 
   if (error || !section) {
     return (

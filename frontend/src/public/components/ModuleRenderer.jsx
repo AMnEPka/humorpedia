@@ -5,8 +5,9 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { publicApi } from '../utils/api';
 import ContentTable from './ContentTable';
-import { moduleContract } from '@/moduleContract';
+import { isGenericModule } from '@/moduleContract';
 import { ModuleFrame, StructuredListModule, ContentWidget, VideoModule } from './AdditionalModules';
+import { selectVisibleModules } from './moduleSelection';
 
 /**
  * Renders a single content module based on its type
@@ -17,7 +18,7 @@ export default function ModuleRenderer({ module, personId }) {
   const { type, data } = module;
   // Эти модули принадлежат sidebar, квизу, лиге или специализированной странице.
   // Их отсутствие в общем потоке — явный контракт, а не неизвестный тип.
-  if (['system', 'special'].includes(moduleContract[type]?.kind)) return null;
+  if (!isGenericModule(type)) return null;
 
   switch (type) {
     case 'hero_card':
@@ -331,9 +332,7 @@ function PollModule({ module }) {
 export function ModuleList({ modules, personId }) {
   if (!modules || modules.length === 0) return null;
 
-  const sortedModules = [...modules]
-    .filter(m => m.visible !== false)
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
+  const sortedModules = selectVisibleModules(modules);
 
   return (
     <div className="space-y-6">

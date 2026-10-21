@@ -36,6 +36,10 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     AlphabetFilter.jsx         общий фильтр людей, команд, шоу и городов: показывает только буквы из `available_letters`; последний пункт `A–Z 0–9 #` объединяет латиницу, цифры и символы
     ForeignAgentNotice.jsx     динамическая звёздочка у имени и единое пояснение для людей, статей и новостей
     ModuleRenderer.jsx         рендер контентных модулей, включая poll (до/после голоса, доступная radio-group) и fallback неизвестного типа
+    moduleSelection.js         общий visible/order/sidebar/preview selection из backend registry; доменные исключения передаёт страница
+    TextModuleCard.jsx          общий каркас текста; якоря, HTML и CSS задаёт доменный renderer
+    PageLoading.jsx             общий loader с прежними размерами страниц
+    moduleNavigation.js        scrollToModule ищет якорь в ownerDocument кнопки, включая preview iframe
     RatingCard.jsx             среднее, веха числа голосов и 10 кнопок-смайликов
     RelatedArticles.jsx        общий смешанный блок «Читайте также» для detail-страниц; URL и подпись типа приходят из API
     RelatedNews.jsx            компактный блок ≤3 свежих новостей после первого контентного блока

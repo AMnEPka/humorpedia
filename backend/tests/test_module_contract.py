@@ -246,3 +246,34 @@ def test_random_page_api_retains_navigation_fields(monkeypatch, tmp_path, conten
     for field in ["_id", "slug", "full_path", "show_id", "url"]:
         assert response.json()[field] == document[field]
     assert "private_field" not in response.json()
+
+
+def test_registry_declares_stable_rendering_ownership_and_placement():
+    sidebar_types = {"poster_photo", "facts_table", "tags_cloud", "social_links", "rating_widget"}
+    system_types = sidebar_types | {"table_of_contents"}
+    entity_types = {
+        "participants", "text", "cast_list", "seasons_list",
+        "first_league_champions", "vl_league_champions",
+    }
+    quiz_types = {"quiz_questions", "quiz_results"}
+    preview_hidden = {"rating_widget", "poll", "random_page", "quiz_questions", "quiz_results"}
+
+    for entry in MODULE_CONTRACT:
+        module_type = entry["type"]
+        if module_type in quiz_types:
+            owner = "quiz"
+        elif module_type in system_types:
+            owner = "system"
+        elif module_type in entity_types:
+            owner = "entity"
+        elif entry["kind"] in {"content", "dynamic"}:
+            owner = "generic"
+        else:
+            pytest.fail(f"Unclassified rendering owner: {module_type} ({entry['kind']})")
+        expected = {
+            "owner": owner,
+            "placement": "sidebar" if module_type in sidebar_types else
+                         "page" if module_type == "table_of_contents" else "content",
+            "preview": module_type not in preview_hidden,
+        }
+        assert entry.get("rendering") == expected, module_type

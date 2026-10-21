@@ -1,6 +1,7 @@
 """Настоящее приложение и production frontend на одноразовой БД для browser smoke."""
 from contextlib import asynccontextmanager
 import os
+import base64
 from pathlib import Path
 import re
 import sys
@@ -30,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "backend"))
 
 from server import app  # noqa: E402
 from starlette.exceptions import HTTPException  # noqa: E402
-from starlette.responses import FileResponse  # noqa: E402
+from starlette.responses import FileResponse, Response  # noqa: E402
 from starlette.staticfiles import StaticFiles  # noqa: E402
 from utils.database import close_db, get_db  # noqa: E402
 
@@ -69,6 +70,14 @@ app.router.lifespan_context = isolated_lifespan
 @app.get("/__browser_smoke__/status")
 async def smoke_status():
     return {"run_id": run_id, "database": database_name}
+
+
+@app.get("/__browser_smoke__/image.png")
+async def smoke_image():
+    # Same-origin deterministic gallery image; never writes into production media.
+    return Response(base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j1ZkAAAAASUVORK5CYII="
+    ), media_type="image/png")
 
 
 class FrontendFiles(StaticFiles):

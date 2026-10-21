@@ -4,13 +4,15 @@ import { publicApi } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
-import { isSystemModule } from '@/components/SystemModules';
+import { Calendar, Tv, Users, ExternalLink, Trophy } from 'lucide-react';
 import { usePageTitle } from '@/utils/pageTitle';
 import { contentImageUrl, orderedFacts } from '@/utils/media';
 import FittedImage from '@/components/FittedImage';
 import ContentTable from '../components/ContentTable';
 import CommonModuleRenderer from '../components/ModuleRenderer';
+import { selectPageModules } from '../components/moduleSelection';
+import TextModuleCard from '../components/TextModuleCard';
+import PageLoading from '../components/PageLoading';
 import CollapsibleCard from '../components/CollapsibleCard';
 import TeamDetailPage from './TeamDetailPage';
 import { isShowTeamPath } from '@/utils/teams';
@@ -58,23 +60,10 @@ export function ModuleRenderer({ module }) {
           </CollapsibleCard>
         );
       }
-      return (
-        <Card>
-          {module.data?.title && (
-            <CardHeader>
-              <CardTitle>{module.data.title}</CardTitle>
-            </CardHeader>
-          )}
-          <CardContent>
-            <style>{tableStyles}</style>
-            <div
-              className="prose prose-lg max-w-none overflow-x-auto break-words"
-              dangerouslySetInnerHTML={{ __html: module.data?.content || '' }}
-            />
-          </CardContent>
-        </Card>
-      );
-    
+      return <TextModuleCard title={module.data?.title} styles={tableStyles}
+        bodyClassName="prose prose-lg max-w-none overflow-x-auto break-words"
+        content={module.data?.content || ''} />;
+
     case 'gallery':
     case 'video':
       return <CommonModuleRenderer module={module} />;
@@ -267,27 +256,11 @@ function ShowPage({ fullPath, preview = false, previewDocument = null, previewRe
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
-  const sidebarModules = useMemo(() => {
-    if (!show?.modules) return [];
-    return show.modules
-      .filter(m => m.visible !== false && isSystemModule(m.type) && (!preview || !['rating_widget', 'poll', 'random_page'].includes(m.type)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [show?.modules, preview]);
+  const { sidebarModules, contentModules } = useMemo(() => (
+    selectPageModules(show?.modules, { preview })
+  ), [show?.modules, preview]);
 
-  const contentModules = useMemo(() => {
-    if (!show?.modules) return [];
-    return show.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type) && (!preview || !['poll', 'random_page', 'quiz_questions', 'quiz_results'].includes(m.type)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [show?.modules, preview]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoading height="min-h-[400px]" color="text-primary" />;
 
   if (error || !show) {
     return (
