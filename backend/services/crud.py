@@ -267,6 +267,7 @@ async def create_content(
     tags: list = None,
     *,
     published_status=None,
+    page_package_id=None,
 ):
     """Universal create handler.
 
@@ -282,6 +283,9 @@ async def create_content(
     doc = model_instance.model_dump(by_alias=True)
     doc["created_at"] = doc["created_at"].isoformat()
     doc["updated_at"] = doc["updated_at"].isoformat()
+    if page_package_id:
+        doc.update(page_package_id=page_package_id, page_package_state='preparing',
+                   page_package_initial_updated_at=doc['updated_at'])
 
     # For KVN, generate a separate UUID 'id' field
     if collection_name == "kvn":

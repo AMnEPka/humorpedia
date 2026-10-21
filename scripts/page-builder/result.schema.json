@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sections", "warnings", "questions"],
+  "properties": {
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["heading", "paragraphs", "fact_ids"],
+        "properties": {
+          "heading": {"type": "string"},
+          "paragraphs": {"type": "array", "items": {"type": "string"}},
+          "fact_ids": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "questions": {"type": "array", "items": {"type": "string"}}
+  }
+}

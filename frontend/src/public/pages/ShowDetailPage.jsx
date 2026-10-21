@@ -221,7 +221,7 @@ export function ModuleRenderer({ module }) {
   }
 }
 
-export default function ShowDetailPage() {
+export default function ShowDetailPage({ preview = false, previewDocument = null, previewRelations = [] } = {}) {
   const { slug, parentSlug, childSlug, grandchildSlug, greatGrandchildSlug } = useParams();
   // Собираем полный путь из всех параметров
   // Если есть parentSlug, значит это вложенный путь
@@ -233,12 +233,12 @@ export default function ShowDetailPage() {
   if (isShowTeamPath(fullPath)) {
     return <TeamDetailPage showTeamPath={fullPath} />;
   }
-  return <ShowPage fullPath={fullPath} />;
+  return <ShowPage fullPath={fullPath} preview={preview} previewDocument={previewDocument} previewRelations={previewRelations} />;
 }
 
-function ShowPage({ fullPath }) {
-  const [show, setShow] = useState(null);
-  const [loading, setLoading] = useState(true);
+function ShowPage({ fullPath, preview = false, previewDocument = null, previewRelations = [] }) {
+  const [show, setShow] = useState(previewDocument);
+  const [loading, setLoading] = useState(!preview);
   const [error, setError] = useState(null);
   const [showAllTags, setShowAllTags] = useState(false);
 
@@ -246,6 +246,12 @@ function ShowPage({ fullPath }) {
 
   useEffect(() => {
     setShowAllTags(false);
+    if (preview) {
+      setShow(previewDocument);
+      setLoading(false);
+      setError(null);
+      return undefined;
+    }
     if (!fullPath) {
       setError('Шоу не найдено');
       setLoading(false);
@@ -257,23 +263,23 @@ function ShowPage({ fullPath }) {
       .then(res => setShow(res.data))
       .catch(() => setError('Шоу не найдено'))
       .finally(() => setLoading(false));
-  }, [fullPath]);
+  }, [fullPath, preview, previewDocument]);
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
   const sidebarModules = useMemo(() => {
     if (!show?.modules) return [];
     return show.modules
-      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .filter(m => m.visible !== false && isSystemModule(m.type) && (!preview || !['rating_widget', 'poll', 'random_page'].includes(m.type)))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [show?.modules]);
+  }, [show?.modules, preview]);
 
   const contentModules = useMemo(() => {
     if (!show?.modules) return [];
     return show.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .filter(m => m.visible !== false && !isSystemModule(m.type) && (!preview || !['poll', 'random_page', 'quiz_questions', 'quiz_results'].includes(m.type)))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [show?.modules]);
+  }, [show?.modules, preview]);
 
   if (loading) {
     return (
@@ -477,27 +483,23 @@ function ShowPage({ fullPath }) {
             </Card>
           )}
 
-          <RatingCard entityType="show" entityId={show._id || show.id} />
+          {!preview && <RatingCard entityType="show" entityId={show._id || show.id} />}
         </div>
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6 min-w-0">
-          {contentModules.length === 0 && (
-            <RelatedNews entityType="show" entityId={show._id || show.id || show.slug} />
-          )}
+          {!preview && contentModules.length === 0 && <RelatedNews entityType="show" entityId={show._id || show.id || show.slug} />}
           {contentModules.map((module, index) => (
             <Fragment key={module.id || index}>
               <ModuleRenderer module={module} />
-              {index === 0 && (
-                <RelatedNews entityType="show" entityId={show._id || show.id || show.slug} />
-              )}
+              {!preview && index === 0 && <RelatedNews entityType="show" entityId={show._id || show.id || show.slug} />}
             </Fragment>
           ))}
-          <ForeignAgentNotice
+          {!preview && <ForeignAgentNotice
             visible={show.foreign_agent_notice}
             notices={show.foreign_agent_notices}
-          />
-          <RelatedArticles contentType="show" contentId={show._id || show.id || show.slug} />
+          />}
+          {!preview && <RelatedArticles contentType="show" contentId={show._id || show.id || show.slug} />}
         </div>
       </div>
     </div>

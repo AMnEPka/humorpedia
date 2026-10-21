@@ -26,6 +26,10 @@ def _without_legacy_marker(value: Optional[str]) -> Optional[str]:
 
 @router.post("/people", response_model=dict)
 async def create_person(data: PersonCreate):
+    return await create_person_record(data)
+
+
+async def create_person_record(data: PersonCreate, *, document_id=None, defer_links=False, page_package_id=None):
     """Create a new person."""
     await check_slug_unique("people", data.slug)
 
@@ -44,14 +48,16 @@ async def create_person(data: PersonCreate):
         primary_tag = swap_name_order(title) or swap_name_order(full_name)
 
     person = Person(
+        **({'id': document_id} if document_id else {}),
         title=title, slug=data.slug, full_name=full_name, aliases=data.aliases,
         foreign_agent=data.foreign_agent,
         photo=data.photo, bio=data.bio or {}, social_links=data.social_links or {},
         facts=data.facts or {}, facts_order=data.facts_order or [], primary_tag=primary_tag,
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status
     )
-    result = await create_content("people", person, data.tags)
-    await _link_person_everywhere(result["id"])
+    result = await create_content("people", person, data.tags, **({'page_package_id': page_package_id} if page_package_id else {}))
+    if not defer_links:
+        await _link_person_everywhere(result["id"])
     return result
 
 

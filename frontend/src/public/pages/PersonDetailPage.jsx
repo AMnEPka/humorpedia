@@ -89,10 +89,13 @@ function TableOfContents({ modules, mode = 'auto', contentType = 'person' }) {
   );
 }
 
-export default function PersonDetailPage() {
+const EMPTY_PREVIEW_RELATIONS = [];
+const APPEARANCE_LABELS = { participant: 'Участник', finalist: 'Финалист', winner: 'Победитель' };
+
+export default function PersonDetailPage({ preview = false, previewDocument = null, previewRelations = EMPTY_PREVIEW_RELATIONS } = {}) {
   const { slug } = useParams();
-  const [person, setPerson] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [person, setPerson] = useState(previewDocument);
+  const [loading, setLoading] = useState(!preview);
   const [error, setError] = useState('');
   const [career, setCareer] = useState(null);
   const [appearances, setAppearances] = useState([]);
@@ -101,6 +104,12 @@ export default function PersonDetailPage() {
   usePageTitle(person?.title || (loading ? 'Человек' : (error ? 'Человек не найден' : 'Человек')));
 
   useEffect(() => {
+    if (preview) {
+      setPerson(previewDocument);
+      setLoading(false);
+      setError('');
+      return undefined;
+    }
     const fetchPerson = async () => {
       setLoading(true);
       setError('');
@@ -115,9 +124,27 @@ export default function PersonDetailPage() {
       }
     };
     fetchPerson();
-  }, [slug]);
+  }, [slug, preview, previewDocument]);
 
   useEffect(() => {
+    if (preview) {
+      setCareer({ teams: [], roles: [] });
+      setAppearances((previewRelations || []).filter((item) => item.kind === 'appearance').map((item) => {
+        const showTitle = item.target?.name || item.target?.slug || 'Шоу';
+        const showPath = item.target?.path || item.target?.slug;
+        const showUrl = showPath ? `/shows/${showPath}` : undefined;
+        const achievement = item.achievement || 'participant';
+        return {
+          id: item.id,
+          show_title: showTitle,
+          show_path: showPath,
+          show_url: showUrl,
+          link_url: showUrl,
+          caption: `${APPEARANCE_LABELS[achievement] || APPEARANCE_LABELS.participant} проекта «${showTitle}»`,
+        };
+      }));
+      return undefined;
+    }
     if (!person?._id) return undefined;
     let active = true;
     setCareer(null);
@@ -129,23 +156,23 @@ export default function PersonDetailPage() {
       .then(({ data }) => { if (active) setAppearances(data.items || []); })
       .catch(() => { if (active) setAppearances([]); });
     return () => { active = false; };
-  }, [person?._id, person?.slug]);
+  }, [person?._id, person?.slug, preview, previewRelations]);
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
   const sidebarModules = useMemo(() => {
     if (!person?.modules) return [];
     return person.modules
-      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .filter(m => m.visible !== false && isSystemModule(m.type) && (!preview || !['rating_widget', 'poll', 'random_page'].includes(m.type)))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [person?.modules]);
+  }, [person?.modules, preview]);
 
   const contentModules = useMemo(() => {
     if (!person?.modules) return [];
     return person.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type))
+      .filter(m => m.visible !== false && !isSystemModule(m.type) && (!preview || !['poll', 'random_page', 'quiz_questions', 'quiz_results'].includes(m.type)))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [person?.modules]);
+  }, [person?.modules, preview]);
 
   const timelineModuleIndex = contentModules.findIndex(module => module.type === 'timeline');
   const careerInsertIndex = timelineModuleIndex === -1 ? contentModules.length : timelineModuleIndex;
@@ -279,13 +306,13 @@ export default function PersonDetailPage() {
               )}
               
               {/* Share */}
-              <Button variant="outline" className="w-full mb-4 order-5" onClick={async () => {
+              {!preview && <Button variant="outline" className="w-full mb-4 order-5" onClick={async () => {
                 try { setShareMessage(await sharePage(person.title) ? 'Ссылка скопирована' : ''); }
                 catch { setShareMessage('Не удалось скопировать ссылку'); }
               }}>
                 <Share2 className="mr-2 h-4 w-4" /> Поделиться
-              </Button>
-              <span role="status" className="block text-sm text-gray-600 order-5">{shareMessage}</span>
+              </Button>}
+              {!preview && <span role="status" className="block text-sm text-gray-600 order-5">{shareMessage}</span>}
 
               {/* Facts Table Module */}
               {sidebarModules.find(m => m.type === 'facts_table') && person.facts && Object.keys(person.facts).length > 0 && (
@@ -371,7 +398,7 @@ export default function PersonDetailPage() {
             </CardContent>
           </Card>
 
-          <RatingCard entityType="person" entityId={person._id || person.id} />
+          {!preview && <RatingCard entityType="person" entityId={person._id || person.id} />}
 
           {/* Table of Contents */}
           <TableOfContents modules={contentModules} contentType="person" />
@@ -379,9 +406,7 @@ export default function PersonDetailPage() {
 
         {/* Main content - динамический рендер контентных модулей */}
         <div className="lg:col-span-2 space-y-6 min-w-0">
-          {contentModules.length === 0 && (
-            <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />
-          )}
+          {!preview && contentModules.length === 0 && <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />}
 
           {/* Tags Cloud Module */}
           {sidebarModules.find(m => m.type === 'tags_cloud') && person.tags?.length > 0 && (
@@ -400,9 +425,7 @@ export default function PersonDetailPage() {
           {contentModules.slice(0, careerInsertIndex).map((module, i) => (
             <Fragment key={module.id || i}>
               <ModuleRenderer module={module} index={i} personId={person._id || person.id} />
-              {i === 0 && (
-                <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />
-              )}
+              {!preview && i === 0 && <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />}
             </Fragment>
           ))}
 
@@ -419,15 +442,13 @@ export default function PersonDetailPage() {
                   index={moduleIndex}
                   personId={person._id || person.id}
                 />
-                {moduleIndex === 0 && (
-                  <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />
-                )}
+                {!preview && moduleIndex === 0 && <RelatedNews entityType="person" entityId={person._id || person.id || person.slug} />}
               </Fragment>
             );
           })}
 
           <ForeignAgentNotice visible={person.foreign_agent_notice} />
-          <RelatedArticles contentType="person" contentId={person._id || person.id || person.slug} />
+          {!preview && <RelatedArticles contentType="person" contentId={person._id || person.id || person.slug} />}
         </div>
       </div>
     </div>

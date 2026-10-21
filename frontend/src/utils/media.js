@@ -52,7 +52,7 @@ export function mediaUrl(...candidates) {
     const rawUrl = typeof value === 'string' ? value : (value?.url || value?.thumbnail);
     const url = normalizeLegacyPattern(rawUrl);
     if (url && url.trim()) {
-      return url.startsWith('/') || url.startsWith('http') ? url : `/${url}`;
+      return url.startsWith('/') || url.startsWith('http') || url.startsWith('blob:') ? url : `/${url}`;
     }
   }
   return null;

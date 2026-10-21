@@ -74,6 +74,8 @@ const TagsPage = React.lazy(() => import('./admin/pages/TagsPage'));
 const CommentsPage = React.lazy(() => import('./admin/pages/CommentsPage'));
 const CorrectionSuggestionsPage = React.lazy(() => import('./admin/pages/CorrectionSuggestionsPage'));
 const EditorialProposalsPage = React.lazy(() => import('./admin/pages/EditorialProposalsPage'));
+const PageBuilderPage = React.lazy(() => import('./admin/pages/PageBuilderPage'));
+const PageImportPage = React.lazy(() => import('./admin/pages/PageImportPage'));
 const UsersPage = React.lazy(() => import('./admin/pages/UsersPage'));
 const TemplatesPage = React.lazy(() => import('./admin/pages/TemplatesPage'));
 const TemplateEditPage = React.lazy(() => import('./admin/pages/TemplateEditPage'));
@@ -257,6 +259,8 @@ function AppRoutes() {
         <Route path="/admin/comments" element={<WithTitle title="Админка: Комментарии"><ProtectedRoute><CommentsPage /></ProtectedRoute></WithTitle>} />
         <Route path="/admin/correction-suggestions" element={<WithTitle title="Админка: Предложения правок"><ProtectedRoute editorOnly><CorrectionSuggestionsPage /></ProtectedRoute></WithTitle>} />
         <Route path="/admin/editorial-proposals" element={<WithTitle title="Админка: Редакционные находки"><ProtectedRoute editorOnly><EditorialProposalsPage /></ProtectedRoute></WithTitle>} />
+        <Route path="/admin/page-builder/:id?" element={<WithTitle title="Админка: Конструктор страниц"><ProtectedRoute editorOnly><PageBuilderPage /></ProtectedRoute></WithTitle>} />
+        <Route path="/admin/page-import" element={<WithTitle title="Админка: Импорт страницы"><ProtectedRoute editorOnly><PageImportPage /></ProtectedRoute></WithTitle>} />
         
         {/* Admin - Users */}
         <Route path="/admin/users" element={<WithTitle title="Админка: Пользователи"><ProtectedRoute><UsersPage /></ProtectedRoute></WithTitle>} />

@@ -51,9 +51,15 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL:-}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ENVIRONMENT=development
+      - LOCAL_PAGE_BUILDER_ENABLED=true
+      - PAGE_BUILDER_DIR=/app/private/page-builder
+      - PAGE_PACKAGE_DIR=/app/private/page-packages
     volumes:
       - ./backend:/app
       - ./uploads:/app/uploads
+      - ./var/page-builder:/app/private/page-builder
+      - ./var/page-packages:/app/private/page-packages
       - ./backups:/app/backups
       # Docker volume for imported images (accessible via /media/imported/images/*)
       # Read-write access for uploading files through web interface
@@ -65,7 +71,7 @@ services:
       mongodb:
         condition: service_healthy
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:8001"
     # Исходники примонтированы из checkout; reload применяет Python-правки без ручного restart.
     command: uvicorn server:app --host 0.0.0.0 --port 8001 --reload --reload-dir /app --reload-delay 1
     restart: unless-stopped
@@ -102,7 +108,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     command: yarn start
     restart: unless-stopped
 

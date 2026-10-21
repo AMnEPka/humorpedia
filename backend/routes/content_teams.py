@@ -1,6 +1,6 @@
 """Team routes — CRUD + bulk operations + KVN league results + scaffold."""
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
-from utils.auth import require_editor_on_write
+from utils.auth import EDITOR_ROLES, get_current_user, require_editor_on_write
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Literal
 from datetime import datetime, timezone
@@ -25,6 +25,7 @@ from services.crud import (
 from services.tags import tag_service
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
+from services.content_visibility import editor_can_view_archived, require_visible, visible_query
 from services.views_counter import views_counter
 from services.competitions import sync_kvn_pages
 from services.memberships import import_team_rosters
@@ -33,7 +34,7 @@ from services.show_teams import (
     KVN_ONLY, attach_related_teams, attach_show_info, check_team_slug_free, get_team_show, kvn_team_query,
     split_team_path, sync_related_teams, team_id_or_kvn_slug_query, team_placement,
 )
-from utils.auth import get_current_user, require_admin
+from utils.auth import require_admin
 
 logger = logging.getLogger(__name__)
 
@@ -676,6 +677,10 @@ async def restore_team_logos(data: RestoreTeamLogosRequest, request: Request):
 
 @router.post("/teams", response_model=dict)
 async def create_team(data: TeamCreate):
+    return await create_team_record(data)
+
+
+async def create_team_record(data: TeamCreate, *, document_id=None, defer_links=False, page_package_id=None):
     """Create a new team (команда шоу — с show_id, адрес /shows/{путь шоу}/teams/{slug})"""
     db = await get_db()
     show = await get_team_show(db, data.show_id)
@@ -715,7 +720,8 @@ async def create_team(data: TeamCreate):
     )
 
     team = Team(
-        title=data.title, slug=data.slug, name=data.name,
+        **({'id': document_id} if document_id else {}),
+        title=data.title, slug=data.slug, name=data.name, aliases=data.aliases,
         team_type=placement.get("team_type") or data.team_type,
         show_id=placement["show_id"], full_path=placement["full_path"],
         logo=logo,
@@ -729,7 +735,7 @@ async def create_team(data: TeamCreate):
         seo=data.seo or {},
         status=data.status
     )
-    result = await create_content("teams", team, data.tags)
+    result = await create_content("teams", team, data.tags, **({'page_package_id': page_package_id} if page_package_id else {}))
 
     if data.related_team_ids:
         related = await sync_related_teams(db, result["id"], data.related_team_ids)
@@ -737,7 +743,7 @@ async def create_team(data: TeamCreate):
 
     # Составы: текстовый блок «Состав команды» → записи «человек — команда»
     created = await db.teams.find_one({"_id": result["id"]})
-    if created:
+    if created and not defer_links:
         await import_team_rosters(db, created)
 
     # ─── Инвалидация кэша ─────────────────────────────────────────────
@@ -762,10 +768,14 @@ async def list_teams(
     year: Optional[int] = Query(None, ge=1900, le=2100),
     show: Optional[str] = Query(None, max_length=100),
     sort: Optional[Literal["popular"]] = None,
+    request: Request = None,
 ):
     """List teams with pagination and filters"""
+    editor = await editor_can_view_archived(request, get_current_user)
+    if not editor and status == ContentStatus.ARCHIVED:
+        raise HTTPException(status_code=404, detail="Teams not found")
     # ─── Кэш: проверяем ──────────────────────────────────────────────
-    cache_key = f"tl:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}:{show_id}:{city}:{league}:{year}:{show}:{sort}"
+    cache_key = f"tl:{int(editor)}:{skip}:{limit}:{status}:{team_type}:{tag}:{search}:{letter}:{show_id}:{city}:{league}:{year}:{show}:{sort}"
     cached = cache_service.get_team_list(cache_key)
     if cached is not None:
         return cached
@@ -788,6 +798,9 @@ async def list_teams(
 
     conditions.extend(await team_conditions(db, city=city, league=league, year=year, show=show))
     availability_conditions = list(conditions)
+    if not editor:
+        conditions.append({"status": {"$ne": ContentStatus.ARCHIVED.value}})
+        availability_conditions.append({"status": {"$ne": ContentStatus.ARCHIVED.value}})
 
     # Поиск подстроки (без учёта регистра) по name, title, slug и aliases
     if search and search.strip():
@@ -834,18 +847,24 @@ async def _find_team(db, id_or_slug: str) -> dict:
     return team
 
 
-async def _add_show_context(db, team: dict) -> dict:
+async def _add_show_context(db, team: dict, include_archived: bool = False) -> dict:
     """Шоу команды и хлебные крошки (шоу → страница-список «Команды …», если есть)."""
     await attach_show_info(db, [team])
     if not team.get("show"):
         return team
     crumbs = []
     fields = {"title": 1, "full_path": 1, "slug": 1, "parent_id": 1}
-    current = await db.shows.find_one({"_id": team["show_id"]}, fields)
+    show_query = {"_id": team["show_id"]}
+    if not include_archived:
+        show_query.update({"status": {"$ne": ContentStatus.ARCHIVED.value}})
+    current = await db.shows.find_one(show_query, fields)
     while current and len(crumbs) < 10:
         crumbs.insert(0, {"title": current.get("title"), "path": "/shows/" + (current.get("full_path") or current["slug"])})
         parent_id = current.get("parent_id")
-        current = await db.shows.find_one({"_id": parent_id}, fields) if parent_id else None
+        parent_query = {"_id": parent_id}
+        if not include_archived:
+            parent_query.update({"status": {"$ne": ContentStatus.ARCHIVED.value}})
+        current = await db.shows.find_one(parent_query, fields) if parent_id else None
     teams_page = await db.shows.find_one(
         {"full_path": f"{team['show']['full_path']}/teams", "status": {"$ne": "archived"}},
         {"title": 1, "full_path": 1},
@@ -857,34 +876,42 @@ async def _add_show_context(db, team: dict) -> dict:
 
 
 @router.get("/teams/by-path/{path:path}", response_model=dict)
-async def get_team_by_path(path: str):
+async def get_team_by_path(path: str, request: Request = None):
     """Команда шоу по адресу: «liga-gorodov/teams/eto-oni» (публичная страница /shows/liga-gorodov/teams/eto-oni)."""
     path = path.strip("/")
     if not split_team_path(path):
         raise HTTPException(status_code=404, detail="Team not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    db = await get_db()
     cache_key = "path:" + path
     cached = cache_service.get_team(cache_key)
     if cached is not None:
+        if cached.get("status") == ContentStatus.ARCHIVED.value and not editor:
+            raise HTTPException(status_code=404, detail="Team not found")
+        current = await db.teams.find_one({"_id": cached["_id"]}, {"status": 1})
+        require_visible(current, editor, "Team not found")
         views_counter.increment("teams", cached["_id"])
         return cached
-    db = await get_db()
-    team = await db.teams.find_one({"full_path": path})
+    team = await db.teams.find_one(visible_query({"full_path": path}, editor))
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+    require_visible(team, editor, "Team not found")
     views_counter.increment("teams", team["_id"])
-    await _add_show_context(db, team)
+    await _add_show_context(db, team, include_archived=editor)
     await attach_related_teams(db, team)
     await LinkResolver.resolve_document(team)
-    cache_service.set_team(cache_key, team)
+    if team.get("status") != ContentStatus.ARCHIVED.value:
+        cache_service.set_team(cache_key, team)
     return team
 
 
 @router.get("/teams/{id_or_slug}", response_model=dict)
-async def get_team(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
+async def get_team(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)"), request: Request = None):
     """Get team by ID or slug — чистое чтение, без write-on-read."""
+    editor = await editor_can_view_archived(request, get_current_user)
     db = await get_db()
     if raw:
-        team = await _find_team(db, id_or_slug)
+        team = require_visible(await _find_team(db, id_or_slug), editor, "Team not found")
         await attach_show_info(db, [team])
         await attach_related_teams(db, team, public=False)
         return team
@@ -892,12 +919,16 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
     # ─── Кэш: проверяем ──────────────────────────────────────────────
     cached = cache_service.get_team(id_or_slug)
     if cached is not None:
+        if cached.get("status") == ContentStatus.ARCHIVED.value and not editor:
+            raise HTTPException(status_code=404, detail="Team not found")
+        current = await db.teams.find_one({"_id": cached["_id"]}, {"status": 1})
+        require_visible(current, editor, "Team not found")
         views_counter.increment("teams", cached["_id"])
         return cached
 
-    team = await _find_team(db, id_or_slug)
+    team = require_visible(await _find_team(db, id_or_slug), editor, "Team not found")
     views_counter.increment("teams", team["_id"])
-    await _add_show_context(db, team)
+    await _add_show_context(db, team, include_archived=editor)
     await attach_related_teams(db, team)
 
     # Ссылки в тексте: актуальные адреса, на отсутствующие страницы — текстом
@@ -905,9 +936,10 @@ async def get_team(id_or_slug: str, raw: bool = Query(False, description="без
 
     # ─── Кэш: сохраняем ──────────────────────────────────────────────
     team_slug = team.get("slug", id_or_slug)
-    cache_service.set_team(team_slug, team)
-    if team_slug != id_or_slug:
-        cache_service.set_team(id_or_slug, team)
+    if team.get("status") != ContentStatus.ARCHIVED.value:
+        cache_service.set_team(team_slug, team)
+        if team_slug != id_or_slug:
+            cache_service.set_team(id_or_slug, team)
 
     return team
 

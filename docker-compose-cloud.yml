@@ -51,6 +51,7 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
       - BACKUP_DIR=/app/backups
+      - PAGE_PACKAGE_DIR=/app/private/page-packages
       - VK_CLIENT_ID=${VK_CLIENT_ID:-}
       - VK_CLIENT_SECRET=${VK_CLIENT_SECRET:-}
       - VK_REDIRECT_URI=${VK_REDIRECT_URI:-}
@@ -60,6 +61,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
       - backups_data:/app/backups
+      - page_packages_data:/app/private/page-packages
       - imported_images_volume:/app/media/imported/images
       - images_volume:/app/images
     depends_on:
@@ -142,4 +144,7 @@ volumes:
     driver: local
 
   backups_data:
+    driver: local
+
+  page_packages_data:
     driver: local

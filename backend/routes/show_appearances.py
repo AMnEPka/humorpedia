@@ -77,6 +77,9 @@ async def update_review(row_id: str, data: ReviewUpdate):
     group_name = changes.get('manual_group_name', row.get('manual_group_name', row.get('group_name')))
     group_kind = changes.get('manual_group_kind', row.get('manual_group_kind', row.get('group_kind')))
     if bool(group_name) != bool(group_kind): raise HTTPException(422, 'Укажите одновременно вид и название состава')
+    if row.get('page_package_id') and row.get('person_id'):
+        await db.people.update_one({'_id': row['person_id'], 'page_package_state': 'preparing'},
+                                   {'$set': {'page_package_manual_change': True}})
     pid = changes.get('person_id', row.get('person_id'))
     if pid and 'manual_achievement' in changes:
         # Подпись относится к шоу целиком, поэтому ручной статус имеет приоритет

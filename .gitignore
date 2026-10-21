@@ -126,3 +126,7 @@ credentials.json
 
 # Шаблон переменных окружения — коммитим
 !.env.example
+
+# Закрытые материалы конструктора, очередь Codex и временные пакеты
+/var/page-builder/
+/var/page-packages/

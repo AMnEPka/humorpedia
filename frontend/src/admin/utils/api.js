@@ -298,6 +298,37 @@ export const editorialProposalsApi = {
   decide: (id, data) => api.post(`/editorial-proposals/${id}/decide`, data),
 };
 
+// Local page builder and reviewed page-package import.
+export const pageBuilderApi = {
+  capabilities: () => api.get('/page-packages/capabilities'),
+  listDrafts: () => api.get('/page-builder/drafts'),
+  createDraft: (data) => api.post('/page-builder/drafts', data),
+  getDraft: (id) => api.get(`/page-builder/drafts/${id}`),
+  updateDraft: (id, data) => api.put(`/page-builder/drafts/${id}`, data),
+  uploadAsset: (id, file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post(`/page-builder/drafts/${id}/assets`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  getAsset: (id, assetId) => api.get(`/page-builder/drafts/${id}/assets/${assetId}`, { responseType: 'blob' }),
+  generate: (id, data) => api.post(`/page-builder/drafts/${id}/generate`, data),
+  cancel: (id) => api.post(`/page-builder/drafts/${id}/cancel`),
+  acceptVersion: (id, data) => api.post(`/page-builder/drafts/${id}/accept`, data),
+  exportDraft: (id, reviewed) => api.get(`/page-builder/drafts/${id}/export`, { params: { reviewed }, responseType: 'blob' }),
+};
+
+export const pagePackagesApi = {
+  capabilities: () => api.get('/page-packages/capabilities'),
+  preview: (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post('/page-packages/preview', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  getPreview: (id) => api.get(`/page-packages/${id}`),
+  getAsset: (id, assetId) => api.get(`/page-packages/${id}/assets/${assetId}`, { responseType: 'blob' }),
+  apply: (id, data) => api.post(`/page-packages/${id}/apply`, data),
+};
+
 // Media API
 export const mediaApi = {
   uploadToSource: async (file, source, prefix = '') => {

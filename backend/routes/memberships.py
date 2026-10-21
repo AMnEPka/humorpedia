@@ -2,7 +2,7 @@
 import uuid
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from services.memberships import (
@@ -11,7 +11,7 @@ from services.memberships import (
     membership_review_status, name_key, now_iso,
 )
 from services.show_teams import attach_show_info, team_id_or_kvn_slug_query, team_url
-from utils.auth import require_admin, require_editor, require_editor_on_write
+from utils.auth import require_admin, require_editor, require_editor_on_write, get_current_user, EDITOR_ROLES
 from utils.database import get_db
 
 router = APIRouter(prefix="/competitions", tags=["memberships"], dependencies=[Depends(require_editor_on_write)])
@@ -79,10 +79,14 @@ def _years_overlap(membership: dict, year: Optional[int]) -> bool:
 # ─── Состав команды ────────────────────────────────────────────────────────────
 
 @router.get("/teams/{id_or_slug}/members")
-async def team_members(id_or_slug: str):
+async def team_members(id_or_slug: str, request: Request = None):
     """Состав команды: текущие и бывшие участники; roster_blocks — какие текстовые блоки разобраны полностью."""
     db = await get_db()
     team = await _find_team(db, id_or_slug)
+    if team.get('status') == 'archived':
+        user = await get_current_user(request) if request else None
+        if not user or user.get('role') not in EDITOR_ROLES:
+            raise HTTPException(404, 'Команда не найдена')
     members = await db.memberships.find({"team_id": team["_id"]}).sort([("status", 1), ("order", 1)]).to_list(None)
 
     person_ids = [m["person_id"] for m in members if m.get("person_id")]
@@ -107,6 +111,7 @@ async def create_membership(data: MembershipIn):
     now = now_iso()
     doc.update({"_id": str(uuid.uuid4()), "source": SOURCE_MANUAL, "created_at": now, "updated_at": now})
     await db.memberships.insert_one(doc)
+    await _mark_package_edit(db, doc)
     return doc
 
 
@@ -135,6 +140,7 @@ async def update_membership(membership_id: str, data: MembershipIn):
     else:
         doc.update({"candidate_person_id": None, "rejected_person_id": None, "link_review_status": None})
     doc.update({"source": SOURCE_MANUAL, "updated_at": now_iso()})
+    await _mark_package_edit(db, existing)
     await db.memberships.update_one({"_id": membership_id}, {"$set": doc})
     return {**existing, **doc}
 
@@ -142,10 +148,20 @@ async def update_membership(membership_id: str, data: MembershipIn):
 @router.delete("/memberships/{membership_id}")
 async def delete_membership(membership_id: str):
     db = await get_db()
+    existing = await db.memberships.find_one({'_id': membership_id})
+    if existing:
+        await _mark_package_edit(db, existing)
     result = await db.memberships.delete_one({"_id": membership_id})
     if not result.deleted_count:
         raise HTTPException(status_code=404, detail="Запись состава не найдена")
     return {"success": True}
+
+
+async def _mark_package_edit(db, row):
+    # A recovery must not recreate a roster deliberately edited/deleted by an editor.
+    if row.get('team_id'):
+        await db.teams.update_one({'_id': row['team_id'], 'page_package_state': 'preparing'},
+                                  {'$set': {'page_package_manual_change': True}})
 
 
 async def _prepare_membership(db, data: MembershipIn) -> dict:
@@ -316,6 +332,7 @@ async def review_membership_link(
         "reviewed_at": now_iso(),
         "updated_at": now_iso(),
     })
+    await _mark_package_edit(db, membership)
     await db.memberships.update_one({"_id": membership_id}, {"$set": changes})
     return {"ok": True, "review_status": changes["link_review_status"]}
 
@@ -323,13 +340,17 @@ async def review_membership_link(
 # ─── Карьера человека ──────────────────────────────────────────────────────────
 
 @router.get("/people/{id_or_slug}/career")
-async def person_career(id_or_slug: str):
+async def person_career(id_or_slug: str, request: Request = None):
     """
     Команды человека (из составов), сезоны этих команд в годы его участия и роли в турнирах (жюри, ведущий, редактор).
     Публично используются только сохранённые person_id; кандидаты проверяются отдельно в админке.
     """
     db = await get_db()
     person = await _find_person(db, id_or_slug)
+    if person.get('status') == 'archived':
+        user = await get_current_user(request) if request else None
+        if not user or user.get('role') not in EDITOR_ROLES:
+            raise HTTPException(404, 'Человек не найден')
     person_id = person["_id"]
     memberships = await db.memberships.find({"person_id": person_id}).sort([("from_year", 1)]).to_list(None)
 

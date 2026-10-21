@@ -377,6 +377,8 @@ from routes.ratings import router as ratings_router
 from routes.related_news import router as related_news_router
 from routes.correction_suggestions import router as correction_suggestions_router
 from routes.editorial_proposals import router as editorial_proposals_router
+from routes.page_packages import router as page_packages_router
+from services.page_builder import enabled as page_builder_enabled
 
 # Content routes (order matters — specific routes before generic catch-alls)
 api_router.include_router(content_articles_router)
@@ -408,6 +410,10 @@ api_router.include_router(ratings_router)
 api_router.include_router(related_news_router)
 api_router.include_router(correction_suggestions_router)
 api_router.include_router(editorial_proposals_router)
+api_router.include_router(page_packages_router)
+if page_builder_enabled():
+    from routes.page_builder import router as page_builder_router
+    api_router.include_router(page_builder_router)
 
 
 # ─── Cache management endpoints ───────────────────────────────────────────────
@@ -510,6 +516,8 @@ app.include_router(api_router)
 # Загрузки через админку: /uploads/YYYY/MM/...
 uploads_dir = Path(os.environ.get("UPLOAD_DIR", "/app/uploads"))
 uploads_dir.mkdir(parents=True, exist_ok=True)
+from routes.page_packages import media_router as page_package_media_router
+app.include_router(page_package_media_router)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Импортированные из MODX картинки: /media/imported/images/...

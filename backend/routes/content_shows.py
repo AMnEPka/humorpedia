@@ -4,8 +4,8 @@
 `full_path` = путь родителя + "/" + slug, публичный адрес — `/shows/{full_path}`. slug уникален только
 среди соседей (у разных шоу бывает «season1»), уникален `full_path`.
 """
-from fastapi import APIRouter, HTTPException, Query, Depends
-from utils.auth import require_editor_on_write
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
+from utils.auth import get_current_user, require_editor_on_write
 from typing import Optional, Literal
 from datetime import datetime, timezone
 import logging
@@ -19,6 +19,7 @@ from services.link_resolver import LinkResolver
 from services.show_teams import move_show_teams
 from services.show_appearances import link_participant_cards
 from services.foreign_agent_notices import decorate_document
+from services.content_visibility import editor_can_view_archived, require_visible, visible_query
 
 logger = logging.getLogger(__name__)
 
@@ -61,17 +62,23 @@ async def _move_descendants(db, show_id: str, full_path: str, level: int) -> Non
         await _move_descendants(db, child["_id"], child_path, level + 1)
 
 
-async def _add_hierarchy(db, show: dict) -> dict:
+async def _add_hierarchy(db, show: dict, include_archived: bool = False) -> dict:
     """Дочерние неархивные страницы (по order) и хлебные крошки для публичной страницы."""
+    child_query = {"parent_id": show["_id"]}
+    if not include_archived:
+        child_query.update(PUBLIC_STATUS)
     children = await db.shows.find(
-        {"parent_id": show["_id"], **PUBLIC_STATUS},
+        child_query,
         {"title": 1, "name": 1, "slug": 1, "full_path": 1, "poster": 1, "order": 1, "description": 1},
     ).sort([("order", 1), ("title", 1)]).to_list(500)
     show["children"] = children
     crumbs = []
     parent_id = show.get("parent_id")
     while parent_id and len(crumbs) < 10:
-        parent = await db.shows.find_one({"_id": parent_id}, {"title": 1, "full_path": 1, "slug": 1, "parent_id": 1})
+        parent_query = {"_id": parent_id}
+        if not include_archived:
+            parent_query.update(PUBLIC_STATUS)
+        parent = await db.shows.find_one(parent_query, {"title": 1, "full_path": 1, "slug": 1, "parent_id": 1})
         if not parent:
             break
         crumbs.insert(0, {"title": parent.get("title"), "path": "/shows/" + (parent.get("full_path") or parent["slug"])})
@@ -82,6 +89,10 @@ async def _add_hierarchy(db, show: dict) -> dict:
 
 @router.post("/shows", response_model=dict)
 async def create_show(data: ShowCreate):
+    return await create_show_record(data)
+
+
+async def create_show_record(data: ShowCreate, *, document_id=None, page_package_id=None):
     """Create a new show."""
     db = await get_db()
     parent = await _get_parent(db, data.parent_id)
@@ -90,6 +101,7 @@ async def create_show(data: ShowCreate):
 
     facts = data.facts or {}
     show = Show(
+        **({'id': document_id} if document_id else {}),
         title=data.title, slug=data.slug, name=data.name, aliases=data.aliases, poster=data.poster,
         facts=facts, facts_order=data.facts_order or list(facts), social_links=data.social_links or {},
         description=data.description,
@@ -98,7 +110,7 @@ async def create_show(data: ShowCreate):
         modules=data.modules, tags=data.tags, seo=data.seo or {}, status=data.status,
         related_person_ids=data.related_person_ids or []
     )
-    return await create_content("shows", show, data.tags)
+    return await create_content("shows", show, data.tags, **({'page_package_id': page_package_id} if page_package_id else {}))
 
 
 @router.get("/shows", response_model=dict)
@@ -111,10 +123,15 @@ async def list_shows(
     letter: Optional[str] = None,
     include_children: bool = Query(False, description="Include child shows"),
     sort: Optional[Literal["popular"]] = None,
+    request: Request = None,
 ):
     """List shows with pagination (excludes child shows by default)."""
-    query = build_query(status, tag, search, ["title", "name", "aliases"], letter)
+    editor = await editor_can_view_archived(request, get_current_user)
+    if not editor and status == ContentStatus.ARCHIVED:
+        raise HTTPException(status_code=404, detail="Shows not found")
+    query = visible_query(build_query(status, tag, search, ["title", "name", "aliases"], letter), editor)
     availability_query = build_query(status, tag)
+    availability_query = visible_query(availability_query, editor)
     if not include_children:
         query = {"$and": [query, ROOT_QUERY]} if query else ROOT_QUERY
         availability_query = (
@@ -129,36 +146,41 @@ async def list_shows(
 
 
 @router.get("/shows/by-path/{path:path}", response_model=dict)
-async def get_show_by_path(path: str):
+async def get_show_by_path(path: str, request: Request = None):
     """Шоу по полному пути (например, comedy-battle/season1) — с дочерними страницами и хлебными крошками."""
     db = await get_db()
     path = path.strip("/")
-    show = await db.shows.find_one({"full_path": path})
+    editor = await editor_can_view_archived(request, get_current_user)
+    show = await db.shows.find_one(visible_query({"full_path": path}, editor))
     if not show and "/" not in path:
-        show = await db.shows.find_one({"slug": path, **ROOT_QUERY})
+        show = await db.shows.find_one(visible_query({"$and": [{"slug": path}, ROOT_QUERY]}, editor))
     if not show:
         raise HTTPException(status_code=404, detail="Show not found")
-    await _add_hierarchy(db, show)
+    require_visible(show, editor, "Show not found")
+    await _add_hierarchy(db, show, include_archived=editor)
     await link_participant_cards(db, show)
     await LinkResolver.resolve_document(show, LINK_FIELDS)
     return await decorate_document(show)
 
 
 @router.get("/shows/{parent_slug}/children", response_model=dict)
-async def get_show_children(parent_slug: str):
+async def get_show_children(parent_slug: str, request: Request = None):
     """Get children of a show (по slug корневого шоу или _id)."""
     db = await get_db()
-    parent = await db.shows.find_one({"$or": [{"_id": parent_slug}, {"full_path": parent_slug}]})
+    editor = await editor_can_view_archived(request, get_current_user)
+    parent = await db.shows.find_one(visible_query({"$or": [{"_id": parent_slug}, {"full_path": parent_slug}]}, editor))
     if not parent:
         raise HTTPException(status_code=404, detail="Parent show not found")
-    children = await db.shows.find({"parent_id": parent["_id"]}).sort([("order", 1), ("title", 1)]).to_list(500)
+    require_visible(parent, editor, "Parent show not found")
+    children = await db.shows.find(visible_query({"parent_id": parent["_id"]}, editor)).sort([("order", 1), ("title", 1)]).to_list(500)
     return {"items": children, "total": len(children), "parent": parent.get("title")}
 
 
 @router.get("/shows/{id_or_slug}", response_model=dict)
-async def get_show(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
+async def get_show(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок (для админки)"), request: Request = None):
     """Get show by ID or slug."""
-    show = await get_by_id_or_slug("shows", id_or_slug, "Show not found")
+    editor = await editor_can_view_archived(request, get_current_user)
+    show = require_visible(await get_by_id_or_slug("shows", id_or_slug, "Show not found"), editor, "Show not found")
     if not raw:
         await link_participant_cards(await get_db(), show)
         await LinkResolver.resolve_document(show, LINK_FIELDS)
@@ -167,10 +189,13 @@ async def get_show(id_or_slug: str, raw: bool = Query(False, description="без
 
 
 @router.get("/shows-hierarchy", response_model=dict)
-async def get_shows_hierarchy(status: Optional[ContentStatus] = None):
+async def get_shows_hierarchy(status: Optional[ContentStatus] = None, request: Request = None):
     """Get all shows with hierarchy for admin panel."""
     db = await get_db()
-    query = {"status": status.value} if status else {}
+    editor = await editor_can_view_archived(request, get_current_user)
+    if not editor and status == ContentStatus.ARCHIVED:
+        raise HTTPException(status_code=404, detail="Shows not found")
+    query = visible_query({"status": status.value} if status else {}, editor)
     all_shows = await db.shows.find(query, {"modules": 0}).sort([("level", 1), ("order", 1), ("title", 1)]).to_list(5000)
 
     by_id = {s["_id"]: s for s in all_shows}

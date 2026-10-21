@@ -25,6 +25,27 @@ import TeamProjects, {
   isTeamProjectsModule,
 } from '../components/TeamProjects';
 
+const EMPTY_PREVIEW_RELATIONS = [];
+
+function teamMembersFromPreviewRelations(relations = []) {
+  const memberships = relations
+    .filter((relation) => relation.kind === 'membership')
+    .map((relation, index) => ({
+      _id: relation.id || `preview-membership-${index}`,
+      person: relation.target?.slug ? { slug: relation.target.slug, name: relation.name } : null,
+      person_name: relation.name,
+      roles: Array.isArray(relation.roles) ? relation.roles : [],
+      from_year: relation.from_year,
+      to_year: relation.to_year,
+    }));
+  return {
+    current: memberships.filter((member) => !member.to_year),
+    former: memberships.filter((member) => Boolean(member.to_year)),
+    total: memberships.length,
+    roster_blocks: [],
+  };
+}
+
 // Старый модуль «Список игр команды» (HTML-таблица из season_data) — вместо него блок «Телевизионные лиги КВН»
 const isGamesTableModule = (m) => m.type === 'text_block' && (m.data?.title || '').trim().toLowerCase().startsWith('список игр команды');
 
@@ -113,18 +134,26 @@ function TableOfContents({ modules, mode = 'auto', projectsVisible = false }) {
 }
 
 // Команда КВН (/kvn/teams/:slug) или команда шоу (/shows/{шоу}/teams/{slug} — showTeamPath из ShowDetailPage)
-export default function TeamDetailPage({ showTeamPath = null }) {
+export default function TeamDetailPage({ showTeamPath = null, preview = false, previewDocument = null, previewRelations = EMPTY_PREVIEW_RELATIONS }) {
   const { slug } = useParams();
-  const [team, setTeam] = useState(null);
+  const [team, setTeam] = useState(previewDocument);
   const [members, setMembers] = useState(null);
   const [teamProjects, setTeamProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!preview);
   const [error, setError] = useState('');
   const [shareMessage, setShareMessage] = useState('');
 
   usePageTitle(teamPageTitle(team) || (loading ? 'Команда' : (error ? 'Команда не найдена' : 'Команда')));
 
   useEffect(() => {
+    if (preview) {
+      setTeam(previewDocument);
+      setMembers(teamMembersFromPreviewRelations(previewRelations));
+      setTeamProjects([]);
+      setLoading(false);
+      setError('');
+      return undefined;
+    }
     const fetchTeam = async () => {
       setLoading(true);
       setError('');
@@ -140,11 +169,12 @@ export default function TeamDetailPage({ showTeamPath = null }) {
       }
     };
     fetchTeam();
-  }, [slug, showTeamPath]);
+  }, [slug, showTeamPath, preview, previewDocument, previewRelations]);
 
   // Составы и турниры — по _id: slug команды шоу уникален только внутри шоу
   const teamKey = team?._id;
   useEffect(() => {
+    if (preview) return undefined;
     if (!teamKey) return undefined;
     let cancelled = false;
     setMembers(null);
@@ -152,9 +182,13 @@ export default function TeamDetailPage({ showTeamPath = null }) {
       .then(res => { if (!cancelled) setMembers(res.data); })
       .catch(() => { if (!cancelled) setMembers(null); });
     return () => { cancelled = true; };
-  }, [teamKey]);
+  }, [teamKey, preview]);
 
   useEffect(() => {
+    if (preview) {
+      setTeamProjects([]);
+      return undefined;
+    }
     if (!teamKey || team?.show_id) {
       setTeamProjects([]);
       return undefined;
@@ -165,23 +199,23 @@ export default function TeamDetailPage({ showTeamPath = null }) {
       .then(res => { if (!cancelled) setTeamProjects(res.data?.items || []); })
       .catch(() => { if (!cancelled) setTeamProjects([]); });
     return () => { cancelled = true; };
-  }, [teamKey, team?.show_id]);
+  }, [teamKey, team?.show_id, preview]);
 
   // Разделяем модули на системные (sidebar) и контентные (main)
   // Хуки должны быть до любых return
   const sidebarModules = useMemo(() => {
     if (!team?.modules) return [];
     return team.modules
-      .filter(m => m.visible !== false && isSystemModule(m.type))
+      .filter(m => m.visible !== false && isSystemModule(m.type) && (!preview || !['rating_widget', 'poll', 'random_page'].includes(m.type)))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [team?.modules]);
+  }, [team?.modules, preview]);
 
   const contentModules = useMemo(() => {
     if (!team?.modules) return [];
     return team.modules
-      .filter(m => m.visible !== false && !isSystemModule(m.type) && !isGamesTableModule(m))
+      .filter(m => m.visible !== false && !isSystemModule(m.type) && !isGamesTableModule(m) && (!preview || !['poll', 'random_page', 'quiz_questions', 'quiz_results'].includes(m.type)))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [team?.modules]);
+  }, [team?.modules, preview]);
 
   const manualProjectModules = useMemo(() => {
     if (team?.show_id) return [];
@@ -320,7 +354,7 @@ export default function TeamDetailPage({ showTeamPath = null }) {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6 min-w-0">
-          <RatingCard entityType="team" entityId={team._id || team.id} />
+          {!preview && <RatingCard entityType="team" entityId={team._id || team.id} />}
 
           {/* Facts Table - рендерится если есть модуль facts_table */}
           {sidebarModules.find(m => m.type === 'facts_table') && factEntries.length > 0 && (
@@ -478,13 +512,13 @@ export default function TeamDetailPage({ showTeamPath = null }) {
             </Card>
           )}
 
-          <Button variant="outline" className="w-full" onClick={async () => {
+          {!preview && <Button variant="outline" className="w-full" onClick={async () => {
             try { setShareMessage(await sharePage(team.title) ? 'Ссылка скопирована' : ''); }
             catch { setShareMessage('Не удалось скопировать ссылку'); }
           }}>
             <Share2 className="mr-2 h-4 w-4" /> Поделиться
-          </Button>
-          <span role="status" className="block text-sm text-gray-600">{shareMessage}</span>
+          </Button>}
+          {!preview && <span role="status" className="block text-sm text-gray-600">{shareMessage}</span>}
 
           {/* Table of Contents */}
           <TableOfContents modules={contentModules} projectsVisible={projectsVisible} />
@@ -506,13 +540,11 @@ export default function TeamDetailPage({ showTeamPath = null }) {
                   />
                 </CardContent>
               </Card>
-              <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />
+              {!preview && <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />}
             </>
           )}
 
-          {!team.history && contentModules.length === 0 && (
-            <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />
-          )}
+          {!preview && !team.history && contentModules.length === 0 && <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />}
 
           {/* Content Modules: старые таблицы игр скрыты, полностью разобранный состав — структурой */}
           {contentModules.map((module, i) => {
@@ -536,19 +568,19 @@ export default function TeamDetailPage({ showTeamPath = null }) {
             return (
               <Fragment key={module.id || i}>
                 {renderedModule}
-                {!team.history && i === 0 && (
-                  <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />
-                )}
+                {!preview && !team.history && i === 0 && <RelatedNews entityType="team" entityId={team._id || team.id || team.slug} />}
               </Fragment>
             );
           })}
+
+          {preview && members?.total > 0 && <TeamRoster members={members} />}
 
           {!team.show_id && manualProjectModules.length === 0 && teamProjects.length > 0 && (
             <TeamProjects items={teamProjects} />
           )}
 
-          <TeamParticipations teamSlug={team._id} teamName={team.name || team.title} />
-          <RelatedArticles contentType="team" contentId={team._id || team.id || team.slug} />
+          {!preview && <TeamParticipations teamSlug={team._id} teamName={team.name || team.title} />}
+          {!preview && <RelatedArticles contentType="team" contentId={team._id || team.id || team.slug} />}
         </div>
       </div>
     </div>
