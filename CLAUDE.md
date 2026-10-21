@@ -18,7 +18,8 @@
 | [docs/ai/MODULE_CONTRACT.md](docs/ai/MODULE_CONTRACT.md) | Реестр модулей, редакторы, владельцы публичного рендера и контрактные проверки |
 | [docs/ai/PAGE_BUILDER.md](docs/ai/PAGE_BUILDER.md) | Локальный конструктор через Codex CLI, редактируемые страницы и ZIP-перенос в админку |
 | [docs/ai/KNOWN_ISSUES.md](docs/ai/KNOWN_ISSUES.md) | Найденные баги, дыры безопасности, техдолг |
-| [docs/ai/tasks/project-refactoring-plan-2026-10-21.md](docs/ai/tasks/project-refactoring-plan-2026-10-21.md) | Аудит проекта и последних обновлений: подтверждённые дефекты, схема рефакторинга, приоритеты и проверки; план без реализации |
+| [docs/ai/tasks/project-refactoring-plan-2026-10-21.md](docs/ai/tasks/project-refactoring-plan-2026-10-21.md) | Аудит проекта, схема рефакторинга и план; начальный пакет исправлений F1–F3 выделен в три коммита |
+| [docs/ai/tasks/initial-refactoring-fixes-2026-10-21.md](docs/ai/tasks/initial-refactoring-fixes-2026-10-21.md) | Ревью четырёх новых коммитов, исправления видимости архива / refresh / person_id, проверки и оставшиеся ограничения |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
 | [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
 | [docs/ai/tasks/team-projects.md](docs/ai/tasks/team-projects.md) | Автоматические проекты участников команды КВН с сохранённым ручным дополнением |

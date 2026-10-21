@@ -1,12 +1,14 @@
 """Модель соревнований: конвертация season_data ⇄ сезон, перекрёстные ссылки, правка сезона. Без БД."""
+import asyncio
 import copy
 
 import pytest
 
 from services.competitions import (
-    TeamLookup, apply_season_update, build_participations, legacy_to_season, season_to_legacy,
-    stable_id, stage_code, unresolved_participants,
+    TeamLookup, apply_season_update, build_participations, legacy_to_season, save_season,
+    season_to_legacy, stable_id, stage_code, sync_from_kvn_page, unresolved_participants,
 )
+from services.memberships import PersonLookup
 
 TEAMS = [
     {"_id": "team-odessa", "slug": "odesskie-gentlmeni"},
@@ -110,6 +112,94 @@ def test_roundtrip_is_stable(lookup):
     for key in ("created_at", "updated_at"):
         first.pop(key, None), second.pop(key, None)
     assert first == second
+
+
+@pytest.mark.parametrize("stale_extra", [None, "person-old"])
+def test_person_id_survives_season_legacy_roundtrip(lookup, stale_extra):
+    season = legacy_to_season(legacy_page(), TOURNAMENT, lookup)
+    result = season["stages"][0]["games"][0]["results"][0]
+    result["person_id"] = "person-42"
+    if stale_extra:
+        # Earlier converters kept this formerly unknown legacy field in extra.
+        result["extra"]["person_id"] = stale_extra
+
+    roundtripped = legacy_to_season(
+        {**legacy_page(), "season_data": season_to_legacy(season)}, TOURNAMENT, lookup
+    )
+
+    assert roundtripped["stages"][0]["games"][0]["results"][0]["person_id"] == "person-42"
+
+
+def test_person_id_survives_save_page_and_sync_roundtrip(lookup):
+    class Collection:
+        def __init__(self, documents=()):
+            self.documents = list(documents)
+
+        @staticmethod
+        def matches(document, query):
+            for key, expected in query.items():
+                actual = document.get(key)
+                if isinstance(expected, dict) and "$in" in expected:
+                    if actual not in expected["$in"]:
+                        return False
+                elif actual != expected:
+                    return False
+            return True
+
+        async def find_one(self, query, _projection=None):
+            return next((d for d in self.documents if self.matches(d, query)), None)
+
+        async def replace_one(self, query, document, upsert=False):
+            existing = next((i for i, d in enumerate(self.documents) if self.matches(d, query)), None)
+            if existing is not None:
+                self.documents[existing] = copy.deepcopy(document)
+            elif upsert:
+                self.documents.append(copy.deepcopy(document))
+
+        async def update_one(self, query, update, upsert=False):
+            document = await self.find_one(query)
+            if document is None and upsert:
+                document = {k: v for k, v in query.items() if not isinstance(v, dict)}
+                self.documents.append(document)
+            if document is not None:
+                document.update(copy.deepcopy(update.get("$set", {})))
+                for key, value in update.get("$setOnInsert", {}).items():
+                    document.setdefault(key, copy.deepcopy(value))
+
+        async def delete_many(self, query):
+            self.documents = [d for d in self.documents if not self.matches(d, query)]
+
+        async def insert_many(self, documents, ordered=False):
+            self.documents.extend(copy.deepcopy(documents))
+
+    page = legacy_page()
+    # Exercise inferred year, multiple winners, stage comment, and historical game id.
+    del page["season_data"]["year"]
+    page["season_data"]["winners"].append({"name": "ВИСИ", "slug": "visi"})
+    season = legacy_to_season(page, TOURNAMENT, lookup)
+    season["stages"][0]["games"][0]["results"][0]["person_id"] = "person-42"
+    expected_legacy = season_to_legacy(season)
+    for key in ("prev_season", "next_season"):
+        if key in page["season_data"]:
+            expected_legacy[key] = page["season_data"][key]
+
+    db = type("DB", (), {})()
+    db.kvn = Collection([page])
+    db.tournaments = Collection([TOURNAMENT])
+    db.seasons = Collection()
+    db.participations = Collection()
+    people = PersonLookup()
+
+    asyncio.run(save_season(db, season, write_page=True, people=people))
+    refreshed_page = asyncio.run(db.kvn.find_one({"_id": page["_id"]}))
+    synced = asyncio.run(sync_from_kvn_page(db, refreshed_page, lookup, people))
+
+    assert refreshed_page["season_data"] == expected_legacy
+    assert refreshed_page["season_data"]["year"] == 1987
+    assert [w["slug"] for w in synced["winners"]] == ["odesskie-gentlmeni", "visi"]
+    assert synced["stages"][0]["comment"] == "Четвертьфиналы прошли в декабре."
+    assert synced["stages"][2]["games"][0]["legacy_id"] == "game-final"
+    assert synced["stages"][0]["games"][0]["results"][0]["person_id"] == "person-42"
 
 
 def test_season_ids_are_deterministic(lookup):

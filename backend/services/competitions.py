@@ -48,7 +48,7 @@ _SEASON_KNOWN = {
 } | _LEGACY_COMPUTED_KEYS
 _STAGE_KNOWN = {"name", "order", "comment", "notes", "additional_teams", "additional_notes", "games"}
 _GAME_KNOWN = {"id", "name", "order", "date", "date_raw", "host", "jury", "contests", "notes", "is_cancelled", "teams"}
-_RESULT_KNOWN = {"team_id", "team_slug", "team_name", "city", "place", "total", "scores", "passed", "is_winner", "is_additional"}
+_RESULT_KNOWN = {"team_id", "person_id", "team_slug", "team_name", "city", "place", "total", "scores", "passed", "is_winner", "is_additional"}
 _TEAM_REF_KNOWN = {"slug", "name", "city"}
 
 KVN_LEAGUE_ORDER = {"vl-kvn": 10, "premier-liga": 20, "1l-kvn": 30, "ml-kvn": 40, "vul": 50}
@@ -175,7 +175,7 @@ def legacy_to_season(page: dict, tournament: dict, lookup: TeamLookup) -> dict:
                 slug = (raw.get("team_slug") or "").strip()
                 results.append({
                     "team_id": lookup.resolve(slug=slug, team_id=raw.get("team_id") or ""),
-                    "person_id": None,
+                    "person_id": raw.get("person_id"),
                     "slug": slug,
                     "name": raw.get("team_name") or slug,
                     "city": raw.get("city") or "",
@@ -300,6 +300,8 @@ def season_to_legacy(season: dict, tournament_slug: Optional[str] = None) -> dic
                 if r.get("legacy_team_id") is not None:
                     entry["team_id"] = r["legacy_team_id"]
                 entry.update(r.get("extra") or {})
+                if r.get("person_id") is not None:
+                    entry["person_id"] = r["person_id"]
                 teams.append(entry)
             legacy_game = {
                 "name": game.get("name") or "",
