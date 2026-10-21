@@ -2,23 +2,13 @@ name: tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/local-page-builder]
   pull_request:
 
 jobs:
   backend:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:8.0.32
-        ports: ["27017:27017"]
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     env:
-      MONGO_URL: mongodb://localhost:27017
       DB_NAME: humorpedia_test
       UPLOAD_DIR: ${{ github.workspace }}/.ci-uploads
     defaults:
@@ -26,6 +16,9 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+      - name: Start disposable MongoDB
+        id: mongodb
+        run: bash ../scripts/ci/start-mongodb.sh
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -37,31 +30,28 @@ jobs:
       - run: node ../scripts/sync-module-contract.cjs --check
       - run: node --test ../scripts/vps-test/test_export_local.mjs
       - run: pytest -q tests
+      - name: Remove disposable MongoDB
+        if: always()
+        env:
+          MONGO_TOOLS_CONTAINER: ${{ steps.mongodb.outputs.container_id }}
+        run: if [ -n "$MONGO_TOOLS_CONTAINER" ]; then docker rm -fv "$MONGO_TOOLS_CONTAINER" >/dev/null 2>&1 || true; fi
 
   mongodb-integration:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:8.0.32
-        ports: ["27017:27017"]
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     env:
-      MONGO_URL: mongodb://localhost:27017
       DB_NAME: humorpedia_test
       UPLOAD_DIR: ${{ github.workspace }}/.ci-uploads
       PAGE_PACKAGE_INTEGRATION: '1'
       SEASON_WRITE_INTEGRATION: '1'
       READINESS_INTEGRATION: '1'
-      MONGO_TOOLS_CONTAINER: ${{ job.services.mongodb.id }}
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+      - name: Start disposable MongoDB
+        id: mongodb
+        run: bash ../scripts/ci/start-mongodb.sh
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -75,6 +65,11 @@ jobs:
           tests/test_page_package_recovery.py tests/test_workflow_recovery_integration.py
           tests/test_season_write_integration.py tests/test_readiness_integration.py -rs
       - run: python -m unittest discover -s ../scripts/vps-test -p test_restore_files.py
+      - name: Remove disposable MongoDB
+        if: always()
+        env:
+          MONGO_TOOLS_CONTAINER: ${{ steps.mongodb.outputs.container_id }}
+        run: if [ -n "$MONGO_TOOLS_CONTAINER" ]; then docker rm -fv "$MONGO_TOOLS_CONTAINER" >/dev/null 2>&1 || true; fi
 
   frontend:
     runs-on: ubuntu-latest
@@ -116,21 +111,13 @@ jobs:
     needs: frontend
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      mongodb:
-        image: mongo:8.0.32
-        ports: ["27017:27017"]
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     env:
-      MONGO_URL: mongodb://localhost:27017
       BROWSER_BUILD_DIR: ${{ github.workspace }}/frontend/build
-      SMOKE_ARTIFACT_DIR: ${{ runner.temp }}/browser-smoke-artifacts
     steps:
       - uses: actions/checkout@v4
+      - name: Start disposable MongoDB
+        id: mongodb
+        run: bash scripts/ci/start-mongodb.sh
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -149,8 +136,11 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/browser-tools" --no-save playwright@1.62.1
           "$RUNNER_TEMP/browser-tools/node_modules/.bin/playwright" install --with-deps chromium
       - name: Browser smoke on a disposable database
+        env:
+          SMOKE_ARTIFACT_DIR: ${{ runner.temp }}/browser-smoke-artifacts
         run: |
-          export SMOKE_RUN_ID=$(python -c 'import uuid; print(uuid.uuid4().hex)')
+          SMOKE_RUN_ID=$(python -c 'import uuid; print(uuid.uuid4().hex)')
+          export SMOKE_RUN_ID
           export DB_NAME="humorpedia_browser_test_$SMOKE_RUN_ID"
           export NODE_PATH="$RUNNER_TEMP/browser-tools/node_modules"
           python scripts/browser-smoke/server.py > "$RUNNER_TEMP/browser-smoke-server.log" 2>&1 &
@@ -165,3 +155,8 @@ jobs:
             ${{ runner.temp }}/browser-smoke-artifacts
             ${{ runner.temp }}/browser-smoke-server.log
           retention-days: 3
+      - name: Remove disposable MongoDB
+        if: always()
+        env:
+          MONGO_TOOLS_CONTAINER: ${{ steps.mongodb.outputs.container_id }}
+        run: if [ -n "$MONGO_TOOLS_CONTAINER" ]; then docker rm -fv "$MONGO_TOOLS_CONTAINER" >/dev/null 2>&1 || true; fi
