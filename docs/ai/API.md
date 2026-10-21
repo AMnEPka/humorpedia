@@ -17,12 +17,15 @@
 | Метод | Путь | Описание |
 |---|---|---|
 | GET | `/` | версия API (лимит 100/мин) |
-| GET | `/health` | healthcheck |
+| GET | `/health` | liveness: `200 {"status":"healthy"}`; не обращается к MongoDB/контентному кэшу |
+| GET | `/ready` | readiness: 200 `ready` или 503 `not_ready`; MongoDB, обязательные индексы и private storage; `Cache-Control: no-store` |
 | GET | `/stats` | счётчики опубликованного контента, пользователей, комментариев, тегов |
 | GET | `/random/{content_type}` | случайный документ: person/team/show/article/news/quiz/wiki/city; `exclude_slug` исключает текущий slug до выборки; сохраняет full_path/show_id/url для навигации |
 | GET | `/cache/stats` 🛡 | статистика кэшей и views_counter |
 | POST | `/cache/flush` 🛡 | сбросить все in-memory кэши |
 | POST | `/views/flush` 🛡 | принудительно записать просмотры в БД |
+
+`/ready` открыт без авторизации. Ответ: `{"status":"ready","checks":{"mongodb":"ok","indexes":"ok","package_storage":"ok"}}`; при отказе соответствующее поле равно `error`. Mongo ping, чтение фактических уникальных индексов и файловая проба ограничены таймаутами по 1 с. Проверяются ключи/unique/sparse/partial filter/collation, а не имя индекса. Private-каталог должен существовать, находиться вне публичных media/uploads и допускать запись/чтение/удаление временного файла; readiness не создаёт отсутствующий каталог. Адреса БД, пути и ошибки драйвера в ответ не попадают. Оба probe-маршрута обходят контентный кэш; прежняя политика HTTP-кэширования `/health` сохранена.
 
 ## auth.py — `/auth`
 | Метод | Путь | Описание |

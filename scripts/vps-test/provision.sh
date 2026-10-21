@@ -10,7 +10,7 @@ id deploy >/dev/null
 test -s /home/deploy/.ssh/authorized_keys
 
 apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl openssl ufw
+apt-get install -y --no-install-recommends ca-certificates curl openssl ufw python3
 apt-get upgrade -y
 
 if ! swapon --show=NAME --noheadings | grep -q .; then

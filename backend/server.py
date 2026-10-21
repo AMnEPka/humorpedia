@@ -108,10 +108,15 @@ async def lifespan(app: FastAPI):
 
 
 _index_failures: list[str] = []
+_required_indexes: list[dict] = []
 
 
 async def _ensure_index(collection, keys, **kwargs):
     """Создать индекс; ошибка одного индекса (например, дубликаты в данных) не мешает остальным."""
+    if kwargs.get("unique"):
+        _required_indexes.append({"collection": collection.name,
+                                  "keys": [(keys, 1)] if isinstance(keys, str) else list(keys),
+                                  "options": dict(kwargs)})
     try:
         await collection.create_index(keys, **kwargs)
     except OperationFailure as e:
@@ -139,6 +144,8 @@ async def _drop_unique_index(collection, name: str):
 async def create_indexes(db):
     """Create MongoDB indexes for optimal performance"""
     _index_failures.clear()
+    _required_indexes.clear()
+    app.state.indexes_initialized = False
     try:
         # People indexes
         await _ensure_index(db.people, "slug", unique=True)
@@ -325,6 +332,7 @@ async def create_indexes(db):
             logger.warning(f"MongoDB indexes: {len(_index_failures)} not created: {_index_failures}")
         else:
             logger.info("MongoDB indexes created successfully")
+        app.state.indexes_initialized = not _index_failures
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
 
@@ -337,6 +345,9 @@ app = FastAPI(
     lifespan=lifespan,
     redirect_slashes=False  # Disable trailing slash redirects to avoid HTTP/HTTPS issues
 )
+
+app.state.indexes_initialized = False
+app.state.required_indexes = _required_indexes
 
 # Create API router
 api_router = APIRouter(prefix="/api")
@@ -353,6 +364,9 @@ async def root(request: Request):
 async def health_check():
     return {"status": "healthy"}
 
+
+from routes.health import router as health_router
+api_router.include_router(health_router)
 
 # Import and include routers
 # Content routes (split from monolithic content.py)
@@ -580,7 +594,7 @@ class CacheSyncMiddleware(BaseHTTPMiddleware):
     """
     async def dispatch(self, request, call_next):
         path = request.url.path
-        if not path.startswith("/api/"):
+        if path in ("/api/health", "/api/ready") or not path.startswith("/api/"):
             return await call_next(request)
 
         db = await get_db()

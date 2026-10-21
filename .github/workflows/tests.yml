@@ -35,6 +35,7 @@ jobs:
             backend/requirements-dev.txt
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: node ../scripts/sync-module-contract.cjs --check
+      - run: node --test ../scripts/vps-test/test_export_local.mjs
       - run: pytest -q tests
 
   mongodb-integration:
@@ -54,6 +55,8 @@ jobs:
       UPLOAD_DIR: ${{ github.workspace }}/.ci-uploads
       PAGE_PACKAGE_INTEGRATION: '1'
       SEASON_WRITE_INTEGRATION: '1'
+      READINESS_INTEGRATION: '1'
+      MONGO_TOOLS_CONTAINER: ${{ job.services.mongodb.id }}
     defaults:
       run:
         working-directory: backend
@@ -67,7 +70,8 @@ jobs:
             backend/requirements.txt
             backend/requirements-dev.txt
       - run: pip install -r requirements.txt -r requirements-dev.txt
-      - run: pytest -q tests/test_page_package_import.py tests/test_season_write_integration.py -rs
+      - run: pytest -q tests/test_page_package_import.py tests/test_season_write_integration.py tests/test_readiness_integration.py -rs
+      - run: python -m unittest discover -s ../scripts/vps-test -p test_restore_files.py
 
   frontend:
     runs-on: ubuntu-latest

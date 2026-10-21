@@ -151,3 +151,28 @@ backend с ZIP/season integration — **878 passed**, frontend — **242 passed 
   Реальный системный file picker, истёкшая сессия и hosted GitHub Actions этим прогоном не проверены.
   Открытого PR у ветки нет; существующий workflow запускается только для PR и push в `main`, поэтому
   публикация ветки сама по себе hosted pipeline не запустила.
+
+## R5: эксплуатация ZIP в отдельном worktree
+
+21.10.2026. Ветка `codex/local-page-builder`, исходный HEAD **`85f4fd165c2c2e893d2784a367534e7db1511d55`**. Продолжение из сохранённой точки выполнено в `C:/Users/rdp6126443.gmail.com/.codex/worktrees/r5-zip-operations/humorpedia`. На момент локальной приёмки это были незакоммиченные изменения поверх сохранённой ветки; deployment не выполнялся. По последующему поручению пользователя R5 оформляется одним отдельным коммитом с документацией и публикуется в `origin/codex/local-page-builder`. Существующий предшественник `85f4fd1` сохранён без переписывания истории; файлы импорта в R5 не меняются. Основной checkout остался чистым на `main`, HEAD `ca46155a9640d4723c07b9fd1762a6e639563414`.
+
+Что подготовлено:
+
+- VPS Compose: постоянный private bind `data/page-packages`, `PAGE_PACKAGE_DIR`, healthcheck `/api/ready`; первоначальная подготовка создаёт каталог 0700. Публичного nginx alias для него нет.
+- По согласованному ответу пользователя сохранён API ZIP 50 MiB; оба nginx дают 52 MiB только точному `/api/page-packages/preview`. Остальные маршруты сохраняют 20 MiB и прежние ограничения частоты.
+- `/api/ready`: Mongo ping, состояние и фактические ограничения обязательных unique indexes, доступный private storage вне публичных каталогов. Зависимости ограничены таймаутами по 1 с; ответ 503 без внутренних адресов/путей, `Cache-Control: no-store`. `/api/health` сохранил прежний контракт. Оба маршрута обходят контентный кэш: отдельный regression-тест воспроизвёл прежнюю зависимость health от обращения к Mongo в middleware.
+- Backup exporter включает private tree и точный SHA-256 manifest. Restore проверяет TAR allowlist/типы/пути, полный private manifest и хеши до записи, запрещает overwrite и ссылки. Для host добавлен Python 3; helper находится рядом с `restore-data.sh`. Сохраняется совместимость архива без private-файлов. Для SIGINT/SIGTERM exporter делает попытку возобновить исходные writers; принудительное завершение/отказ Docker требует ручной проверки и запуска. Неполную копию использовать нельзя.
+- В Mongo integration job добавлен реальный backup/restore тест R5 и fixture-проверки файлов. Команды и границы — [VPS README](../../../scripts/vps-test/README.md), эксплуатационный контракт — [operations](../../deployment/vps-test-operations.md), HTTP-контракт — [API](../API.md).
+
+Локальные результаты:
+
+- Полный backend на одноразовой MongoDB 8.0.32 с `PAGE_PACKAGE_INTEGRATION=1`, `SEASON_WRITE_INTEGRATION=1`, `READINESS_INTEGRATION=1`: **964 passed, 15 skipped**, четыре существующих deprecation warning. Source-import integration флаг не включался; отдельная приёмка 24СМИ не проводилась.
+- Новый readiness-набор — 12 unit/API-тестов; real Mongo R5 — 2 integration-теста. Удаление unique index и отсутствие private storage дают 503. Отдельная фактическая пауза только тестовой Mongo дала `/api/ready` → **503 за 1,01 с**, `/api/health` → **200**.
+- Настоящий Uvicorn backend-контейнер с исходниками worktree, отдельной Mongo и двумя собственными постоянными томами прошёл preflight ZIP с PNG, проверку фото 404 до apply, `docker restart`, проверку прежнего SHA-256 ZIP, apply и получение фото 200 с тем же SHA-256 и проверкой декодирования PNG. Ни один порт этого backend/Mongo на host не публиковался.
+- Интеграционный тест остановил lifespan writers, выполнил настоящий `mongodump`, восстановление только своей случайной БД через `mongorestore`, `restore_files.py` в новый каталог и старт нового lifespan: readiness 200, страница и пакет доступны, ZIP/фото имеют прежние SHA-256, PNG открывается.
+- Exporter fixture: **4 passed** на Windows; настоящий код с подставными Docker/process boundaries проверяет private SHA-256 manifest, состав tar и возврат writers при ошибке/SIGINT/SIGTERM до вызова exit. Реальный native exit не воспроизводился. Файловые restore fixtures на Linux: **10 passed**, без skip. Оба nginx прошли `nginx -t`; синтетический HTTP upstream подтвердил **6 случаев**: ZIP ровно 50 MiB с multipart → 200 через TLS+внутренний слой и напрямую через внутренний; >52 MiB preview и >20 MiB другой API → 413 на обоих входах.
+- Node/shell syntax, workflow YAML и VPS Compose с фиктивным окружением проверены. Hosted GitHub Actions ещё не запускался. Frontend не менялся; повторного browser smoke и production build в R5 не было.
+
+Границы: proxy fixture подтверждает проксирование и размер HTTP-тела, API-интеграция использует небольшой валидный ZIP с фото. Полный exporter на основном стенде не запускался, первоначальные VPS-скрипты не исполнялись. Приёмка существующего VPS после будущей выкладки остаётся отдельным gate. Не выполнялись SSH, перенос данных, обновление образов/прокси или миграции на VPS. Параллельные файлы импорта источников сохранены без изменений.
+
+Итог изоляции: после проверок main остаётся чистым на `ca46155`; ID, StartedAt и restart count трёх основных контейнеров совпадают с исходным снимком. `http://localhost:3000/` → 200, `http://localhost:8001/api/health` → 200. Одноразовые контейнеры, MongoDB с тестовыми данными, две собственные volumes и сети R5/proxy fixture удалены. Основные volumes и файлы импорта не изменялись.

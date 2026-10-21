@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 cd /home/deploy/humorpedia-test
 [[ ${1:-} =~ ^[[:xdigit:]]{64}$ && ${2:-} =~ ^[[:xdigit:]]{64}$ ]]
 test ! -e .restore-complete
@@ -7,13 +8,8 @@ printf '%s  incoming/humorpedia-test.archive.gz\n' "$1" | sha256sum -c -
 chmod 600 incoming/*
 if [[ ! -f .media-restored ]]; then
 printf '%s  incoming/media.tar.gz\n' "$2" | sha256sum -c -
-# Expected archive paths are only media directories, with no absolute/traversal names.
-tar -tzf incoming/media.tar.gz | awk '
-  /^\// || /(^|\/)\.\.($|\/)/ { bad=1 }
-  !/^(imported-images|images|uploads)(\/|$)/ { bad=1 }
-  END { exit bad ? 1 : 0 }
-'
-tar -xzf incoming/media.tar.gz -C data
+command -v python3 >/dev/null
+python3 "$script_dir/restore_files.py" incoming/media.tar.gz data
 touch .media-restored
 # The original media archive remains off-server; do not keep a duplicate on a 10 GB VPS.
 rm -- /home/deploy/humorpedia-test/incoming/media.tar.gz
