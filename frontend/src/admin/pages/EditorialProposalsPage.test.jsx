@@ -33,6 +33,7 @@ async function renderProposal(item) {
   editorialProposalsApi.list.mockResolvedValue({ data: { items: [item], total: 1 } });
   await act(async () => root.render(<MemoryRouter><EditorialProposalsPage /></MemoryRouter>));
   await act(async () => { await Promise.resolve(); });
+  await click('Ручные находки');
 }
 
 function click(label) {
@@ -109,6 +110,7 @@ test('imports a research JSON file into the review queue', async () => {
   editorialProposalsApi.list.mockResolvedValue({ data: { items: [], total: 0 } });
   await act(async () => root.render(<MemoryRouter><EditorialProposalsPage /></MemoryRouter>));
   await act(async () => { await Promise.resolve(); });
+  await click('Ручные находки');
 
   const input = host.querySelector('input[type="file"]');
   const proposal = { kind: 'new_person', candidate_name: 'Комик', changes: [] };

@@ -12,9 +12,15 @@ jobs:
       mongodb:
         image: mongo:8.0.32
         ports: ["27017:27017"]
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       MONGO_URL: mongodb://localhost:27017
       DB_NAME: humorpedia_test
+      SOURCE_IMPORT_INTEGRATION: '1'
       UPLOAD_DIR: ${{ github.workspace }}/.ci-uploads
     defaults:
       run:
