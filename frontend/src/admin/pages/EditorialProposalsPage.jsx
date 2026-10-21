@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import SourceImportsPanel from '../components/SourceImportsPanel';
 import { contentApi, editorialProposalsApi, getErrorMessage } from '../utils/api';
 
 const KINDS = [
@@ -250,6 +251,7 @@ function ProposalCard({ item, onSaved }) {
 }
 
 export default function EditorialProposalsPage() {
+  const [activeTab, setActiveTab] = useState('imports');
   const [kind, setKind] = useState('update_person');
   const [status, setStatus] = useState('');
   const [skip, setSkip] = useState(0);
@@ -308,8 +310,14 @@ export default function EditorialProposalsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Редакционные находки</h1>
-        <p className="mt-1 text-muted-foreground">Факты из ручного исследования. Каждое изменение применяется только после решения редактора.</p>
+        <p className="mt-1 text-muted-foreground">Материалы из источников и факты из ручного исследования проходят редакторскую проверку.</p>
       </div>
+      <div role="tablist" aria-label="Тип редакционной очереди" className="flex gap-2">
+        <Button role="tab" aria-selected={activeTab === 'imports'} variant={activeTab === 'imports' ? 'default' : 'outline'} onClick={() => setActiveTab('imports')}>Импорт с сайтов</Button>
+        <Button role="tab" aria-selected={activeTab === 'manual'} variant={activeTab === 'manual' ? 'default' : 'outline'} onClick={() => setActiveTab('manual')}>Ручные находки</Button>
+      </div>
+      {activeTab === 'imports' ? <SourceImportsPanel /> : <>
+      <p className="text-sm text-muted-foreground">Факты из ручного исследования. Каждое изменение применяется только после решения редактора.</p>
       <details className="rounded-lg border bg-white p-4">
         <summary className="cursor-pointer font-medium">Загрузить предложения из JSON</summary>
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -338,6 +346,7 @@ export default function EditorialProposalsPage() {
           </div>
         </div>
       ) : <p className="rounded-lg border bg-white p-10 text-center text-muted-foreground">Предложений в этой категории нет.</p>}
+      </>}
     </div>
   );
 }
