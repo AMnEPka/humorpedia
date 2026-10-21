@@ -1,11 +1,7 @@
 import axios from 'axios';
+import { getApiBase } from '../../utils/apiBase';
 
-// В dev при USE_API_PROXY запросы идут на тот же origin (/api), проксируются на бэкенд — без таймаутов и CORS.
-const BACKEND_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
-  ? window.__BACKEND_URL__
-  : (process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8001`);
-const USE_API_PROXY = process.env.REACT_APP_USE_API_PROXY === 'true';
-const API_BASE_URL = USE_API_PROXY ? '/api' : BACKEND_URL + '/api';
+const API_BASE_URL = getApiBase();
 if (typeof window !== 'undefined') console.log('[Public API] API_BASE_URL:', API_BASE_URL);
 
 const api = axios.create({
@@ -22,6 +18,7 @@ const pollAuthConfig = () => {
 
 // Public API - no auth required
 export const publicApi = {
+  lookupRedirect: (path) => api.get('/redirects/lookup', { params: { path } }),
   createCorrectionSuggestion: (data) => api.post('/correction-suggestions', data),
   getPersonShows: (id) => api.get(`/show-appearances/people/${id}`),
   getTeamProjects: (idOrSlug) => api.get(`/show-appearances/teams/${encodeURIComponent(idOrSlug)}/projects`),

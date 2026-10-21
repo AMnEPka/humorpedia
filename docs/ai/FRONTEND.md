@@ -107,14 +107,17 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 
 ## Как фронт находит бэкенд
 
-`API_BASE` (в обоих api.js):
+Оба API-клиента используют `utils/apiBase.js:getApiBase()`:
 1. `REACT_APP_USE_API_PROXY=true` → `/api` (dev в Docker, прокси CRA → `http://backend:8001`);
 2. иначе `window.__BACKEND_URL__` (ставит `public/config.js` для localhost) → `REACT_APP_BACKEND_URL` → `${protocol}//${hostname}:8001`.
+
+К базе добавляется `/api`; завершающие слеши убираются, заданный префикс пути сохраняется. В админке `API_BASE` остаётся экспортируемой константой.
 
 Картинки: `/media/imported/...`, `/images/...`, `/uploads/...` — отдаёт бэкенд (в dev — через прокси CRA).
 Если ожидаемого изображения нет или файл не загрузился, `FittedImage` и функции `utils/media.js` показывают один из
 `/media/imported/images/pattern/{1..4}.jpg`; вариант стабильно выбирается по slug/id страницы.
-`SectionDetailPage` делает `fetch(\`${BACKEND_URL}/api/redirects/lookup\`)` напрямую, минуя `API_BASE`.
+`SectionDetailPage` ищет старые URL через `publicApi.lookupRedirect(path)` и общий API-клиент, включая proxy/runtime config. Путь передаётся query-параметром Axios; найденный `new_path` открывается с `replace: true`.
+`mediaUrl` сохраняет относительные, абсолютные и private `blob:` URL; адрес API к изображениям не добавляется.
 
 ### Рекомендации и опросы
 

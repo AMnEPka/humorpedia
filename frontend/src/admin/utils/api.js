@@ -1,11 +1,7 @@
 import axios from 'axios';
+import { getApiBase } from '../../utils/apiBase';
 
-// В dev при USE_API_PROXY запросы идут на тот же origin (/api), проксируются на бэкенд.
-const BACKEND_URL = (typeof window !== 'undefined' && window.__BACKEND_URL__)
-  ? window.__BACKEND_URL__
-  : (process.env.REACT_APP_BACKEND_URL || `${window.location.protocol}//${window.location.hostname}:8001`);
-const USE_API_PROXY = process.env.REACT_APP_USE_API_PROXY === 'true';
-export const API_BASE = USE_API_PROXY ? '/api' : `${BACKEND_URL}/api`;
+export const API_BASE = getApiBase();
 
 console.log('[API] API_BASE:', API_BASE);
 
