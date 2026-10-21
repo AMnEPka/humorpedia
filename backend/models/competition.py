@@ -60,6 +60,7 @@ class Stage(_Model):
 
 class SeasonUpdate(_Model):
     """Редактируемая часть сезона. Название/slug/путь принадлежат странице и здесь не меняются."""
+    expected_updated_at: Optional[str] = None
     year: Optional[int] = None
     number: Optional[int] = None
     league_name: Optional[str] = None

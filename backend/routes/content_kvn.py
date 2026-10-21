@@ -23,7 +23,9 @@ from services.show_teams import KVN_ONLY
 from services.link_resolver import LinkResolver
 from services.cache import cache_service
 from services.views_counter import views_counter
-from services.competitions import sync_from_kvn_page, delete_season_for_page
+from services.competitions import (
+    sync_from_kvn_page, delete_season_for_page, version_matches, version_filter, next_version,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -872,6 +874,13 @@ async def update_kvn(id: str, data: KVNUpdate):
     
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
+
+    versioned_season_write = data.season_data is not None
+    if versioned_season_write:
+        if "expected_updated_at" not in data.model_fields_set:
+            raise HTTPException(status_code=409, detail="Версия страницы сезона не передана. Обновите страницу и повторите сохранение.")
+        if not version_matches(kvn, data.expected_updated_at):
+            raise HTTPException(status_code=409, detail="Страница сезона уже изменена. Обновите страницу и повторите сохранение.")
     
     # Get the actual _id for update operations
     kvn_id = kvn["_id"]
@@ -924,7 +933,6 @@ async def update_kvn(id: str, data: KVNUpdate):
         ]
     if data.tags is not None:
         update_data["tags"] = data.tags
-        await tag_service.sync_tags(data.tags)
     if data.seo is not None:
         update_data["seo"] = data.seo.model_dump() if hasattr(data.seo, 'model_dump') else data.seo
     if data.status is not None:
@@ -1061,7 +1069,7 @@ async def update_kvn(id: str, data: KVNUpdate):
                 logger.error("Skipping season_data update due to serialization errors")
                 # Не добавляем season_data в update_data
     
-    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_at"] = next_version(data.expected_updated_at if versioned_season_write else None)
     
     # Логируем размер данных для отладки
     try:
@@ -1074,8 +1082,11 @@ async def update_kvn(id: str, data: KVNUpdate):
     except Exception as e:
         logger.warning(f"Could not calculate data size: {e}")
     
+    write_filter = {"_id": kvn_id}
+    if versioned_season_write:
+        write_filter.update(version_filter(kvn))
     try:
-        result = await db.kvn.update_one({"_id": kvn_id}, {"$set": update_data})
+        result = await db.kvn.update_one(write_filter, {"$set": update_data})
     except Exception as e:
         logger.error(f"Error updating KVN {id}: {e}", exc_info=True)
         # Логируем детали ошибки
@@ -1095,7 +1106,7 @@ async def update_kvn(id: str, data: KVNUpdate):
                     return obj
                 
                 cleaned_update_data = convert_objectid(update_data)
-                result = await db.kvn.update_one({"_id": kvn_id}, {"$set": cleaned_update_data})
+                result = await db.kvn.update_one(write_filter, {"$set": cleaned_update_data})
                 logger.info("Successfully updated after ObjectId conversion")
             except Exception as e2:
                 logger.error(f"Error after ObjectId conversion: {e2}", exc_info=True)
@@ -1104,7 +1115,12 @@ async def update_kvn(id: str, data: KVNUpdate):
             raise HTTPException(status_code=500, detail=f"Failed to update KVN: {str(e)}")
     
     if result.matched_count == 0:
+        if versioned_season_write:
+            raise HTTPException(status_code=409, detail="Страница сезона изменилась во время сохранения. Обновите страницу и повторите.")
         raise HTTPException(status_code=404, detail="KVN page not found")
+
+    if data.tags is not None:
+        await tag_service.sync_tags(data.tags)
     
     # Автоматически обновляем соседние сезоны, если изменился slug, year или league_slug
     should_update_adjacent = False

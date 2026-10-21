@@ -20,10 +20,11 @@ import copy
 import logging
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Optional
 
 from bson import ObjectId
+from fastapi import HTTPException
 
 from services.memberships import PersonLookup, load_person_lookup, name_key
 from services.show_teams import KVN_ONLY
@@ -60,6 +61,53 @@ def stable_id(*parts: Any) -> str:
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+_NO_EXPECTED_VERSION = object()
+
+
+def _parse_version(value: Any) -> Optional[datetime]:
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def version_matches(document: dict, expected: Optional[str]) -> bool:
+    """Compare a client ISO version with a stored ISO string/BSON datetime."""
+    if "updated_at" not in document:
+        return expected is None
+    actual = document["updated_at"]
+    if expected is None:
+        return actual is None
+    actual_dt, expected_dt = _parse_version(actual), _parse_version(expected)
+    return actual_dt == expected_dt if actual_dt and expected_dt else actual == expected
+
+
+def version_filter(document: dict) -> dict:
+    """Build a CAS filter using the exact value read from storage, not its JSON form."""
+    if "updated_at" not in document:
+        return {"updated_at": {"$exists": False}}
+    if document["updated_at"] is None:
+        return {"updated_at": {"$eq": None, "$exists": True}}
+    return {"updated_at": document["updated_at"]}
+
+
+def next_version(expected: Optional[str] = None) -> str:
+    """Return a UTC ISO timestamp strictly newer than a supplied version."""
+    now = datetime.now(timezone.utc)
+    expected_dt = _parse_version(expected)
+    if expected_dt and now <= expected_dt:
+        now = expected_dt + timedelta(microseconds=1)
+    return now.isoformat()
 
 
 # ─── Нормализация ──────────────────────────────────────────────────────────────
@@ -649,13 +697,30 @@ async def ensure_kvn_tournament(db, league_slug: str) -> Optional[dict]:
     return await db.tournaments.find_one({"_id": doc["_id"]})
 
 
-async def save_season(db, season: dict, *, write_page: bool, people: Optional[PersonLookup] = None) -> dict:
+async def save_season(
+    db, season: dict, *, write_page: bool, people: Optional[PersonLookup] = None,
+    expected_updated_at: Any = _NO_EXPECTED_VERSION,
+) -> dict:
     """Сохранить сезон, пересобрать participations; при write_page — записать season_data в страницу."""
-    now = now_iso()
-    existing = await db.seasons.find_one({"_id": season["_id"]}, {"created_at": 1})
+    existing = await db.seasons.find_one(
+        {"_id": season["_id"]}, {"created_at": 1, "updated_at": 1}
+    )
+    if expected_updated_at is not _NO_EXPECTED_VERSION:
+        if existing is None or not version_matches(existing, expected_updated_at):
+            raise HTTPException(status_code=409, detail="Сезон уже изменён. Обновите страницу и повторите сохранение.")
+        now = next_version(expected_updated_at)
+    else:
+        now = now_iso()
     season["created_at"] = (existing or {}).get("created_at") or now
     season["updated_at"] = now
-    await db.seasons.replace_one({"_id": season["_id"]}, season, upsert=True)
+    filter_query = {"_id": season["_id"]}
+    if expected_updated_at is not _NO_EXPECTED_VERSION:
+        filter_query.update(version_filter(existing))
+    result = await db.seasons.replace_one(
+        filter_query, season, upsert=expected_updated_at is _NO_EXPECTED_VERSION
+    )
+    if expected_updated_at is not _NO_EXPECTED_VERSION and result.matched_count == 0:
+        raise HTTPException(status_code=409, detail="Сезон изменён во время сохранения. Обновите страницу и повторите.")
 
     rows = build_participations(season, people or await load_person_lookup(db))
     await db.participations.delete_many({"season_id": season["_id"]})

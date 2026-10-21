@@ -397,7 +397,9 @@ export default function KVNEditPage() {
         navigate(`/admin/kvn/${res.data.id}`, { replace: true });
       } else {
         const oldSlug = kvn.slug;
-        await contentApi.updateKvn(id, dataToSend);
+        dataToSend.expected_updated_at = kvn.updated_at ?? null;
+        const saved = await contentApi.updateKvn(id, dataToSend);
+        setKvn(current => ({ ...current, updated_at: saved.data.updated_at }));
         setSuccess('Сохранено!');
         // Reload data after save to get updated full_path and other fields
         // This is especially important if slug changed

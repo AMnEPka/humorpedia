@@ -103,12 +103,17 @@ async def update_season(season_id: str, data: SeasonUpdate):
     Правка сезона. Для лиг КВН изменения записываются и в season_data страницы сезона,
     так что публичная страница и старый редактор видят их сразу.
     """
+    if "expected_updated_at" not in data.model_fields_set:
+        raise HTTPException(status_code=409, detail="Версия сезона не передана. Обновите страницу и повторите сохранение.")
     db = await get_db()
     season = await _get_season(db, season_id)
     update = data.model_dump(exclude_unset=True)
+    expected_updated_at = update.pop("expected_updated_at")
     lookup = await load_team_lookup(db)
     season = apply_season_update(season, update, lookup)
-    saved = await save_season(db, season, write_page=True)
+    saved = await save_season(
+        db, season, write_page=True, expected_updated_at=expected_updated_at
+    )
     return {**saved, **_season_counts(saved), "unresolved": unresolved_participants(saved)}
 
 

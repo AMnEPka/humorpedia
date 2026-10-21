@@ -79,6 +79,10 @@
 | PUT | `/kvn/{id}` ✏️ | обновить (включая `season_data`, `jury_cards`); пересчёт full_path, очистка данных, инвалидация кэша |
 | DELETE | `/kvn/{id}` ✏️ | удалить |
 
+При передаче ненулевого `season_data` в PUT обязательно `expected_updated_at` из GET этой KVN-страницы.
+Отсутствующий/устаревший токен — `409`; явный `null` допустим для документа без версии или с `updated_at: null`.
+Полный контракт — [версия записи сезона](COMPETITIONS.md#версия-записи-сезона-21102026).
+
 ### Шоу (`content_shows.py`, коллекция `shows`)
 POST `/shows` ✏️ (учитывает `parent_id`, считает `full_path`) · GET `/shows` (только корневые, `include_children=true` — все; `sort=popular` — по просмотрам) · GET `/shows/by-path/{path}` (+ `children`, `breadcrumbs`, ссылки проверяются) · GET `/shows/{_id|full_path}/children` · GET `/shows/{id_or_slug}?raw=` (ссылки проверяются, `raw=true` — для админки) · GET `/shows-hierarchy` · PUT `/shows/{id}` ✏️ · DELETE `/shows/{id}` ✏️
 
@@ -207,6 +211,7 @@ GET `/collections` · POST `/export` (query/projection/sort/limit) · POST `/imp
 
 ## competitions.py — `/competitions` (турниры, сезоны, перекрёстные ссылки)
 GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + сезоны) · GET `/seasons/{id}` · GET `/seasons/by-page/{page_id}` · PUT `/seasons/{id}` ✏️ (пишет и в `season_data` страницы) · GET `/unresolved` · POST `/sync` 🛡 · GET `/teams/{id_or_slug}/participations?games=`
+PUT сезона всегда требует `expected_updated_at` из GET канонического сезона; конфликт или отсутствие токена — `409`.
 Подробно — [COMPETITIONS.md](COMPETITIONS.md).
 
 ## memberships.py — `/competitions` (составы, карьера человека)
