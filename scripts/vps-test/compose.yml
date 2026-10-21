@@ -1,0 +1,84 @@
+name: humorpedia-test
+x-logging: &small-logs
+  driver: json-file
+  options:
+    max-size: "3m"
+    max-file: "2"
+services:
+  mongodb:
+    image: mongo:8.0.32
+    # Moby seccomp profile, with rseq and legacy socketcall removed from the allow-list.
+    # MongoDB 8.0.32's allocator falls back when rseq is unavailable (SERVER-121912).
+    security_opt:
+      - seccomp=./seccomp-mongodb.json
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Required}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?Required}
+    command: ["mongod", "--auth", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.256"]
+    volumes:
+      - ./data/mongo:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/10-app-user.js:ro
+      - ./incoming:/incoming:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --host localhost --username root --password \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
+      interval: 60s
+      timeout: 20s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    logging: *small-logs
+  backend:
+    image: humorpedia/backend:${RELEASE_ID:?Required}
+    environment:
+      ENVIRONMENT: production
+      PYTHONUNBUFFERED: "1"
+      DB_NAME: humorpedia
+      MONGO_HOST: mongodb
+      MONGO_PORT: "27017"
+      MONGO_USER: humorpedia_app
+      MONGO_PASSWORD: ${MONGO_APP_PASSWORD:?Required}
+      MONGO_AUTH_SOURCE: humorpedia
+      JWT_SECRET: ${JWT_SECRET:?Required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Required}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Required}
+      CORS_ORIGINS: http://localhost:8080,https://77.105.139.231
+      # Backend has no host port; only the internal nginx forwards sanitized headers.
+      FORWARDED_ALLOW_IPS: "*"
+      UPLOAD_DIR: /app/uploads
+      BACKUP_DIR: /app/backups
+    command: ["gunicorn", "server:app", "--workers", "1", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8001", "--timeout", "120"]
+    volumes:
+      - ./data/uploads:/app/uploads
+      - ./data/imported-images:/app/media/imported/images
+      - ./data/images:/app/images
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8001/api/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+    logging: *small-logs
+  frontend:
+    image: humorpedia/frontend:${RELEASE_ID:?Required}
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./config.js:/usr/share/nginx/html/config.js:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:80/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    logging: *small-logs
