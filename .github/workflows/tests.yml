@@ -12,6 +12,11 @@ jobs:
       mongodb:
         image: mongo:8.0.32
         ports: ["27017:27017"]
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       MONGO_URL: mongodb://localhost:27017
       DB_NAME: humorpedia_test
@@ -32,6 +37,38 @@ jobs:
       - run: node ../scripts/sync-module-contract.cjs --check
       - run: pytest -q tests
 
+  mongodb-integration:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:8.0.32
+        ports: ["27017:27017"]
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MONGO_URL: mongodb://localhost:27017
+      DB_NAME: humorpedia_test
+      UPLOAD_DIR: ${{ github.workspace }}/.ci-uploads
+      PAGE_PACKAGE_INTEGRATION: '1'
+      SEASON_WRITE_INTEGRATION: '1'
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q tests/test_page_package_import.py tests/test_season_write_integration.py -rs
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -48,3 +85,16 @@ jobs:
       - run: yarn test --watchAll=false --runInBand
         env:
           CI: 'true'
+      - run: yarn build
+        env:
+          CI: 'true'
+
+  windows-tools:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/page-builder/test_worker.py
+      - run: pwsh ./scripts/test-dev-workflow.ps1

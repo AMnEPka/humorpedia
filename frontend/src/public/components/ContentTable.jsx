@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 
+const EMPTY_ROWS = [];
+
 // Число из ячейки: «1 224 000», «-162000», «12,5» → number; иначе null
 function toNumber(value) {
   const text = String(value ?? '').replace(/[\s ₽%]/g, '').replace(',', '.');
@@ -26,7 +28,7 @@ function CellValue({ value }) {
  * При sortable — сортировка по клику на заголовок (числа сравниваются как числа).
  */
 export default function ContentTable({ data }) {
-  const rows = data?.rows || [];
+  const rows = data?.rows || EMPTY_ROWS;
   const headers = data?.headers || [];
   const hasHeaders = data?.hasHeaders !== false && headers.length > 0;
   const sortable = Boolean(data?.sortable) && hasHeaders;

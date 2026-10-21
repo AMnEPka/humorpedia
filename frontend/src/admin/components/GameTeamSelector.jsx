@@ -18,6 +18,8 @@ import {
 import { contentApi } from '../utils/api';
 import { normalizeSearchText } from '@/utils/search';
 
+const EMPTY_TEAMS = [];
+
 // Вспомогательная функция для извлечения города из facts
 // Поддерживает поля "Город", "город", "Города", "города"
 // Обрабатывает случаи, когда городов несколько (разделенных новой строкой или запятой)
@@ -76,8 +78,8 @@ function cleanTeamName(teamName) {
 export default function GameTeamSelector({ 
   value, // Текущая команда: {team_slug, team_name, city} или строка
   onChange, // (team) => void
-  existingTeams = [], // Массив уже добавленных команд в игре
-  seasonAllTeams = [], // Массив всех команд сезона (из "Команды-участники")
+  existingTeams = EMPTY_TEAMS, // Массив уже добавленных команд в игре
+  seasonAllTeams = EMPTY_TEAMS, // Массив всех команд сезона (из "Команды-участники")
   placeholder = "Выберите команду...",
   allowCustom = true
 }) {
@@ -87,42 +89,24 @@ export default function GameTeamSelector({
   const [loading, setLoading] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  // Извлекаем ключевые поля из value для оптимизации зависимостей
-  // Используем примитивные значения, чтобы избежать лишних пересчётов
-  const teamSlug = typeof value === 'object' && value !== null ? (value.team_slug || value.slug || value.id || '') : (typeof value === 'string' ? value : '');
-  const teamName = typeof value === 'object' && value !== null ? (value.team_name || value.name || '') : '';
-  
-  // valueTypeKey меняется при смене типа (object -> string) или при смене строки, чтобы teamKey пересчитывался
-  const valueTypeKey = typeof value === 'string' ? value : (typeof value === 'object' && value !== null ? 'object' : '');
-  const teamKey = useMemo(() => {
-    if (!value) return null;
-    if (typeof value === 'object' && value !== null) {
-      return JSON.stringify({
-        slug: teamSlug,
-        name: teamName
-      });
-    }
-    return String(value);
-  }, [teamSlug, teamName, valueTypeKey]);
+  // Extract primitive fields so equivalent object props do not trigger another lookup.
+  const hasTeamValue = Boolean(value);
+  const valueIsObject = typeof value === 'object' && value !== null;
+  const teamId = valueIsObject
+    ? (value.team_slug || value.slug || value.id || '')
+    : value;
+  const teamName = valueIsObject ? (value.team_name || value.name || '') : '';
+  const teamSlug = valueIsObject
+    ? (value.team_slug || value.slug || '')
+    : value;
+  const teamCity = valueIsObject ? (value.city || '') : '';
 
   // Загружаем информацию о выбранной команде
   useEffect(() => {
     const loadTeam = async () => {
-      if (!value) {
+      if (!hasTeamValue) {
         setSelectedTeam(null);
         return;
-      }
-
-      let teamId, teamName, teamSlug, teamCity;
-      
-      if (typeof value === 'object' && value !== null) {
-        teamId = value.team_slug || value.slug || value.id || '';
-        teamName = value.team_name || value.name || '';
-        teamSlug = value.team_slug || value.slug || '';
-        teamCity = value.city || '';
-      } else {
-        teamId = value;
-        teamSlug = value;
       }
 
       if (teamId) {
@@ -163,7 +147,7 @@ export default function GameTeamSelector({
     };
 
     loadTeam();
-  }, [teamKey]);
+  }, [hasTeamValue, teamId, teamName, teamSlug, teamCity]);
 
   // Поиск команд только среди команд сезона
   useEffect(() => {
