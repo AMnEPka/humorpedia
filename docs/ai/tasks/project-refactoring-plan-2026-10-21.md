@@ -325,7 +325,7 @@ flowchart LR
 
 ### R7. Укрепить переходы состояний
 
-**Статус 21.10.2026:** локально реализован и проверен поверх опубликованного R6 `5026a24` в прежнем worktree. По поручению пользователя R7 оформляется отдельным коммитом с документацией и публикуется в ветку рефакторинга. Пользователь согласовал отсутствие автоматического перехвата и операторское освобождение после остановки прежнего worker.
+**Статус 21.10.2026:** локально реализован и проверен поверх опубликованного R6 `5026a24` в прежнем worktree. R7 опубликован отдельным коммитом с документацией `85ba090ea11684172f053bd89c448d961212e33d` в `origin/codex/local-page-builder`; точный ref подтверждён. Пользователь согласовал отсутствие автоматического перехвата и операторское освобождение после остановки прежнего worker.
 
 **Файлы:** `services/editorial_decisions.py`, `routes/editorial_proposals.py`, модель запроса и `EditorialProposalsPage`; `services/page_package_import.py`, `scripts/recover_workflow_claim.py`, `scripts/report_page_package_storage.py`, concurrency/recovery tests и Mongo CI.
 
@@ -338,12 +338,16 @@ flowchart LR
 
 ### R8. Завершить переход соревнований к одному источнику
 
+**Продолжение 21.10.2026:** R8 реализован и проверен локально в прежнем worktree.
+Выбран журнал проекций на standalone Mongo, редактор переведён на canonical API.
+Изменения пока не опубликованы; CI-причины и локальная проверка — [задача R8](r8-canonical-seasons-2026-10-21.md).
+
 **Файлы:** `backend/services/competitions.py`, `routes/competitions.py`, `routes/content_kvn.py`, `models/competition.py`, `frontend/src/admin/components/SeasonDataEditor.jsx`, `public/pages/SeasonDetailPage.jsx`, `docs/ai/COMPETITIONS.md`.
 
-- [ ] На копии базы построить отчёт различий `seasons` и `kvn.season_data`. Не объявлять одну копию правильной только по её типу; конфликтующие записи требуют редакторского решения.
-- [ ] Согласовать `seasons` как единственный путь записи, revision и правила обработки старого клиента. Предлагаемая точка входа — существующий API `/competitions/seasons/{id}`, legacy API становится адаптером к тому же workflow.
-- [ ] Перевести редактор по частям. Проекцию `season_data` и `participations` строить из сохранённого сезона; повторное построение не меняет канонические данные. Прямую обратную замену сезона из устаревшей проекции убрать после переключения всех writers.
-- [ ] Приёмка: create/edit/reorder/rename/role/person-only result проходят UI/API; два параллельных редактора получают конфликт; reconciliation после rebuild даёт нулевой diff. Возврат версии приложения сохраняет совместимую legacy-проекцию.
+- [x] Read-only отчёт на отдельной копии: 122 проекции и metadata совпадают; 406 round-trip различий в 107 сезонах — только отсутствующий пустой stage.comment. Данные не менялись, хеши шести коллекций совпали. [Все сезоны и ограничения](r8-season-reconciliation-2026-10-21.md). Содержательные конфликты на другой цели по-прежнему требуют редакторского решения.
+- [x] Общий workflow: выбран и реализован журнал на прежней standalone Mongo, durable claims, versioned save и безопасный retry; legacy-адаптер требует версии страницы и сезона.
+- [x] Редактор переведён на canonical API с editor_data/ID sidecars; проекции строятся из сохранённого сезона. Bootstrap missing-only, reverse overwrite существующего сезона удалён; служебные writers обновлены/legacy --apply заблокирован.
+- [x] Локальная приёмка: 1058 backend / 266 frontend, CI build, реальный browser smoke и SIGKILL→409→operator recovery→retry200; двойной rebuild 122 сезонов сохраняет канонику/версии и 9276 связей. Projection/metadata diff=0; 406 прежних missing/empty stage.comment round-trip различий отдельно учтены. [Протокол, CI-причины и ограничения](r8-canonical-seasons-2026-10-21.md). Hosted CI после исправления не запускался; R8 ещё не опубликован.
 
 ### R9. Упорядочить публичный рендеринг
 

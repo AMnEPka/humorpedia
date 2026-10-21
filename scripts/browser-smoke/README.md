@@ -1,10 +1,12 @@
 # Browser smoke
 
-`run.cjs` выполняет три сценария настоящим Chromium без моков API:
+`run.cjs` выполняет четыре сценария настоящим Chromium без моков API:
 
 1. Вход → новая заготовка человека → редактура → preview внутри iframe → скачивание ZIP.
 2. Загрузка ZIP → preflight без публикации → явный apply → обычный редактор → сохранение → публичный preview.
 3. Анонимный поиск → карточка → browser back с восстановлением результатов.
+4. `seasons.cjs`: создание лиги/сезона, canonical сохранение из редактора, сохранность ID и person_id,
+   перестановка этапов и роли через API, stale 409, публичная проекция комментария.
 
 Технический тест не запускает Codex worker и не генерирует материалы. Все имена/страницы синтетические.
 Проверяется browser file input, без автоматизации системного диалога выбора файла.
@@ -44,7 +46,8 @@ powershell -ExecutionPolicy Bypass -File scripts/browser-smoke/local.ps1 `
 
 Job `browser-smoke` получает artifact frontend из того же workflow. Сборка использует
 `REACT_APP_USE_API_PROXY=true`, поэтому все `/api` и uploads идут на изолированный сервер.
-Mongo service принадлежит job. Playwright устанавливается отдельно в `$RUNNER_TEMP/browser-tools`;
+MongoDB 8.0.32 запускается после checkout через `scripts/ci/start-mongodb.sh` с существующим
+seccomp-профилем; контейнер и anonymous volumes удаляются в always cleanup по точному ID. Playwright устанавливается отдельно в `$RUNNER_TEMP/browser-tools`;
 версии frontend/backend dependencies остаются прежними.
 
 Для ручного запуска на Linux задать `MONGO_URL`, уникальные `SMOKE_RUN_ID`/`DB_NAME`, `BROWSER_BUILD_DIR`,

@@ -527,5 +527,6 @@ class KVNUpdate(BaseModel):
     jury_cards: Optional[Dict[str, Dict[str, Any]]] = None  # { [juryName]: { photo: MediaFile, text: str } }
     season_data: Optional[Dict[str, Any]] = None  # Структурированные данные сезона
     expected_updated_at: Optional[str] = None
+    expected_season_updated_at: Optional[str] = None
     related_kvn_ids: Optional[List[str]] = None
     old_urls: Optional[List[str]] = None  # Старые URL для редиректов

@@ -2,7 +2,7 @@
 """
 Миграция season_data страниц КВН в модель соревнований (tournaments / seasons / participations).
 
-Идемпотентна: идентификаторы детерминированные, повторный запуск перезаписывает те же документы.
+Идемпотентна: идентификаторы детерминированные, повторный запуск восстанавливает проекции существующих сезонов; канонические данные не заменяются.
 При старте сервер выполняет её сам, если коллекция seasons пуста.
 
 Использование (внутри контейнера backend):
@@ -60,7 +60,7 @@ async def main(apply: bool) -> None:
         lookup = await load_team_lookup(db)
         await report(db, lookup)
         if apply:
-            stats = await sync_kvn_pages(db)
+            stats = await sync_kvn_pages(db, bootstrap=True)
             print("\nЗаписано:", stats)
             print("Турниров:", await db.tournaments.count_documents({}),
                   "сезонов:", await db.seasons.count_documents({}),

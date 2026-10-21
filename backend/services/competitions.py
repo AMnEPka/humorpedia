@@ -7,10 +7,10 @@
 - participations  — производная таблица для перекрёстных ссылок, пересобирается при сохранении сезона:
                     kind="season" — итог участника в сезоне, kind="game" — результат в конкретной игре
 
-Переходный период (этапы 1–3): публичные страницы и старый редактор работают с kvn.season_data.
-Источник истины — seasons; синхронизация в обе стороны идёт через save_season():
-- PUT страницы КВН с season_data → sync_from_kvn_page() → seasons + participations;
-- PUT /api/competitions/seasons/{id} → seasons + participations + запись season_data обратно в страницу.
+Источник истины — seasons; kvn.season_data и participations — проекции.
+save_season фиксирует версию и журнал, season_projection безопасно повторяет проекции.
+sync_from_kvn_page только инициализирует отсутствующий сезон; существующий не перезаписывает.
+Старый PUT страницы — versioned адаптер, админка использует canonical season API.
 
 Функции без БД (legacy_to_season, season_to_legacy, build_participations) покрыты тестами.
 """
@@ -50,7 +50,7 @@ _SEASON_KNOWN = {
 _STAGE_KNOWN = {"name", "order", "comment", "notes", "additional_teams", "additional_notes", "games"}
 _GAME_KNOWN = {"id", "name", "order", "date", "date_raw", "host", "jury", "contests", "notes", "is_cancelled", "teams"}
 _RESULT_KNOWN = {"team_id", "person_id", "team_slug", "team_name", "city", "place", "total", "scores", "passed", "is_winner", "is_additional"}
-_TEAM_REF_KNOWN = {"slug", "name", "city"}
+_TEAM_REF_KNOWN = {"slug", "name", "city", "person_id"}
 
 KVN_LEAGUE_ORDER = {"vl-kvn": 10, "premier-liga": 20, "1l-kvn": 30, "ml-kvn": 40, "vul": 50}
 
@@ -189,7 +189,8 @@ def _team_ref(raw: Any, lookup: TeamLookup) -> dict:
     raw = raw or {}
     slug = (raw.get("slug") or "").strip()
     return {
-        "team_id": lookup.resolve(slug=slug),
+        "team_id": None if raw.get("person_id") else lookup.resolve(slug=slug),
+        **({"person_id": raw["person_id"]} if raw.get("person_id") is not None else {}),
         "slug": slug,
         "name": raw.get("name") or slug,
         "city": raw.get("city") or "",
@@ -306,6 +307,8 @@ def _legacy_team_ref(ref: dict) -> dict:
     if ref.get("city") or ref.get("had_city"):
         out["city"] = ref.get("city") or ""
     out.update(ref.get("extra") or {})
+    if ref.get("person_id") is not None:
+        out["person_id"] = ref["person_id"]
     return out
 
 
@@ -700,56 +703,30 @@ async def ensure_kvn_tournament(db, league_slug: str) -> Optional[dict]:
 async def save_season(
     db, season: dict, *, write_page: bool, people: Optional[PersonLookup] = None,
     expected_updated_at: Any = _NO_EXPECTED_VERSION,
+    page_patch: Optional[dict] = None,
+    expected_page_updated_at: Any = _NO_EXPECTED_VERSION,
 ) -> dict:
-    """Сохранить сезон, пересобрать participations; при write_page — записать season_data в страницу."""
-    existing = await db.seasons.find_one(
-        {"_id": season["_id"]}, {"created_at": 1, "updated_at": 1}
-    )
-    if expected_updated_at is not _NO_EXPECTED_VERSION:
-        if existing is None or not version_matches(existing, expected_updated_at):
-            raise HTTPException(status_code=409, detail="Сезон уже изменён. Обновите страницу и повторите сохранение.")
-        now = next_version(expected_updated_at)
-    else:
-        now = now_iso()
-    season["created_at"] = (existing or {}).get("created_at") or now
-    season["updated_at"] = now
-    filter_query = {"_id": season["_id"]}
-    if expected_updated_at is not _NO_EXPECTED_VERSION:
-        filter_query.update(version_filter(existing))
-    result = await db.seasons.replace_one(
-        filter_query, season, upsert=expected_updated_at is _NO_EXPECTED_VERSION
-    )
-    if expected_updated_at is not _NO_EXPECTED_VERSION and result.matched_count == 0:
-        raise HTTPException(status_code=409, detail="Сезон изменён во время сохранения. Обновите страницу и повторите.")
+    """CAS-commit canonical season and persist an idempotent projection intent."""
+    from services.season_projection import save_season_with_projection
 
-    rows = build_participations(season, people or await load_person_lookup(db))
-    await db.participations.delete_many({"season_id": season["_id"]})
-    if rows:
-        await db.participations.insert_many(rows, ordered=False)
-
-    if write_page and season.get("page_collection") == "kvn" and season.get("page_id"):
-        page = await db.kvn.find_one(page_filter(season["page_id"]), {"season_data": 1})
-        if page is not None:
-            legacy = season_to_legacy(season)
-            old = page.get("season_data") or {}
-            for key in _LEGACY_COMPUTED_KEYS:
-                if key in old:
-                    legacy[key] = old[key]
-            await db.kvn.update_one(
-                {"_id": page["_id"]},
-                {"$set": {"season_data": legacy, "updated_at": now}},
-            )
-    return season
+    return await save_season_with_projection(
+        db, season, write_page=write_page, people=people,
+        expected_updated_at=expected_updated_at, page_patch=page_patch,
+        expected_page_updated_at=expected_page_updated_at,
+    )
 
 
 async def sync_from_kvn_page(
     db, page: dict, lookup: Optional[TeamLookup] = None, people: Optional[PersonLookup] = None
 ) -> Optional[dict]:
-    """Синхронизировать сезон из страницы КВН. Страницы без season_data или вне лиги — удаляют сезон."""
+    """Initialize a missing canonical season from legacy data; never overwrite an existing one."""
     page_id = str(page["_id"])
+    season_id = stable_id("kvn-page", page_id)
+    existing = await db.seasons.find_one({"_id": season_id})
+    if existing is not None:
+        return existing
     league_slug = _league_slug_from_path(page.get("full_path", ""))
     if not page.get("season_data") or not league_slug:
-        await delete_season_for_page(db, page_id)
         return None
     tournament = await ensure_kvn_tournament(db, league_slug)
     if not tournament:
@@ -760,8 +737,10 @@ async def sync_from_kvn_page(
     return await save_season(db, season, write_page=False, people=people)
 
 
-async def sync_kvn_pages(db, query: Optional[dict] = None) -> dict:
-    """Синхронизировать все (или отобранные) страницы КВН с season_data."""
+async def sync_kvn_pages(db, query: Optional[dict] = None, *, bootstrap: bool = False) -> dict:
+    """Rebuild canonical projections; legacy-to-canonical initialization is opt-in."""
+    from services.season_projection import rebuild_season_projection, retry_season_projection
+
     lookup = await load_team_lookup(db)
     people = await load_person_lookup(db)
     stats = {"pages": 0, "seasons": 0, "skipped": 0, "errors": []}
@@ -771,18 +750,46 @@ async def sync_kvn_pages(db, query: Optional[dict] = None) -> dict:
     async for page in db.kvn.find(base_query):
         stats["pages"] += 1
         try:
-            season = await sync_from_kvn_page(db, page, lookup, people)
+            season_id = stable_id("kvn-page", str(page["_id"]))
+            existing = await db.seasons.find_one({"_id": season_id})
+            if existing is not None:
+                if (existing.get("_projection")
+                        and existing["_projection"].get("state") != "ready"):
+                    season = await retry_season_projection(
+                        db, season_id, existing.get("updated_at"), people=people,
+                    )
+                else:
+                    season = await rebuild_season_projection(db, existing, people=people)
+            elif bootstrap:
+                season = await sync_from_kvn_page(db, page, lookup, people)
+            else:
+                season = None
         except Exception as e:  # одна битая страница не должна останавливать остальные
             stats["errors"].append(f"{page.get('full_path')}: {e}")
             logger.error(f"Competitions: ошибка синхронизации {page.get('full_path')}: {e}", exc_info=True)
             continue
-        stats["seasons" if season else "skipped"] += 1
+        if season and season.get("projection_status") == "error":
+            stats["errors"].append(f"{page.get('full_path')}: каноника сохранена, проекция требует retry")
+            stats["skipped"] += 1
+        else:
+            stats["seasons" if season else "skipped"] += 1
     return stats
 
 
 async def delete_season_for_page(db, page_id: str) -> None:
     season_id = stable_id("kvn-page", page_id)
-    await db.seasons.delete_one({"_id": season_id})
+    existing = await db.seasons.find_one({"_id": season_id})
+    if existing and (existing.get("_write_claim")
+                     or (existing.get("_projection") or {}).get("state") not in (None, "ready")):
+        raise HTTPException(status_code=409, detail="Сезон обрабатывается или ожидает восстановления; удаление отклонено.")
+    if existing:
+        result = await db.seasons.delete_one({
+            "_id": season_id,
+            **version_filter(existing),
+            "$or": [{"_write_claim": {"$exists": False}}, {"_write_claim": None}],
+        })
+        if result.deleted_count != 1:
+            raise HTTPException(status_code=409, detail="Сезон изменён; повторите удаление.")
     await db.participations.delete_many({"season_id": season_id})
 
 
@@ -793,7 +800,7 @@ async def ensure_competitions_synced(db) -> None:
             return
         if not await db.kvn.find_one({"season_data": {"$exists": True}}, {"_id": 1}):
             return
-        stats = await sync_kvn_pages(db)
+        stats = await sync_kvn_pages(db, bootstrap=True)
         logger.info(f"Competitions: первичная синхронизация из страниц КВН: {stats}")
     except Exception as e:
         logger.error(f"Competitions: первичная синхронизация не удалась: {e}", exc_info=True)

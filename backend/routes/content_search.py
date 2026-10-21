@@ -15,6 +15,7 @@ from utils.search import literal_search_pattern, normalize_search_text, search_v
 from services.crud import (
     generate_unique_slug, convert_objectids_to_strings,
 )
+from services.competitions import sync_from_kvn_page
 from services.tags import tag_service
 from services.show_teams import attach_show_info, team_id_or_kvn_slug_query, team_url
 
@@ -577,12 +578,16 @@ async def duplicate_content(content_type: str, id: str):
         if not original:
             raise HTTPException(status_code=404, detail="Content not found")
 
+        if content_type == 'kvn' and original.get('_season_write_claim'):
+            raise HTTPException(409, 'Сначала восстановите проекции исходного сезона')
+
         # Deep copy
         copy_data = copy_module.deepcopy(dict(original))
         copy_data.pop("_id", None)
         copy_data.pop("created_at", None)
         copy_data.pop("updated_at", None)
         copy_data.pop("views", None)
+        copy_data.pop("_season_write_claim", None)
         copy_data = convert_objectids_to_strings(copy_data)
 
         # Generate unique slug
@@ -664,6 +669,10 @@ async def duplicate_content(content_type: str, id: str):
                             {"_id": parent_doc["_id"]},
                             {"$addToSet": {"child_kvn_ids": new_id}}
                         )
+
+        if content_type == 'kvn' and copy_data.get('season_data'):
+            created_page = await db.kvn.find_one({'_id': result.inserted_id})
+            await sync_from_kvn_page(db, created_page)
 
         if "tags" in copy_data and copy_data["tags"]:
             await tag_service.sync_tags(copy_data["tags"])

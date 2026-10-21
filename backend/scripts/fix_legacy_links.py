@@ -25,7 +25,8 @@ load_dotenv()
 
 from routes.redirects import _try_pattern_redirect  # noqa: E402
 from services.cache import cache_service  # noqa: E402
-from services.competitions import sync_kvn_pages  # noqa: E402
+from services.competitions import save_season, load_team_lookup, version_filter
+from services.season_editor import apply_editor_update  # noqa: E402
 from services.link_resolver import load_old_id_urls  # noqa: E402
 from services.modx_content import LinkMapper, rewrite_links  # noqa: E402
 from services.modx_dump import load_modx_site  # noqa: E402
@@ -35,7 +36,7 @@ from utils.database import close_db, get_db  # noqa: E402
 
 DEFAULT_DUMP = "/app/backups/idemsku8_modx2.sql"
 COLLECTIONS = ("teams", "kvn", "shows", "people")
-SKIP_FIELDS = {"_id", "id", "slug", "full_path", "old_urls", "logo", "photo", "image", "poster", "cover_image"}
+SKIP_FIELDS = {"_projection", "_write_claim", "_season_write_claim", "_id", "id", "slug", "full_path", "old_urls", "logo", "photo", "image", "poster", "cover_image"}
 
 
 def rewrite_value(value, mapper, counter):
@@ -62,7 +63,6 @@ async def main(args) -> None:
         kvn_slugs = {t["slug"] async for t in db.teams.find(KVN_ONLY, {"slug": 1})}
         mapper = LinkMapper(site, _try_pattern_redirect, await load_old_id_urls(db), url_builders,
                             path_builders + [misplaced_show_team_builder(site, kvn_slugs)])
-        changed_kvn = []
         for coll in COLLECTIONS:
             docs = changed_strings = 0
             async for doc in db[coll].find({}):
@@ -79,14 +79,26 @@ async def main(args) -> None:
                 docs += 1
                 changed_strings += counter[0]
                 if args.apply:
-                    await db[coll].update_one({"_id": doc["_id"]}, {"$set": updates})
-                    if coll == "kvn" and "season_data" in updates:
-                        changed_kvn.append(doc["_id"])
+                    canonical = await db.seasons.find_one({'page_collection': 'kvn', 'page_id': str(doc['_id'])}) if coll == 'kvn' else None
+                    if canonical:
+                        if 'season_data' in updates:
+                            canonical = apply_editor_update(canonical, updates.pop('season_data'), await load_team_lookup(db))
+                        for field in ('title', 'slug', 'status'):
+                            if field in updates:
+                                canonical[field] = updates[field]
+                        saved = await save_season(db, canonical, write_page=True, expected_updated_at=canonical.get('updated_at'),
+                                                  expected_page_updated_at=doc.get('updated_at'), page_patch=updates)
+                        if saved.get('projection_status') != 'ready':
+                            raise RuntimeError('Сезон сохранён, но проекция требует безопасного повтора')
+                    else:
+                        query = {'_id': doc['_id'], **version_filter(doc)}
+                        if coll == 'kvn':
+                            query['_season_write_claim'] = {'$exists': False}
+                        result = await db[coll].update_one(query, {'$set': updates})
+                        if result.matched_count != 1:
+                            raise RuntimeError('Документ изменён; повторите отчёт перед применением')
             print(f"{coll}: документов {docs}, текстовых полей {changed_strings}")
         if args.apply:
-            if changed_kvn:
-                stats = await sync_kvn_pages(db, {"_id": {"$in": changed_kvn}})
-                print("Синхронизация сезонов:", {k: v for k, v in stats.items() if k != "errors"}, stats["errors"][:3])
             await cache_service.invalidate_everywhere(db)
             print("Готово.")
         else:

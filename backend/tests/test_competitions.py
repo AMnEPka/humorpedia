@@ -131,46 +131,7 @@ def test_person_id_survives_season_legacy_roundtrip(lookup, stale_extra):
 
 
 def test_person_id_survives_save_page_and_sync_roundtrip(lookup):
-    class Collection:
-        def __init__(self, documents=()):
-            self.documents = list(documents)
-
-        @staticmethod
-        def matches(document, query):
-            for key, expected in query.items():
-                actual = document.get(key)
-                if isinstance(expected, dict) and "$in" in expected:
-                    if actual not in expected["$in"]:
-                        return False
-                elif actual != expected:
-                    return False
-            return True
-
-        async def find_one(self, query, _projection=None):
-            return next((d for d in self.documents if self.matches(d, query)), None)
-
-        async def replace_one(self, query, document, upsert=False):
-            existing = next((i for i, d in enumerate(self.documents) if self.matches(d, query)), None)
-            if existing is not None:
-                self.documents[existing] = copy.deepcopy(document)
-            elif upsert:
-                self.documents.append(copy.deepcopy(document))
-
-        async def update_one(self, query, update, upsert=False):
-            document = await self.find_one(query)
-            if document is None and upsert:
-                document = {k: v for k, v in query.items() if not isinstance(v, dict)}
-                self.documents.append(document)
-            if document is not None:
-                document.update(copy.deepcopy(update.get("$set", {})))
-                for key, value in update.get("$setOnInsert", {}).items():
-                    document.setdefault(key, copy.deepcopy(value))
-
-        async def delete_many(self, query):
-            self.documents = [d for d in self.documents if not self.matches(d, query)]
-
-        async def insert_many(self, documents, ordered=False):
-            self.documents.extend(copy.deepcopy(documents))
+    from test_season_projection import Collection
 
     page = legacy_page()
     # Exercise inferred year, multiple winners, stage comment, and historical game id.

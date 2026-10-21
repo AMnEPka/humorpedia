@@ -32,6 +32,29 @@ const emptyKvn = {
   jury_cards: {}  // { [juryName]: { photo: {...}, text: '' } }
 };
 
+function hasLegacySeason(page) {
+  return Boolean(page.season_data && Object.keys(page.season_data).length);
+}
+
+function normalizeKvnPage(page, seasonData = page.season_data || null) {
+  let poster = page.poster;
+  if (typeof poster === 'string') {
+    poster = { url: poster, alt: '', caption: '', thumbnail: poster };
+  }
+  return {
+    ...emptyKvn,
+    ...page,
+    poster,
+    parent_id: page.parent_id || null,
+    facts: page.facts || {},
+    facts_order: page.facts_order || [],
+    social_links: page.social_links || {},
+    seo: { ...emptyKvn.seo, ...page.seo },
+    season_data: seasonData,
+    jury_cards: page.jury_cards || {},
+  };
+}
+
 export default function KVNEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -48,6 +71,9 @@ export default function KVNEditPage() {
   const [juryMembers, setJuryMembers] = useState([]);
   const [loadingJury, setLoadingJury] = useState(false);
   const [loadingPreviousSeason, setLoadingPreviousSeason] = useState(false);
+  const [seasonRecord, setSeasonRecord] = useState(null);
+  const [seasonLoadState, setSeasonLoadState] = useState(isNew ? 'none' : 'loading');
+  const [retryingProjection, setRetryingProjection] = useState(false);
 
   // Загружаем список родителей для выбора
   useEffect(() => {
@@ -88,39 +114,53 @@ export default function KVNEditPage() {
   useEffect(() => {
     if (!isNew) {
       let cancelled = false;
-      contentApi.getKvn(id).then(res => {
-        if (cancelled) return;
-        
-        let poster = res.data.poster;
-        if (poster) {
-          if (typeof poster === 'string') {
-            poster = { url: poster, alt: '', caption: '', thumbnail: poster };
+      const load = async () => {
+        try {
+          const pageResponse = await contentApi.getKvn(id);
+          if (cancelled) return;
+          const page = pageResponse.data;
+          let canonical = null;
+          setSeasonLoadState('loading');
+          try {
+            const seasonResponse = await contentApi.getSeasonByPage(page._id || page.id || id);
+            if (cancelled) return;
+            canonical = seasonResponse.data;
+            if (!canonical?.editor_data || !canonical?._id) {
+              throw new Error('Ответ сервера не содержит данных канонического сезона');
+            }
+          } catch (seasonError) {
+            if (cancelled) return;
+            if (seasonError.response?.status === 404 && !hasLegacySeason(page)) {
+              canonical = null;
+            } else {
+              setKvn(normalizeKvnPage(page, null));
+              setSeasonRecord(null);
+              if (seasonError.response?.status === 404) {
+                setSeasonLoadState('missing');
+                setError('Канонический сезон не найден. Старые данные сезона не будут сохранены через редактор.');
+              } else {
+                setSeasonLoadState('load_error');
+                setError(getErrorMessage(seasonError, 'Не удалось загрузить канонический сезон'));
+              }
+              return;
+            }
           }
+
+          if (cancelled) return;
+          setKvn(normalizeKvnPage(page, canonical ? canonical.editor_data : null));
+          setSeasonRecord(canonical);
+          setSeasonLoadState(canonical ? 'ready' : 'none');
+          setError('');
+        } catch (loadError) {
+          if (!cancelled) {
+            setSeasonLoadState('load_error');
+            setError(getErrorMessage(loadError, 'Ошибка загрузки'));
+          }
+        } finally {
+          if (!cancelled) setLoading(false);
         }
-        
-        if (!cancelled) {
-          setKvn({ 
-            ...emptyKvn, 
-            ...res.data, 
-            poster: poster,
-            parent_id: res.data.parent_id || null,  // null для корневой страницы
-            facts: res.data.facts || {},
-            facts_order: res.data.facts_order || [],
-            social_links: res.data.social_links || {},
-            seo: { ...emptyKvn.seo, ...res.data.seo },
-            season_data: res.data.season_data || null,  // Сохраняем season_data для редактирования
-            jury_cards: res.data.jury_cards || {}  // Сохраняем карточки жюри
-          });
-        }
-      }).catch(() => {
-        if (!cancelled) {
-          setError('Ошибка загрузки');
-        }
-      }).finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
+      };
+      load();
       
       return () => {
         cancelled = true;
@@ -387,16 +427,71 @@ export default function KVNEditPage() {
       if (kvn.person_ids !== undefined) dataToSend.person_ids = Array.isArray(kvn.person_ids) ? kvn.person_ids : [];
       if (kvn.team_ids !== undefined) dataToSend.team_ids = Array.isArray(kvn.team_ids) ? kvn.team_ids : [];
       if (kvn.social_links) dataToSend.social_links = kvn.social_links;
-      if (kvn.season_data !== undefined) dataToSend.season_data = kvn.season_data;  // Сохраняем season_data
       if (kvn.jury_cards !== undefined) dataToSend.jury_cards = kvn.jury_cards;  // Сохраняем карточки жюри
       if (kvn.old_urls !== undefined) dataToSend.old_urls = (kvn.old_urls || []).filter(u => u.trim());  // Старые URL
       
       if (isNew) {
+        if (kvn.season_data !== undefined) dataToSend.season_data = kvn.season_data;
         const res = await contentApi.createKvn(dataToSend);
         setSuccess('Создано!');
         navigate(`/admin/kvn/${res.data.id}`, { replace: true });
+      } else if (seasonRecord) {
+        if (!kvn.season_data) {
+          throw new Error('Канонический сезон нельзя сохранить без данных редактора');
+        }
+        const saved = await contentApi.updateSeason(seasonRecord._id, {
+          expected_updated_at: seasonRecord.updated_at ?? null,
+          expected_page_updated_at: kvn.updated_at ?? null,
+          editor_data: kvn.season_data,
+          page_update: dataToSend,
+        });
+        const savedSeason = saved.data;
+        setSeasonRecord(current => ({ ...current, ...savedSeason }));
+        setSeasonLoadState('ready');
+        setKvn(current => ({
+          ...current,
+          updated_at: savedSeason.page_updated_at ?? current.updated_at,
+          season_data: savedSeason.editor_data || current.season_data,
+        }));
+
+        if (savedSeason.projection_status === 'error') {
+          setError('Сезон сохранён, но не удалось обновить публичную проекцию. Повторите синхронизацию.');
+          setSuccess('');
+          return;
+        }
+        if (savedSeason.projection_status === 'applying') {
+          setError('Сезон сохранён; синхронизация проекции ещё выполняется. Повторное сохранение пока недоступно.');
+          setSuccess('');
+          return;
+        }
+
+        setSuccess('Сохранено!');
+        try {
+          const pageResponse = await contentApi.getKvn(id);
+          let refreshedSeason = null;
+          try {
+            const seasonResponse = await contentApi.getSeasonByPage(pageResponse.data._id || pageResponse.data.id || id);
+            refreshedSeason = seasonResponse.data;
+            if (!refreshedSeason?.editor_data || !refreshedSeason?._id) {
+              throw new Error('Ответ сервера не содержит данных канонического сезона');
+            }
+          } catch (seasonError) {
+            if (seasonError.response?.status !== 404 || hasLegacySeason(pageResponse.data)) throw seasonError;
+          }
+          setKvn(normalizeKvnPage(pageResponse.data, refreshedSeason ? refreshedSeason.editor_data : null));
+          setSeasonRecord(refreshedSeason);
+          setSeasonLoadState(refreshedSeason ? 'ready' : 'none');
+          setError('');
+        } catch (reloadError) {
+          console.error('Не удалось обновить страницу и сезон после сохранения:', reloadError);
+          setSuccess('');
+          setError('Сезон сохранён, но не удалось обновить данные страницы. Локальные данные и версии сохранены.');
+        }
       } else {
-        const oldSlug = kvn.slug;
+        if (kvn.season_data) {
+          dataToSend.season_data = kvn.season_data;
+          dataToSend.expected_season_updated_at = null;
+        }
         dataToSend.expected_updated_at = kvn.updated_at ?? null;
         const saved = await contentApi.updateKvn(id, dataToSend);
         setKvn(current => ({ ...current, updated_at: saved.data.updated_at }));
@@ -405,33 +500,65 @@ export default function KVNEditPage() {
         // This is especially important if slug changed
         try {
           const res = await contentApi.getKvn(id);
-          let poster = res.data.poster;
-          if (poster) {
-            if (typeof poster === 'string') {
-              poster = { url: poster, alt: '', caption: '', thumbnail: poster };
+          let canonical = null;
+          try {
+            const seasonResponse = await contentApi.getSeasonByPage(res.data._id || res.data.id || id);
+            canonical = seasonResponse.data;
+            if (!canonical?.editor_data || !canonical?._id) {
+              throw new Error('Ответ сервера не содержит данных канонического сезона');
             }
+          } catch (seasonError) {
+            if (seasonError.response?.status !== 404 || res.data.season_data) throw seasonError;
           }
-          setKvn({ 
-            ...emptyKvn, 
-            ...res.data, 
-            poster: poster,
-            parent_id: res.data.parent_id || null,
-            facts: res.data.facts || {},
-            facts_order: res.data.facts_order || [],
-            social_links: res.data.social_links || {},
-            seo: { ...emptyKvn.seo, ...res.data.seo },
-            season_data: res.data.season_data || null,
-            jury_cards: res.data.jury_cards || {}
-          });
+          setKvn(normalizeKvnPage(res.data, canonical ? canonical.editor_data : null));
+          setSeasonRecord(canonical);
+          setSeasonLoadState(canonical ? 'ready' : 'none');
+          setError('');
         } catch (reloadErr) {
           console.error('Error reloading data after save:', reloadErr);
-          // Don't show error to user, just log it
+          setSuccess('');
+          setError('Изменения сохранены, но не удалось обновить данные страницы. Локальные данные и версия сохранены.');
         }
       }
     } catch (err) {
       setError(getErrorMessage(err, 'Ошибка сохранения'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRetryProjection = async () => {
+    if (!seasonRecord?._id || !seasonRecord.updated_at) return;
+    setError('');
+    setSuccess('');
+    setRetryingProjection(true);
+    try {
+      const response = await contentApi.retrySeasonProjection(seasonRecord._id, {
+        expected_updated_at: seasonRecord.updated_at,
+      });
+      const refreshed = response.data;
+      setSeasonRecord(current => ({
+        ...current,
+        updated_at: refreshed.updated_at,
+        page_updated_at: refreshed.page_updated_at,
+        projection_status: refreshed.projection_status,
+      }));
+      setKvn(current => ({
+        ...current,
+        updated_at: refreshed.page_updated_at ?? current.updated_at,
+      }));
+      setSeasonLoadState('ready');
+      if (refreshed.projection_status === 'error') {
+        setError('Сезон сохранён, но публичная проекция всё ещё не обновлена. Повторите попытку позже.');
+      } else if (refreshed.projection_status === 'applying') {
+        setError('Синхронизация проекции уже выполняется. Повторный запуск не выполнен.');
+      } else {
+        setSuccess('Публичная проекция обновлена. Локальные правки редактора сохранены.');
+      }
+    } catch (retryError) {
+      setError(getErrorMessage(retryError, 'Не удалось повторить синхронизацию проекции'));
+    } finally {
+      setRetryingProjection(false);
     }
   };
 
@@ -462,7 +589,7 @@ export default function KVNEditPage() {
                 <SelectItem value="archived">В архив</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving || ['loading', 'load_error', 'missing'].includes(seasonLoadState) || ['error', 'applying'].includes(seasonRecord?.projection_status) || (seasonRecord && !kvn.season_data)}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Сохранить
             </Button>
           </div>
@@ -471,6 +598,22 @@ export default function KVNEditPage() {
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
       {success && <Alert><AlertDescription>{success}</AlertDescription></Alert>}
+      {seasonLoadState === 'load_error' && !error && (
+        <Alert variant="destructive"><AlertDescription>Не удалось загрузить данные канонического сезона.</AlertDescription></Alert>
+      )}
+      {seasonRecord?.projection_status === 'error' && (
+        <Alert variant="destructive">
+          <AlertDescription className="flex items-center justify-between gap-4">
+            <span>Сезон сохранён, но публичная проекция не обновлена.</span>
+            <Button onClick={handleRetryProjection} disabled={retryingProjection || saving}>
+              {retryingProjection ? 'Синхронизация…' : 'Повторить синхронизацию'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      {seasonRecord?.projection_status === 'applying' && (
+        <Alert><AlertDescription>Синхронизация публичной проекции выполняется. Обычное сохранение заблокировано.</AlertDescription></Alert>
+      )}
 
       <Tabs defaultValue="main" className="space-y-6">
         <TabsList>
@@ -656,7 +799,7 @@ export default function KVNEditPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Данные сезона</CardTitle>
-                {!kvn.season_data && (
+                {!kvn.season_data && seasonLoadState !== 'missing' && seasonLoadState !== 'load_error' && (
                   <Button 
                     onClick={() => {
                       const newSeasonData = {
@@ -680,10 +823,16 @@ export default function KVNEditPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <SeasonDataEditor 
-                seasonData={kvn.season_data} 
-                onChange={(seasonData) => setKvn(p => ({ ...p, season_data: seasonData }))} 
-              />
+              {seasonLoadState === 'missing' ? (
+                <p className="text-sm text-destructive">Канонический сезон для этой страницы не найден. Редактирование старых season_data заблокировано.</p>
+              ) : seasonLoadState === 'load_error' ? (
+                <p className="text-sm text-destructive">Не удалось загрузить канонический сезон. Повторите загрузку страницы.</p>
+              ) : (
+                <SeasonDataEditor
+                  seasonData={kvn.season_data}
+                  onChange={(seasonData) => setKvn(p => ({ ...p, season_data: seasonData }))}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

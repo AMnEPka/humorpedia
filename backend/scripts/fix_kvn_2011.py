@@ -182,6 +182,7 @@ def update_season_2011(db, season_2015_doc, season_2011_doc, apply: bool = False
     
     # Применяем обновления
     if updates and apply:
+        raise RuntimeError('Legacy repair --apply отключён: используйте versioned API /competitions/seasons и восстановление проекций')
         print(f"\n[UPDATE] Применяем обновления к документу 2011 года...")
         result = db.kvn.update_one(
             {"_id": SEASON_2011_ID},

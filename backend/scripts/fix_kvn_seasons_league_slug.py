@@ -58,6 +58,7 @@ def fix_season_league_slug(db, season_doc, apply: bool = False):
     print(f"[OK] Найден league_slug для сезона {title}: {league_slug}")
     
     if apply:
+        raise RuntimeError('Legacy repair --apply отключён: используйте versioned API /competitions/seasons и восстановление проекций')
         # Обновляем season_data
         updated_season_data = season_data.copy()
         updated_season_data["league_slug"] = league_slug

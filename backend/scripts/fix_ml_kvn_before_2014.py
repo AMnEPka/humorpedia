@@ -124,6 +124,7 @@ def fix_season_league_slug(db, season_doc, apply: bool = False) -> bool:
     print(f"[FIX] Будет изменено: ml-kvn -> {correct_league_slug}")
     
     if apply:
+        raise RuntimeError('Legacy repair --apply отключён: используйте versioned API /competitions/seasons и восстановление проекций')
         # Обновляем season_data
         updated_season_data = season_data.copy()
         updated_season_data["league_slug"] = correct_league_slug

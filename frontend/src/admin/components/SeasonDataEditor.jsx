@@ -1054,8 +1054,13 @@ function GameContent({
       return team;
     });
     
+    if (hasUnmatchedPersonReferences(newTeams, game.teams || [])) {
+      setListError('Нельзя заменить список: привязка к человеку для одной из команд не сопоставлена однозначно. Уточните названия команд и повторите вставку.');
+      return;
+    }
+
     // Обновляем игру с новыми командами
-    updateGame({ teams: newTeams });
+    updateGame({ teams: retainUnambiguousTeamLinks(newTeams, game.teams || []) });
     
     // Закрываем диалог
     setShowListDialog(false);
@@ -1196,13 +1201,18 @@ function GameContent({
     }).filter(Boolean);
     
     // После фильтрации пересчитываем места, чтобы они были последовательными
-    const teamsWithPlaces = newTeams.map((team, index) => ({
+    const teamsWithPlaces = retainUnambiguousTeamLinks(newTeams, game.teams || []).map((team, index) => ({
       ...team,
       place: index + 1,
     }));
     
     if (newTeams.length === 0) {
       setTableError('Не удалось распознать ни одной команды в таблице.');
+      return;
+    }
+
+    if (hasUnmatchedPersonReferences(newTeams, game.teams || [])) {
+      setTableError('Нельзя заменить таблицу: привязка к человеку для одной из команд не сопоставлена однозначно. Уточните названия команд и повторите вставку.');
       return;
     }
     
@@ -1653,6 +1663,70 @@ function removeCityFromName(name) {
   return name.replace(/\s*\([^)]+\)\s*$/, '').trim();
 }
 
+export function cloneGameForNewStage(game, gameIndex) {
+  const copy = JSON.parse(JSON.stringify(game));
+  delete copy._canonical_id;
+  copy.name = `${copy.name || `Игра ${gameIndex + 1}`} (копия)`;
+  return copy;
+}
+
+export function mergeTeamIdentityUpdate(team, updates) {
+  const updated = { ...team, ...updates };
+  const oldSlug = String(team.team_slug || '').trim();
+  const newSlug = String(updated.team_slug || '').trim();
+  const identityChanged = (
+    Object.prototype.hasOwnProperty.call(updates, 'team_slug') ||
+    Object.prototype.hasOwnProperty.call(updates, 'team_name')
+  ) && (
+    oldSlug || newSlug
+      ? oldSlug !== newSlug
+      : String(team.team_name || '').trim() !== String(updated.team_name || '').trim()
+  );
+  if (identityChanged) {
+    delete updated.team_id;
+    delete updated.person_id;
+  }
+  return updated;
+}
+
+export function retainUnambiguousTeamLinks(teams, previousTeams = []) {
+  const used = new Set();
+  return teams.map(team => {
+    const slug = String(team.team_slug || '').trim().toLowerCase();
+    const name = removeCityFromName(String(team.team_name || '').trim()).toLowerCase();
+    const candidates = previousTeams
+      .map((previous, index) => ({ previous, index }))
+      .filter(({ previous, index }) => {
+        if (used.has(index)) return false;
+        const previousSlug = String(previous.team_slug || '').trim().toLowerCase();
+        if (slug && previousSlug) return slug === previousSlug;
+        return !slug && !previousSlug && name &&
+          removeCityFromName(String(previous.team_name || '').trim()).toLowerCase() === name;
+      });
+    if (candidates.length !== 1) return team;
+    const { previous, index } = candidates[0];
+    used.add(index);
+    return { ...previous, ...team };
+  });
+}
+
+export function hasUnmatchedPersonReferences(teams, previousTeams = []) {
+  const linkedTeams = retainUnambiguousTeamLinks(teams, previousTeams);
+  return previousTeams.some(previous => {
+    if (!previous.person_id) return false;
+    const previousSlug = String(previous.team_slug || '').trim().toLowerCase();
+    const previousName = removeCityFromName(String(previous.team_name || '').trim()).toLowerCase();
+    return !linkedTeams.some(team => {
+      if (team.person_id !== previous.person_id) return false;
+      const teamSlug = String(team.team_slug || '').trim().toLowerCase();
+      const teamName = removeCityFromName(String(team.team_name || '').trim()).toLowerCase();
+      return previousSlug || teamSlug
+        ? previousSlug === teamSlug
+        : previousName === teamName;
+    });
+  });
+}
+
 export default function SeasonDataEditor({ seasonData, onChange }) {
   const [expandedStages, setExpandedStages] = useState(new Set());
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
@@ -1801,9 +1875,7 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     const game = newData.stages[fromStageIndex]?.games?.[gameIndex];
     if (!game) return;
     
-    // Создаем глубокую копию игры
-    const gameCopy = JSON.parse(JSON.stringify(game));
-    gameCopy.name = `${gameCopy.name || `Игра ${gameIndex + 1}`} (копия)`;
+    const gameCopy = cloneGameForNewStage(game, gameIndex);
     
     // Добавляем в целевую стадию
     if (!newData.stages[toStageIndex].games) {
@@ -2152,10 +2224,8 @@ export default function SeasonDataEditor({ seasonData, onChange }) {
     newData.stages[stageIndex].games[gameIndex].teams = [
       ...newData.stages[stageIndex].games[gameIndex].teams
     ];
-    newData.stages[stageIndex].games[gameIndex].teams[teamIndex] = {
-      ...newData.stages[stageIndex].games[gameIndex].teams[teamIndex],
-      ...updates
-    };
+    const updatedTeam = mergeTeamIdentityUpdate(prevTeam, updates);
+    newData.stages[stageIndex].games[gameIndex].teams[teamIndex] = updatedTeam;
 
     // Автоматически поддерживаем "Доборы после стадии" в sync с флагом "Добор"
     // Поведение: добавляем имя, когда ставят флаг, убираем — когда снимают.

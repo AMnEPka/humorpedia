@@ -82,7 +82,7 @@
 | PUT | `/kvn/{id}` ✏️ | обновить (включая `season_data`, `jury_cards`); пересчёт full_path, очистка данных, инвалидация кэша |
 | DELETE | `/kvn/{id}` ✏️ | удалить |
 
-При передаче ненулевого `season_data` в PUT обязательно `expected_updated_at` из GET этой KVN-страницы.
+При передаче ненулевого `season_data` в PUT обязательны `expected_updated_at` страницы и `expected_season_updated_at` канонического сезона. Отсутствие/несовпадение любой версии — 409.
 Отсутствующий/устаревший токен — `409`; явный `null` допустим для документа без версии или с `updated_at: null`.
 Полный контракт — [версия записи сезона](COMPETITIONS.md#версия-записи-сезона-21102026).
 
@@ -214,7 +214,7 @@ GET `/collections` · POST `/export` (query/projection/sort/limit) · POST `/imp
 
 ## competitions.py — `/competitions` (турниры, сезоны, перекрёстные ссылки)
 GET `/tournaments?show=` · GET `/tournaments/{show}/{slug}` (турнир + сезоны) · GET `/seasons/{id}` · GET `/seasons/by-page/{page_id}` · PUT `/seasons/{id}` ✏️ (пишет и в `season_data` страницы) · GET `/unresolved` · POST `/sync` 🛡 · GET `/teams/{id_or_slug}/participations?games=`
-PUT сезона всегда требует `expected_updated_at` из GET канонического сезона; конфликт или отсутствие токена — `409`.
+PUT сезона всегда требует `expected_updated_at` из GET канонического сезона; конфликт или отсутствие токена — `409`. Админка передаёт `editor_data`, `page_update` и отдельный `expected_page_updated_at`. Ответ включает `editor_data`, `page_updated_at` и `projection_status`. После commit ошибка проекций возвращает 200/error; `POST /seasons/{id}/projections/retry` принимает только expected_updated_at и повторяет сохранённый журнал без смены версии. `POST /sync` восстанавливает проекции из каноники, не заменяет её legacy-данными. Протокол и CLI — [COMPETITIONS.md](COMPETITIONS.md#запись-и-восстановление-r8-21102026).
 Подробно — [COMPETITIONS.md](COMPETITIONS.md).
 
 ## memberships.py — `/competitions` (составы, карьера человека)

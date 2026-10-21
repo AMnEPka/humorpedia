@@ -107,6 +107,8 @@ async def export_data(request: ExportRequest):
 @router.post("/import")
 async def import_data(request: ImportRequest):
     """Import data into a collection."""
+    if request.collection in {'seasons', 'participations', 'kvn'}:
+        raise HTTPException(409, 'Коллекции соревнований изменяются через versioned content/competitions API')
     db = await get_db()
     
     # Parse documents
@@ -197,6 +199,8 @@ async def import_data(request: ImportRequest):
 @router.post("/delete")
 async def delete_data(request: DeleteRequest):
     """Delete documents from a collection."""
+    if request.collection in {'seasons', 'participations', 'kvn'}:
+        raise HTTPException(409, 'Коллекции соревнований изменяются через versioned content/competitions API')
     db = await get_db()
     
     # Parse query
@@ -233,6 +237,12 @@ async def aggregate_data(request: AggregateRequest):
     if not isinstance(pipeline, list):
         raise HTTPException(status_code=400, detail="Pipeline must be a JSON array")
     
+    def has_write_stage(value):
+        if isinstance(value, dict):
+            return any(key in {'$out', '$merge'} or has_write_stage(item) for key, item in value.items())
+        return isinstance(value, list) and any(has_write_stage(item) for item in value)
+    if has_write_stage(pipeline):
+        raise HTTPException(409, 'Aggregation доступна только для чтения')
     collection = db[request.collection]
     
     # Run aggregation

@@ -18,6 +18,7 @@ from services.crud import (
     check_slug_unique, create_content, delete_content,
     get_by_id_or_slug, convert_objectids_to_strings,
 )
+from services.season_editor import apply_editor_update
 from services.tags import tag_service
 from services.show_teams import KVN_ONLY
 from services.link_resolver import LinkResolver
@@ -25,6 +26,7 @@ from services.cache import cache_service
 from services.views_counter import views_counter
 from services.competitions import (
     sync_from_kvn_page, delete_season_for_page, version_matches, version_filter, next_version,
+    save_season, load_team_lookup, legacy_to_season, ensure_kvn_tournament, _league_slug_from_path,
 )
 
 logger = logging.getLogger(__name__)
@@ -575,7 +577,7 @@ async def list_kvn(
     editor = await editor_can_view_archived(request, get_current_user)
     query = visible_query(query, editor)
     count = await db.kvn.count_documents(query)
-    cursor = db.kvn.find(query, {"_id": 0}).sort("title", 1).skip(skip).limit(limit)
+    cursor = db.kvn.find(query, {"_id": 0, "_season_write_claim": 0}).sort("title", 1).skip(skip).limit(limit)
     items = await cursor.to_list(limit)
     
     return {"items": items, "total": count, "skip": skip, "limit": limit}
@@ -641,6 +643,7 @@ async def get_kvn_by_path(path: str, request: Request = None):
         if kvn_id and not editor:
             cache_service.set_breadcrumbs(kvn_id, breadcrumbs)
     
+    kvn.pop("_season_write_claim", None)
     kvn["breadcrumbs"] = breadcrumbs
     
     # Автоматически определяем соседние сезоны
@@ -792,6 +795,7 @@ async def get_kvn(id_or_slug: str, raw: bool = Query(False, description="без 
     kvn = await get_by_id_or_slug("kvn", id_or_slug, "KVN page not found", editor=editor)
     if not raw:
         await LinkResolver.resolve_document(kvn, ("modules", "facts", "season_data", "jury_cards"))
+    kvn.pop("_season_write_claim", None)
     return kvn
 
 
@@ -875,13 +879,20 @@ async def update_kvn(id: str, data: KVNUpdate):
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
 
+    if kvn.get('_season_write_claim'):
+        raise HTTPException(409, 'Проекции сезона ещё обновляются. Повторите их восстановление.')
+    season = await db.seasons.find_one({'page_collection': 'kvn', 'page_id': str(kvn['_id'])})
     versioned_season_write = data.season_data is not None
     if versioned_season_write:
-        if "expected_updated_at" not in data.model_fields_set:
-            raise HTTPException(status_code=409, detail="Версия страницы сезона не передана. Обновите страницу и повторите сохранение.")
-        if not version_matches(kvn, data.expected_updated_at):
-            raise HTTPException(status_code=409, detail="Страница сезона уже изменена. Обновите страницу и повторите сохранение.")
-    
+        if not {'expected_updated_at', 'expected_season_updated_at'} <= data.model_fields_set:
+            raise HTTPException(409, 'Нужны версии страницы и канонического сезона. Обновите страницу.')
+        if (not version_matches(kvn, data.expected_updated_at)
+                or (season is not None and not version_matches(season, data.expected_season_updated_at))
+                or (season is None and data.expected_season_updated_at is not None)):
+            raise HTTPException(409, 'Страница или сезон уже изменены. Обновите страницу.')
+    elif 'expected_updated_at' in data.model_fields_set and not version_matches(kvn, data.expected_updated_at):
+        raise HTTPException(409, 'Страница уже изменена. Обновите страницу.')
+
     # Get the actual _id for update operations
     kvn_id = kvn["_id"]
     
@@ -892,6 +903,10 @@ async def update_kvn(id: str, data: KVNUpdate):
     if data.slug is not None:
         await check_slug_unique("kvn", data.slug, exclude_id=id)
         update_data["slug"] = data.slug
+        if data.parent_id is None:
+            old_path = (kvn.get('full_path') or '').rstrip('/')
+            prefix = old_path.rsplit('/', 1)[0] if '/' in old_path else ''
+            update_data['full_path'] = f'{prefix}/{data.slug}' if prefix else data.slug
     if data.name is not None:
         update_data["name"] = data.name
     if data.poster is not None:
@@ -945,310 +960,49 @@ async def update_kvn(id: str, data: KVNUpdate):
         update_data["related_kvn_ids"] = data.related_kvn_ids
     if data.jury_cards is not None:
         update_data["jury_cards"] = data.jury_cards
-    if data.season_data is not None:
-        # Валидируем и очищаем season_data перед сохранением
-        # Убеждаемся, что все вложенные структуры сериализуемы
-        try:
+    if data.old_urls is not None:
+        update_data['old_urls'] = data.old_urls
 
-            from bson import ObjectId
-            from datetime import datetime as dt, date
-            
-            # Преобразуем Pydantic модель в dict, если нужно
-            season_data_dict = data.season_data
-            if hasattr(season_data_dict, 'model_dump'):
-                season_data_dict = season_data_dict.model_dump()
-            elif hasattr(season_data_dict, 'dict'):
-                season_data_dict = season_data_dict.dict()
-            
-            # Логируем наличие специальных символов в данных для диагностики
-            try:
-                season_data_str = json.dumps(season_data_dict, ensure_ascii=False)
-                if '+' in season_data_str or '%2B' in season_data_str:
-                    logger.info(f"Found '+' character in season_data, will handle properly")
-            except:
-                pass
-            
-            # Рекурсивно очищаем данные от несериализуемых объектов
-            def clean_data(obj, depth=0, max_depth=15):
-                if depth > max_depth:
-                    logger.warning(f"Max depth reached in clean_data, converting to string")
-                    return str(obj)
-                
-                # Обрабатываем специальные типы BSON и Python
-                if isinstance(obj, ObjectId):
-                    return str(obj)
-                elif isinstance(obj, (dt, date)):
-                    return obj.isoformat()
-                elif isinstance(obj, dict):
-                    return {k: clean_data(v, depth+1, max_depth) for k, v in obj.items()}
-                elif isinstance(obj, list):
-                    return [clean_data(item, depth+1, max_depth) for item in obj]
-                elif isinstance(obj, (str, int, float, bool, type(None))):
-                    # Убеждаемся, что строки правильно обрабатываются
-                    if isinstance(obj, str):
-                        # Проверяем на наличие проблемных символов
-                        if obj and ('+' in obj or '%' in obj):
-                            logger.debug(f"Processing string with special characters: {obj[:50]}...")
-                    return obj
-                elif hasattr(obj, 'model_dump'):
-                    # Pydantic модель
-                    return clean_data(obj.model_dump(), depth+1, max_depth)
-                elif hasattr(obj, '__dict__'):
-                    # Объект с атрибутами - преобразуем в словарь
-                    return clean_data(obj.__dict__, depth+1, max_depth)
-                else:
-                    # Преобразуем в строку если не сериализуемо
-                    return str(obj)
-            
-            cleaned_data = clean_data(season_data_dict)
-            
-            # Автоматически добавляем league_slug, если его нет и есть родитель "Высшая лига КВН"
-            if not cleaned_data.get("league_slug"):
-                parent_id = kvn.get("parent_id")
-                if parent_id:
-                    # Находим родителя
-                    parent = await db.kvn.find_one({"id": parent_id})
-                    if not parent:
-                        parent = await db.kvn.find_one({"_id": parent_id})
-                    
-                    if parent:
-                        # Определяем league_slug из родителя
-                        league_slug = get_league_slug_from_parent(parent)
-                        
-                        if league_slug:
-                            cleaned_data["league_slug"] = league_slug
-                            logger.info(f"Автоматически добавлен league_slug '{league_slug}' в season_data при обновлении")
-            
-            # Пробуем сериализовать для проверки
-            try:
-                json_str = json.dumps(cleaned_data, default=str, ensure_ascii=False)
-                logger.info(f"Season data serialized successfully, size: {len(json_str)} bytes")
-                # Если данные слишком большие - логируем предупреждение, но сохраняем
-                if len(json_str) > 1000000:  # 1MB
-                    logger.warning(f"Season data is large: {len(json_str)} bytes")
-                update_data["season_data"] = cleaned_data
-            except (TypeError, ValueError) as json_err:
-                logger.error(f"JSON serialization error: {json_err}")
-                logger.error(f"Problematic data type: {type(cleaned_data)}")
-                # Пробуем более агрессивную очистку
-                try:
-                    # Конвертируем все в базовые типы
-                    def force_serializable(obj):
-                        if isinstance(obj, (str, int, float, bool, type(None))):
-                            return obj
-                        elif isinstance(obj, dict):
-                            return {str(k): force_serializable(v) for k, v in obj.items()}
-                        elif isinstance(obj, list):
-                            return [force_serializable(item) for item in obj]
-                        else:
-                            return str(obj)
-                    cleaned_data = force_serializable(cleaned_data)
-                    json_str = json.dumps(cleaned_data, ensure_ascii=False)
-                    update_data["season_data"] = cleaned_data
-                    logger.warning("Used force_serializable to fix JSON serialization")
-                except Exception as e3:
-                    logger.error(f"Even force_serializable failed: {e3}")
-                    raise
-        except Exception as e:
-            logger.error(f"Error processing season_data: {e}", exc_info=True)
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            # Пробуем сохранить хотя бы структуру без проблемных данных
-            try:
-                # Упрощаем данные - убираем сложные вложенные структуры
-                season_data_dict = data.season_data
-                if hasattr(season_data_dict, 'model_dump'):
-                    season_data_dict = season_data_dict.model_dump()
-                elif hasattr(season_data_dict, 'dict'):
-                    season_data_dict = season_data_dict.dict()
-                simplified = json.loads(json.dumps(season_data_dict, default=str, ensure_ascii=False))
-                update_data["season_data"] = simplified
-                logger.warning("Used simplified season_data after serialization error")
-            except Exception as e2:
-                logger.error(f"Failed to simplify season_data: {e2}", exc_info=True)
-                # В крайнем случае - не сохраняем season_data, но не падаем
-                logger.error("Skipping season_data update due to serialization errors")
-                # Не добавляем season_data в update_data
-    
-    update_data["updated_at"] = next_version(data.expected_updated_at if versioned_season_write else None)
-    
-    # Логируем размер данных для отладки
-    try:
-
-        update_data_size = len(json.dumps(update_data, default=str, ensure_ascii=False))
-        logger.info(f"Updating KVN {id}, data size: {update_data_size} bytes")
-        if 'season_data' in update_data:
-            season_data_size = len(json.dumps(update_data['season_data'], default=str, ensure_ascii=False))
-            logger.info(f"Season data size: {season_data_size} bytes")
-    except Exception as e:
-        logger.warning(f"Could not calculate data size: {e}")
-    
-    write_filter = {"_id": kvn_id}
-    if versioned_season_write:
-        write_filter.update(version_filter(kvn))
-    try:
-        result = await db.kvn.update_one(write_filter, {"$set": update_data})
-    except Exception as e:
-        logger.error(f"Error updating KVN {id}: {e}", exc_info=True)
-        # Логируем детали ошибки
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        # Проверяем, не связана ли ошибка с сериализацией
-        if 'ObjectId' in str(e) or 'serialize' in str(e).lower() or 'bson' in str(e).lower():
-            logger.error("Error appears to be related to BSON serialization")
-            # Пробуем преобразовать ObjectId в строки
-            try:
-                def convert_objectid(obj):
-                    if isinstance(obj, dict):
-                        return {k: convert_objectid(v) for k, v in obj.items()}
-                    elif isinstance(obj, list):
-                        return [convert_objectid(item) for item in obj]
-                    elif hasattr(obj, '__class__') and 'ObjectId' in str(type(obj)):
-                        return str(obj)
-                    return obj
-                
-                cleaned_update_data = convert_objectid(update_data)
-                result = await db.kvn.update_one(write_filter, {"$set": cleaned_update_data})
-                logger.info("Successfully updated after ObjectId conversion")
-            except Exception as e2:
-                logger.error(f"Error after ObjectId conversion: {e2}", exc_info=True)
-                raise HTTPException(status_code=500, detail=f"Failed to update KVN after ObjectId conversion: {str(e2)}")
+    if season is not None or versioned_season_write:
+        if season is None:
+            league = _league_slug_from_path(update_data.get('full_path', kvn.get('full_path', '')))
+            tournament = await ensure_kvn_tournament(db, league) if league else None
+            if not tournament:
+                raise HTTPException(422, 'Для сезона нужна страница лиги КВН')
+            season = legacy_to_season({**kvn, **update_data, 'season_data': data.season_data}, tournament, await load_team_lookup(db))
+            expected_season = None
         else:
-            raise HTTPException(status_code=500, detail=f"Failed to update KVN: {str(e)}")
-    
-    if result.matched_count == 0:
-        if versioned_season_write:
-            raise HTTPException(status_code=409, detail="Страница сезона изменилась во время сохранения. Обновите страницу и повторите.")
-        raise HTTPException(status_code=404, detail="KVN page not found")
-
+            expected_season = data.expected_season_updated_at if versioned_season_write else season.get('updated_at')
+            if versioned_season_write:
+                season = apply_editor_update(season, data.season_data, await load_team_lookup(db))
+        # Page metadata never reconstructs the competition body from a legacy snapshot.
+        for page_key, season_key in (('title', 'title'), ('slug', 'slug'), ('status', 'status'), ('full_path', 'page_path')):
+            if page_key in update_data:
+                season[season_key] = update_data[page_key]
+        if 'full_path' in update_data:
+            league = _league_slug_from_path(update_data['full_path'])
+            tournament = await ensure_kvn_tournament(db, league) if league else None
+            if not tournament:
+                raise HTTPException(422, 'Сезон должен оставаться внутри лиги КВН')
+            season.update(tournament_id=tournament['_id'], tournament_slug=tournament['slug'])
+        await save_season(db, season, write_page=True, expected_updated_at=expected_season,
+                          expected_page_updated_at=data.expected_updated_at if 'expected_updated_at' in data.model_fields_set else kvn.get('updated_at'),
+                          page_patch=update_data)
+    else:
+        update_data['updated_at'] = next_version(kvn.get('updated_at'))
+        result = await db.kvn.update_one(
+            {'_id': kvn_id, '_season_write_claim': {'$exists': False}, **version_filter(kvn)},
+            {'$set': update_data})
+        if not result.matched_count:
+            raise HTTPException(409, 'Страница изменилась во время сохранения. Обновите страницу.')
     if data.tags is not None:
         await tag_service.sync_tags(data.tags)
-    
-    # Автоматически обновляем соседние сезоны, если изменился slug, year или league_slug
-    should_update_adjacent = False
-    old_slug = kvn.get("slug", "")
-    new_slug = update_data.get("slug", old_slug)
-    old_season_data = kvn.get("season_data", {})
-    new_season_data = update_data.get("season_data", old_season_data)
-    
-    # Проверяем, изменился ли slug
-    if old_slug != new_slug:
-        should_update_adjacent = True
-    
-    # Проверяем, изменился ли year или league_slug в season_data
-    if new_season_data:
-        old_year = old_season_data.get("year", 0)
-        new_year = new_season_data.get("year", 0)
-        old_league_slug = old_season_data.get("league_slug", "")
-        new_league_slug = new_season_data.get("league_slug", "")
-        
-        if old_year != new_year or old_league_slug != new_league_slug:
-            should_update_adjacent = True
-    
-    if should_update_adjacent:
-        # Сохраняем старые значения соседних сезонов
-        old_prev_season = old_season_data.get("prev_season", "")
-        old_next_season = old_season_data.get("next_season", "")
-        
-        # Получаем обновленный документ
-        updated_doc = await db.kvn.find_one({"_id": kvn_id})
-        if updated_doc:
-            # Пересчитываем соседние сезоны для обновленного сезона
-            prev_season_slug, next_season_slug = await find_adjacent_seasons(db, updated_doc, editor=True)
-            
-            # Обновляем season_data с новыми соседними сезонами
-            if updated_doc.get("season_data"):
-                updated_doc["season_data"]["prev_season"] = prev_season_slug or ""
-                updated_doc["season_data"]["next_season"] = next_season_slug or ""
-            else:
-                updated_doc["season_data"] = {
-                    "prev_season": prev_season_slug or "",
-                    "next_season": next_season_slug or ""
-                }
-            
-            await db.kvn.update_one(
-                {"_id": kvn_id},
-                {"$set": {"season_data": updated_doc["season_data"]}}
-            )
-            
-            # Пересчитываем соседние сезоны для предыдущего сезона (если он был)
-            if old_prev_season:
-                prev_season_doc = await db.kvn.find_one({"slug": old_prev_season})
-                if prev_season_doc:
-                    prev_prev_slug, prev_next_slug = await find_adjacent_seasons(db, prev_season_doc, editor=True)
-                    if prev_season_doc.get("season_data"):
-                        prev_season_doc["season_data"]["prev_season"] = prev_prev_slug or ""
-                        prev_season_doc["season_data"]["next_season"] = prev_next_slug or ""
-                    else:
-                        prev_season_doc["season_data"] = {
-                            "prev_season": prev_prev_slug or "",
-                            "next_season": prev_next_slug or ""
-                        }
-                    await db.kvn.update_one(
-                        {"_id": prev_season_doc["_id"]},
-                        {"$set": {"season_data": prev_season_doc["season_data"]}}
-                    )
-            
-            # Пересчитываем соседние сезоны для следующего сезона (если он был)
-            if old_next_season:
-                next_season_doc = await db.kvn.find_one({"slug": old_next_season})
-                if next_season_doc:
-                    next_prev_slug, next_next_slug = await find_adjacent_seasons(db, next_season_doc, editor=True)
-                    if next_season_doc.get("season_data"):
-                        next_season_doc["season_data"]["prev_season"] = next_prev_slug or ""
-                        next_season_doc["season_data"]["next_season"] = next_next_slug or ""
-                    else:
-                        next_season_doc["season_data"] = {
-                            "prev_season": next_prev_slug or "",
-                            "next_season": next_next_slug or ""
-                        }
-                    await db.kvn.update_one(
-                        {"_id": next_season_doc["_id"]},
-                        {"$set": {"season_data": next_season_doc["season_data"]}}
-                    )
-            
-            logger.info(f"Обновлены соседние сезоны для сезона {new_slug}")
-            
-            # Если slug изменился, нужно обновить все сезоны, которые ссылаются на старый slug
-            if old_slug != new_slug and old_slug:
-                # Ищем все сезоны, которые ссылаются на старый slug в prev_season или next_season
-                seasons_to_update = await db.kvn.find({
-                    "$or": [
-                        {"season_data.prev_season": old_slug},
-                        {"season_data.next_season": old_slug}
-                    ]
-                }).to_list(1000)
-                
-                # Обновляем найденные сезоны
-                for season_to_update in seasons_to_update:
-                    # Заменяем старый slug на новый в ссылках
-                    if season_to_update.get("season_data"):
-                        if season_to_update["season_data"].get("prev_season") == old_slug:
-                            season_to_update["season_data"]["prev_season"] = new_slug
-                        if season_to_update["season_data"].get("next_season") == old_slug:
-                            season_to_update["season_data"]["next_season"] = new_slug
-                        
-                        # Пересчитываем соседние сезоны для этого сезона
-                        prev_slug, next_slug = await find_adjacent_seasons(db, season_to_update, editor=True)
-                        season_to_update["season_data"]["prev_season"] = prev_slug or ""
-                        season_to_update["season_data"]["next_season"] = next_slug or ""
-                        
-                        await db.kvn.update_one(
-                            {"_id": season_to_update["_id"]},
-                            {"$set": {"season_data": season_to_update["season_data"]}}
-                        )
-                
-                if seasons_to_update:
-                    logger.info(f"Обновлены {len(seasons_to_update)} сезонов, которые ссылались на старый slug {old_slug}")
-    
-    # Модель соревнований: season_data, путь или статус страницы могли измениться — пересобрать сезон
-    if data.season_data is not None or any(k in update_data for k in ("full_path", "slug", "title", "status")):
-        page_after = await db.kvn.find_one({"_id": kvn_id})
-        if page_after:
-            await sync_from_kvn_page(db, page_after)
 
     # Return updated document, converting ObjectIds to strings
     try:
         updated = await db.kvn.find_one({"_id": kvn_id}, {"_id": 0})
         if updated:
+            updated.pop("_season_write_claim", None)
             updated = convert_objectids_to_strings(updated)
 
         # ─── Инвалидация кэша ─────────────────────────────────────────
@@ -1274,6 +1028,10 @@ async def delete_kvn(id: str):
     
     if not kvn:
         raise HTTPException(status_code=404, detail="KVN page not found")
+
+    if kvn.get('_season_write_claim'):
+        raise HTTPException(409, 'Сначала восстановите проекции сезона')
+    await delete_season_for_page(db, str(kvn['_id']))
 
     # Get the actual _id for deletion
     kvn_id = kvn["_id"]
@@ -1305,7 +1063,6 @@ async def delete_kvn(id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="KVN page not found")
 
-    await delete_season_for_page(db, str(kvn_id))
 
     # ─── Инвалидация кэша ─────────────────────────────────────────────
     cache_service.invalidate_kvn()

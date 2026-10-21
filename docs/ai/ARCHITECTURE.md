@@ -40,7 +40,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 ├── docs/ai/                      подробные справочники (этот файл и соседние)
 ├── README.md                     быстрый старт, прод, тесты
 ├── .env.example                  шаблон переменных окружения (копировать в .env)
-├── .github/workflows/tests.yml   CI: pytest бэкенда (с MongoDB service)
+├── .github/workflows/tests.yml   CI: pytest/API/browser smoke с отдельной MongoDB и seccomp-профилем после checkout
 ├── DOCKER_DEV.md                 запуск в Docker (dev)
 ├── DOCKER_VOLUME_SETUP.md        volume images_volume для /images
 ├── BACKUP_SYSTEM.md, RESTORE_BACKUP.md   бэкап/восстановление Mongo
@@ -99,6 +99,9 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   │   ├── modx_shows.py         раздел «Шоу» MODX → тело POST /content/shows; дерево раздела, адреса /shows/<путь> для LinkMapper; SPECIAL_PAGES — страницы с уникальной структурой
 │   │   ├── modx_show_teams.py    страницы команд шоу MODX → тело POST /content/teams (show_id); составы, адреса команд для LinkMapper (link_builders)
 │   │   ├── show_teams.py         команды шоу: team_url, show_id/full_path, slug в пределах шоу, kvn_team_query, attach_show_info
+│   │   ├── season_projection.py   canonical CAS, durable claims, журнал и повтор проекций
+│   │   ├── season_editor.py       transport legacy-редактора с canonical IDs
+│   │   ├── competition_reconciliation.py  read-only сверка проекции сезонов, metadata и canonical round-trip; CLI report_competition_reconciliation.py
 │   │   ├── editorial_decisions.py  атомарный claim редакционного решения, CAS/revision и освобождение только своего токена
 │   │   ├── content_commands.py   создание person/team/show с явным db, scaffold и иерархия, связывание memberships/show_appearances; совместимые route wrappers
 │   │   ├── crud.py               check_slug_unique, generate_unique_slug, sync/check primary_tag, update_tags_everywhere, build_query, create/update/delete/get_by_id_or_slug/list_content
@@ -197,7 +200,11 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 **Открытие публичной страницы КВН** `/kvn/vl-kvn/vl-2009`:
 `SectionDetailPage` (catch-all `/*`) → путь начинается с `kvn` (и не `kvn/teams`) → `GET /api/content/kvn/by-path/kvn/vl-kvn/vl-2009` (кэш 5 мин; ответ содержит `breadcrumbs` и `children`, в `season_data` дописываются `prev_season`/`next_season`); при ошибке — `GET /api/sections/path/...`. Прочие пути — сразу `sections/path`. Если у документа есть `season_data` — рендерится `SeasonDetailPage`, иначе модули + список детей. Если ничего не найдено — `GET /api/redirects/lookup?path=...` → `navigate(new_path)`.
 
-**Редактирование сезона в админке**: `/admin/kvn/:id` → `KVNEditPage` + `SeasonDataEditor` (2665 строк, dnd-kit, ввод баллов) → `PUT /api/content/kvn/{id}` с `season_data` → очистка данных, инвалидация кэша. Обновление таблиц игр у команд — через `POST /api/content/teams/{slug}/refresh` или `/api/content/teams-refresh-all`.
+**Редактирование сезона в админке**: `/admin/kvn/:id` → KVNEditPage + SeasonDataEditor →
+GET/PUT `/api/competitions/seasons` с editor_data и отдельными версиями сезона/страницы.
+Canonical CAS фиксирует журнал; season_projection обновляет legacy и participations.
+При ошибке тело сезона уже сохранено, UI предлагает безопасный retry проекций.
+Детали протокола — [COMPETITIONS.md](COMPETITIONS.md#запись-и-восстановление-r8-21102026).
 
 **Авторизация админки**: `POST /api/auth/login` (только роли admin/editor/moderator пускаются в админку; `ProtectedRoute` проверяет `isStaff`) → `access_token` в `localStorage.admin_token`, пользователь в `admin_user` → axios-интерсептор добавляет `Bearer`; на 401 один раз пробует `POST /api/auth/refresh` (принимает токены, просроченные до 30 дней) → `useAuth` ещё и тихо обновляет токен каждые 6 ч. Токен удаляется только при подтверждённом 401/403, не при сетевых ошибках.
 
