@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { setTimeout: pause } = require('node:timers/promises');
 
 // Real public pages and the actual constructor iframe, on the owned smoke database.
 module.exports = async function runModuleSmoke({ browser, context, base, output, status }) {
@@ -71,13 +72,20 @@ module.exports = async function runModuleSmoke({ browser, context, base, output,
         : scope.getByRole('button', { name: 'R9 title B', exact: true });
       await scope.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
       await button.click();
-      await scope.waitForFunction(id => {
-        const target = document.getElementById(id)?.getBoundingClientRect();
-        const viewport = document.documentElement.clientHeight;
-        // CSS scroll margins and scrollbar height vary across Chromium platforms.
-        // The navigation contract is a visible target inside its own document.
-        return target && target.top >= -1 && target.bottom <= viewport + 1;
-      }, target, { timeout: 5000 });
+      // The preview intentionally forbids scripts. Chromium can suppress the
+      // frame's rAF callbacks, so poll from Node instead of waitForFunction(rAF).
+      const deadline = Date.now() + 5000;
+      let geometry;
+      do {
+        geometry = await scope.evaluate(id => {
+          const rect = document.getElementById(id)?.getBoundingClientRect();
+          return { top: rect?.top, bottom: rect?.bottom, viewport: document.documentElement.clientHeight };
+        }, target);
+        if (geometry.top >= -1 && geometry.bottom <= geometry.viewport + 1) break;
+        await pause(50);
+      } while (Date.now() < deadline);
+      assert.ok(geometry.top >= -1 && geometry.bottom <= geometry.viewport + 1,
+        'TOC did not reveal ' + target + ': ' + JSON.stringify(geometry));
     }
     const layout = await scope.evaluate(() => ({
       width: document.documentElement.clientWidth,
