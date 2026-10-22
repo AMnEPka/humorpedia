@@ -17,6 +17,13 @@ from services.show_teams import team_url
 SETTINGS_ID = "recommendations"
 CANDIDATE_POOL_PER_TYPE = 60
 RELEVANT_POOL_PER_TYPE = 200
+RECOMMENDATION_ORDER = [("featured", -1), ("views", -1), ("published_at", -1), ("_id", 1)]
+
+
+async def create_recommendation_indexes(ensure_index, db) -> None:
+    # Full sort indexes avoid changing the leading fields of unsorted relevance queries.
+    for collection in ("people", "teams", "shows", "kvn"):
+        await ensure_index(db[collection], RECOMMENDATION_ORDER, name="recommendation_order_1")
 
 INTERNAL_HOSTS = {"humorpedia.ru", "www.humorpedia.ru", "dev.humorpedia.ru", "localhost", "127.0.0.1"}
 HREF_RE = re.compile(r"href\s*=\s*['\"]([^'\"]+)['\"]", re.IGNORECASE)
@@ -379,9 +386,7 @@ async def _candidate_documents(db, source: dict[str, Any], source_type: str, res
         relevant_query = {**base_query, "$or": clauses}
         documents.extend(await collection.find(relevant_query, PROJECTION).to_list(RELEVANT_POOL_PER_TYPE))
 
-    fallback = collection.find(base_query, PROJECTION).sort([
-        ("featured", -1), ("views", -1), ("published_at", -1), ("_id", 1),
-    ]).limit(CANDIDATE_POOL_PER_TYPE)
+    fallback = collection.find(base_query, PROJECTION).sort(RECOMMENDATION_ORDER).limit(CANDIDATE_POOL_PER_TYPE)
     documents.extend(await fallback.to_list(CANDIDATE_POOL_PER_TYPE))
     unique: dict[str, dict[str, Any]] = {}
     for document in documents:

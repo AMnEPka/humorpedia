@@ -267,3 +267,62 @@ def test_stored_adjacent_season_links_are_filtered_without_changing_saved_data(v
         assert data["prev_season"] == ("archived" if role in ("editor", "admin") else "")
         assert data["next_season"] == "draft"
     assert current["season_data"]["prev_season"] == "archived"
+
+
+class CountedSeasonCollection(Collection):
+    def __init__(self, docs=()):
+        super().__init__(docs)
+        self.queries = []
+
+    def find(self, query, projection=None):
+        self.queries.append(deepcopy(query))
+        return super().find(query, projection)
+
+
+def _adjacent_probe(docs, parent=None):
+    collection = CountedSeasonCollection(docs)
+    current = {'slug': '2026', 'season_data': {'year': 2026, 'league_slug': 'probe'}}
+    if parent:
+        current['parent_id'] = parent
+    result = asyncio.run(find_adjacent_seasons(SimpleNamespace(kvn=collection), current))
+    return result, collection.queries
+
+
+def test_adjacent_empty_legacy_results_do_not_repeat_twelve_proven_empty_path_searches():
+    result, queries = _adjacent_probe([])
+    assert result == ('', '')
+    assert len(queries) == 4  # Two exact and two legacy superset reads.
+
+
+def test_adjacent_empty_path_proof_keeps_parent_map_for_manual_metadata_only_seasons():
+    result, queries = _adjacent_probe([{
+        'slug': 'manual-previous', 'full_path': 'kvn/probe/manual',
+        'parent_id': 'league', 'season_data': {'year': 2025},
+    }], parent='league')
+    assert result == ('manual-previous', '')
+    assert len(queries) == 5
+
+
+def test_adjacent_truncated_legacy_list_keeps_original_patterns_and_leading_slash_candidate():
+    unrelated = [{'slug': f'other-{n}-2025', 'full_path': f'kvn/other/other-{n}-2025'} for n in range(20)]
+    previous = {'slug': 'previous', 'full_path': '/kvn/probe/final-2025', 'season_data': {'year': 2025}}
+    result, queries = _adjacent_probe([*unrelated, previous])
+    assert result == ('previous', '')
+    final_queries = [query.get('$and', [query])[0] for query in queries]
+    assert any(set(query) == {'full_path'} for query in final_queries)
+
+
+def test_adjacent_missing_path_is_unknown_and_keeps_the_six_legacy_queries():
+    result, queries = _adjacent_probe([{'slug': 'other-2025'}])
+    assert result == ('', '')
+    final_queries = [query.get('$and', [query])[0] for query in queries]
+    assert sum(set(query) == {'full_path'} for query in final_queries) == 6
+
+
+def test_adjacent_existing_paths_keep_original_duplicate_selection_priority():
+    current = {'slug': '2026', 'season_data': {'year': 2026, 'league_slug': 'probe'}}
+    duplicates = [
+        {'slug': 'chosen', 'full_path': 'kvn/probe/chosen-2025', 'season_data': {'year': 2025, 'league_slug': 'probe'}},
+        {'slug': 'second', 'full_path': 'kvn/probe/second-2025', 'season_data': {'year': 2025, 'league_slug': 'probe'}},
+    ]
+    assert asyncio.run(find_adjacent_seasons(SimpleNamespace(kvn=CountedSeasonCollection(duplicates)), current)) == ('chosen', '')

@@ -39,6 +39,7 @@ from utils.database import get_db, close_db
 from utils.auth import require_admin, SAFE_METHODS
 from services.admin_bootstrap import ensure_admin_from_env
 from services.competitions import ensure_competitions_synced, create_competition_indexes
+from services.recommendations import create_recommendation_indexes
 from services.memberships import ensure_rosters_imported, create_membership_indexes
 from services.show_appearances import ensure_show_appearances, create_show_appearance_indexes
 
@@ -325,6 +326,7 @@ async def create_indexes(db):
 
         # Соревнования: турниры, сезоны, перекрёстные ссылки
         await create_competition_indexes(_ensure_index, db)
+        await create_recommendation_indexes(_ensure_index, db)
         await create_membership_indexes(_ensure_index, db)
         await create_show_appearance_indexes(_ensure_index, db)
         

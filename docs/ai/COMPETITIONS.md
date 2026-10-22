@@ -316,3 +316,17 @@ python scripts/report_competition_reconciliation.py --db-name ИМЯ_КОПИИ_
 новых различий публичной проекции. Сверка ограничивает lookup командами КВН (show_id отсутствует/null),
 как производственный loader; команды других шоу с тем же slug не считаются неоднозначностью данных.
 Результаты проверок и границы поставки — в [контексте R8](tasks/r8-canonical-seasons-2026-10-21.md).
+
+## Ограниченные чтения R11 (21.10.2026)
+
+`create_competition_indexes` добавляет отдельный индекс на `teams.team_id`, `teams.slug`,
+`winners.team_id`, `winners.slug`, `stages.games.results.team_id` и `stages.games.results.slug`.
+Все шесть ветвей `_season_team_refs_query` индексируемы; один compound multikey индекс
+вместо них не подходит для независимых массивов. CAS, ownership и порядок проекций прежние.
+
+Поиск соседнего сезона сохраняет приоритет metadata → legacy → parent map → final regex.
+Только полный legacy-ответ менее 20 строк без нужного league path доказывает пустоту
+финальных regex; parent map проверяется всегда. При усечённой выдаче/неизвестном path fallback остаётся.
+Все 122 сезона public/editor дают прежние пары, 714 → 546 чтений.
+Slug reference lookup: 122 → 1 examined; fixture с 3503 сезонами читает только 3 связанных.
+[Метод, замеры и принятая с учётом контрольного разброса приёмка R11](tasks/r11-performance-2026-10-21.md).

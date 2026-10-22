@@ -44,13 +44,14 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 ├── DOCKER_DEV.md                 запуск в Docker (dev)
 ├── DOCKER_VOLUME_SETUP.md        volume images_volume для /images
 ├── BACKUP_SYSTEM.md, RESTORE_BACKUP.md   бэкап/восстановление Mongo
-├── PERFORMANCE_OPTIMIZATIONS.md  что сделано для нагрузки (lazy, text-индексы, rate limit, pool)
+├── PERFORMANCE_OPTIMIZATIONS.md  метод локальных замеров R11 и исторические оптимизации
 ├── docker-compose.yml            dev: mongodb(--auth) + backend(uvicorn reload) + frontend(yarn start, polling/HMR)
 ├── docker-compose-cloud.yml      неиспользуемый шаблон: mongodb(--auth, порт не публикуется) + backend(gunicorn 4×UvicornWorker) + backup(раз в сутки) + frontend(nginx); требует .env
 ├── uploads/2025/12, 2026/01      несколько загруженных картинок
 │
 ├── backend/
 │   ├── server.py                 приложение, индексы, первый админ из env, middleware, /api/stats, /api/random/{type}, /api/cache/stats|flush, /api/views/flush
+│   ├── scripts/profile_api.py    R11: read-only GET замеры отдельной UUID-копии без lifespan; latency/CPU/RSS/explain
 │   ├── start.sh                  entrypoint: restore_backup.py → exec CMD
 │   ├── Dockerfile                python:3.11-slim + mongodb-database-tools + mongosh; ENTRYPOINT чинит CRLF
 │   ├── Dockerfile-cloud          без mongo tools, gunicorn

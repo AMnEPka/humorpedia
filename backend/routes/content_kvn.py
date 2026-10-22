@@ -109,6 +109,7 @@ async def find_adjacent_seasons(db, current_season: dict, *, editor: bool = Fals
     
     prev_season_slug = ""
     next_season_slug = ""
+    empty_legacy_path_years = set()
     
     # Ищем предыдущий сезон (year - 1)
     prev_year = year - 1
@@ -152,6 +153,17 @@ async def find_adjacent_seasons(db, current_season: dict, *, editor: bool = Fals
                 ]
             }, editor), {"slug": 1, "season_data": 1, "full_path": 1, "parent_id": 1}).to_list(20)
             
+            # Every final path pattern is a subset of this legacy query. A complete
+            # batch with no league path proves those later probes would be empty.
+            # Missing paths and a full batch remain unknown; preserve their fallback.
+            league_path = f"kvn/{league_slug}/"
+            if len(candidates) < 20 and all(
+                isinstance(candidate.get("full_path"), str)
+                and league_path not in candidate["full_path"]
+                for candidate in candidates
+            ):
+                empty_legacy_path_years.add(target_year)
+
             for candidate in candidates:
                 # Проверяем, что это действительно сезон нужного года
                 c_year = candidate.get("season_data", {}).get("year", 0)
@@ -212,6 +224,8 @@ async def find_adjacent_seasons(db, current_season: dict, *, editor: bool = Fals
     if not prev_season_slug or not next_season_slug:
         # Ищем сезоны по full_path с годом
         for target_year in [prev_year, next_year]:
+            if target_year in empty_legacy_path_years:
+                continue
             if target_year == prev_year and prev_season_slug:
                 continue
             if target_year == next_year and next_season_slug:

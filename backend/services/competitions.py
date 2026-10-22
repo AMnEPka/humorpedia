@@ -810,6 +810,10 @@ async def create_competition_indexes(ensure_index, db) -> None:
     await ensure_index(db.tournaments, [("show", 1), ("slug", 1)], unique=True)
     await ensure_index(db.seasons, [("tournament_id", 1), ("year", 1)])
     await ensure_index(db.seasons, "page_id")
+    # Each OR branch in team rename/detach must be indexed to avoid a collection scan.
+    for path in ("teams", "winners", "stages.games.results"):
+        for field in ("team_id", "slug"):
+            await ensure_index(db.seasons, f"{path}.{field}")
     await ensure_index(db.participations, "season_id")
     await ensure_index(db.participations, [("team_id", 1), ("kind", 1), ("season_year", -1)])
     await ensure_index(db.participations, [("person_id", 1), ("kind", 1), ("season_year", -1)])

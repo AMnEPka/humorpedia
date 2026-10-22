@@ -22,7 +22,8 @@
 | [docs/ai/tasks/initial-refactoring-fixes-2026-10-21.md](docs/ai/tasks/initial-refactoring-fixes-2026-10-21.md) | Ревью четырёх новых коммитов, исправления видимости архива / refresh / person_id, проверки и оставшиеся ограничения |
 | [docs/ai/tasks/r8-canonical-seasons-2026-10-21.md](docs/ai/tasks/r8-canonical-seasons-2026-10-21.md) | R8: сверка сезонов на копии, единый путь записи, проекции и совместимость старого редактора |
 | [docs/ai/tasks/r9-public-rendering-2026-10-21.md](docs/ai/tasks/r9-public-rendering-2026-10-21.md) | R9: единый выбор модулей, общий текстовый каркас, загрузка и навигация TOC в preview; приёмка 390/1120 |
-| [docs/ai/tasks/r10-editor-decomposition-2026-10-21.md](docs/ai/tasks/r10-editor-decomposition-2026-10-21.md) | R10: операции и формы редакторов модулей/сезонов, сохранение JSON, браузерная приёмка; публикация отдельным коммитом |
+| [docs/ai/tasks/r10-editor-decomposition-2026-10-21.md](docs/ai/tasks/r10-editor-decomposition-2026-10-21.md) | R10: операции и формы редакторов модулей/сезонов, сохранение JSON, браузерная приёмка; коммит 7ad0577, GitHub CI success |
+| [docs/ai/tasks/r11-performance-2026-10-21.md](docs/ai/tasks/r11-performance-2026-10-21.md) | R11: read-only замеры на копии, соседние сезоны и индексы; приёмка завершена 22.10 с учётом контрольного разброса p95; 1064 backend + 2 readiness |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
 | [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
 | [docs/ai/tasks/team-projects.md](docs/ai/tasks/team-projects.md) | Автоматические проекты участников команды КВН с сохранённым ручным дополнением |
