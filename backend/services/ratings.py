@@ -143,10 +143,10 @@ async def ensure_baseline(db, entity_type: str, entity: dict[str, Any]) -> dict[
 
 
 async def _new_votes_total(db, entity_type: str, entity_id: str) -> tuple[float, int]:
-    rows = await db.rating_votes.aggregate([
+    rows = await (await db.rating_votes.aggregate([
         {"$match": {"entity_type": entity_type, "entity_id": entity_id}},
         {"$group": {"_id": None, "sum": {"$sum": "$score"}, "count": {"$sum": 1}}},
-    ]).to_list(1)
+    ])).to_list(1)
     if not rows:
         return 0.0, 0
     return float(rows[0].get("sum") or 0), int(rows[0].get("count") or 0)

@@ -584,7 +584,7 @@ async def list_available_alphabet_filters(
     """Return only filters that have at least one matching document."""
     db = await get_db()
     collection = getattr(db, collection_name)
-    cursor = collection.aggregate(
+    cursor = await collection.aggregate(
         build_alphabet_availability_pipeline(query, sort_fields)
     )
     initials = await cursor.to_list(None)
@@ -622,7 +622,7 @@ async def list_alphabetical_content(
         exclude_modules,
         sort,
     )
-    cursor = collection.aggregate(
+    cursor = await collection.aggregate(
         pipeline,
         collation={"locale": "ru", "strength": 2},
     )

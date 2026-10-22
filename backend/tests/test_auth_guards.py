@@ -5,13 +5,15 @@
 должен получать 401/403. Новый эндпоинт без защиты уронит этот тест.
 """
 import re
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
 from server import app
-from utils import auth
+from utils import auth, database
 from utils.auth import create_token, SAFE_METHODS
 
 # Изменяющие запросы, которые намеренно доступны без токена
@@ -54,6 +56,18 @@ def _write_routes():
         for method in sorted(route.methods - SAFE_METHODS):
             if (method, route.path) not in PUBLIC_WRITE_ROUTES:
                 yield method, route.path
+
+
+@pytest.fixture(autouse=True)
+def isolated_cache_database(monkeypatch):
+    # The real cache middleware still calls get_db before rejecting a write.
+    # Auth-only tests must not create a client on TestClient temporary loops.
+    previous_client = database._client
+    async def cache_db():
+        return SimpleNamespace(cache_meta=SimpleNamespace(find_one=AsyncMock(return_value=None)))
+    monkeypatch.setattr("server.get_db", cache_db)
+    yield
+    assert database._client is previous_client
 
 
 @pytest.fixture(scope="module")

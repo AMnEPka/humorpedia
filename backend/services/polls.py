@@ -32,10 +32,10 @@ def serialize_poll(poll: dict, live_counts: dict[str, int], *, selected_option_i
 
 
 async def live_vote_counts(db, poll_id: str) -> dict[str, int]:
-    rows = await db.poll_votes.aggregate([
+    rows = await (await db.poll_votes.aggregate([
         {"$match": {"poll_id": poll_id}},
         {"$group": {"_id": "$option_id", "count": {"$sum": 1}}},
-    ]).to_list(None)
+    ])).to_list(None)
     return {str(row["_id"]): int(row["count"]) for row in rows}
 
 

@@ -1,5 +1,5 @@
 """Database utilities"""
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 import os
 from urllib.parse import quote_plus
 
@@ -36,7 +36,7 @@ async def get_db():
         # minPoolSize: min number of connections to maintain
         # maxIdleTimeMS: close idle connections after 45s
         # serverSelectionTimeoutMS: timeout for server selection
-        _client = AsyncIOMotorClient(
+        _client = AsyncMongoClient(
             mongo_url,
             maxPoolSize=50,          # Up to 50 concurrent connections
             minPoolSize=10,          # Always maintain 10 connections
@@ -51,7 +51,7 @@ async def get_db():
 async def close_db():
     """Close database connection"""
     global _client, _db
-    if _client:
-        _client.close()
-        _client = None
-        _db = None
+    # Detach before awaiting: no caller can reuse a closing/failed client.
+    client, _client, _db = _client, None, None
+    if client is not None:
+        await client.close()

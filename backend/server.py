@@ -525,7 +525,7 @@ async def get_random_content(content_type: str, request: Request, exclude_slug: 
                       "full_path": 1, "show_id": 1, "url": 1}}
     ]
     
-    result = await collection.aggregate(pipeline).to_list(1)
+    result = await (await collection.aggregate(pipeline)).to_list(1)
     
     if not result:
         return {"error": "No content found"}

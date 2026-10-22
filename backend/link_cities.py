@@ -22,7 +22,7 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from services.city_linking import link_all_cities
 
 # MongoDB connection
@@ -33,7 +33,7 @@ DB_NAME = os.environ.get('DB_NAME', 'humorpedia')
 async def main():
     print(f"[{datetime.now()}] Starting city linking...")
     
-    client = AsyncIOMotorClient(MONGO_URL)
+    client = AsyncMongoClient(MONGO_URL)
     db = client[DB_NAME]
     
     try:
@@ -49,7 +49,7 @@ async def main():
                 print(f"  {detail['city_name']}: {detail['people_count']} editorial people, {detail['teams_count']} teams")
         
     finally:
-        client.close()
+        await client.close()
 
 
 if __name__ == '__main__':

@@ -10,7 +10,6 @@ python-multipart==0.0.20
 aiofiles==25.1.0
 
 # Данные и валидация
-motor==3.7.1
 pymongo==4.18.1
 dnspython==2.8.0
 pydantic==2.12.5

@@ -9,13 +9,13 @@ import os
 # Добавляем корневую директорию в путь
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 
 async def fix_team_types():
     """Добавляет team_type='kvn' всем командам, у которых он не указан"""
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     db_name = os.environ.get('DB_NAME', 'humorpedia')
-    client = AsyncIOMotorClient(mongo_url)
+    client = AsyncMongoClient(mongo_url)
     db = client[db_name]
     
     # Находим все команды без team_type или с пустым team_type
@@ -51,7 +51,7 @@ async def fix_team_types():
     else:
         print("Все команды успешно обновлены!")
     
-    client.close()
+    await client.close()
 
 if __name__ == "__main__":
     asyncio.run(fix_team_types())

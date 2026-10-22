@@ -213,7 +213,7 @@ def test_random_page_api_retains_navigation_fields(monkeypatch, tmp_path, conten
         def __init__(self, name):
             self.name = name
 
-        def aggregate(self, pipeline):
+        async def aggregate(self, pipeline):
             pipelines[self.name] = deepcopy(pipeline)
             projection = next(stage["$project"] for stage in pipeline if "$project" in stage)
 

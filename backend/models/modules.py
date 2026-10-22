@@ -1,5 +1,5 @@
 """Module definitions for modular page builder"""
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import Optional, List, Dict, Any, Union, Literal
 from enum import Enum
 
@@ -293,8 +293,7 @@ class PageModule(BaseModel):
             raise ValueError("Для модуля poll требуется poll_id")
         return self
     
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 # --- Page Template ---

@@ -19,7 +19,7 @@ import logging
 from collections import defaultdict
 from typing import Dict, Tuple
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.asynchronous.database import AsyncDatabase
 
 logger = logging.getLogger("views_counter")
 
@@ -33,14 +33,14 @@ class ViewsCounter:
         # {(collection_name, doc_id_str): count}
         self._buffer: Dict[Tuple[str, str], int] = defaultdict(int)
         self._task: asyncio.Task | None = None
-        self._db: AsyncIOMotorDatabase | None = None
+        self._db: AsyncDatabase | None = None
 
     def increment(self, collection: str, doc_id) -> None:
         """Инкрементирует счётчик в памяти. Мгновенно, без DB."""
         key = (collection, str(doc_id))
         self._buffer[key] += 1
 
-    async def start(self, db: AsyncIOMotorDatabase) -> None:
+    async def start(self, db: AsyncDatabase) -> None:
         """Запускает фоновый flush. Вызывается при старте приложения."""
         self._db = db
         if self._task is None or self._task.done():

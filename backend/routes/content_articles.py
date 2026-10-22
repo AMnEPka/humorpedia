@@ -25,7 +25,7 @@ async def get_random_article(request: Request):
         {"$match": {"status": {"$ne": "archived"}}},
         {"$sample": {"size": 1}},
     ]
-    result = await db.articles.aggregate(pipeline).to_list(1)
+    result = await (await db.articles.aggregate(pipeline)).to_list(1)
     if not result:
         raise HTTPException(status_code=404, detail="No articles found")
     return result[0]

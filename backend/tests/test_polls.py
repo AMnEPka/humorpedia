@@ -66,7 +66,7 @@ class _PollVotes:
             raise DuplicateKeyError("duplicate")
         self.docs[doc["_id"]] = doc
 
-    def aggregate(self, _pipeline):
+    async def aggregate(self, _pipeline):
         counts = {}
         for doc in self.docs.values():
             counts[doc["option_id"]] = counts.get(doc["option_id"], 0) + 1

@@ -58,7 +58,7 @@ class _Collection:
             self.documents[query["_id"]] = document
         return _Result()
 
-    def aggregate(self, pipeline):
+    async def aggregate(self, pipeline):
         match = pipeline[0]["$match"]
         scores = [
             doc["score"] for doc in self.documents.values()

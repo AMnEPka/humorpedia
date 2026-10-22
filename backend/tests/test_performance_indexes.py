@@ -4,7 +4,7 @@ from copy import deepcopy
 import os
 import uuid
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 import pytest
 
 from routes.content_teams import _season_team_refs_query
@@ -14,7 +14,7 @@ from services.competitions import create_competition_indexes
 @pytest.mark.skipif(os.environ.get('PERFORMANCE_INTEGRATION') != '1', reason='Needs own MongoDB with PERFORMANCE_INTEGRATION=1')
 def test_team_slug_reference_lookup_scales_with_matching_seasons():
     async def check():
-        client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+        client = AsyncMongoClient(os.environ['MONGO_URL'])
         name = 'humorpedia_perf_test_' + uuid.uuid4().hex
         db = client[name]
         assert db.name == name and not await db.list_collection_names()
@@ -50,7 +50,7 @@ def test_team_slug_reference_lookup_scales_with_matching_seasons():
         finally:
             assert db.name == name and name.startswith('humorpedia_perf_test_')
             await client.drop_database(name)
-            client.close()
+            await client.close()
 
     asyncio.run(check())
 
@@ -61,7 +61,7 @@ def test_recommendation_sort_index_preserves_candidate_pool_and_daily_results():
     from services import recommendations
 
     async def check():
-        client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+        client = AsyncMongoClient(os.environ['MONGO_URL'])
         name = 'humorpedia_perf_test_' + uuid.uuid4().hex
         db = client[name]
         assert not await db.list_collection_names()
@@ -100,6 +100,6 @@ def test_recommendation_sort_index_preserves_candidate_pool_and_daily_results():
         finally:
             assert db.name == name and name.startswith('humorpedia_perf_test_')
             await client.drop_database(name)
-            client.close()
+            await client.close()
 
     asyncio.run(check())

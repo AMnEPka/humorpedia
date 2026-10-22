@@ -40,7 +40,7 @@ async def list_tags(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     search: Optional[str] = None,
-    sort_by: str = Query("usage", regex="^(usage|name|created)$")
+    sort_by: str = Query("usage", pattern="^(usage|name|created)$")
 ):
     """List all tags"""
     db = await get_db()

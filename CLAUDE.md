@@ -23,7 +23,8 @@
 | [docs/ai/tasks/r8-canonical-seasons-2026-10-21.md](docs/ai/tasks/r8-canonical-seasons-2026-10-21.md) | R8: сверка сезонов на копии, единый путь записи, проекции и совместимость старого редактора |
 | [docs/ai/tasks/r9-public-rendering-2026-10-21.md](docs/ai/tasks/r9-public-rendering-2026-10-21.md) | R9: единый выбор модулей, общий текстовый каркас, загрузка и навигация TOC в preview; приёмка 390/1120 |
 | [docs/ai/tasks/r10-editor-decomposition-2026-10-21.md](docs/ai/tasks/r10-editor-decomposition-2026-10-21.md) | R10: операции и формы редакторов модулей/сезонов, сохранение JSON, браузерная приёмка; коммит 7ad0577, GitHub CI success |
-| [docs/ai/tasks/r12a-runtime-2026-10-22.md](docs/ai/tasks/r12a-runtime-2026-10-22.md) | R12a: Node24, Gunicorn pin, signed Mongo tools; изолированная приёмка пройдена, изменения без коммита; полный dev-sync после интеграции |
+| [docs/ai/tasks/r12b-pymongo-async-2026-10-22.md](docs/ai/tasks/r12b-pymongo-async-2026-10-22.md) | R12b: native PyMongo Async, async close/aggregate; приёмка завершена, 1107 backend + 2 readiness; без коммита |
+| [docs/ai/tasks/r12a-runtime-2026-10-22.md](docs/ai/tasks/r12a-runtime-2026-10-22.md) | R12a: Node24, Gunicorn pin, signed Mongo tools; коммит 2ea75f6, GitHub CI success; полный dev-sync после интеграции |
 | [docs/ai/tasks/r11-performance-2026-10-21.md](docs/ai/tasks/r11-performance-2026-10-21.md) | R11: read-only замеры на копии, соседние сезоны и индексы; коммит 857508f; приёмка p95 с контрольным разбросом, CI success после smoke fix 8aa370d |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
 | [docs/ai/tasks/related-news.md](docs/ai/tasks/related-news.md) | Автоматический блок свежих связанных новостей, настройки и очистка старых вставок |
@@ -40,7 +41,7 @@
 
 ## Стек
 
-- **Backend**: Python 3.11, FastAPI 0.110, Motor (async MongoDB), Pydantic v2, PyJWT + bcrypt, slowapi, cachetools. Точка входа `backend/server.py`.
+- **Backend**: Python 3.11, FastAPI 0.110, PyMongo Async (MongoDB), Pydantic v2, PyJWT + bcrypt, slowapi, cachetools. Точка входа `backend/server.py`.
 - **Frontend**: React 19 + CRA через CRACO, React Router 7, Tailwind + shadcn/ui (Radix), TipTap/react-quill (редакторы), dnd-kit, axios. Алиас `@` → `frontend/src`. Пакетный менеджер — **yarn**.
 - **БД**: локальный Compose с MongoDB 8.0.32 и отдельная копия на тестовом VPS (04.10.2026); Mongo не опубликована наружу. База `humorpedia`: отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`. Локальная и VPS-БД не синхронизируются автоматически.
 - **Инфра**: `docker-compose.yml` (локальный стенд, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (неиспользуемый общий шаблон); фактический малый VPS использует `scripts/vps-test/compose.yml`: gunicorn ×1, nginx, Mongo8.0.32 с отдельным seccomp-профилем, Docker-web только на loopback. Host nginx открывает `https://77.105.139.231` без общего пароля; Let's Encrypt shortlived IP-сертификат продлевает systemd timer. Старый хостинг/DNS/почта не переключены.

@@ -13,7 +13,7 @@ from uuid import uuid4
 sys.path.insert(0, '/app/backend')
 
 import asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from dotenv import load_dotenv
 
 load_dotenv('/app/backend/.env')
@@ -217,7 +217,7 @@ async def import_one_person():
     print("="*80)
     
     # Connect to MongoDB
-    client = AsyncIOMotorClient(MONGO_URL)
+    client = AsyncMongoClient(MONGO_URL)
     db = client[DB_NAME]
     
     # Check if person already exists

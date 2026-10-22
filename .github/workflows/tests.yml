@@ -47,6 +47,8 @@ jobs:
       PAGE_PACKAGE_INTEGRATION: '1'
       SEASON_WRITE_INTEGRATION: '1'
       READINESS_INTEGRATION: '1'
+      DATABASE_INTEGRATION: '1'
+      PERFORMANCE_INTEGRATION: '1'
     defaults:
       run:
         working-directory: backend
@@ -66,7 +68,8 @@ jobs:
       - run: >-
           pytest -q tests/test_page_package_import.py tests/test_page_package_concurrency.py
           tests/test_page_package_recovery.py tests/test_workflow_recovery_integration.py
-          tests/test_season_write_integration.py tests/test_readiness_integration.py -rs
+          tests/test_season_write_integration.py tests/test_readiness_integration.py
+          tests/test_database_integration.py tests/test_performance_indexes.py -rs
       - run: python -m unittest discover -s ../scripts/vps-test -p test_restore_files.py
       - name: Remove disposable MongoDB
         if: always()

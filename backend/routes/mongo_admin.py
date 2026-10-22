@@ -246,7 +246,7 @@ async def aggregate_data(request: AggregateRequest):
     collection = db[request.collection]
     
     # Run aggregation
-    cursor = collection.aggregate(pipeline)
+    cursor = await collection.aggregate(pipeline)
     documents = await cursor.to_list(length=1000)
     
     # Convert to JSON
