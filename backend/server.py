@@ -4,6 +4,7 @@ Main FastAPI application with modular content management
 """
 from fastapi import FastAPI, APIRouter, Request, Depends
 from fastapi.staticfiles import StaticFiles
+from services.static_media import MediaStaticFiles
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -551,7 +552,7 @@ app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 # запасной — старое расположение в исходниках фронтенда.
 for media_dir in (Path("/app/media"), Path("/app/frontend/public/media")):
     if media_dir.exists():
-        app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
+        app.mount("/media", MediaStaticFiles(directory=str(media_dir)), name="media")
         break
 
 # Картинки сайта из docker volume images_volume: /images/kvn-team/maximum.jpg

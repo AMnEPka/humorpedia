@@ -98,7 +98,7 @@ Unlinked/candidate/rejected — разные допустимые состоян
 - Ignored evidence: `.cache/r13g/{manifest.json,media-manifest.json,content-snapshot.jsonl,media-snapshot.jsonl,content-audit.json,relations-audit.json,link-review-queue.json,media-audit.json,media-review.json,legacy-probe.json,verified-originals.json,recovery/}`.
 - Одноразовые анализаторы и тесты рядом: `audit_content.py`, `audit_relations.py`, `audit_media.py`, `test_audit_*.py`. Export scripts фиксируют allowlist полей и сравнение двух чтений. Raw snapshots, фотографии и полные логи в Git не добавлять.
 - Согласованная политика demo проверена на отдельном offline preview:25620→25610 records,news1018→1008;удалены ровно10 ID,остальные строки byte-identical, SHA источника не изменился.4 проверки exact-match/другая collection/похожий ID/title-slug PASS. Evidence `transfer-preview-acceptance.json`. Это projected preview, не полный Mongo release archive; существующий `export-local.mjs` не запускался и пока не применяет policy автоматически. Будущий transfer обязан применить её на отдельной release-копии и повторно проверить результат.
-- CI evidence: `.cache/r13g/r13f-ci-jobs-final.json`; опубликованный SHA проверен отдельно от незакоммиченного R13g.
+- CI evidence предыдущего R13f: `.cache/r13g/r13f-ci-jobs-final.json`; результат публикации самого R13g приведён ниже.
 
 ## Следующие пакеты
 
@@ -111,3 +111,7 @@ Unlinked/candidate/rejected — разные допустимые состоян
 | Интеграция и выпуск | Отдельное поручение: merge/main/dev-sync, повтор приёмки, serving/indexing gates. VPS сейчас запрещён | Sol/high |
 
 Read-only отчёт исходного пункта плана подготовлен с явным покрытием; он не закрывает очереди исправления/внешних проверок. R0–R12 реализованы в ветке; оставшиеся действия — данные, интеграция и выпуск. Основной checkout проверен: чистый main ca46155, прежние container IDs/StartedAt и0 restarts, Mongo healthy; HTTP3000 и8001/api/health200. Импорт24СМИ и VPS не изменялись. 22.10.2026 пользователь поручил отдельный commit/push R13g вместе с документацией и проверку CI на новом SHA; следующий этап — продолжить изолированные пакеты из этого плана.
+
+## Публикация R13g и продолжение
+
+22.10.2026 R13g с документацией опубликован отдельным коммитом `467c7a6c892bc6cc47565d37c7cf9e8995d20305` в `origin/codex/local-page-builder`. [GitHub CI39832700995](https://github.com/AMnEPka/humorpedia/actions/runs/39832700995) completed/success на точном SHA; все5 jobs и три browser-сценария success. Evidence: `.cache/r13h/r13g-ci-{run,jobs}-final.json`. Следующий пакет [R13h](r13h-media-recovery-2026-10-22.md) подготовил150 originals и применил согласованные78 URL mappings только к копии; WebP MIME исправлен, native HTTP/React81 и media150 PASS;8 posters не подменялись. Локальная приёмка R13h завершена; пользователь поручил его отдельный commit/push и проверку CI. Main/24СМИ/VPS не изменялись.

@@ -1,0 +1,3651 @@
+{
+  "schema_version": 1,
+  "task": "R13h",
+  "base_commit": "467c7a6c892bc6cc47565d37c7cf9e8995d20305",
+  "prepared_at": "2026-10-22T18:47:22.376Z",
+  "scope": "Exact source recovery and approved paths applied only to isolated projected copy; source data unchanged",
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "proposed_replacements_approved": true,
+  "assets": [
+    {
+      "original_reference": "/assets/cache_image/images/igra/womanteam_0x0_6fe.webP",
+      "target_url": "/media/imported/assets/cache_image/images/igra/womanteam_0x0_6fe.webP",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://dev.humorpedia.ru/assets/cache_image/images/igra/womanteam_0x0_6fe.webP",
+      "provenance_page": "https://humorpedia.ru/people/yuliya-arkhipenko.html",
+      "initial_origin_status": 404,
+      "source_status": 200,
+      "source_content_type": "image/webp",
+      "sha256": "af4751037fee2e9a5e3f5754c18fceb49ba63ffe4b63702143373cd9f34d1b5e",
+      "bytes": 44616,
+      "format": "WEBP",
+      "width": 800,
+      "height": 450,
+      "staged": ".cache/r13h/recovery/assets/cache_image/images/igra/womanteam_0x0_6fe.webP",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/yuliya-arkhipenko",
+          "status": "published",
+          "field": "modules[7].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/293.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/293.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/293.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "695d6254c424e00a743e3bcabd68e488702caf3e8a7650617e8f01140610515f",
+      "bytes": 17268,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/293.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/daria-pokazanieva",
+          "status": "published",
+          "field": "modules[6].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/296.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/296.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/296.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "ce9f08bbbd2b5b089df3d4d09aa67d8ac6194f243eb234cd5f2b25feb958506e",
+      "bytes": 16358,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/296.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/ekaterina-fedorova",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/297.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/297.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/297.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "9b4df2f4458f75c598e4164fe064eb8b4efd8c45ed83ff3d4b0b89bc3c254d10",
+      "bytes": 20608,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/297.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/raf",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/299.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/299.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/299.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "47e2ebc2d4d61fa314554b3c80d0e86eb3c5577a2413426f9476a0c707588156",
+      "bytes": 18329,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/299.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/petr-shevlokov",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/310.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/310.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/310.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "47cf8f6265c1be924abedb85161475a4f5e385c7b72f4a06af3e08118b2759eb",
+      "bytes": 15926,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/310.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/anya-cherkashina",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/311.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/311.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/311.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "c2855c7ae156fabe3cc1343f2e0cdcb59ed42aef6c06c509d915b8afa33af733",
+      "bytes": 17333,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/311.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/arseniy-agapov",
+          "status": "published",
+          "field": "modules[6].data.events[7].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/314.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/314.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/314.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "6fd19956cd945e428e8f6ecc588a74e49d905d614217d344b373b90a2f8f1331",
+      "bytes": 16782,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/314.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/maxim-savenko",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/319.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/319.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/319.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d63d2d6cb05052a469510c876fe8dd0fe589d10b36a44c99550c248e0262976d",
+      "bytes": 19534,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/319.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/artem-khalter",
+          "status": "published",
+          "field": "modules[6].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/321.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/321.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/321.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "7253054095037f08b8b80780b96576e0ef5a8b08328bb2cd075b650da3c46ebb",
+      "bytes": 19682,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/321.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alina-nikonova",
+          "status": "published",
+          "field": "modules[6].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/322.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/322.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/322.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "5e3adef00c08ab9d0924b0662ce70c32c01363cb7bcc77913f763f16a71f51c1",
+      "bytes": 18237,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/322.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/liza-konovalenko",
+          "status": "published",
+          "field": "modules[7].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/323.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/323.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/323.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "97d39b077f287a27a7f33a896d74cad4ecc62206512e783c5cdfaed2b6064c6b",
+      "bytes": 18239,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/323.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/maria-shakhnovich",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/324.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/324.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/324.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4c2066cc204cd996773628ef17d1cfbfadf42cd77fa514b33e2dba6022fe55fc",
+      "bytes": 19326,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/324.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-konushev",
+          "status": "published",
+          "field": "modules[7].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/326.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/326.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/326.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "10d06fde26cc90ad83b265952abb9e9cbcd6d3c6f639c6c7774f110f7918bdd2",
+      "bytes": 15866,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/326.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/mikhail-karin",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/330.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/330.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/330.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "aa7e9e9a21109d1354ac2438595407adfa2e617263399015bc34dda345d78946",
+      "bytes": 15648,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/330.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alexander-lebedev",
+          "status": "published",
+          "field": "modules[6].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/335.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/335.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/335.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "c5780bad847be88695316be0a257cb0ddfd19433c7b280dd361be52e662d808e",
+      "bytes": 18802,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/335.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/roman-yaroslavtsev",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/338.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/338.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/338.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "2c7105fa5683cef64296d67b12a260c9f1ed217eb669e50ec172dcc8521d31fa",
+      "bytes": 17312,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/338.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/sergey-bondar",
+          "status": "published",
+          "field": "modules[7].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/339.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/339.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/339.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "2ce6b8d26c60dd9428973b3e7583b644fa278c58537eb6f3807663de4c5c9efd",
+      "bytes": 18392,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/339.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-golovchenko",
+          "status": "published",
+          "field": "modules[6].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/340.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/340.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/340.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "f399ac4dc6b568aa7deda400e7dcdbcb30cdcdf88a9b4f248d43e7255f8aa8fc",
+      "bytes": 18008,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/340.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/evgeniya-polkovnikova",
+          "status": "published",
+          "field": "modules[7].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/342.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/342.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/342.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "43d6dc872eb0f60260d8b2910d6217088b6deed17a76c9815935e32f6fb5d283",
+      "bytes": 18776,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/342.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alena-ponomareva",
+          "status": "published",
+          "field": "modules[6].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/343.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/343.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/343.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "640da53e139452d78427163b6ad0555cbebbcb027a92e2f826cc427d14ae7e77",
+      "bytes": 16775,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/343.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alana-chochieva",
+          "status": "published",
+          "field": "modules[6].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/347.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/347.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/347.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "aa1b5c160c2aad0e810d92a0810f4721a549b3df412dcf6438e958a3f7878d97",
+      "bytes": 18362,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/347.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/roman-golovin",
+          "status": "published",
+          "field": "modules[7].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/348.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/348.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/348.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "445ef8fecbedfcbc1ad1c6581c6d89a6888f75706190ad215af7667af7c7e3a6",
+      "bytes": 18524,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/348.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/sergey-samokhin",
+          "status": "published",
+          "field": "modules[6].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/349.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/349.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/349.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "3a5903391b1cf93b172a784c4d3de5b4b7b290b0ad055a26fd53cd8d391db241",
+      "bytes": 20970,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/349.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/andrey-zhmikhov",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/350.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/350.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/350.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "b8d38d89b119ffb9efe5576ae44a20eb3685cc9c2ab6af3429f3b40c2ffb7a15",
+      "bytes": 18661,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/350.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/ivan-bragin",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/352.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/352.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/352.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "5e7fafb6d80e47cc9041fd3d381cbd08cc0eeb855929cf5e1a0b34861ec5c8ea",
+      "bytes": 19139,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/352.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/katya-zubova",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/353.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/353.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/353.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "be06e227a3037991fea4b3a09d5533e31ed611d4799fce4d7012591240461ad2",
+      "bytes": 18210,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/353.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/evgeniy-gorodnitskiy",
+          "status": "published",
+          "field": "modules[7].data.events[6].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/364.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/364.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/364.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "c52cb5feaa4f4e8b06cf9588115f2bf6e523151d22ce47d91edfcd22c75e17cf",
+      "bytes": 19152,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/364.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/amir-gurbanov",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/368.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/368.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/368.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4843973ddeb6a2b9d881a40a4caa6dac5b0bf164a377d652c956d86f1d8ce821",
+      "bytes": 18940,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/368.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/anastasia-pekhtereva",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/374.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/374.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/374.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "bccb275b8dfb263e071917f2634f24023805868801abcacd5266e6e794a70282",
+      "bytes": 18315,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/374.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/igor-che",
+          "status": "published",
+          "field": "modules[6].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/377.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/377.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/377.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "8a08f5278b2efd61522f00dab18428e7ee1aea1e8fcd0828d0234eb3d9cb164d",
+      "bytes": 17208,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/377.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-pur",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/385.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/385.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/385.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "c5f4160c56ab03eefe7ba9c831c815e04cfbc8706191c96177ac2455b6299a22",
+      "bytes": 13542,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/385.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/valeria-gavrik",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/386.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/386.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/386.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "96a8689a3090a90da089f1d7fbe7b259c95af5b6db22cb6b1d1b3b9bd5daf2a0",
+      "bytes": 20341,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/386.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/bogdan-lisevskiy",
+          "status": "published",
+          "field": "modules[7].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/387.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/387.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/387.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "53f38a7ee6649c4f7aab05184a9fd33eaa6cefe82c831943552345835730e80c",
+      "bytes": 21110,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/387.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/kseniya-korneva",
+          "status": "published",
+          "field": "modules[7].data.events[8].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/388.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/388.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/388.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4c64239e1aef0412d286be10759d01da89eb5b466e096984a87133e36a2a475d",
+      "bytes": 21157,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/388.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/valera-ravdin",
+          "status": "published",
+          "field": "modules[7].data.events[7].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/389.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/389.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/389.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "1d5f177f595e86eb50d99802af3a655eac8b0a2b85be07042c1a3e3b3276f5bf",
+      "bytes": 20511,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/389.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/mikhail-stognienko",
+          "status": "published",
+          "field": "modules[7].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/390.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/390.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/390.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "416d11c8e8ad0b52e8111e2505a48b4f915014e7cf292abd5131d5ec5954bfbd",
+      "bytes": 21043,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/390.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-bushuev",
+          "status": "published",
+          "field": "modules[7].data.events[6].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/391.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/391.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/391.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "210a6fcb7a59e897a58e21a1b426579cc0ee7a938a3aba5ca05b1440b5abdb18",
+      "bytes": 21258,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/391.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/azamat-musagaliev",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/393.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/393.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/393.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4d105bd92e926a9d90e2a3f69ff495fd6ce56888417604f0f5da3664061e346d",
+      "bytes": 20819,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/393.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-kolchin",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/394.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/394.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/394.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "3d1100343fd65f829587d85cac16c7ad0ee4bda387f47d6ef7e9192d39e31c2a",
+      "bytes": 20642,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/394.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alexey-krivenya",
+          "status": "published",
+          "field": "modules[7].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/395.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/395.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/395.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "f56b5a1f6dbf62148f4acc0629ef81c036cf083cbe48ee86bf97ef216df66a52",
+      "bytes": 20700,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/395.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-shpenkov",
+          "status": "published",
+          "field": "modules[7].data.events[7].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/396.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/396.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/396.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "e9179a475c0318253302298e8c646ca1cc39b7fae12ce49083d78088ffce5626",
+      "bytes": 19376,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/396.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/sergey-milenin",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/397.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/397.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/397.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "eb44a16f967d470319e02ece6b79671f29a87921177d903f26c05994dfa43fb7",
+      "bytes": 19150,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/397.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/nadya-bobrysheva",
+          "status": "published",
+          "field": "modules[7].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/401.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/401.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/401.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "7e9c908a9d1d2c6d0a901d3567433f4f49542102eab5ea82f5ce1e906d23b3e8",
+      "bytes": 19248,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/401.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/igor-pimenov",
+          "status": "published",
+          "field": "modules[7].data.events[7].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/402.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/402.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/402.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "f0c4fd9262f4110dc4a23181752e315c3caf1da9e47491732e1aad95b9dc0fb0",
+      "bytes": 19268,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/402.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alexei-khamin",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/406.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/406.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/406.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "6eadb8bf1093b5fb19b50006de7451057aeaa3545cf3d7326354f9c5715ce328",
+      "bytes": 13369,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/406.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/elena-prachenko",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/408.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/408.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/408.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "a62375a67236da113ff8d76e99475a7a4a452ccb2e168e367e4e54403934ae69",
+      "bytes": 13526,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/408.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alexey-sergeev",
+          "status": "published",
+          "field": "modules[6].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/410.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/410.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/410.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "647e06cac97d4538e358bba34577d0e2211e5d1ab466072a93e1d00cc0e8872f",
+      "bytes": 14353,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/410.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/khatuna-romanovskaya",
+          "status": "published",
+          "field": "modules[7].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/412.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/412.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/412.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d4d4a8d793f9f44a304339ee3cb230c65c3a9e4d12de96fd1d80c5ebf9c7b27e",
+      "bytes": 13807,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/412.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/nikita-ivanov",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/413.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/413.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/413.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "30c155236d534b62e65a357c8c966e5cead64668fec7dd1a9d65895819c173d3",
+      "bytes": 13872,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/413.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/gar-dmitriev",
+          "status": "published",
+          "field": "modules[7].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/414.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/414.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/414.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "81a3a8054613b5462bac1e06fa658c0d770d1729692783a533cace1cd3c80444",
+      "bytes": 16338,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/414.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/yusif-yusifov",
+          "status": "published",
+          "field": "modules[7].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/415.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/415.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/415.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "6e9fc6791d43bbded242ef1ee25391c99455c04d4bc1a1104a2a25065e469cea",
+      "bytes": 16869,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/415.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/rukhin-magerramov",
+          "status": "published",
+          "field": "modules[7].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/421.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/421.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/421.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "e7bcd65f352d2b2dae1416da61c278364464e815bfbf1d8abca9eed834172f44",
+      "bytes": 18962,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/421.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-valeev",
+          "status": "published",
+          "field": "modules[7].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/423.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/423.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/423.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "b7505ea755d6aabc3402d97213a15f8d1c3ba34fad209cda3bafa2c168cdc859",
+      "bytes": 19510,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/423.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/kirill-skvortsov",
+          "status": "published",
+          "field": "modules[6].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/427.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/427.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/427.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "85be1840f571bad08fb7666b0b5971aa1460429bfad415444540b852d4362273",
+      "bytes": 20919,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/427.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/nikolai-arkhipenko",
+          "status": "published",
+          "field": "modules[7].data.events[5].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/428.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/428.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/428.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "642de37cc9e3334f43f6d3b821feabf56d312a5f43bcda7d1a34e490f96bef8b",
+      "bytes": 17395,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/428.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/maria-kameneva",
+          "status": "published",
+          "field": "modules[6].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/429.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/429.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/429.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4f1c94fa58ac2e207c282c849278222514b06b3d8cdf1203507991c00e716d8f",
+      "bytes": 17286,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/429.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/veronika-ratushnaya",
+          "status": "published",
+          "field": "modules[6].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/430.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/430.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/430.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "247824b7c01dbe1a7984d7b77d3d3ebf58066beb10f80b87b8d4d4f336fdb160",
+      "bytes": 17287,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/430.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/evgeniy-nikitin",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/431.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/431.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/431.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "82b3e36a482b80a79baede54d282b7e5098daafd1c7377a101bac41bf90309f9",
+      "bytes": 16875,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/431.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/elena-orlovskaya",
+          "status": "published",
+          "field": "modules[6].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/432.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/432.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/432.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "cd6496275f7fb782be61dd1cbae5fa1f1a941675f57ca3de6a3d3a160401ca52",
+      "bytes": 17022,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/432.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/vasilisa-sokolova",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/444.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/444.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/444.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "afdbd7933c0f8380fc3f6ea5ccd67c3287eb7fe04b533090e0955255cafcc671",
+      "bytes": 18077,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/444.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/roman-pavlov",
+          "status": "published",
+          "field": "modules[7].data.events[1].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/446.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/446.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/446.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "eaa85fa351b47d1edf243d2ecfca0c3dcbaa7d3ce236ee2b52d85586ffd23769",
+      "bytes": 21016,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/446.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/mikhail-bashkatov",
+          "status": "published",
+          "field": "modules[7].data.events[6].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/449.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/449.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/449.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "2288f3b4f6c344121a59f31760e488bd53e0dd316f32d99c9b4ea85f15b91983",
+      "bytes": 18239,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/449.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alya-kokushkina",
+          "status": "published",
+          "field": "modules[7].data.events[6].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/450.f301de605f3015739402da4cc8d6bc08.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/450.f301de605f3015739402da4cc8d6bc08.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/450.f301de605f3015739402da4cc8d6bc08.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "1aa9182208a6bab623d66492936e9bdfb7e3dc1754a8ef8a98d64c88febb7cfe",
+      "bytes": 17360,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/450.f301de605f3015739402da4cc8d6bc08.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/alexei-shalnov",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/453.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/453.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/453.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "9632b73734b8439513a735eab9e0ec8cc434256d8fb53e65a88941ae8354f6da",
+      "bytes": 16910,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/453.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/pavel-malakhov",
+          "status": "published",
+          "field": "modules[7].data.events[4].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/458.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/458.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/458.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "7f1630ed1417291224e64b13b3635e193f0d364d7dd4e6adcbe32833431a2e33",
+      "bytes": 18606,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/458.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/vlad-solomko",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/460.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/460.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/460.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "822e65ae084d04304fd804539ac96f9d464de75d70c5f7217bd65f8b951163d2",
+      "bytes": 18670,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/460.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/ivan-olshanski",
+          "status": "published",
+          "field": "modules[7].data.events[3].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/461.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/461.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/461.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "38a3e5679b7cf3b30414aecaeb8857bc12ccfa8d743556af1c7ac3b015852484",
+      "bytes": 19028,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/461.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/dmitry-arteev",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/462.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/462.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/462.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "117d41b4db6b17cca1ed7bb68c6a0f3efd2478666ce4132ee105b791c922034d",
+      "bytes": 18507,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/462.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/ilya-bebekh",
+          "status": "published",
+          "field": "modules[7].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/474.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/474.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/474.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "8290d666b7b8f6ea35c5d9026234aa922bc41c742e1790740762986dd755b5b4",
+      "bytes": 16741,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/474.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/liza-goncharova",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/assets/components/phpthumbof/cache/476.cef762078330b84e60a604b1e225c573.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/476.cef762078330b84e60a604b1e225c573.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/476.cef762078330b84e60a604b1e225c573.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "aeb2037788291b6b55719fa641656043ce75857d6a546ee514c30df4274f631d",
+      "bytes": 15952,
+      "format": "JPEG",
+      "width": 250,
+      "height": 310,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/476.cef762078330b84e60a604b1e225c573.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/people/kirill-muravkin",
+          "status": "published",
+          "field": "modules[6].data.events[2].description",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/1.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/1.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/1.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "7c2d99ae125ece49dea7917db86dff70413286a04cda8daa238835176dff3d44",
+      "bytes": 15169,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/1.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/10.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/10.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/10.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "18c60b4b2ece358c2c68074ae3ddf6d2f2ab4e581df79cff24350e189b308e53",
+      "bytes": 14828,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/10.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/11.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/11.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/11.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "22ca150b3bafdf1b8ce6e714d01b1248619c78daa4f37a3f427b462632eec93a",
+      "bytes": 15367,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/11.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/12.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/12.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/12.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "eafd60b40b8d35a1ab303e5342c621bad7ebb0b51cb411d1b55788938e051387",
+      "bytes": 17861,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/12.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/13.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/13.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/13.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "dcb1687ba2c7f182e0ba278ded02634b8fc5b3721d3a9bd2e1da1ea41fdeab75",
+      "bytes": 15398,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/13.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/14.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/14.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/14.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "c595d698b459b3679dc5a612c38d171f563123bf8e014b937b43ec67b93d7723",
+      "bytes": 15669,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/14.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/15.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/15.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/15.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "619af713208117d373c4567cee5becf7d3f872ee620f5a778facfe24ff3f8dc8",
+      "bytes": 16767,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/15.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/16.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/16.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/16.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "2fd2056aa47a538198216898ecdd93e7795ef9ca42818d062a456c5607162f99",
+      "bytes": 15595,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/16.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/17.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/17.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/17.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d2268f905099d7d5f1a07fd423fda7d4c8e92db16b471e04ed24c1db1580368b",
+      "bytes": 14861,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/17.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/18.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/18.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/18.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "08a81654b45b549c6840a363f4c20fd9884554aed05cf62044a05e52a654f5e5",
+      "bytes": 15512,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/18.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/19.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/19.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/19.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "8490b17d82af89ae567c69515623f667f631c9afdb2c5175ea4921704656404e",
+      "bytes": 14048,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/19.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/2.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/2.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/2.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "38be50f228b94fb1956be95cd78575bbbd9f61e5213b57d4d6cdcb5dcee3147d",
+      "bytes": 15658,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/2.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/20.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/20.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/20.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "930901083032f6a668f20b0373bf119cdb51234b76174d706e462e17fbd43b44",
+      "bytes": 12487,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/20.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/21.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/21.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/21.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "a24848914b6ace3ba3212608fe61bb25e43d30f62ed0c46a1297fffc1d0e0702",
+      "bytes": 13592,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/21.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/22.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/22.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/22.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d65a0c84424dbc0a7e45619fb65fb9b38e8ee61561deaa35d6190ba3dc51ecf5",
+      "bytes": 15454,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/22.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/23.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/23.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/23.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "67d23d1933d90ae6b51d329ae72e8204382259de9bb91f33509f3bc797daac13",
+      "bytes": 14496,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/23.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/25.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/25.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/25.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "04916df8f1ca65ce47f3a13b74d1f7461bd3e584af9d8b371942d1ed69df3d15",
+      "bytes": 14090,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/25.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/26.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/26.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/26.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0ddfdaae40a3f82cab73ee5ff4649c8ea0bee874ab7478bfb77f299047b070b3",
+      "bytes": 14357,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/26.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/27.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/27.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/27.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "ee7270beea16a72b7e1112d8b461f9303145d5361469b030e125df742032d31a",
+      "bytes": 15120,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/27.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/28.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/28.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/28.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "bb3ff29f7ae4552f2a9015edcca85fa40cb2fe327a5da2b3029cea0d5b426d7d",
+      "bytes": 16832,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/28.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/29.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/29.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/29.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4eeaf14673b8f7f6063ad7ec6da76da6034b2daa4d198329592d7e86972848a5",
+      "bytes": 14555,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/29.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/3.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/3.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/3.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "dd2ec8bdd2a87b3e7cbc11c400a9438ce82352fce4f5e68917aec928854e2422",
+      "bytes": 15238,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/3.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/30.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/30.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/30.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "1d12a6fc890e5a4a289cd050d1f5c40364daa54c3a5abfd2fafa976107fc3538",
+      "bytes": 16975,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/30.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/31.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/31.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/31.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "36f63068c762639ebe988cfa92cd13ddf2b5529519b72225861b96f0b230df35",
+      "bytes": 13824,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/31.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/32.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/32.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/32.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "66471dce5cea2b591c47fbf7cc24d5c5427dbbd6b53d40c4e0596673c22ea734",
+      "bytes": 13090,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/32.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/33.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/33.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/33.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0a59a06e95c5ea833d054bf758760a99169eeae49b5f04ece2a4415e946ff6c7",
+      "bytes": 17079,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/33.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/34.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/34.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/34.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "db1512cb77afcaf91552232b5a19e4c9140d2dd0bae7dabb17c83af03f722e66",
+      "bytes": 13524,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/34.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/35.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/35.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/35.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "b57750666191805befe45a6e06035ea11f3618dbd49436fa5c0e48a0d0ba9f33",
+      "bytes": 15782,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/35.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/36.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/36.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/36.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "94840053261cfb996f95b1883544f3fdf402a006b7cfc7435d2690bdd4120ec6",
+      "bytes": 14527,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/36.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/37.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/37.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/37.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d7077337f4c25547ad7f71e0f9b6ecf7a453300a3931edcf726439500940ffd4",
+      "bytes": 16776,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/37.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/38.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/38.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/38.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "ccdb9b4a74175a338a1cdd24b75cf172c71a3b39bbd24516351a9a92ea24c81e",
+      "bytes": 15556,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/38.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/4.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/4.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/4.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0233a4827ce04684a14935b7b42b1a3d6f0503b37ff13e8cf1b98c02a5a46e6b",
+      "bytes": 13508,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/4.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/438.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/438.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/438.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "27f435192b5a84d2af8c10f96f1129518a42a9459f9cb6cdae374b92e0f4224f",
+      "bytes": 16423,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/438.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/439.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/439.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/439.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "77b51437dfc0a857688aab852dad06bb4dd77d51df7af681c499905f95d43975",
+      "bytes": 13913,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/439.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/440.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/440.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/440.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "50ca0411d7b5b4126961a98ae2edc222506bce08712397048a3ba6516dd29a1e",
+      "bytes": 14139,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/440.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/477.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/477.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/477.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d60d351943765220bacfb7f297e957d98aa129188034331ea42684d4dbe97fc1",
+      "bytes": 14535,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/477.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/478.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/478.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/478.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "84a6981c7ce2bab5fdfd51d1d0207175fd32f7953107146758ba3740f1ea82da",
+      "bytes": 13991,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/478.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/479.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/479.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/479.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "e75f44236ff48eb4e38e3b713c8ff6d04dfa485215c14edfa1443a8870273e67",
+      "bytes": 14059,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/479.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/480.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/480.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/480.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "083b9fb2cd1cf611abc34478c4ed1748041d03bfd8086a0c3fab06e22c60e1d1",
+      "bytes": 14617,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/480.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/481.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/481.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/481.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "27d99e831994aa36fb5255f4a62e77c03183a3e16ac1c91ff9ad9f8c8b9239bd",
+      "bytes": 16373,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/481.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/482.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/482.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/482.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4447eb521a4ac9d688dc62a910b9aae9746fe6a62ee695114aba6578fee7c2ac",
+      "bytes": 12751,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/482.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/483.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/483.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/483.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "a86897d1cf83da449a69f2b50b99623b8da5b431aa80e6f349c46cf8c1134be4",
+      "bytes": 13239,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/483.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/484.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/484.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/484.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "785eb30ae7131022d1ef98b514631645746e8d533e6d84b607624fc92db09c8a",
+      "bytes": 13945,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/484.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/485.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/485.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/485.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "518117496d9493ceb41a41a0d6ede2f654b37a7b3da596e3904e48a975f06f5d",
+      "bytes": 12782,
+      "format": "JPEG",
+      "width": 244,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/485.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/5.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/5.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/5.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0110bf95b4b85876c1b98993441057724afa9f9cd44fb0663207cf70f3751ef4",
+      "bytes": 14022,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/5.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/6.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/6.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/6.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "2f74b8420695bb01a1fc26f1de7bcf1bb9f9bde1a555402b704c74d4d13c8c01",
+      "bytes": 15417,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/6.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/7.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/7.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/7.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "4d7acfc37822d5f72e4de02b8113084db5f19c201d5100e9c443f0b71c88d218",
+      "bytes": 15270,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/7.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/77.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/77.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/77.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "1338aa166b5bedb27b7930a583885aac81c7c9b005a2418e63b00dc502bee76e",
+      "bytes": 14587,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/77.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/78.33b5c66682d8bedaa51a0a139bea9e50.png",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/78.33b5c66682d8bedaa51a0a139bea9e50.png",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/78.33b5c66682d8bedaa51a0a139bea9e50.png",
+      "source_status": 200,
+      "source_content_type": "image/png",
+      "sha256": "302a350948919573f47bdfc845f447e1b64b96c94f3efe962408e06fcdfcdd18",
+      "bytes": 100977,
+      "format": "PNG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/78.33b5c66682d8bedaa51a0a139bea9e50.png",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/79.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/79.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/79.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "3d826729b2814b2adf39e790b60b1db1df9b5854cad52cdf24fe9dc811cd92d3",
+      "bytes": 13859,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/79.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/80.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/80.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/80.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0097d1a0192d934552b6ff660e6069fe142c784a6b51f4ef4fd59740895e1397",
+      "bytes": 13910,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/80.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/81.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/81.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/81.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "11ce9b66be7b688c06a72572fab082cf6d65daedd793537a099734869924643f",
+      "bytes": 14119,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/81.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/82.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/82.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/82.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "e24567b4fea734dba4b17fdb47d979d5775865ab7a35fce5acfc0cf3ac029be1",
+      "bytes": 14950,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/82.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/83.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/83.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/83.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "35caee18f21f08fa4ddcca2460b3f769aacacf516a22e3f6a70d704b2d7922aa",
+      "bytes": 13672,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/83.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/84.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/84.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/84.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "349715c2981d53727e678c963e9750aaabbf3c5a1fefd2f9707d640ef8cd5df4",
+      "bytes": 13984,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/84.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/85.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/85.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/85.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "998ef5142522f687c95ed390cf1577d9631a788bfc54a2810aba9cceb86e606c",
+      "bytes": 9693,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/85.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/86.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/86.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/86.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "35131476977ecf81382af44f6803ab72e260092a0d42bd1cc55d904cb0ff56c4",
+      "bytes": 11194,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/86.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/87.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/87.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/87.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "99d8ae17df020b0978100c968fad2c97195b41237b07e98653386e1ea00fcc0d",
+      "bytes": 12923,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/87.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/88.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/88.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/88.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "baec1024246773f24c68e998062d8fac87213ac0856f5e69dd98c8fa5b4bd82f",
+      "bytes": 11728,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/88.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/89.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/89.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/89.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0e1fc7d3cb51c9d3dae08c7d162ce546353a2285119d035492c8bec361d67d2e",
+      "bytes": 14700,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/89.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/9.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/9.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/9.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "f4a822dfc3fc446bf342f1cb824c7858ba3f5f80cd279b6ec240826a30989232",
+      "bytes": 15541,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/9.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/90.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/90.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/90.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "3e4de869e159748407179c4b0df9a14114b12fb3ef99c25055141e15873fc89b",
+      "bytes": 9529,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/90.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/91.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/91.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/91.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "1034478167b0146046a5537bf0f3f47cf2778bd55af0c0160f42ebc148116f6d",
+      "bytes": 13793,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/91.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/92.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/92.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/92.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "47faf3e88382803393741d5635959ce28766ea8bb8de5ecdc0282df438be388e",
+      "bytes": 15671,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/92.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/93.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/93.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/93.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "68beac0fdecb7d668df024cbcf5c26a82822f0388ee33de0bb0b6ca03f40450e",
+      "bytes": 13974,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/93.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/94.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/94.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/94.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "684352699fcbc71d85cf99ef43cfb3d418f466e7d25c13a9715c8b1218ad3b52",
+      "bytes": 14218,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/94.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/95.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/95.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/95.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "39dc6f656c9f2a8aa7dc34af32f1799ddecb1046896a13b90c93b7f3cba87165",
+      "bytes": 15426,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/95.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/96.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/96.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/96.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "d8e7cd1a8e1709b7747ef5efa815cb1f64103b4ed394ed26efc09a379ef84070",
+      "bytes": 12495,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/96.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/97.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/97.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/97.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "dd594589658cc76d7278864c1aec78912574095ab8744b9c2af97d386e6548c5",
+      "bytes": 16328,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/97.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/98.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/98.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/98.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0871025e3b7f2ef35c749359d00cf673ed189332bde568708cbb06770d2f9ea9",
+      "bytes": 15232,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/98.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/components/phpthumbof/cache/99.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "target_url": "/media/imported/assets/components/phpthumbof/cache/99.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/components/phpthumbof/cache/99.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "b2059eb63796fea92fb4a19427bc0a086dd73ba2a9ed644455497d1dbd83222d",
+      "bytes": 14797,
+      "format": "JPEG",
+      "width": 245,
+      "height": 170,
+      "staged": ".cache/r13h/recovery/assets/components/phpthumbof/cache/99.ff13f3022cd8a257382296aadbc58cdb.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/kvn/sharzhi-marka",
+          "status": "published",
+          "field": "modules[6].data.content",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "/media/imported/assets/project_files/img/show/dizel_studio.jpg",
+      "target_url": "/media/imported/assets/project_files/img/show/dizel_studio.jpg",
+      "action": "restore_file_at_existing_url",
+      "source_url": "https://humorpedia.ru/assets/project_files/img/show/dizel_studio.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "abb5c722c1a770967c27550be237456e4edf51fb4b5c8b8d024ff9da5ac5636f",
+      "bytes": 30467,
+      "format": "JPEG",
+      "width": 600,
+      "height": 600,
+      "staged": ".cache/r13h/recovery/assets/project_files/img/show/dizel_studio.jpg",
+      "existing_identical_file": false,
+      "sources": [
+        {
+          "page": "/shows/diesel-studio",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/shows/diesel-studio",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/kvn-team/maximum.jpg",
+      "target_url": "/media/imported/images/kvn-team/maximum.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/kvn-team/maximum.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0209d3727f8b72ff005658af566e1270e11d09888732736dafd0ee89cba17b17",
+      "bytes": 185301,
+      "format": "JPEG",
+      "width": 1000,
+      "height": 653,
+      "staged": ".cache/r13h/recovery/images/kvn-team/maximum.jpg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/vl-kvn/vl-2008",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2008",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2008",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2008",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2009",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2009",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2009",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2009",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/kvn-team/mpei-ol.jpg",
+      "target_url": "/media/imported/images/kvn-team/mpei-ol.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/kvn-team/mpei-ol.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "0ae81f82bcfb7231ec5defaad9fa2312ddebe3b6a9f9209ea75fbd03d9063308",
+      "bytes": 75741,
+      "format": "JPEG",
+      "width": 699,
+      "height": 467,
+      "staged": ".cache/r13h/recovery/images/kvn-team/mpei-ol.jpg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/vl-kvn/vl-2007",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2007",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2007",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2007",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/kvn-team/rudn.jpg",
+      "target_url": "/media/imported/images/kvn-team/rudn.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/kvn-team/rudn.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "70e3cc80bac4418414b3bd89fc8b53371a7f15cfb35867774cf0256fdb1a71c6",
+      "bytes": 62177,
+      "format": "JPEG",
+      "width": 960,
+      "height": 559,
+      "staged": ".cache/r13h/recovery/images/kvn-team/rudn.jpg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/vl-kvn/vl-2006",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2006",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2006",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2006",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/kvn-team/sbornaya-pyatigorska.jpg",
+      "target_url": "/media/imported/images/kvn-team/sbornaya-pyatigorska.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/kvn-team/sbornaya-pyatigorska.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "c14663d5399e96250f6b3ee8bf0bc039fb90c8677f11e5ac2514be2cdde29446",
+      "bytes": 459147,
+      "format": "JPEG",
+      "width": 779,
+      "height": 489,
+      "staged": ".cache/r13h/recovery/images/kvn-team/sbornaya-pyatigorska.jpg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/vl-kvn/vl-2004",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2004",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2004",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2004",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/kvn-team/uegorod.jpg",
+      "target_url": "/media/imported/images/kvn-team/uegorod.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/kvn-team/uegorod.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "a874ca76bde1c3be9f98edd1b66a5fa6fb3a42bff0be940fdcbfd1186d316041",
+      "bytes": 122289,
+      "format": "JPEG",
+      "width": 823,
+      "height": 541,
+      "staged": ".cache/r13h/recovery/images/kvn-team/uegorod.jpg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/vl-kvn/vl-2002",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2002",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2002",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2002",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/kvn-team/utomlennie-solncem.jpg",
+      "target_url": "/media/imported/images/kvn-team/utomlennie-solncem.jpg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/kvn-team/utomlennie-solncem.jpg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "1614884e78139e8128e05b4cd080eee193e448e39dd161a501243dcc4a0b8aa4",
+      "bytes": 183617,
+      "format": "JPEG",
+      "width": 1200,
+      "height": 900,
+      "staged": ".cache/r13h/recovery/images/kvn-team/utomlennie-solncem.jpg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/vl-kvn/vl-2003",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2003",
+          "status": "published",
+          "field": "poster.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2003",
+          "status": "published",
+          "field": "poster.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/vl-kvn/vl-2003",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "original_reference": "https://humorpedia.ru/images/liga-gorodov/porshni.jpeg",
+      "target_url": "/media/imported/images/liga-gorodov/porshni.jpeg",
+      "action": "proposed_exact_reference_replacement",
+      "source_url": "https://humorpedia.ru/images/liga-gorodov/porshni.jpeg",
+      "source_status": 200,
+      "source_content_type": "image/jpeg",
+      "sha256": "e9120103612115c8f970a9e373c0ef68996c8a26223c344265f8b716ed2d4bfe",
+      "bytes": 209369,
+      "format": "JPEG",
+      "width": 1080,
+      "height": 1080,
+      "staged": ".cache/r13h/recovery/images/liga-gorodov/porshni.jpeg",
+      "existing_identical_file": true,
+      "sources": [
+        {
+          "page": "/kvn/teams/porshni",
+          "status": "published",
+          "field": "image",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/teams/porshni",
+          "status": "published",
+          "field": "poster",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/teams/porshni",
+          "status": "published",
+          "field": "logo.thumbnail",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/teams/porshni",
+          "status": "published",
+          "field": "logo.url",
+          "hidden": false
+        },
+        {
+          "page": "/kvn/teams/porshni",
+          "status": "published",
+          "field": "modules[0].data.url",
+          "hidden": false
+        }
+      ]
+    }
+  ],
+  "unresolved": [],
+  "season_posters": "8 unresolved original posters remain governed by R13g; no team-photo substitutions",
+  "approval_scope": "Exact URL replacement on isolated copy; user selected original77 proposal, subsequently verified78th original follows the same stated rule; no main or VPS changes",
+  "copy_application": {
+    "records": 25620,
+    "changed_documents": 79,
+    "changed_fields": 104,
+    "unique_mapping_count": 78,
+    "other_fields_unchanged": true,
+    "source_unchanged": true,
+    "baseline_sha256": "5cf7d1c17a9ae7f3ab01900746cf30b429c3f587b32c06e3cb70a8af4b57ffbf",
+    "patched_sha256": "3b81abc86dd255443950b37dbb2e3ff1c06171d2e319f185a31636471fa59d0b",
+    "evidence": ".cache/r13h/copy/acceptance.json",
+    "scope": "Merged R13g content/media projections, not a full release archive"
+  },
+  "acceptance": {
+    "run_id": "358c7ed0ff8a4dcbaf3a4187024bfaae",
+    "native_http_react_pages": 81,
+    "http_mime_sha_decode_images": 150,
+    "rendered_unique_images": 150,
+    "backend_passed": 1193,
+    "backend_skipped": 16,
+    "main_unchanged": true,
+    "vps_deployed": false
+  }
+}
