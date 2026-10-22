@@ -1,6 +1,5 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { setTimeout: pause } = require('node:timers/promises');
 
 module.exports = async function runEditorSmoke({ context, base, output, status }) {
   const baseUrl = new URL(base);
@@ -24,6 +23,19 @@ module.exports = async function runEditorSmoke({ context, base, output, status }
       const result = await response.json();
       assert.equal(response.status(), 200, route + ': ' + JSON.stringify(result));
       return result;
+    };
+    const keyboardMoveUp = async (handle, activeId, targetId) => {
+      const announcement = text => page.getByRole('status').filter({ hasText: text });
+      await handle.scrollIntoViewIfNeeded();
+      await handle.focus();
+      await handle.press('Space');
+      // The initial collision confirms activation AND measured droppable geometry.
+      // Sending ArrowUp immediately can run before the keyboard sensor is ready.
+      await announcement('Draggable item ' + activeId + ' was moved over droppable area ' + activeId + '.').waitFor();
+      await handle.press('ArrowUp');
+      await announcement('Draggable item ' + activeId + ' was moved over droppable area ' + targetId + '.').waitFor();
+      await handle.press('Space');
+      await announcement('Draggable item ' + activeId + ' was dropped over droppable area ' + targetId).waitFor();
     };
     const save = async route => {
       const response = page.waitForResponse(item => item.request().method() === 'PUT' && item.url().includes('/api' + route));
@@ -60,10 +72,7 @@ module.exports = async function runEditorSmoke({ context, base, output, status }
 
     // Real dnd-kit keyboard sensor and the same serialized order as the pure operation.
     const drag = page.getByRole('button', { name: 'Переместить блок Галерея', exact: true });
-    await drag.focus();
-    await drag.press('Space'); await pause(100);
-    await drag.press('ArrowUp'); await pause(150);
-    await drag.press('Space'); await pause(100);
+    await keyboardMoveUp(drag, beforeModules[galleryIndex].id, beforeModules[galleryIndex - 1].id);
     const movedSave = page.waitForResponse(item => item.request().method() === 'PUT' && item.url().includes('/api/content/people/'));
     await page.getByTestId('save-btn').click();
     assert.equal((await movedSave).status(), 200);
@@ -123,11 +132,7 @@ module.exports = async function runEditorSmoke({ context, base, output, status }
     // Move the source stage behind the destination, then copy its legacy-id game backwards.
     await page.getByRole('button', { name: 'Свернуть стадию R10 Этап', exact: true }).first().click();
     const stageDrag = page.getByRole('button', { name: 'Переместить стадию R10 Другой этап', exact: true });
-    await stageDrag.scrollIntoViewIfNeeded();
-    await stageDrag.focus(); await stageDrag.press('Space');
-    await stageDrag.press('ArrowUp');
-    await page.getByRole('status').filter({ hasText: 'Draggable item stage-1 was moved over droppable area stage-0.' }).waitFor();
-    await stageDrag.press('Space');
+    await keyboardMoveUp(stageDrag, 'stage-1', 'stage-0');
     await save('/competitions/seasons/' + before._id);
     const afterStageDrag = await api(canonicalPath);
     const expectedStageOrder = structuredClone(expected);
@@ -157,10 +162,7 @@ module.exports = async function runEditorSmoke({ context, base, output, status }
     await page.getByRole('menuitem', { name: 'R10 Другой этап', exact: true }).first().click();
     await page.getByRole('button', { name: 'Развернуть стадию R10 Другой этап', exact: true }).click();
     const repeatedCopyDrag = page.getByRole('button', { name: 'Переместить игру R10 Финал (копия)', exact: true }).last();
-    await repeatedCopyDrag.scrollIntoViewIfNeeded();
-    await repeatedCopyDrag.focus(); await repeatedCopyDrag.press('Space'); await repeatedCopyDrag.press('ArrowUp');
-    await page.getByRole('status').filter({ hasText: 'Draggable item game-0-2 was moved over droppable area game-0-1.' }).waitFor();
-    await repeatedCopyDrag.press('Space');
+    await keyboardMoveUp(repeatedCopyDrag, 'game-0-2', 'game-0-1');
     await save('/competitions/seasons/' + before._id);
     const repeated = await api(canonicalPath);
     const freshCopy = repeated.editor_data.stages[0].games[1];
