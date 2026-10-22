@@ -83,16 +83,12 @@ services:
     container_name: humorpedia-frontend
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - WDS_SOCKET_PORT=0
       - REACT_APP_BACKEND_URL=http://localhost:8001
       # Запросы к API идут на тот же origin (127.0.0.1:3000/api), dev-сервер проксирует на backend — устраняет таймауты и ERR_CONNECTION_RESET
       - REACT_APP_USE_API_PROXY=true
       - DOCKER_ENV=true
       # Suppress deprecation warnings and increase memory limit to prevent ENOMEM errors
       - NODE_OPTIONS=--no-deprecation --max-old-space-size=4096
-      # Increase file descriptor limit for watchpack
-      - WATCHPACK_POLLING=true
-      - WATCHPACK_IGNORED=/app/public
     ulimits:
       # Increase file descriptor limit to prevent ENOMEM errors
       nofile:
@@ -101,7 +97,7 @@ services:
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
-      # Exclude public/media from frontend volume to prevent webpack from scanning 3000+ images
+      # Exclude public/media from frontend volume to prevent Vite from scanning 3000+ images
       # The empty directory from Dockerfile will be used instead of real files from host
       # Media files are served by backend (see backend volumes), so frontend doesn't need them
       - frontend_media:/app/public/media
@@ -116,7 +112,7 @@ volumes:
   mongo_data:
   # Isolate node_modules from host mount so deps stay inside container; named for clear docker volume ls
   frontend_node_modules:
-  # Empty volume for frontend public/media to prevent webpack from scanning 3000+ images
+  # Empty volume for frontend public/media to prevent Vite from scanning 3000+ images
   # Media files are served by backend, so frontend doesn't need them
   frontend_media:
   # Docker volume for imported images (migrated from frontend/public/media/imported/images)

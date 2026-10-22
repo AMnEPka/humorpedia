@@ -335,7 +335,7 @@ export default function TeamEditPage() {
             errorMessage = detail;
           } else if (Array.isArray(detail)) {
             // Если это массив ошибок валидации, объединяем их в строку
-            errorMessage = detail.map((e: any) => {
+            errorMessage = detail.map((e) => {
               if (typeof e === 'string') return e;
               if (typeof e === 'object' && e.msg) return e.msg;
               return JSON.stringify(e);

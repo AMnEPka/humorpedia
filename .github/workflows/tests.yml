@@ -90,6 +90,7 @@ jobs:
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
       - run: yarn install --frozen-lockfile
+      - run: yarn test:tooling
       - run: yarn test --watchAll=false --runInBand
         env:
           CI: 'true'

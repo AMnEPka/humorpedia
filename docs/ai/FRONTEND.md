@@ -1,19 +1,23 @@
 # Фронтенд Humorpedia (`frontend/`)
 
-React 19, Create React App через **CRACO** (`craco start|build`), React Router 7, Tailwind 3 + shadcn/ui (`src/components/ui`, конфиг `components.json`), иконки lucide-react, тосты sonner.
+React 19, **Vite8.3.5** (`yarn start|build`), React Router 7, Tailwind 3 + shadcn/ui (`src/components/ui`, конфиг `components.json`), иконки lucide-react, тосты sonner.
 Docker builders и Node jobs CI: **Node24.22.1**, Yarn1.22.22, обязательный lockfile и frozen install. [Приёмка и границы R12a](tasks/r12a-runtime-2026-10-22.md).
 Импорт через алиас `@/` = `src/`. Пакеты — **yarn** (`yarn.lock`). Тесты: `yarn test --watchAll=false --runInBand`
-(Jest/React DOM, также job frontend в CI). Контракт модулей, форматы и специальные владельцы — [MODULE_CONTRACT.md](MODULE_CONTRACT.md).
+(standalone Jest27.5.1/React DOM, также job frontend в CI). Конфигурация — `jest.config.cjs`; исходные тесты сохранены.
+`yarn test:tooling` проверяет настоящий Vite (proxy, SPA, переменные и health recovery); `yarn lint` — прежние явные React Hooks rules.
+`yarn build` сначала запускает эти lint rules; ошибки останавливают сборку, предупреждения останавливают её при `CI=true`.
+HTML entry — `frontend/index.html`, выход сборки — `frontend/build` (или `BUILD_PATH`, каталог очищается как в CRA).
+`@vitejs/plugin-legacy` читает прежний production browserslist; lazy routes остаются отдельными чанками. [Приёмка R12c](tasks/r12c-vite-2026-10-22.md). Контракт модулей, форматы и специальные владельцы — [MODULE_CONTRACT.md](MODULE_CONTRACT.md).
 
 ## Структура `src/`
 
 ```
-index.js / index.css / App.css
-App.js                         BrowserRouter → AuthProvider → ScrollRestoration → AppRoutes (все маршруты)
+index.jsx / index.css / App.css
+App.jsx                         BrowserRouter → AuthProvider → ScrollRestoration → AppRoutes (все маршруты)
 lib/utils.js                   cn() (clsx + tailwind-merge)
 hooks/use-toast.js             shadcn toast
 utils/
-  pageTitle.js                 usePageTitle / buildPageTitle (обёртка <WithTitle> в App.js)
+  pageTitle.js                 usePageTitle / buildPageTitle (обёртка <WithTitle> в App.jsx)
   number.js                    formatDecimalTrim, roundTo (баллы КВН)
   team.js                      cleanTeamName
   media.js                     URL медиа, personPhotoUrl/teamLogoUrl/contentImageUrl, стабильный выбор одной из 4 фирменных заглушек, orderedFacts
@@ -63,7 +67,7 @@ public/                        ПУБЛИЧНЫЙ САЙТ
     SearchPage, TagSearchPage, ContactsPage, PolicyPage
 
 admin/                         АДМИНКА
-  hooks/useAuth.js             AuthProvider/useAuth: user из localStorage (admin_user), проверка /auth/me, тихий refresh каждые 6 ч; токен удаляется только при 401/403; STAFF_ROLES, isAdmin/isEditor/isModerator/isStaff
+  hooks/useAuth.jsx             AuthProvider/useAuth: user из localStorage (admin_user), проверка /auth/me, тихий refresh каждые 6 ч; токен удаляется только при 401/403; STAFF_ROLES, isAdmin/isEditor/isModerator/isStaff
   utils/api.js                 axios `api` с Bearer из localStorage.admin_token и refresh-интерсептором (очередь запросов на время refresh);
                                группы: authApi, contentApi, statsApi, usersApi, tagsApi, commentsApi, correctionSuggestionsApi, mediaApi, templatesApi, sectionsApi; getErrorMessage()
   components/
@@ -86,7 +90,7 @@ admin/                         АДМИНКА
                                RelatedNewsSettingsPage (adminOnly: включение, свежесть, лимит и области применения)
 ```
 
-## Маршруты (App.js)
+## Маршруты (App.jsx)
 
 Публичные (внутри `PublicLayout`):
 | Путь | Страница |
@@ -115,12 +119,12 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 ## Как фронт находит бэкенд
 
 Оба API-клиента используют `utils/apiBase.js:getApiBase()`:
-1. `REACT_APP_USE_API_PROXY=true` → `/api` (dev в Docker, прокси CRA → `http://backend:8001`);
+1. `REACT_APP_USE_API_PROXY=true` → `/api` (dev в Docker, прокси Vite → `http://backend:8001`);
 2. иначе `window.__BACKEND_URL__` (ставит `public/config.js` для localhost) → `REACT_APP_BACKEND_URL` → `${protocol}//${hostname}:8001`.
 
 К базе добавляется `/api`; завершающие слеши убираются, заданный префикс пути сохраняется. В админке `API_BASE` остаётся экспортируемой константой.
 
-Картинки: `/media/imported/...`, `/images/...`, `/uploads/...` — отдаёт бэкенд (в dev — через прокси CRA).
+Картинки: `/media/imported/...`, `/images/...`, `/uploads/...` — отдаёт бэкенд (в dev — через прокси Vite).
 Если ожидаемого изображения нет или файл не загрузился, `FittedImage` и функции `utils/media.js` показывают один из
 `/media/imported/images/pattern/{1..4}.jpg`; вариант стабильно выбирается по slug/id страницы.
 `SectionDetailPage` ищет старые URL через `publicApi.lookupRedirect(path)` и общий API-клиент, включая proxy/runtime config. Путь передаётся query-параметром Axios; найденный `new_path` открывается с `replace: true`.
@@ -156,6 +160,8 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 - Все тексты интерфейса на русском.
 - Статус иностранного агента задаётся переключателем в `PersonEditPage`; звёздочку и поясняющий блок в HTML вручную не добавлять.
 - HTML из БД выводить только через `sanitizeHTML` (DOMPurify).
-- Заголовок вкладки — через `<WithTitle title="...">` в App.js или `usePageTitle`.
+- Заголовок вкладки — через `<WithTitle title="...">` в App.jsx или `usePageTitle`.
 - В Docker (`DOCKER_ENV=true`) изменения `frontend/src` отслеживаются polling-наблюдателем раз в секунду; тяжёлые каталоги и медиа исключены, HMR/live reload включены. После смены ветки или зависимостей запускать корневой `scripts/dev-sync.ps1`.
-- `plugins/health-check` подключается только при `ENABLE_HEALTH_CHECK=true`; старый неиспользуемый `plugins/visual-edits` удалён.
+- `plugins/health-check/vite-health-plugin.mjs` подключается только при `ENABLE_HEALTH_CHECK=true` в dev. Прежние шесть URL и HTTP-статусы сохранены; JSON содержит native Vite transforms/errors вместо Webpack compile/warnings/memory. Ready означает listening + наблюдённая трансформация + отсутствие известных ошибок, а не полную компиляцию графа. [Контракт](tasks/r12c-vite-2026-10-22.md#диагностика-dev).
+- Только используемые `REACT_APP_BACKEND_URL` и `REACT_APP_USE_API_PROXY` сохраняют прежние имена через Vite define; весь server env в клиент не передаётся. Стандартные публичные `VITE_*` также подчиняются правилам Vite.
+- Docker включает polling 1000 мс; native Windows использует файловые события. HMR `/ws` берёт hostname/port текущей страницы; явный `WDS_SOCKET_PORT>0` поддержан как совместимый override.

@@ -7,7 +7,7 @@
 
 ```
 Браузер
-  │  SPA (React 19, CRA/CRACO)
+  │  SPA (React 19, Vite)
   │  dev: :3000 → прокси /api /media /images /uploads → backend:8001
   │  cloud-шаблон: nginx (статика билда) :3000→80; API по REACT_APP_BACKEND_URL (вшит в билд)
   ▼
@@ -142,7 +142,9 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │       └── fix_mongo_user.py          пересоздание пользователя Mongo
 │
 ├── frontend/                     см. FRONTEND.md
-│   ├── craco.config.js           алиас @, прокси dev-сервера, polling/HMR в Docker с исключением тяжёлых каталогов, health-check плагин (ENABLE_HEALTH_CHECK)
+│   ├── vite.config.mjs           алиас @, четыре dev proxy, polling/HMR, legacy chunks и опциональная диагностика
+│   ├── index.html                 вход Vite; public/config.js загружается до src/index.jsx
+│   ├── jest.config.cjs            standalone Jest27; scripts/build.mjs — hooks lint gate + Vite build
 │   ├── nginx.conf                SPA fallback, кэш статики 1y, no-store для index.html и config.js
 │   ├── public/config.js          window.__BACKEND_URL__ = http://localhost:8001 для localhost
 │   ├── plugins/health-check/     опциональный health-check для dev-сервера (`ENABLE_HEALTH_CHECK=true`)
@@ -193,7 +195,7 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 - `images_volume` → `/app/images` → URL `/images/*`
 - `imported_images_volume` → `/app/media/imported/images` → URL `/media/imported/images/*` (server.py монтирует `/app/media`, запасной путь — `/app/frontend/public/media`). При старте четыре фирменных заглушки копируются из `backups/images/pattern/` в `pattern/` этого volume.
   Наполнение: папка `images/` старого сайта копируется в корень volume (`images/people/x.jpg` → URL `/media/imported/images/people/x.jpg`). Источники на машине владельца: `backups/images` (сентябрь 2026, 2359 файлов) и более полная `Downloads/images` (декабрь 2025, 3116 файлов; общие файлы совпадают побайтно) — залиты обе, 3128 файлов.
-- `frontend_node_modules`, `frontend_media` (пустой, чтобы webpack не сканировал 3000+ картинок)
+- `frontend_node_modules`, `frontend_media` (пустой, чтобы dev watcher не сканировал 3000+ картинок)
 - prod: `uploads_data`, `backups_data`
 
 ## 5. Типовые потоки

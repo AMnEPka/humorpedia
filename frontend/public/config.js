@@ -1,7 +1,7 @@
 // Backend URL: use REACT_APP_BACKEND_URL (injected at build time) when available.
 // Fallback to deriving from current page (host:8001) for local dev only.
 (function() {
-  // REACT_APP_BACKEND_URL is embedded by CRA at build time via process.env.
+  // REACT_APP_BACKEND_URL is embedded by the bundler at build time via process.env.
   // We do NOT override it here — api.js reads it directly from process.env.
   // This config.js only sets __BACKEND_URL__ as a last-resort fallback for localhost.
   if (typeof window.__BACKEND_URL__ === 'undefined') {

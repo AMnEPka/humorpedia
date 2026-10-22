@@ -23,7 +23,8 @@
 | [docs/ai/tasks/r8-canonical-seasons-2026-10-21.md](docs/ai/tasks/r8-canonical-seasons-2026-10-21.md) | R8: сверка сезонов на копии, единый путь записи, проекции и совместимость старого редактора |
 | [docs/ai/tasks/r9-public-rendering-2026-10-21.md](docs/ai/tasks/r9-public-rendering-2026-10-21.md) | R9: единый выбор модулей, общий текстовый каркас, загрузка и навигация TOC в preview; приёмка 390/1120 |
 | [docs/ai/tasks/r10-editor-decomposition-2026-10-21.md](docs/ai/tasks/r10-editor-decomposition-2026-10-21.md) | R10: операции и формы редакторов модулей/сезонов, сохранение JSON, браузерная приёмка; коммит 7ad0577, GitHub CI success |
-| [docs/ai/tasks/r12b-pymongo-async-2026-10-22.md](docs/ai/tasks/r12b-pymongo-async-2026-10-22.md) | R12b: native PyMongo Async, async close/aggregate; приёмка завершена, 1107 backend + 2 readiness; без коммита |
+| [docs/ai/tasks/r12b-pymongo-async-2026-10-22.md](docs/ai/tasks/r12b-pymongo-async-2026-10-22.md) | R12b: native PyMongo Async, async close/aggregate; коммит f97d796, GitHub CI success; 1107 backend + 2 readiness |
+| [docs/ai/tasks/r12c-vite-2026-10-22.md](docs/ai/tasks/r12c-vite-2026-10-22.md) | R12c: Vite, standalone Jest, proxy/runtime config, Windows/Docker HMR; приёмка завершена, публикация поручена 22.10 |
 | [docs/ai/tasks/r12a-runtime-2026-10-22.md](docs/ai/tasks/r12a-runtime-2026-10-22.md) | R12a: Node24, Gunicorn pin, signed Mongo tools; коммит 2ea75f6, GitHub CI success; полный dev-sync после интеграции |
 | [docs/ai/tasks/r11-performance-2026-10-21.md](docs/ai/tasks/r11-performance-2026-10-21.md) | R11: read-only замеры на копии, соседние сезоны и индексы; коммит 857508f; приёмка p95 с контрольным разбросом, CI success после smoke fix 8aa370d |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |
@@ -42,7 +43,7 @@
 ## Стек
 
 - **Backend**: Python 3.11, FastAPI 0.110, PyMongo Async (MongoDB), Pydantic v2, PyJWT + bcrypt, slowapi, cachetools. Точка входа `backend/server.py`.
-- **Frontend**: React 19 + CRA через CRACO, React Router 7, Tailwind + shadcn/ui (Radix), TipTap/react-quill (редакторы), dnd-kit, axios. Алиас `@` → `frontend/src`. Пакетный менеджер — **yarn**.
+- **Frontend**: React 19 + Vite 8.3.5, React Router 7, Tailwind + shadcn/ui (Radix), TipTap/react-quill (редакторы), dnd-kit, axios. Алиас `@` → `frontend/src`. Пакетный менеджер — **yarn**.
 - **БД**: локальный Compose с MongoDB 8.0.32 и отдельная копия на тестовом VPS (04.10.2026); Mongo не опубликована наружу. База `humorpedia`: отдельная коллекция на каждый тип контента (`people`, `teams`, `kvn`, ...), документы с UUID-строкой в `_id`. Локальная и VPS-БД не синхронизируются автоматически.
 - **Инфра**: `docker-compose.yml` (локальный стенд, mongo с auth, backend reload + frontend polling/HMR), `docker-compose-cloud.yml` (неиспользуемый общий шаблон); фактический малый VPS использует `scripts/vps-test/compose.yml`: gunicorn ×1, nginx, Mongo8.0.32 с отдельным seccomp-профилем, Docker-web только на loopback. Host nginx открывает `https://77.105.139.231` без общего пароля; Let's Encrypt shortlived IP-сертификат продлевает systemd timer. Старый хостинг/DNS/почта не переключены.
 
@@ -55,7 +56,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\dev-finish.ps1 -PullRequest <
 docker compose up -d               # повторный запуск уже синхронизированного dev-стека
 ```
 - **Local-first обязателен**: hooks в основной папке после переключения/локального merge вызывают `scripts/dev-sync.ps1 -Auto`; при отсутствии/ошибке hooks основной агент выполняет полный sync до редактирования. После удалённого merge PR обязательно вызвать `scripts/dev-finish.ps1`. Синхронизация проверяет реальные mounts и :8001/:3000, а образы и `frontend_node_modules` обновляет при изменении входных файлов. Дополнительные worktree не управляют стендом. Подробные правила — [AGENTS.md](AGENTS.md), команды — [DOCKER_DEV.md](DOCKER_DEV.md).
-- В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси CRA (`REACT_APP_USE_API_PROXY=true`, см. `frontend/craco.config.js`). Python-код автоматически перезапускает Uvicorn, изменения `frontend/src` пересобираются polling-наблюдателем с HMR. После правок зависимостей, Dockerfile или Compose повторить полный `dev-sync.ps1`.
+- В dev фронт ходит на `/api`, `/media`, `/images`, `/uploads` через прокси Vite (`REACT_APP_USE_API_PROXY=true`, см. `frontend/vite.config.mjs`). Python-код автоматически перезапускает Uvicorn, изменения `frontend/src` пересобираются polling-наблюдателем с HMR. После правок зависимостей, Dockerfile или Compose повторить полный `dev-sync.ps1`.
 - Swagger: http://localhost:8001/docs.
 - При старте бэкенд создаёт индексы (каждый независимо), первого админа из `ADMIN_EMAIL`/`ADMIN_PASSWORD` (только если админов в БД нет; вручную — `python init_admin.py --email … [--reset]`) и запускает батч-счётчик просмотров. `backend/start.sh` перед стартом зовёт `scripts/restore_backup.py` (восстанавливает БД из бэкапа, если она пустая).
 - Переменные окружения — шаблон `.env.example` (в корне; `.env` не коммитится). Прод (`ENVIRONMENT=production`) не стартует без `JWT_SECRET` ≥32 символов; compose-cloud требует `MONGO_INITDB_ROOT_PASSWORD`.
@@ -76,9 +77,9 @@ backend/
   tests/              pytest: test_auth_guards.py обходит все маршруты (запись без токена → 401/403)
   scripts/            разовые фиксы/миграции данных (запускать внутри контейнера backend)
 frontend/src/
-  App.js              все маршруты; публичные страницы lazy, админка lazy отдельным чанком
+  App.jsx              все маршруты; публичные страницы lazy, админка lazy отдельным чанком
   public/             публичный сайт (pages, components, utils/api.js → publicApi)
-  admin/              админка /admin/* (pages, components, hooks/useAuth.js, utils/api.js с refresh-интерсептором)
+  admin/              админка /admin/* (pages, components, hooks/useAuth.jsx, utils/api.js с refresh-интерсептором)
   components/ui/      shadcn/ui — не редактировать без нужды
 migration/            импорт из MODX-дампа (people, kvn, shows), парсеры HTML, JSON-маппинги
 content/              markdown-тексты страниц КВН/лиг + скрипт update_kvn_pages.py (заливка через API)

@@ -2,7 +2,7 @@
 
 Энциклопедия российского юмора и КВН: люди, команды, лиги и сезоны КВН, шоу, статьи, новости, квизы.
 
-**Стек:** FastAPI + MongoDB (Motor) · React 19 (CRA/CRACO) + Tailwind/shadcn · Docker Compose.
+**Стек:** FastAPI + MongoDB (PyMongo Async) · React 19 (Vite) + Tailwind/shadcn · Docker Compose.
 
 ## Быстрый старт (разработка)
 

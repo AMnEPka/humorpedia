@@ -7,7 +7,7 @@ RUN yarn install --frozen-lockfile
 
 COPY . /app
 
-# Create empty public/media directory to prevent webpack from scanning 3000+ images
+# Create empty public/media directory to prevent Vite from scanning 3000+ images
 # Media files are served by backend, so frontend doesn't need them in its filesystem
 RUN mkdir -p /app/public/media && touch /app/public/media/.gitkeep
 
