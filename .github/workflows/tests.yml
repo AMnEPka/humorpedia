@@ -49,6 +49,7 @@ jobs:
       READINESS_INTEGRATION: '1'
       DATABASE_INTEGRATION: '1'
       PERFORMANCE_INTEGRATION: '1'
+      HTML_PILOT_INTEGRATION: '1'
     defaults:
       run:
         working-directory: backend
@@ -69,7 +70,8 @@ jobs:
           pytest -q tests/test_page_package_import.py tests/test_page_package_concurrency.py
           tests/test_page_package_recovery.py tests/test_workflow_recovery_integration.py
           tests/test_season_write_integration.py tests/test_readiness_integration.py
-          tests/test_database_integration.py tests/test_performance_indexes.py -rs
+          tests/test_database_integration.py tests/test_performance_indexes.py
+          tests/test_html_pilot_integration.py -rs
       - run: python -m unittest discover -s ../scripts/vps-test -p test_restore_files.py
       - name: Remove disposable MongoDB
         if: always()

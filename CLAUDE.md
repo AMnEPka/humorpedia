@@ -24,7 +24,9 @@
 | [docs/ai/tasks/r9-public-rendering-2026-10-21.md](docs/ai/tasks/r9-public-rendering-2026-10-21.md) | R9: единый выбор модулей, общий текстовый каркас, загрузка и навигация TOC в preview; приёмка 390/1120 |
 | [docs/ai/tasks/r10-editor-decomposition-2026-10-21.md](docs/ai/tasks/r10-editor-decomposition-2026-10-21.md) | R10: операции и формы редакторов модулей/сезонов, сохранение JSON, браузерная приёмка; коммит 7ad0577, GitHub CI success |
 | [docs/ai/tasks/r12b-pymongo-async-2026-10-22.md](docs/ai/tasks/r12b-pymongo-async-2026-10-22.md) | R12b: native PyMongo Async, async close/aggregate; коммит f97d796, GitHub CI success; 1107 backend + 2 readiness |
-| [docs/ai/tasks/r12c-vite-2026-10-22.md](docs/ai/tasks/r12c-vite-2026-10-22.md) | R12c: Vite, standalone Jest, proxy/runtime config, Windows/Docker HMR; приёмка завершена, публикация поручена 22.10 |
+| [docs/ai/tasks/r12c-vite-2026-10-22.md](docs/ai/tasks/r12c-vite-2026-10-22.md) | R12c: Vite, standalone Jest, proxy/runtime config, Windows/Docker HMR; коммит 893b57e, GitHub CI success; полный dev-sync после интеграции |
+| [docs/ai/tasks/r13a-search-metadata-2026-10-22.md](docs/ai/tasks/r13a-search-metadata-2026-10-22.md) | R13a: утверждённый контракт индексации/превью, origin humorpedia.ru, raw HTML baseline |
+| [docs/ai/tasks/r13b-fastapi-html-pilot-plan-2026-10-22.md](docs/ai/tasks/r13b-fastapi-html-pilot-plan-2026-10-22.md) | R13b: изолированный people/articles HTML-пилот принят; metadata/JS-off/parity/no-write/restart, 1157 backend + 2 readiness, p95/RSS; без production wiring |
 | [docs/ai/tasks/r12a-runtime-2026-10-22.md](docs/ai/tasks/r12a-runtime-2026-10-22.md) | R12a: Node24, Gunicorn pin, signed Mongo tools; коммит 2ea75f6, GitHub CI success; полный dev-sync после интеграции |
 | [docs/ai/tasks/r11-performance-2026-10-21.md](docs/ai/tasks/r11-performance-2026-10-21.md) | R11: read-only замеры на копии, соседние сезоны и индексы; коммит 857508f; приёмка p95 с контрольным разбросом, CI success после smoke fix 8aa370d |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |

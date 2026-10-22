@@ -1,0 +1,170 @@
+{
+  "people": [
+    {
+      "_id": "person-alpha",
+      "title": "Альфа",
+      "slug": "alpha",
+      "status": "published",
+      "old_urls": [
+        "/old/alpha.html",
+        "/people/alpha-old.html"
+      ],
+      "seo": {
+        "meta_title": "Альфа — карточка",
+        "meta_description": "Описание Альфы"
+      },
+      "modules": [
+        {
+          "type": "text_block",
+          "order": 1,
+          "data": {
+            "title": "Биография",
+            "content": "<p>Основной текст Альфы. <a href=\"/people/beta\">Бета</a></p>"
+          }
+        },
+        {
+          "type": "quote",
+          "order": 1,
+          "data": {
+            "text": "Цитата",
+            "author": "Автор"
+          }
+        },
+        {
+          "type": "timeline",
+          "order": 2,
+          "data": {
+            "title": "История",
+            "events": [
+              {
+                "year": "2020",
+                "title": "Начало",
+                "description": "<p>Первое событие</p>"
+              }
+            ]
+          }
+        },
+        {
+          "type": "text_block",
+          "visible": false,
+          "data": {
+            "content": "HIDDEN_SECRET"
+          }
+        },
+        {
+          "type": "facts_table",
+          "data": {
+            "content": "SIDEBAR_SECRET"
+          }
+        }
+      ]
+    },
+    {
+      "_id": "person-beta",
+      "title": "Бета",
+      "slug": "beta",
+      "status": "published",
+      "foreign_agent": true,
+      "modules": [
+        {
+          "type": "text_block",
+          "data": {
+            "content": "<p>Текст Беты</p>"
+          }
+        }
+      ]
+    },
+    {
+      "_id": "person-draft",
+      "title": "Черновик",
+      "slug": "draft",
+      "status": "draft",
+      "modules": []
+    },
+    {
+      "_id": "person-missing",
+      "title": "Legacy без статуса",
+      "slug": "missing",
+      "modules": []
+    },
+    {
+      "_id": "person-archived",
+      "title": "Архивный секрет",
+      "slug": "archived",
+      "status": "archived",
+      "old_urls": [
+        "/old/archived.html"
+      ],
+      "modules": []
+    },
+    {
+      "_id": "person-private",
+      "title": "PRIVATE_SECRET",
+      "slug": "private",
+      "status": "private",
+      "old_urls": [
+        "/old/private.html"
+      ],
+      "modules": []
+    }
+  ],
+  "articles": [
+    {
+      "_id": "article-story",
+      "title": "История",
+      "slug": "story",
+      "status": "published",
+      "excerpt": "Краткое описание",
+      "old_urls": [
+        "/old/story.html"
+      ],
+      "modules": [
+        {
+          "type": "text_block",
+          "data": {
+            "title": "Текст",
+            "content": "<p>Статья о <a href=\"/people/beta\">Бете</a>.</p><script>SCRIPT_SECRET</script><a href=\"javascript:alert(1)\">Ссылка без адреса</a>"
+          }
+        }
+      ]
+    },
+    {
+      "_id": "article-legacy",
+      "title": "Старая статья",
+      "slug": "legacy",
+      "status": "published",
+      "modules": [],
+      "content": "<p>Legacy text <a href=\"/people/beta\">Бета</a></p>"
+    },
+    {
+      "_id": "article-hidden",
+      "title": "Скрытые модули",
+      "slug": "hidden-only",
+      "status": "published",
+      "modules": [
+        {
+          "type": "text_block",
+          "visible": false,
+          "data": {
+            "content": "HIDDEN_SECRET"
+          }
+        }
+      ],
+      "content": "FALLBACK_SECRET"
+    },
+    {
+      "_id": "article-notice",
+      "title": "Старая пометка",
+      "slug": "legacy-notice",
+      "status": "published",
+      "modules": [
+        {
+          "type": "text_block",
+          "data": {
+            "content": "<p><a href=\"/people/beta\">Бета</a></p><p>* — признан в РФ иностранным агентом.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
