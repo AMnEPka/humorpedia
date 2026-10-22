@@ -53,8 +53,8 @@ Middleware (от внешнего к внутреннему): CORS (`CORS_ORIGIN
 │   ├── server.py                 приложение, индексы, первый админ из env, middleware, /api/stats, /api/random/{type}, /api/cache/stats|flush, /api/views/flush
 │   ├── scripts/profile_api.py    R11: read-only GET замеры отдельной UUID-копии без lifespan; latency/CPU/RSS/explain
 │   ├── start.sh                  entrypoint: restore_backup.py → exec CMD
-│   ├── Dockerfile                python:3.11-slim + mongodb-database-tools + mongosh; ENTRYPOINT чинит CRLF
-│   ├── Dockerfile-cloud          без mongo tools, gunicorn
+│   ├── Dockerfile                python:3.11-slim-bookworm + signed Mongo8 repository (database tools/mongosh); ENTRYPOINT чинит CRLF
+│   ├── Dockerfile-cloud          Bookworm без mongo tools, gunicorn26.2.0 (UvicornWorker)
 │   ├── requirements.txt          прямые runtime-зависимости (pinned); requirements-dev.txt — pytest, включён только в локальный dev-образ
 │   ├── init_admin.py             CLI: создать админа / сбросить пароль (--email, --username, --reset; пароль из ADMIN_PASSWORD или ввод)
 │   ├── link_cities.py            cron-скрипт: обновить команды городов, не меняя редакционный список людей

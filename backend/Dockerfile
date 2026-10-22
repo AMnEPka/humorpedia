@@ -1,18 +1,17 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
 # System deps (optional but helps some wheels) + MongoDB tools + dos2unix
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    wget \
     gnupg \
     curl \
     ca-certificates \
     dos2unix \
-  && wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-6.0.gpg \
-  && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/debian bullseye/mongodb-org/6.0 main" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list \
-  && apt-get update --allow-insecure-repositories && apt-get install -y --allow-unauthenticated --no-install-recommends \
+  && curl -fsSL https://pgp.mongodb.com/server-8.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-8.0.gpg \
+  && echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list \
+  && apt-get update && apt-get install -y --no-install-recommends \
     mongodb-database-tools \
     mongodb-mongosh \
   && rm -rf /var/lib/apt/lists/*

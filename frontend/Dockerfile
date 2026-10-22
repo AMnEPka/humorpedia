@@ -1,9 +1,9 @@
-FROM node:20-slim
+FROM node:24.22.1-bookworm-slim
 
 WORKDIR /app
 
-COPY package.json /app/
-RUN yarn install
+COPY package.json yarn.lock /app/
+RUN yarn install --frozen-lockfile
 
 COPY . /app
 

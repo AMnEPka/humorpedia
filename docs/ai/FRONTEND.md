@@ -1,6 +1,7 @@
 # Фронтенд Humorpedia (`frontend/`)
 
 React 19, Create React App через **CRACO** (`craco start|build`), React Router 7, Tailwind 3 + shadcn/ui (`src/components/ui`, конфиг `components.json`), иконки lucide-react, тосты sonner.
+Docker builders и Node jobs CI: **Node24.22.1**, Yarn1.22.22, обязательный lockfile и frozen install. [Приёмка и границы R12a](tasks/r12a-runtime-2026-10-22.md).
 Импорт через алиас `@/` = `src/`. Пакеты — **yarn** (`yarn.lock`). Тесты: `yarn test --watchAll=false --runInBand`
 (Jest/React DOM, также job frontend в CI). Контракт модулей, форматы и специальные владельцы — [MODULE_CONTRACT.md](MODULE_CONTRACT.md).
 
