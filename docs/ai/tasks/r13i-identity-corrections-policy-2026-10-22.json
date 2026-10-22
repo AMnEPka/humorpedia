@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "task": "R13i",
+  "approved": true,
+  "approval_scope": "Only derived isolated copy; primary Mongo/media and VPS excluded",
+  "source_sha256": "3b81abc86dd255443950b37dbb2e3ff1c06171d2e319f185a31636471fa59d0b",
+  "source_rows": 25620,
+  "preimages": [
+    {
+      "kind": "kvn",
+      "id": "dd6e3ba7-1234-4bd2-80a3-7e07ada543fc",
+      "sha256": "7a03bd23ec910895a058e8f45114dcb8042f3562c5d48dc041b011f23ee0f1b9"
+    },
+    {
+      "kind": "kvn",
+      "id": {
+        "$oid": "69689b6886d41cb5cb0aa853"
+      },
+      "sha256": "90a4edd2e0ef5506ae2a1349c7f5d3d76d399e74ddaab82f5bec898f8a7deb10"
+    },
+    {
+      "kind": "memberships",
+      "id": "4050fe35-5a2e-5151-9749-8a90933a44d2",
+      "sha256": "f276a69da67d90c4f994431e17f0e0c682124b10c0ea195b856c21a3da26a0ea"
+    },
+    {
+      "kind": "memberships",
+      "id": "93f24933-757f-5fbb-9500-1aaaf347695c",
+      "sha256": "04e24bbc29913d75ed68933401952c491f31de348fb1e895537cc4c8ee9da652"
+    }
+  ],
+  "operations": [
+    {
+      "kind": "kvn",
+      "id": {
+        "$oid": "69689b6886d41cb5cb0aa853"
+      },
+      "action": "set",
+      "field": "old_id",
+      "before": {
+        "$numberInt": "2540"
+      },
+      "after": null
+    },
+    {
+      "kind": "memberships",
+      "id": "4050fe35-5a2e-5151-9749-8a90933a44d2",
+      "action": "existing_api_review_reject",
+      "before_person_id": "59458e72-a706-4d13-8a3e-e4f97368ed7f",
+      "after": {
+        "person_id": null,
+        "candidate_person_id": null,
+        "rejected_person_id": "59458e72-a706-4d13-8a3e-e4f97368ed7f",
+        "person_link_disabled": true,
+        "matched_by": "manual",
+        "link_review_status": "rejected",
+        "source": "manual"
+      },
+      "audit_fields": [
+        "reviewed_by",
+        "reviewed_at",
+        "updated_at"
+      ]
+    }
+  ],
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "full_release_preimage_required": true,
+  "copy_acceptance": {
+    "run_id": "c73a514dfdc44a73b5153ad320fb6dd2",
+    "patched_sha256": "7439abd0b81796875960d270735d3efd1f0acea2738d84dcd61b740862e58aeb",
+    "records": 25620,
+    "changed_documents": 2,
+    "only_approved_changes": true,
+    "api_team_count": 54,
+    "career_memberships_before": 2,
+    "career_memberships_after": 1,
+    "browser_pages": 4,
+    "media_images": 150,
+    "unit_tests_passed": 25,
+    "product_code_changed": false,
+    "primary_unchanged": true,
+    "scope": "Derived projection only; audit actor is a synthetic isolated editor; full release requires fresh complete preimages"
+  }
+}

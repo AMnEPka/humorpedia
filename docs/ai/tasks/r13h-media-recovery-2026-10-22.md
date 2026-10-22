@@ -4,9 +4,9 @@
 
 ## Результат
 
-Пользователь выбрал точные замены URL на изолированной копии. Применены 78 mappings —104 поля в 79 документах.81 затронутая размещением файлов или заменами страница прошла HTTP/React-проверку; все 150 восстановленных изображений — HTTP200/image MIME/SHA256/Chromium decode. Исправлен MIME WebP через `/media`. Исходные snapshots, основная БД и media storage не изменялись. 22.10.2026 пользователь поручил отдельный commit/push R13h с документацией и проверку CI на новом SHA.
+Пользователь выбрал точные замены URL на изолированной копии. Применены 78 mappings —104 поля в 79 документах.81 затронутая размещением файлов или заменами страница прошла HTTP/React-проверку; все 150 восстановленных изображений — HTTP200/image MIME/SHA256/Chromium decode. Исправлен MIME WebP через `/media`. Исходные snapshots, основная БД и media storage не изменялись. 22.10.2026 R13h опубликован отдельным коммитом `7678c4b8dd312e7f7d954948ee802b3a7c8e6fae` в `origin/codex/local-page-builder`. [GitHub39844032265](https://github.com/AMnEPka/humorpedia/actions/runs/39844032265) completed/success на точном SHA: все5 jobs и три browser-сценария success; attempt1. Evidence: `.cache/r13i/r13h-ci-{run,jobs}-final.json`.
 
-R13g уже опубликован отдельным `467c7a6`. [GitHub CI39832700995](https://github.com/AMnEPka/humorpedia/actions/runs/39832700995) completed/success на точном SHA, все 5 jobs и три browser-сценария success. Этот CI относится к R13g; локальная приёмка R13h завершена. Результат CI нового коммита фиксируется отдельно после публикации.
+R13g уже опубликован отдельным `467c7a6`. [GitHub CI39832700995](https://github.com/AMnEPka/humorpedia/actions/runs/39832700995) completed/success на точном SHA, все 5 jobs и три browser-сценария success. Этот предыдущий CI относится к R13g; результат самого R13h приведён выше. Следующий пакет — [R13i](r13i-identity-corrections-2026-10-22.md), исправления идентификаторов на копии после согласования.
 
 ## Согласованное изменение данных
 
