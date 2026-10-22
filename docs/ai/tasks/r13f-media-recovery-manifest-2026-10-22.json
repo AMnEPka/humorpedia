@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "prepared_at": "2026-10-22T17:45:13.029Z",
+  "baseline_commit": "a2eeb8803216db836fc3923ad8ea0ddd6fefa6bd",
+  "strategy": "restore exact original files; do not rewrite documents",
+  "auto_apply": false,
+  "primary_storage_write_authorized": false,
+  "vps_deployment_authorized": false,
+  "source_origin": "https://humorpedia.ru",
+  "assets": [
+    {
+      "page": "/people/anastasia-frolova",
+      "target_url": "/media/imported/images/peoplekvn/anastasia-frolova.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/anastasia-frolova.jpg",
+      "staged_relative": "images/peoplekvn/anastasia-frolova.jpg",
+      "sha256": "93c08e0e1cf23d9e8f9e41cf7858e5116d7fd40aa546c894f4a945b2f9cb2be9",
+      "bytes": 189261,
+      "format": "JPEG",
+      "width": 1541,
+      "height": 1703
+    },
+    {
+      "page": "/people/anna-bolshakova",
+      "target_url": "/media/imported/images/peoplekvn/anna-bolshakova.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/anna-bolshakova.jpg",
+      "staged_relative": "images/peoplekvn/anna-bolshakova.jpg",
+      "sha256": "8635abe1d22d2b5ceaedae5705adf2761c7d77413836696745a8942eb5d98293",
+      "bytes": 109651,
+      "format": "JPEG",
+      "width": 635,
+      "height": 853
+    },
+    {
+      "page": "/people/anna-efanova",
+      "target_url": "/media/imported/images/peoplekvn/anna-efanova.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/anna-efanova.jpg",
+      "staged_relative": "images/peoplekvn/anna-efanova.jpg",
+      "sha256": "e9f7275c0bf04e52f8592c72ab43f6263c1dc0d79d535c8a1862d905681e4472",
+      "bytes": 99249,
+      "format": "JPEG",
+      "width": 752,
+      "height": 1003
+    },
+    {
+      "page": "/people/anna-eremeevskaya",
+      "target_url": "/media/imported/images/peoplekvn/anna-eremeevskaya.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/anna-eremeevskaya.jpg",
+      "staged_relative": "images/peoplekvn/anna-eremeevskaya.jpg",
+      "sha256": "aa0fae8cdd31af37831bf4d316163a346ebfdac33d33b6c458fe994f3f4f38b4",
+      "bytes": 227701,
+      "format": "JPEG",
+      "width": 960,
+      "height": 1280
+    },
+    {
+      "page": "/people/dmitry-arefiev",
+      "target_url": "/media/imported/images/peoplekvn/dmitry-arefiev.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/dmitry-arefiev.jpg",
+      "staged_relative": "images/peoplekvn/dmitry-arefiev.jpg",
+      "sha256": "bd4579c03945fa099831b150d2f0fb43945c6ac9d6265032d95539c9213f7510",
+      "bytes": 150957,
+      "format": "JPEG",
+      "width": 853,
+      "height": 1280
+    },
+    {
+      "page": "/people/farid-gasanov",
+      "target_url": "/media/imported/images/people/om/farid-gasanov.png",
+      "source_url": "https://humorpedia.ru/images/people/om/farid-gasanov.png",
+      "staged_relative": "images/people/om/farid-gasanov.png",
+      "sha256": "98834a5fd6b13e70640dff237dc0ef6da1deb873448faa43df251cb4458134cf",
+      "bytes": 1171176,
+      "format": "PNG",
+      "width": 853,
+      "height": 1280
+    },
+    {
+      "page": "/people/maksim-eremkin",
+      "target_url": "/media/imported/images/peoplekvn/maksim-eremkin.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/maksim-eremkin.jpg",
+      "staged_relative": "images/peoplekvn/maksim-eremkin.jpg",
+      "sha256": "1dcf566bd3cc44c77a290ceaf1c2bc6fc6d1fb258656befbdd09d6861600f7dd",
+      "bytes": 83544,
+      "format": "JPEG",
+      "width": 854,
+      "height": 1280
+    },
+    {
+      "page": "/people/roman-davydov",
+      "target_url": "/media/imported/images/people/roman-davydov.JPG",
+      "source_url": "https://humorpedia.ru/images/people/roman-davydov.JPG",
+      "staged_relative": "images/people/roman-davydov.JPG",
+      "sha256": "0329979c4bb89ab9bde027d89c1757b2594d5743acf565282173077d665d1b5d",
+      "bytes": 146438,
+      "format": "JPEG",
+      "width": 960,
+      "height": 960
+    },
+    {
+      "page": "/people/svetlana-prihodko",
+      "target_url": "/media/imported/images/people/improv-teams/svetlana-prihodko.JPG",
+      "source_url": "https://humorpedia.ru/images/people/improv-teams/svetlana-prihodko.JPG",
+      "staged_relative": "images/people/improv-teams/svetlana-prihodko.JPG",
+      "sha256": "8d9b21a164a3267a869651b8ae32fd360f66e78ef15a2e318dd72ae5803f5fd6",
+      "bytes": 96020,
+      "format": "JPEG",
+      "width": 800,
+      "height": 1200
+    }
+  ],
+  "common_image": {
+    "url": "/share/humorpedia.png",
+    "repo_file": "frontend/public/share/humorpedia.png",
+    "editable_source": "frontend/public/share/humorpedia.svg",
+    "sha256": "90be8dfba3fbd16fe34cb9c3bd88abedf8ee77cccc916cc759201ca9326afab1",
+    "bytes": 29431,
+    "width": 1200,
+    "height": 630
+  },
+  "apply_policy": "Separate approval required. Verify all staging hashes and destination containment; missing-only atomic placement, skip identical existing bytes, conflict on different existing bytes. No Mongo writes."
+}

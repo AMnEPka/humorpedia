@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Humorpedia — humorpedia.ru">
+  <defs><linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2563eb"/><stop offset="1" stop-color="#1e40af"/></linearGradient></defs>
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect x="120" y="225" width="180" height="180" rx="36" fill="url(#brand)"/>
+  <text x="210" y="350" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="100" font-weight="700">H</text>
+  <text x="344" y="315" fill="#111827" font-family="Arial, sans-serif" font-size="90" font-weight="700">Humorpedia</text>
+  <text x="348" y="374" fill="#4b5563" font-family="Arial, sans-serif" font-size="34">humorpedia.ru</text>
+</svg>
