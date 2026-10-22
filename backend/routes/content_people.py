@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
 import re
 from utils.auth import EDITOR_ROLES, get_current_user, require_editor_on_write
-from typing import Optional, Literal
+from typing import Annotated, Optional, Literal
 
 from models.base import ContentStatus
 from models.content import PersonCreate, PersonUpdate
@@ -16,6 +16,7 @@ from services.crud import (
 )
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
+from services.page_response_metadata import attach_page_metadata
 from services.memberships import unlink_person
 from services.catalog_filters import combine_query, person_conditions, people_filter_options
 
@@ -90,7 +91,7 @@ async def search_people(request: Request, q: str = Query(..., min_length=2), lim
 
 
 @router.get("/people/{id_or_slug}", response_model=dict)
-async def get_person(id_or_slug: str, request: Request, raw: bool = Query(False, description="без обработки ссылок (для админки)")):
+async def get_person(id_or_slug: str, request: Request, raw: bool = Query(False, description="без обработки ссылок (для админки)"), include_page_metadata: Annotated[bool, Query(description="Метаданные HTML-пилота")] = False):
     """Get person by ID or slug."""
     user = await get_current_user(request)
     editor = bool(user and user.get("role") in EDITOR_ROLES)
@@ -101,7 +102,7 @@ async def get_person(id_or_slug: str, request: Request, raw: bool = Query(False,
     if not raw:
         await LinkResolver.resolve_document(person)
         await decorate_document(person)
-    return person
+    return attach_page_metadata("people", person, request, enabled=include_page_metadata is True and raw is not True)
 
 
 @router.put("/people/{id}", response_model=dict)

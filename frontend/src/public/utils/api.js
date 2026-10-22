@@ -1,3 +1,4 @@
+import { isHtmlPilotEnabled } from './htmlPilot';
 import axios from 'axios';
 import { getApiBase } from '../../utils/apiBase';
 
@@ -28,7 +29,9 @@ export const publicApi = {
   
   // Articles
   getArticles: (params) => api.get('/content/articles', { params }),
-  getArticle: (slug) => api.get(`/content/articles/${slug}`),
+  getArticle: (slug) => isHtmlPilotEnabled()
+    ? api.get(`/content/articles/${slug}`, { params: { include_page_metadata: 1 } })
+    : api.get(`/content/articles/${slug}`),
   getPopularArticles: (limit = 5) => api.get('/content/articles', { params: { limit, sort: '-rating' } }),
   getRandomArticle: () => api.get('/content/articles/random'),
   getRandomContent: (type, params) => api.get(`/random/${type}`, { params }),
@@ -41,7 +44,9 @@ export const publicApi = {
   
   // People
   getPeople: (params) => api.get('/content/people', { params }),
-  getPerson: (slug) => api.get(`/content/people/${slug}`),
+  getPerson: (slug) => isHtmlPilotEnabled()
+    ? api.get(`/content/people/${slug}`, { params: { include_page_metadata: 1 } })
+    : api.get(`/content/people/${slug}`),
 
   // Турниры, сезоны, составы (перекрёстные ссылки)
   getTeamParticipations: (idOrSlug, games = true) => api.get(`/competitions/teams/${idOrSlug}/participations`, { params: { games } }),

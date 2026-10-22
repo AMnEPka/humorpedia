@@ -6,8 +6,9 @@ from fastapi import FastAPI
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from routes.html_pilot import create_router, error_response
 from utils.database import get_db, close_db
+from services.public_html import render_html_page
 
-def create_app():
+def create_app(*, render_page=render_html_page):
     run_id = os.environ.get("HTML_PILOT_RUN_ID", "")
     name = os.environ.get("DB_NAME", "")
     if (os.environ.get("HTML_PILOT_ENABLED") != "1" or not re.fullmatch(r"[0-9a-f]{32}", run_id)
@@ -32,5 +33,5 @@ def create_app():
         return error_response(error.status_code)
 
     app.include_router(create_router(run_id=run_id, db_name=name,
-                                    indexing_enabled=os.environ.get("HTML_PILOT_INDEXING_ENABLED") == "1"))
+                                    indexing_enabled=os.environ.get("HTML_PILOT_INDEXING_ENABLED") == "1", render_page=render_page))
     return app

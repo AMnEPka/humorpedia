@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { usePageTitle } from '@/utils/pageTitle';
+import { isHtmlPilotEnabled, isHtmlPilotDetail } from './public/utils/htmlPilot';
 import { AuthProvider, useAuth } from './admin/hooks/useAuth';
 import ScrollRestoration from './components/ScrollRestoration';
 
@@ -85,7 +86,8 @@ const MongoAdminPage = React.lazy(() => import('./admin/pages/MongoAdminPage'));
 
 
 function WithTitle({ title, children }) {
-  usePageTitle(title);
+  const { pathname } = useLocation();
+  usePageTitle(title, { enabled: !(isHtmlPilotEnabled() && isHtmlPilotDetail(pathname)) });
   return children;
 }
 

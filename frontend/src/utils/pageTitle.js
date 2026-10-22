@@ -12,9 +12,9 @@ export function buildPageTitle(pageTitle) {
   return `${t} ${SUFFIX}`;
 }
 
-export function usePageTitle(pageTitle) {
+export function usePageTitle(pageTitle, { enabled = true } = {}) {
   useEffect(() => {
-    document.title = buildPageTitle(pageTitle);
-  }, [pageTitle]);
+    if (enabled) document.title = buildPageTitle(pageTitle);
+  }, [pageTitle, enabled]);
 }
 

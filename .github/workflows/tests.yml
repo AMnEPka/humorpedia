@@ -156,6 +156,38 @@ jobs:
           server_pid=$!
           trap 'kill -TERM "$server_pid" 2>/dev/null || true; wait "$server_pid" || true' EXIT
           node scripts/browser-smoke/run.cjs
+      - name: HTML React pilot on an owned UUID database
+        env:
+          HTML_PILOT_ENABLED: '1'
+          HTML_REACT_PILOT_ENABLED: '1'
+          HTML_REACT_BUILD_DIR: ${{ github.workspace }}/frontend/build
+          HTML_REACT_PILOT_ARTIFACT_DIR: ${{ runner.temp }}/html-react-pilot-artifacts
+        run: |
+          export HTML_PILOT_RUN_ID=$(python -c 'import uuid; print(uuid.uuid4().hex)')
+          export DB_NAME="humorpedia_html_pilot_$HTML_PILOT_RUN_ID"
+          export NODE_PATH="$RUNNER_TEMP/browser-tools/node_modules"
+          python scripts/seo/react_pilot_server.py > "$RUNNER_TEMP/html-react-pilot-server.log" 2>&1 &
+          server_pid=$!
+          cleanup() {
+            result=$?
+            trap - EXIT
+            kill -TERM "$server_pid" 2>/dev/null || true
+            wait "$server_pid" || result=1
+            python - <<'PY' || result=1
+          import asyncio, os
+          from pymongo import AsyncMongoClient
+          async def check():
+              client = AsyncMongoClient(os.environ['MONGO_URL'])
+              try:
+                  assert os.environ['DB_NAME'] not in await client.list_database_names(), 'Pilot cleanup failed'
+              finally:
+                  await client.close()
+          asyncio.run(check())
+          PY
+            exit "$result"
+          }
+          trap cleanup EXIT
+          node scripts/seo/check_react_pilot.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -163,6 +195,8 @@ jobs:
           path: |
             ${{ runner.temp }}/browser-smoke-artifacts
             ${{ runner.temp }}/browser-smoke-server.log
+            ${{ runner.temp }}/html-react-pilot-artifacts
+            ${{ runner.temp }}/html-react-pilot-server.log
           retention-days: 3
       - name: Remove disposable MongoDB
         if: always()

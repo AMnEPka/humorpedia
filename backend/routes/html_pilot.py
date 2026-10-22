@@ -14,7 +14,7 @@ def error_response(status):
     return HTMLResponse(f'<!doctype html><html lang="ru"><head><meta name="robots" content="noindex,follow"><title>{text}</title></head><body><h1>{text}</h1></body></html>',
                         status_code=status, headers={"Cache-Control":"no-store","X-Robots-Tag":"noindex,follow"})
 
-def create_router(*, run_id, db_name, indexing_enabled):
+def create_router(*, run_id, db_name, indexing_enabled, render_page=render_html_page):
     router = APIRouter()
     options = dict(site_origin="https://humorpedia.ru", indexing_enabled=indexing_enabled, default_image_url="/media/pilot-share.png")
 
@@ -22,7 +22,7 @@ def create_router(*, run_id, db_name, indexing_enabled):
         headers = {"Cache-Control":"no-store","X-Robots-Tag":page.metadata.robots}
         if redirect:
             return RedirectResponse(page.metadata.canonical_url, status_code=301, headers=headers)
-        return HTMLResponse(render_html_page(page), headers=headers)
+        return HTMLResponse(render_page(page), headers=headers)
 
     async def legacy(request):
         db = await get_db()

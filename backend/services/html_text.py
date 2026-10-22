@@ -81,3 +81,12 @@ def parse_text(value):
 
 def plain_text(value):
     return parse_text(value)[0]
+
+def normalize_person_rich_text(value: str) -> str:
+    """Match the existing person renderer's SQL/JSON escape normalization."""
+    import re
+    if not isinstance(value, str):
+        return ""
+    value = re.sub(r"\\+r\\+n", "\n", value)
+    value = re.sub(r"\\+[rn]", "\n", value)
+    return re.sub(r"""\\+(["'/<>])""", r"\1", value)

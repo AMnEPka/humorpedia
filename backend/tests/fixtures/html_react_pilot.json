@@ -1,0 +1,85 @@
+{
+  "people": [
+    {
+      "_id": "person-legacy",
+      "slug": "legacy-person",
+      "title": "Legacy человек",
+      "status": "published",
+      "modules": [
+        {
+          "type": "text",
+          "data": {
+            "content": "<p>Legacy текст</p>"
+          }
+        },
+        {
+          "type": "timeline",
+          "data": {
+            "period": "1990–2020",
+            "content_html": "<p>Legacy хронология</p>"
+          }
+        }
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "_id": "article-anchors",
+      "slug": "anchors",
+      "title": "Статья с якорем",
+      "status": "published",
+      "seo": {
+        "meta_title": "Мета статьи"
+      },
+      "modules": [
+        {
+          "type": "text_block",
+          "data": {
+            "title": "Начало",
+            "anchor_id": "first",
+            "content": "<p>Текст <a href=\"#second\">вперёд</a></p>"
+          }
+        },
+        {
+          "type": "text_block",
+          "data": {
+            "title": "Второй раздел",
+            "anchor_id": "second",
+            "content": "<p>Цель якоря</p>"
+          }
+        },
+        {
+          "type": "text_block",
+          "data": {
+            "collapsed": true,
+            "content": "<p>Подробный текст</p>"
+          }
+        }
+      ]
+    },
+    {
+      "_id": "article-header",
+      "slug": "header-image",
+      "title": "Статья с обложкой",
+      "status": "published",
+      "modules": [
+        {
+          "type": "image",
+          "order": 0,
+          "data": {
+            "url": "/media/pilot-share.png",
+            "alt": "Обложка пилота"
+          }
+        },
+        {
+          "type": "text_block",
+          "order": 1,
+          "data": {
+            "title": "Текст",
+            "content": "<p>Текст под обложкой</p>"
+          }
+        }
+      ]
+    }
+  ]
+}

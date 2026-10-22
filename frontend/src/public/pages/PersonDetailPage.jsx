@@ -1,5 +1,6 @@
+import { isHtmlPilotEnabled, useHtmlPilotReady, beginPage, isHtmlPilotResultCurrent } from '../utils/htmlPilot';
 import { Fragment, useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { Calendar, MapPin, Share2, ArrowLeft, List, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,6 +91,11 @@ const APPEARANCE_LABELS = { participant: 'Участник', finalist: 'Фина
 
 export default function PersonDetailPage({ preview = false, previewDocument = null, previewRelations = EMPTY_PREVIEW_RELATIONS } = {}) {
   const { slug } = useParams();
+  const { pathname, key: navigationKey } = useLocation();
+  const pilot = isHtmlPilotEnabled() && !preview;
+  const [pilotResult, setPilotResult] = useState(null);
+  useHtmlPilotReady(pilotResult, { preview });
+  const pilotWaiting = pilot && !isHtmlPilotResultCurrent(pilotResult, pathname, navigationKey);
   const [person, setPerson] = useState(previewDocument);
   const [loading, setLoading] = useState(!preview);
   const [error, setError] = useState('');
@@ -97,7 +103,7 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
   const [appearances, setAppearances] = useState([]);
   const [shareMessage, setShareMessage] = useState('');
 
-  usePageTitle(person?.title || (loading ? 'Человек' : (error ? 'Человек не найден' : 'Человек')));
+  usePageTitle(person?.title || (loading ? 'Человек' : (error ? 'Человек не найден' : 'Человек')), { enabled: !pilot });
 
   useEffect(() => {
     if (preview) {
@@ -106,21 +112,28 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
       setError('');
       return undefined;
     }
+    let active = true;
+    const pageToken = pilot ? beginPage(pathname, navigationKey) : null;
     const fetchPerson = async () => {
       setLoading(true);
       setError('');
       setShareMessage('');
       try {
         const res = await publicApi.getPerson(slug);
+        if (pilot && !active) return;
         setPerson(res.data);
+        setPilotResult({ token: pageToken, status: 'ready', metadata: res.data.page_metadata ?? null });
       } catch (err) {
+        if (pilot && !active) return;
         setError('Человек не найден');
+        setPilotResult({ token: pageToken, status: err?.response?.status === 404 ? 'not_found' : 'network_error', metadata: null });
       } finally {
-        setLoading(false);
+        if (!pilot || active) setLoading(false);
       }
     };
     fetchPerson();
-  }, [slug, preview, previewDocument]);
+    return () => { active = false; };
+  }, [slug, preview, previewDocument, pilot, pilot ? pathname : null, pilot ? navigationKey : null]);
 
   useEffect(() => {
     if (preview) {
@@ -163,7 +176,7 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
   const timelineModuleIndex = contentModules.findIndex(module => module.type === 'timeline');
   const careerInsertIndex = timelineModuleIndex === -1 ? contentModules.length : timelineModuleIndex;
 
-  if (loading) return <PageLoading />;
+  if (loading || pilotWaiting) return <PageLoading />;
 
   if (error || !person) {
     return (

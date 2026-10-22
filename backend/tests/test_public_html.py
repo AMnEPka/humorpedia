@@ -84,3 +84,44 @@ def test_pilot_rejects_non_public_status_before_enrichment(monkeypatch, status):
         assert public_html.LinkResolver.resolve_document.await_count == 0
         assert public_html.decorate_document.await_count == 0
     asyncio.run(check())
+
+def test_person_legacy_text_timeline_and_anchors(monkeypatch):
+    async def check():
+        from services.public_html import render_html_page
+        page=await load(monkeypatch,{"slug":"a","title":"А","modules":[
+            module("facts_table",content="SIDE"),
+            module("text_block",title="Раздел",content=r'<p>Строка\n<\/p><p>Вторая</p>'),
+            module("timeline",period="1990–2020",content_html="<p>Legacy timeline</p>"),
+            module("text",content=r'<p>Legacy \"text\"</p>'),
+            module("timeline",title="События",events=[{"year":"2020","description":"A &amp; B"}]),
+        ]})
+        html=render_html_page(page)
+        assert 'id="section-0"' in html and 'id="timeline-1"' in html and 'id="text-2"' in html
+        assert 'id="timeline-3-event-0"' in html
+        body=" ".join(b.heading+" "+b.body_text for b in page.blocks)
+        assert "Строка Вторая" in body and 'Legacy "text"' in body
+        assert "Хронология" in body and "1990–2020" in body and "Legacy timeline" in body
+        assert "A &amp; B" in body
+    asyncio.run(check())
+
+def test_article_explicit_anchor_and_notice(monkeypatch):
+    async def check():
+        from services.public_html import render_html_page
+        document={"slug":"a","title":"Статья","foreign_agent_notice":True,"modules":[
+            module("text_block",title="Раздел Ё",anchor_id='anchor"><script>',content='<p>Текст <a href="#second">далее</a></p>'),
+            module("text_block",title="Другой Раздел",content="<p>Продолжение</p>"),
+            module("text_block",collapsed=True,content="<p>Детали</p>"),
+            module("text",content="ARTICLE_UNSUPPORTED"),
+        ]}
+        page=await load(monkeypatch,document,"articles")
+        html=render_html_page(page)
+        assert 'id="anchor&quot;&gt;&lt;script&gt;"' in html and '<script>' not in html
+        assert 'id="другой-раздел"' in html and "Подробнее" in html
+        assert '<a href="#second">далее</a>' in html
+        assert "ARTICLE_UNSUPPORTED" not in html and page.unsupported_types==("text",)
+        assert html.count("признан в РФ иностранным агентом")==1
+    asyncio.run(check())
+
+def test_person_rich_text_normalization():
+    from services.html_text import normalize_person_rich_text
+    assert normalize_person_rich_text(r'\<p\>A\nB\r\nC \"цитата\"<\/p\>')=='<p>A\nB\nC "цитата"</p>'

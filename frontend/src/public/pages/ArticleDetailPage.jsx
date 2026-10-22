@@ -1,5 +1,6 @@
+import { isHtmlPilotEnabled, useHtmlPilotReady, beginPage, isHtmlPilotResultCurrent } from '../utils/htmlPilot';
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { Loader2, Clock, MessageCircle, Share2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,28 +16,41 @@ import RatingCard from '../components/RatingCard';
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
+  const { pathname, key: navigationKey } = useLocation();
+  const pilot = isHtmlPilotEnabled();
+  const [pilotResult, setPilotResult] = useState(null);
+  useHtmlPilotReady(pilotResult);
+  const pilotWaiting = pilot && !isHtmlPilotResultCurrent(pilotResult, pathname, navigationKey);
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  usePageTitle(article?.title || (loading ? 'Статья' : (error ? 'Статья не найдена' : 'Статья')));
+  usePageTitle(article?.title || (loading ? 'Статья' : (error ? 'Статья не найдена' : 'Статья')), { enabled: !pilot });
 
   useEffect(() => {
+    let active = true;
+    const pageToken = pilot ? beginPage(pathname, navigationKey) : null;
     const fetchArticle = async () => {
       setLoading(true);
+      setError('');
       try {
         const res = await publicApi.getArticle(slug);
+        if (pilot && !active) return;
         setArticle(res.data);
+        setPilotResult({ token: pageToken, status: 'ready', metadata: res.data.page_metadata ?? null });
       } catch (err) {
+        if (pilot && !active) return;
         setError('Статья не найдена');
+        setPilotResult({ token: pageToken, status: err?.response?.status === 404 ? 'not_found' : 'network_error', metadata: null });
       } finally {
-        setLoading(false);
+        if (!pilot || active) setLoading(false);
       }
     };
     fetchArticle();
-  }, [slug]);
+    return () => { active = false; };
+  }, [slug, pilot, pilot ? pathname : null, pilot ? navigationKey : null]);
 
-  if (loading) {
+  if (loading || pilotWaiting) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />

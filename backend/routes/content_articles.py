@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from utils.auth import get_current_user, require_editor_on_write
 from services.content_visibility import editor_can_view_archived
-from typing import Optional, Literal
+from typing import Annotated, Optional, Literal
 
 from models.base import ContentStatus
 from models.content import Article, ArticleCreate, ArticleUpdate
@@ -13,6 +13,7 @@ from services.crud import (
 )
 from services.link_resolver import LinkResolver
 from services.foreign_agent_notices import decorate_document
+from services.page_response_metadata import attach_page_metadata
 
 router = APIRouter(prefix="/content", tags=["articles"], dependencies=[Depends(require_editor_on_write)])
 
@@ -70,14 +71,14 @@ async def list_articles(
 
 
 @router.get("/articles/{id_or_slug}", response_model=dict)
-async def get_article(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)"), request: Request = None):
+async def get_article(id_or_slug: str, raw: bool = Query(False, description="без обработки ссылок и пометок (для админки)"), request: Request = None, include_page_metadata: Annotated[bool, Query(description="Метаданные HTML-пилота")] = False):
     """Get article by ID or slug."""
     editor = await editor_can_view_archived(request, get_current_user)
     article = await get_by_id_or_slug("articles", id_or_slug, "Article not found", editor=editor)
     if not raw:
         await LinkResolver.resolve_document(article)
         await decorate_document(article)
-    return article
+    return attach_page_metadata("articles", article, request, enabled=include_page_metadata is True and raw is not True)
 
 
 @router.put("/articles/{id}", response_model=dict)
