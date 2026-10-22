@@ -93,6 +93,8 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
   const { slug } = useParams();
   const { pathname, key: navigationKey } = useLocation();
   const pilot = isHtmlPilotEnabled() && !preview;
+  const pilotPathname = pilot ? pathname : null;
+  const pilotNavigationKey = pilot ? navigationKey : null;
   const [pilotResult, setPilotResult] = useState(null);
   useHtmlPilotReady(pilotResult, { preview });
   const pilotWaiting = pilot && !isHtmlPilotResultCurrent(pilotResult, pathname, navigationKey);
@@ -113,7 +115,7 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
       return undefined;
     }
     let active = true;
-    const pageToken = pilot ? beginPage(pathname, navigationKey) : null;
+    const pageToken = pilot ? beginPage(pilotPathname, pilotNavigationKey) : null;
     const fetchPerson = async () => {
       setLoading(true);
       setError('');
@@ -133,7 +135,7 @@ export default function PersonDetailPage({ preview = false, previewDocument = nu
     };
     fetchPerson();
     return () => { active = false; };
-  }, [slug, preview, previewDocument, pilot, pilot ? pathname : null, pilot ? navigationKey : null]);
+  }, [slug, preview, previewDocument, pilot, pilotPathname, pilotNavigationKey]);
 
   useEffect(() => {
     if (preview) {

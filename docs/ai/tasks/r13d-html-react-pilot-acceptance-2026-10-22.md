@@ -76,3 +76,12 @@ node scripts/seo/check_react_pilot.cjs
 Primary остаётся чистым `main ca46155a9640d4723c07b9fd1762a6e639563414`. Все3 исходных container IDs/StartedAt/restarts0 совпали с началом; frontend/backend HTTP200/200, Mongo healthy. Временные writers штатно остановлены, owner HTML/browser UUID DB отсутствуют, собственные containers/Mongo/anonymous volumes/network удалены. Снимок R13c и локальные отчётные artifacts сохранены. Изменения импорта24СМИ, рабочие БД/volumes, основная ветка и VPS не затронуты.
 
 Пилот принят локально в заявленном scope. Он не подключён к production serving; следующий выпускной этап требует отдельного плана интеграции, решения по media и проверки dev-sync после интеграции. Автоматического merge/deploy из этой приёмки не следует.
+
+
+## Публикация и строгая CI-сборка
+
+R13d с документацией R13c/R13d опубликован отдельным коммитом `3b6146ffe420afbaa697ae2f2eba607c8b258f6c` в `origin/codex/local-page-builder`; remote ref проверен. [Первый CI39783235689](https://github.com/AMnEPka/humorpedia/actions/runs/39783235689) на этом SHA: backend/mongodb-integration/windows-tools PASS; frontend Jest357 и tooling5 PASS, но строгий build завершился ошибкой из-за6 предупреждений React hooks; зависимый browser-smoke пропущен.
+
+Причина: локальная приёмочная сборка выполнялась без `CI=true`. `frontend/scripts/build.mjs` в этом режиме сообщает предупреждения; CI отклоняет их. В Person/Article effect использовал pathname/navigationKey, а dependencies содержали условные выражения, которые exhaustive-deps не может проверить.
+
+Отдельное исправление выделяет `pilotPathname`/`pilotNavigationKey` и использует те же значения в effect и его dependencies. При выключенном пилоте они остаются null: обычные запросы/preview и защита от запоздавших ответов сохраняются. Правила ESLint и строгость CI не ослаблены. Воспроизведение: `CI=true REACT_APP_USE_API_PROXY=true yarn build` →FAIL6warnings; после исправления полный Jest **357 PASS**, строгий build **PASS**,0warnings,10.83s. Логи `.cache/r13d/ci-strict-red.log` и `ci-strict-green.log`; GitHub CI исправленного коммита проверяется после push, итог фиксируется в следующем проектном контексте.

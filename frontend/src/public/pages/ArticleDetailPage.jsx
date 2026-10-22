@@ -18,6 +18,8 @@ export default function ArticleDetailPage() {
   const { slug } = useParams();
   const { pathname, key: navigationKey } = useLocation();
   const pilot = isHtmlPilotEnabled();
+  const pilotPathname = pilot ? pathname : null;
+  const pilotNavigationKey = pilot ? navigationKey : null;
   const [pilotResult, setPilotResult] = useState(null);
   useHtmlPilotReady(pilotResult);
   const pilotWaiting = pilot && !isHtmlPilotResultCurrent(pilotResult, pathname, navigationKey);
@@ -29,7 +31,7 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     let active = true;
-    const pageToken = pilot ? beginPage(pathname, navigationKey) : null;
+    const pageToken = pilot ? beginPage(pilotPathname, pilotNavigationKey) : null;
     const fetchArticle = async () => {
       setLoading(true);
       setError('');
@@ -48,7 +50,7 @@ export default function ArticleDetailPage() {
     };
     fetchArticle();
     return () => { active = false; };
-  }, [slug, pilot, pilot ? pathname : null, pilot ? navigationKey : null]);
+  }, [slug, pilot, pilotPathname, pilotNavigationKey]);
 
   if (loading || pilotWaiting) {
     return (
