@@ -33,6 +33,23 @@ function runDockerProcess(args,{cwd,timeout=180000,allowFailure=false,spawnProce
   });
  });
 }
+async function waitMongoReady(command,name,{timeout=60000,pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
+ const deadline=Date.now()+timeout;
+ while(Date.now()<deadline){
+  const state=JSON.parse((await command(['inspect','--format','{{json .State}}',name])).output);
+  if(!state.Running){
+   const logs=await command(['logs','--tail','60',name],{allowFailure:true});
+   throw new Error('Mongo exited before readiness (exit '+state.ExitCode+')\n'+logs.output);
+  }
+  const ping=await command(['exec','--user','mongodb','--env','HOME=/tmp',name,
+   'mongosh','--norc','--quiet','mongodb://127.0.0.1:27017/?serverSelectionTimeoutMS=1000',
+   '--eval','quit(db.adminCommand("ping").ok===1?0:1)'],{timeout:10000,allowFailure:true});
+  if(ping.code===0)return;
+  await pause(500);
+ }
+ const logs=await command(['logs','--tail','60',name],{allowFailure:true});
+ throw new Error('Mongo did not become ready within '+timeout+'ms\n'+logs.output);
+}
 async function main(){
  const root=path.resolve(__dirname,'../..');
  const build=path.resolve(process.env.BROWSER_BUILD_DIR||'');
@@ -91,8 +108,12 @@ async function main(){
    await command(['build','--file','Dockerfile.public-html','--target',target+'-release','--build-context','public_html_release='+bundle,...label,'-t',r.images[target],'.'],{timeout:600000});
    images.add(r.images[target]);
   }
+  if((await command(['image','inspect','mcr.microsoft.com/playwright:v1.62.1-noble'],{allowFailure:true})).code!==0){
+   await command(['pull','mcr.microsoft.com/playwright:v1.62.1-noble'],{timeout:600000});
+  }
   await command(['network','create','--internal',...label,r.network]);network=true;
-  await command(['run','-d','--name',r.containers.mongo,...label,'--network',r.network,'--network-alias','mongo','--tmpfs','/data/db:rw,size=768m','--tmpfs','/data/configdb:rw,size=16m','mongo:8.0.32']);created.add(r.containers.mongo);
+  await command(['run','-d','--name',r.containers.mongo,...label,'--network',r.network,'--network-alias','mongo','--security-opt','seccomp='+path.join(root,'scripts/vps-test/seccomp-mongodb.json'),'--tmpfs','/data/db:rw,size=768m','--tmpfs','/data/configdb:rw,size=16m','mongo:8.0.32']);created.add(r.containers.mongo);
+  await waitMongoReady(command,r.containers.mongo);
   const candidates=[...(process.env.NODE_PATH||'').split(path.delimiter),path.join(root,'.cache/browser-tools/node_modules')].filter(Boolean);
   let tools;
   for(const candidate of candidates){try{await fs.access(path.join(candidate,'playwright/package.json'));tools=candidate;break;}catch{}}
@@ -147,5 +168,5 @@ async function main(){
   if(failure)throw primaryError?new AggregateError([primaryError,failure],'Gateway and cleanup failed'):failure;
  }
 }
-module.exports={ownedResources,assertOwned,runDockerProcess};
+module.exports={ownedResources,assertOwned,runDockerProcess,waitMongoReady};
 if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});

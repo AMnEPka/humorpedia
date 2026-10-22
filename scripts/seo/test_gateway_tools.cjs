@@ -23,3 +23,24 @@ test('timeout or signal is failure, never a successful Docker command',async()=>
  };
  await assert.rejects(runDockerProcess(['run'],{timeout:100,spawnProcess:signalled}),/signal/);
 });
+
+test('Mongo startup fails with diagnostics before browser work when the container exited',async()=>{
+ const {waitMongoReady}=require('./run_gateway.cjs');
+ const calls=[];
+ await assert.rejects(waitMongoReady(async args=>{
+  calls.push(args);
+  return args[0]==='inspect'?{code:0,output:'{"Running":false,"ExitCode":14}'}:{code:0,output:'rseq startup failure'};
+ },'owned-mongo'),/rseq startup failure/);
+ assert.deepEqual(calls.map(args=>args[0]),['inspect','logs']);
+});
+test('Mongo startup waits for ping, using a non-data HOME for mongosh',async()=>{
+ const {waitMongoReady}=require('./run_gateway.cjs');
+ const calls=[];let probes=0;
+ await waitMongoReady(async args=>{
+  calls.push(args);
+  return args[0]==='inspect'?{code:0,output:'{"Running":true}'}:{code:++probes===1?1:0,output:''};
+ },'owned-mongo',{pause:async()=>{}});
+ assert.equal(probes,2);
+ const probe=calls.find(args=>args[0]==='exec');
+ assert(probe.includes('HOME=/tmp'));assert(probe.includes('mongodb'));
+});
