@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "approved_at": "2026-10-22",
+  "scope": "Future content transfer package only",
+  "source_database_must_remain_unchanged": true,
+  "mode": "exclude_exact_ids",
+  "exclusions": [
+    {
+      "collection": "news",
+      "ids": [
+        "demo-related-news-01",
+        "demo-related-news-02",
+        "demo-related-news-03",
+        "demo-related-news-04",
+        "demo-related-news-05",
+        "demo-related-news-06",
+        "demo-related-news-07",
+        "demo-related-news-08",
+        "demo-related-news-09",
+        "demo-related-news-10"
+      ],
+      "reason": "Local related-news demo fixtures; user approved exclusion from transfer, retain locally"
+    }
+  ],
+  "matching": "Exact collection and exact string _id only; no title/slug/prefix matching",
+  "apply_to_primary_database": false,
+  "automatic_vps_deployment": false,
+  "current_acceptance": "Offline projected JSONL copy only; not a full Mongo backup or wired production exporter",
+  "release_gate": "Apply and verify this policy on a separately owned release copy before any authorized transfer; raw export-local.mjs archive is not filtered"
+}

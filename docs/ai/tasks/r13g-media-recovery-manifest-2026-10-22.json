@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "prepared_at": "2026-10-22T18:24:46.057Z",
+  "baseline_head": "02c16ca3638a4fe601059e3c40f4e07e5aafe312",
+  "scope": "Additional exact original images found in R13g audit; no storage or Mongo apply",
+  "auto_apply": false,
+  "primary_storage_write_authorized": false,
+  "vps_deployment_authorized": false,
+  "source_origin": "https://humorpedia.ru",
+  "preceding_manifest": "r13f-media-recovery-manifest-2026-10-22.json",
+  "assets": [
+    {
+      "page": "/shows/zvezdy-ntv/teams/improvizatory-zvezdy",
+      "target_url": "/media/imported/images/igra/improvizatory-zvezdy копия.jpg",
+      "source_url": "https://humorpedia.ru/images/igra/improvizatory-zvezdy%20%D0%BA%D0%BE%D0%BF%D0%B8%D1%8F.jpg",
+      "staged_relative": ".cache/r13g/recovery/images/igra/improvizatory-zvezdy копия.jpg",
+      "sha256": "8574900e199c935b6d2c8090187cc97ba16804c674aa12e051a3a89464a1a8ea",
+      "bytes": 204815,
+      "format": "JPEG",
+      "width": 2560,
+      "height": 1706
+    },
+    {
+      "page": "/shows/zvezdy-ntv/season3",
+      "target_url": "/media/imported/images/igra/zvezdy3.jpg",
+      "source_url": "https://humorpedia.ru/images/igra/zvezdy3.jpg",
+      "staged_relative": ".cache/r13g/recovery/images/igra/zvezdy3.jpg",
+      "sha256": "59c59094cd0aafb762d24117752eea33ffaa992770e0056be00ed1efc3e68c5b",
+      "bytes": 393239,
+      "format": "JPEG",
+      "width": 988,
+      "height": 1152
+    },
+    {
+      "page": "/people/dmitry-arefiev",
+      "target_url": "/media/imported/images/kvn-team/negoden2.jpg",
+      "source_url": "https://humorpedia.ru/images/kvn-team/negoden2.jpg",
+      "staged_relative": ".cache/r13g/recovery/images/kvn-team/negoden2.jpg",
+      "sha256": "68865ead5004837e49c46e95da884384851d733cc5eeb64168c221c15e4812e8",
+      "bytes": 175556,
+      "format": "JPEG",
+      "width": 1280,
+      "height": 853
+    },
+    {
+      "page": "/people/anna-eremeevskaya",
+      "target_url": "/media/imported/images/peoplekvn/anna-eremeevskaya2.jpg",
+      "source_url": "https://humorpedia.ru/images/peoplekvn/anna-eremeevskaya2.jpg",
+      "staged_relative": ".cache/r13g/recovery/images/peoplekvn/anna-eremeevskaya2.jpg",
+      "sha256": "56a4ec8a29a7b65d491267b1c069a4764c4f2029fafe4f4d9d1c23ef931877c8",
+      "bytes": 121588,
+      "format": "JPEG",
+      "width": 1280,
+      "height": 853
+    },
+    {
+      "page": "/shows/pozhaluysta-ne-rasskazyvay",
+      "target_url": "/media/imported/images/shows/pnr.jpg",
+      "source_url": "https://humorpedia.ru/images/shows/pnr.jpg",
+      "staged_relative": ".cache/r13g/recovery/images/shows/pnr.jpg",
+      "sha256": "aed8ffd78688658ce374955a5175c0c4e07f19ec3c1fa50654ca5b27ad930cf2",
+      "bytes": 140043,
+      "format": "JPEG",
+      "width": 1080,
+      "height": 1080
+    },
+    {
+      "page": "/shows/teoriya",
+      "target_url": "/media/imported/images/shows/teoria.jpg",
+      "source_url": "https://humorpedia.ru/images/shows/teoria.jpg",
+      "staged_relative": ".cache/r13g/recovery/images/shows/teoria.jpg",
+      "sha256": "ef4ac683167e4846ed95dcffd3bac0812e683ad3687367182cf8a5e2084d3bca",
+      "bytes": 94657,
+      "format": "JPEG",
+      "width": 1080,
+      "height": 1080
+    }
+  ],
+  "unresolved": [
+    {
+      "page": "/kvn/vl-kvn/vl-2016",
+      "target_url": "/media/imported/images/kvn-season/asia-mix-2016.jpg",
+      "source_url": "https://humorpedia.ru/images/kvn-season/asia-mix-2016.jpg",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2013",
+      "target_url": "/media/imported/images/kvn-season/gorod-pyatigorsk-2013.jpg",
+      "source_url": "https://humorpedia.ru/images/kvn-season/gorod-pyatigorsk-2013.jpg",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2010",
+      "target_url": "/media/imported/images/kvn-season/skk-2010.jpg",
+      "source_url": "https://humorpedia.ru/images/kvn-season/skk-2010.jpg",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2011",
+      "target_url": "/media/imported/images/kvn-season/sok-2011.webp",
+      "source_url": "https://humorpedia.ru/images/kvn-season/sok-2011.webp",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2014",
+      "target_url": "/media/imported/images/kvn-season/soyuz-2014.webp",
+      "source_url": "https://humorpedia.ru/images/kvn-season/soyuz-2014.webp",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2017",
+      "target_url": "/media/imported/images/kvn-season/sparta-2017.jpg",
+      "source_url": "https://humorpedia.ru/images/kvn-season/sparta-2017.jpg",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2012",
+      "target_url": "/media/imported/images/kvn-season/triod-2012.jpg",
+      "source_url": "https://humorpedia.ru/images/kvn-season/triod-2012.jpg",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    },
+    {
+      "page": "/kvn/vl-kvn/vl-2018",
+      "target_url": "/media/imported/images/kvn-season/vyatka-2018.webp",
+      "source_url": "https://humorpedia.ru/images/kvn-season/vyatka-2018.webp",
+      "http_status": 404,
+      "reason": "Exact original returned 404; replacement image not selected"
+    }
+  ],
+  "apply_policy": [
+    "Separate target-storage authorization required",
+    "Verify SHA and path containment",
+    "Missing-only atomic placement; skip identical file; conflict on different existing file",
+    "No Mongo writes",
+    "Repeat HTTP/MIME/decode and page selection acceptance after authorized apply"
+  ]
+}

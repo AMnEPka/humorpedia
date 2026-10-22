@@ -6,7 +6,7 @@
 
 R13e с документацией опубликован отдельным [4e94eba](https://github.com/AMnEPka/humorpedia/commit/4e94eba69be3a9a4c90b4de85d6d9513eb1fa6c4). Первый CI39824229497 упал на старте тестовой Mongo gateway. Отдельный [CI-fix a2eeb88](https://github.com/AMnEPka/humorpedia/commit/a2eeb8803216db836fc3923ad8ea0ddd6fefa6bd) восстановил принятый seccomp-профиль, добавил readiness/diagnostics и отделил image pull от browser timeout; [диагностика](r13e-ci-gateway-startup-2026-10-22.md).
 
-[GitHub Actions39826557657](https://github.com/AMnEPka/humorpedia/actions/runs/39826557657) на точном `a2eeb88` completed/success: backend, mongodb-integration, frontend, windows-tools, browser-smoke — все5jobs success. В browser job фактически выполнены старый smoke, HTML React pilot и native gateway. Remote ref подтверждён. Этот CI относится к опубликованному R13e/CI-fix; R13f проверен локально; пользователь поручил отдельный commit/push с документацией и проверку нового hosted SHA.
+[GitHub Actions39826557657](https://github.com/AMnEPka/humorpedia/actions/runs/39826557657) на точном `a2eeb88` completed/success: backend, mongodb-integration, frontend, windows-tools, browser-smoke — все5jobs success. В browser job фактически выполнены старый smoke, HTML React pilot и native gateway. Remote ref подтверждён. Этот CI относится к опубликованному R13e/CI-fix; R13f опубликован отдельным [02c16ca](https://github.com/AMnEPka/humorpedia/commit/02c16ca3638a4fe601059e3c40f4e07e5aafe312); [GitHub39828202864](https://github.com/AMnEPka/humorpedia/actions/runs/39828202864) на точном SHA completed/success, все5jobs и все3 browser сценария success.
 
 ## Решение и источник
 
@@ -142,9 +142,9 @@ Path mapping `/media/imported/images/... → https://humorpedia.ru/images/...` �
 
 | Следующий шаг | Условие готовности | Модель |
 | --- | --- | --- |
-| R13f: отдельный commit/push поручены 22.10.2026 | PNG/SVG + manifest + этот отчёт/указатели; raw данные и фотографии не включать | Sol/medium |
+| R13f: отдельный commit/push выполнены,02c16ca; CI success | PNG/SVG + manifest + этот отчёт/указатели; raw данные и фотографии не включать | Sol/medium |
 | Применить media пакет — только отдельное поручение | Backup/ownership целевого storage, проверенные SHA,9 безопасных placements, повтор22 HTTP/metadata; без изменения документов | Sol/high |
 | Завершить общий аудит переноса | Демо-документы/ссылки/связность participants/дубли за пределами этого среза; findings до изменений данных | Sol/high |
 | Интеграция и выпуск — отдельно | Main merge/dev-sync/полная приёмка, serving/indexing gates; VPS сейчас запрещён | Sol/high |
 
-Исходная техническая программа R0–R12 реализована в ветке; main-интеграция/приёмка выпуска остаются. R13 — отдельный продуктовый инкремент исходного плана. Общий пункт read-only аудита переноса ещё не закрыт: в R13c snapshot нет полных memberships/participations, а13 сырых ссылок были кандидатами, не доказанными404. Отдельные UX-функции сюда не включены.
+Исходная техническая программа R0–R12 реализована в ветке; main-интеграция/приёмка выпуска остаются. R13 — отдельный продуктовый инкремент исходного плана. Общий read-only отчёт продолжен и подготовлен в [R13g](r13g-migration-readiness-2026-10-22.md): полный срез связей, resolver, локальные медиа и конкретные очереди исправлений. Готовность контента к выпуску ещё не подтверждена; None resolver не означает HTTP404. Отдельные UX-функции сюда не включены.
