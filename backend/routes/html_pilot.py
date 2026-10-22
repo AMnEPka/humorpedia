@@ -3,7 +3,6 @@ import logging
 from urllib.parse import unquote
 from fastapi import APIRouter, HTTPException, Request
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
-from routes.redirects import _try_pattern_redirect
 from services.public_html import load_html_page, render_html_page
 from utils.database import get_db
 
@@ -25,22 +24,13 @@ def create_router(*, run_id, db_name, indexing_enabled, render_page=render_html_
         return HTMLResponse(render_page(page), headers=headers)
 
     async def legacy(request):
-        db = await get_db()
-        path = request.url.path.rstrip("/") or "/"
-        for kind in ("people", "articles"):
-            doc = await db[kind].find_one({"old_urls":path}, {"slug":1})
-            if doc:
-                page = await load_html_page(kind, str(doc["_id"]), **options)
-                if unquote(page.canonical_path) == request.url.path:
-                    raise HTTPException(404)
-                return response(page, redirect=True)
-        target = _try_pattern_redirect(path)
-        if target:
-            parts = target.strip("/").split("/")
-            if len(parts) == 2 and parts[0] in {"people", "articles"}:
-                page = await load_html_page(parts[0], parts[1], **options)
-                if unquote(page.canonical_path) != request.url.path:
-                    return response(page, redirect=True)
+        from services.public_html_dispatch import lookup_legacy
+        result = await lookup_legacy(request.url.path.rstrip("/") or "/", options=options,
+                                     get_database=get_db, load_page=load_html_page)
+        if result.kind == "redirect":
+            return response(result.page, redirect=True)
+        if result.kind == "unavailable":
+            return error_response(503)
         raise HTTPException(404)
 
     async def record(kind, slug, request):

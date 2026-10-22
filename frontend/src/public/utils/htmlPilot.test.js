@@ -62,3 +62,21 @@ test('SPA network failure clears the previous document metadata without initial 
   expect(document.title).toBe('Humorpedia | humorpedia.ru');
   expect(document.getElementById('root').hidden).toBe(false);
 });
+
+test.each([false, undefined, 'true', 1])('neutral flag %p is strict', value => {
+  window.__HTML_PILOT__ = false;
+  window.__PUBLIC_HTML_ENABLED__ = value;
+  expect(isHtmlPilotEnabled()).toBe(false);
+  delete window.__PUBLIC_HTML_ENABLED__;
+});
+test('neutral runtime boolean enables the same navigation guard', () => {
+  window.__HTML_PILOT__ = false;
+  window.__PUBLIC_HTML_ENABLED__ = true;
+  expect(isHtmlPilotEnabled()).toBe(true);
+  const old = beginPage('/people/a', 'repeat');
+  beginPage('/people/b', 'b');
+  const current = beginPage('/people/a', 'repeat');
+  expect(commitPage(old, {status:'ready', metadata})).toBe(false);
+  expect(commitPage(current, {status:'ready', metadata})).toBe(true);
+  delete window.__PUBLIC_HTML_ENABLED__;
+});

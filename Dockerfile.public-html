@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim-bookworm AS backend-release
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir gunicorn==26.2.0
+COPY backend/ /app/
+COPY --from=public_html_release build/ /opt/public-html/build/
+ENV PUBLIC_HTML_BUILD_DIR=/opt/public-html/build
+EXPOSE 8001
+CMD ["gunicorn","server:app","--workers","4","--worker-class","uvicorn.workers.UvicornWorker","--bind","0.0.0.0:8001"]
+
+FROM nginx:1.29.3-alpine AS gateway-release
+COPY --from=public_html_release build/ /usr/share/nginx/html/
+COPY --from=public_html_release gateway-configs/ /opt/public-html/gateway-configs/
+COPY frontend/docker/public-html-mode.sh /docker-entrypoint.d/40-public-html-mode.sh
+COPY frontend/docker/public-html-ready.sh /usr/local/bin/public-html-ready
+RUN sed -i '1s/^\xef\xbb\xbf//' /docker-entrypoint.d/40-public-html-mode.sh /usr/local/bin/public-html-ready \
+    && sed -i 's/\r$//' /docker-entrypoint.d/40-public-html-mode.sh /usr/local/bin/public-html-ready \
+    && chmod +x /docker-entrypoint.d/40-public-html-mode.sh /usr/local/bin/public-html-ready
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s CMD /usr/local/bin/public-html-ready
+EXPOSE 80

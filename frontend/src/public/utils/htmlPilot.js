@@ -4,7 +4,7 @@ import { buildPageTitle } from '../../utils/pageTitle';
 
 let active = null;
 let generation = 0;
-export const isHtmlPilotEnabled = () => typeof window !== 'undefined' && window.__HTML_PILOT__ === true;
+export const isHtmlPilotEnabled = () => typeof window !== 'undefined' && (window.__PUBLIC_HTML_ENABLED__ === true || window.__HTML_PILOT__ === true);
 export const isHtmlPilotDetail = path => /^\/(people|articles)\/[^/]+\/?$/.test(path);
 const fallback = () => document.getElementById('html-pilot-fallback');
 function showRoot() {

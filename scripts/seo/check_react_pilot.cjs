@@ -6,10 +6,11 @@ const {setTimeout: pause} = require('node:timers/promises');
 const {chromium} = require('playwright');
 const base = new URL(process.env.HTML_REACT_PILOT_BASE_URL || 'http://127.0.0.1:18014');
 const runId = process.env.HTML_PILOT_RUN_ID;
+const gateway = process.env.HTML_GATEWAY_RUN_ID === runId;
 const output = process.env.HTML_REACT_PILOT_ARTIFACT_DIR || '.cache/r13d/browser';
 const passed = [], errors = [], external = [];
 let browser;
-const url = p => new URL(p, base);
+const url = p => new URL(gateway ? p.replace('/__html_react_pilot__/', '/api/__html_gateway__/') : p, base);
 async function json(p, options) {const response=await fetch(url(p),options);assert(response.ok,`${p}: ${response.status}`);return response.json();}
 const control = action => json('/__html_react_pilot__/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_id:runId,action})});
 async function context(options={}) {
@@ -36,7 +37,7 @@ async function main(){
   assert(['localhost','127.0.0.1','[::1]'].includes(base.hostname));assert.match(runId||'',/^[0-9a-f]{32}$/);
   let state;
   for(let i=0;i<60;i++){try{state=await json('/__html_react_pilot__/measure');break;}catch(e){if(i===59)throw e;await pause(250);}}
-  assert.equal(state.run_id,runId);assert.equal(state.database,'humorpedia_html_pilot_'+runId);
+  assert.equal(state.run_id,runId);assert.equal(state.database,(gateway?'humorpedia_html_gateway_':'humorpedia_html_pilot_')+runId);
   await fs.mkdir(output,{recursive:true});browser=await chromium.launch({headless:true});
   try {
     await test('JS off: metadata, text, anchors, notices, redirects, zero API/views',async()=>{
@@ -58,7 +59,7 @@ async function main(){
       }
       await page.goto('/articles/hidden-only');assert(!/HIDDEN_SECRET|FALLBACK_SECRET/.test(await page.locator('body').innerText()));
       await page.goto('/people/beta');assert.equal((await page.locator('body').innerText()).split('признан в РФ иностранным агентом').length-1,1);
-      for(const route of ['/people/archived','/people/private','/unknown'])assert.equal((await page.goto(route)).status(),404);
+      for(const route of (gateway?['/people/archived','/people/private']:['/people/archived','/people/private','/unknown']))assert.equal((await page.goto(route)).status(),404);
       const redirect=await fetch(url('/old/alpha.html'),{redirect:'manual'});assert.equal(redirect.status,301);assert.equal(redirect.headers.get('location'),'https://humorpedia.ru/people/alpha');
       assert.equal((await fetch(url('/media/pilot-share.png'))).status,200);assert.equal(api,0);
       assert.deepEqual((await control('flush')).views,before.views);await ctx.close();

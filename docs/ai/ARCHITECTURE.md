@@ -218,3 +218,9 @@ Canonical CAS фиксирует журнал; season_projection обновля�
 - Апрель 2026: рефакторинг Emergent — монолитный `routes/content.py` (~4300 строк) разбит на `content_*.py`, общий CRUD вынесен в `services/crud.py`, единое подключение к БД, refresh-токены, code splitting, text-индексы, rate limiting, in-memory кэш и батч-счётчик просмотров.
 - Все локальные и удалённые ветки (`debugs`, `geography`, `jury_stats`, `kvn_leagues`, `new_media`, `emergent_*`, `conflict_160426_1510`) полностью влиты в `main`.
 - Сентябрь 2026, этап 0 (Claude Code): авторизация через FastAPI-зависимости на всех операциях записи, `JWT_SECRET` из env, первый админ из env вместо `admin/admin`, Mongo с `--auth` в проде, синхронизация кэша между воркерами, устойчивое создание индексов, тесты + CI. Подробно — KNOWN_ISSUES.md, раздел «Исправлено».
+
+## Optional public HTML (R13e, ещё не интегрирован в main)
+
+server.py после API/media вызывает register_public_html по строгим настройкам public_html_config; lifespan остаётся единственным. Default serving/indexing=false, canonical https://humorpedia.ru. People/articles читаются anonymous без views; opt-in metadata возвращает обычный content API GET. Internal legacy dispatcher различает redirect/unavailable/no-match, private418 обрабатывает только named Nginx location. Sitemap —live published-only read без новой проекции.
+
+Dockerfile.public-html —optional backend-release/gateway-release targets с одним named artifact context public_html_release. Post-build manifest проверяет template/hashes; generated gateway-configs вне hashed build, config.js —runtime overlay. Действующие Dockerfiles/Compose/VPS не переключены. Corrupt release закрывает HTML503; gateway readiness проверяет пару release/mode. Fixture/ownership/control imports присутствуют только в scripts/seo wrapper. [R13e acceptance](tasks/r13e-html-integration-acceptance-2026-10-22.md).

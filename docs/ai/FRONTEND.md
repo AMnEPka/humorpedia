@@ -165,3 +165,7 @@ HomePage, SectionDetailPage и PublicLayout грузятся синхронно;
 - `plugins/health-check/vite-health-plugin.mjs` подключается только при `ENABLE_HEALTH_CHECK=true` в dev. Прежние шесть URL и HTTP-статусы сохранены; JSON содержит native Vite transforms/errors вместо Webpack compile/warnings/memory. Ready означает listening + наблюдённая трансформация + отсутствие известных ошибок, а не полную компиляцию графа. [Контракт](tasks/r12c-vite-2026-10-22.md#диагностика-dev).
 - Только используемые `REACT_APP_BACKEND_URL` и `REACT_APP_USE_API_PROXY` сохраняют прежние имена через Vite define; весь server env в клиент не передаётся. Стандартные публичные `VITE_*` также подчиняются правилам Vite.
 - Docker включает polling 1000 мс; native Windows использует файловые события. HMR `/ws` берёт hostname/port текущей страницы; явный `WDS_SOCKET_PORT>0` поддержан как совместимый override.
+
+## Optional HTML handoff (R13e, default-off)
+
+isHtmlPilotEnabled принимает строгий window.__PUBLIC_HTML_ENABLED__===true; прежний strict pilot flag сохранён для isolated harness. Disabled сохраняет прежний fetch/title. People/articles initial fallback расположен вне root, React выполняет штатный content GET с opt-in metadata; request token защищает head при повторном Back/A–B–A. Это createRoot + второй read, без bootstrap/SSR. scripts/build.mjs после strict lint/Vite build записывает manifest всех public assets; обе images получают один artifact. [R13e acceptance](tasks/r13e-html-integration-acceptance-2026-10-22.md). Main/VPS ещё не переключены.

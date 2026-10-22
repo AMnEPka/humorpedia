@@ -24,5 +24,10 @@ async def ready(request: Request):
     except Exception:
         result = {"status": "not_ready",
                   "checks": {"mongodb": "error", "indexes": "error", "package_storage": "error"}}
+    if hasattr(request.app.state, "public_html_settings"):
+        html_ready = request.app.state.public_html_release is not None
+        result["checks"]["public_html"] = "ok" if html_ready else "error"
+        if not html_ready:
+            result["status"] = "not_ready"
     return JSONResponse(result, status_code=200 if result["status"] == "ready" else 503,
                         headers={"Cache-Control": "no-store"})

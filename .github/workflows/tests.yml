@@ -31,7 +31,7 @@ jobs:
           node-version: "24.22.1"
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: node ../scripts/sync-module-contract.cjs --check
-      - run: node --test ../scripts/vps-test/test_export_local.mjs
+      - run: node --test ../scripts/vps-test/test_export_local.mjs ../scripts/seo/test_gateway_tools.cjs
       - run: pytest -q tests
       - name: Remove disposable MongoDB
         if: always()
@@ -119,7 +119,7 @@ jobs:
   browser-smoke:
     needs: frontend
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       BROWSER_BUILD_DIR: ${{ github.workspace }}/frontend/build
     steps:
@@ -188,6 +188,12 @@ jobs:
           }
           trap cleanup EXIT
           node scripts/seo/check_react_pilot.cjs
+      - name: Native HTML gateway on owned Docker network and UUID database
+        env:
+          HTML_GATEWAY_ARTIFACT_DIR: ${{ github.workspace }}/.cache/r13e
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/browser-tools/node_modules"
+          node scripts/seo/run_gateway.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -197,6 +203,13 @@ jobs:
             ${{ runner.temp }}/browser-smoke-server.log
             ${{ runner.temp }}/html-react-pilot-artifacts
             ${{ runner.temp }}/html-react-pilot-server.log
+            .cache/r13e/*/result.json
+            .cache/r13e/*/cleanup.json
+            .cache/r13e/*/commands.json
+            .cache/r13e/*/docker.log
+            .cache/r13e/*/closed/*.json
+            .cache/r13e/*/disabled/*.json
+            .cache/r13e/*/indexed/*.json
           retention-days: 3
       - name: Remove disposable MongoDB
         if: always()

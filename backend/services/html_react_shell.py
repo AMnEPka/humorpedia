@@ -69,7 +69,7 @@ class _Template(HTMLParser):
 def _tag(tag, attrs):
     return "<" + tag + "".join(" " + key + ("" if value is None else '="' + escape(value, quote=True) + '"') for key, value in attrs) + ">"
 
-def render_react_shell(page, template_html):
+def validate_template(template_html):
     parser = _Template(template_html)
     parser.feed(template_html)
     parser.close()
@@ -78,6 +78,11 @@ def render_react_shell(page, template_html):
     start, end, attrs = parser.root
     if template_html[end:parser.root_end].strip() or parser.title_start is not None:
         raise ValueError("Expected empty root and complete head")
+    return parser
+
+def render_react_shell(page, template_html):
+    parser = validate_template(template_html)
+    start, end, attrs = parser.root
     rendered = render_html_page(page)
     metadata = rendered.split("<head>", 1)[1].split("</head>", 1)[0].replace('<meta charset="utf-8">', "", 1)
     body = rendered.split("<body>", 1)[1].rsplit("</body>", 1)[0]

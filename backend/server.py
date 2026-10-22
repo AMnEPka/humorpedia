@@ -560,6 +560,12 @@ if images_dir.exists():
     app.mount("/images", StaticFiles(directory=str(images_dir)), name="images")
 
 
+# Optional public HTML: reuse the native lifespan and register after API/media.
+from services.public_html_config import load_public_html_settings
+from routes.public_html import register_public_html
+register_public_html(app, load_public_html_settings(os.environ))
+
+
 # ─── Middleware ────────────────────────────────────────────────────────────────
 # Порядок: последний добавленный — внешний. Итоговая цепочка:
 # CORS → SlowAPI → CacheSync → CacheControl → приложение

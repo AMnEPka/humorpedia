@@ -29,7 +29,10 @@
 | [docs/ai/tasks/r13b-fastapi-html-pilot-plan-2026-10-22.md](docs/ai/tasks/r13b-fastapi-html-pilot-plan-2026-10-22.md) | R13b: people/articles HTML-пилот; коммит fa9342d, GitHub CI success; без production wiring |
 | [docs/ai/tasks/r13c-content-readiness-2026-10-22.md](docs/ai/tasks/r13c-content-readiness-2026-10-22.md) | R13c: read-only аудит3911 документов/1107 HTML на копии; схема A HTML + React согласована, подготовлен план R13d |
 | [docs/ai/tasks/r13d-html-react-pilot-plan-2026-10-22.md](docs/ai/tasks/r13d-html-react-pilot-plan-2026-10-22.md) | R13d: утверждённый и выполненный план HTML+React пилота |
-| [docs/ai/tasks/r13d-html-react-pilot-acceptance-2026-10-22.md](docs/ai/tasks/r13d-html-react-pilot-acceptance-2026-10-22.md) | R13d: локальная приёмка,357 frontend/1174 backend+2 readiness, browser/performance; пакет R13d с документацией |
+| [docs/ai/tasks/r13d-html-react-pilot-acceptance-2026-10-22.md](docs/ai/tasks/r13d-html-react-pilot-acceptance-2026-10-22.md) | R13d: опубликован3b6146f + CI-fix98f37bb, GitHub39783968388 success; локальная/browsers приёмка |
+| [docs/ai/tasks/r13e-html-integration-design-2026-10-22.md](docs/ai/tasks/r13e-html-integration-design-2026-10-22.md) | R13e: утверждённая схема optional native HTML + Nginx, единый release, media/crawl gates |
+| [docs/ai/tasks/r13e-html-integration-plan-2026-10-22.md](docs/ai/tasks/r13e-html-integration-plan-2026-10-22.md) | R13e:7 задач выполнены; default-off, main/VPS не переключались |
+| [docs/ai/tasks/r13e-html-integration-acceptance-2026-10-22.md](docs/ai/tasks/r13e-html-integration-acceptance-2026-10-22.md) | R13e: native gateway/browser/crawl приёмка и измерения; локально принято; отдельный commit/push поручены, hosted CI — после публикации |
 | [docs/ai/tasks/r12a-runtime-2026-10-22.md](docs/ai/tasks/r12a-runtime-2026-10-22.md) | R12a: Node24, Gunicorn pin, signed Mongo tools; коммит 2ea75f6, GitHub CI success; полный dev-sync после интеграции |
 | [docs/ai/tasks/r11-performance-2026-10-21.md](docs/ai/tasks/r11-performance-2026-10-21.md) | R11: read-only замеры на копии, соседние сезоны и индексы; коммит 857508f; приёмка p95 с контрольным разбросом, CI success после smoke fix 8aa370d |
 | [docs/ai/tasks/ratings.md](docs/ai/tasks/ratings.md) | Статус восстановления рейтингов, миграция и проверки |

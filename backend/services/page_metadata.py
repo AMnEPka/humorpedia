@@ -30,13 +30,18 @@ def validate_origin(origin):
 def _media(value):
     return value.get("url") or value.get("thumbnail") if isinstance(value, dict) else value
 
-def build_page_metadata(kind, document, *, site_origin, indexing_enabled, default_image_url):
+def canonical_document_url(kind, document, *, site_origin):
     origin = validate_origin(site_origin)
     if kind not in {"people", "articles"}:
         raise ValueError("Unsupported pilot content type")
     slug = document.get("slug")
     if not isinstance(slug, str) or not slug or slug in {".", ".."} or any(c.isspace() or c in "/\\?#" or ord(c) < 32 for c in slug):
         raise ValueError("Missing or invalid canonical slug")
+    return f"{origin}/{kind}/{quote(slug, safe='')}"
+
+def build_page_metadata(kind, document, *, site_origin, indexing_enabled, default_image_url):
+    canonical = canonical_document_url(kind, document, site_origin=site_origin)
+    origin = validate_origin(site_origin)
     seo = document.get("seo") if isinstance(document.get("seo"), dict) else {}
     heading = _value(document.get("title")) or "Humorpedia"
     title = _value(seo.get("meta_title")) or heading
@@ -66,6 +71,6 @@ def build_page_metadata(kind, document, *, site_origin, indexing_enabled, defaul
     if image is None:
         raise ValueError("Public default image required")
     return PageMetadata(
-        title=title, description=description, canonical_url=f"{origin}/{kind}/{quote(slug, safe='')}",
+        title=title, description=description, canonical_url=canonical,
         og_type="website" if kind == "people" else "article", image_url=urljoin(origin + "/", image),
         image_alt=plain_text(heading), robots="index,follow" if indexing_enabled and document.get("status") == "published" else "noindex,follow")

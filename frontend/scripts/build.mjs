@@ -1,5 +1,6 @@
 import { ESLint } from 'eslint';
-import { build } from 'vite';
+import { build, resolveConfig } from 'vite';
+import { writeHtmlRelease } from './html-release.mjs';
 
 const eslint = new ESLint();
 const results = await eslint.lintFiles(['src']);
@@ -11,3 +12,6 @@ if (errors || (process.env.CI && process.env.CI !== 'false' && warnings)) {
   throw new Error('Frontend lint failed: ' + errors + ' errors, ' + warnings + ' warnings');
 }
 await build();
+
+const config = await resolveConfig({}, 'build');
+await writeHtmlRelease(config.build.outDir);
