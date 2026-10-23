@@ -1,0 +1,469 @@
+{
+  "schema_version": 1,
+  "task": "R13n",
+  "date": "2026-10-23",
+  "status": "accepted_spa_contract_ready_for_publication",
+  "approved": true,
+  "branch": "codex/local-page-builder",
+  "base_commit": "bb3221dee5810871a00e117473167ad4f47e6273",
+  "source_copy": ".cache/r13m/copy/patched.jsonl",
+  "source_sha256": "9c63bb45d3a18d66b0798bd81db27308546322db3996cb0cdc12673c379cc308",
+  "source_rows": 25620,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "readiness": {
+    "resources": 38,
+    "template": 19,
+    "resources_with_empty_content": 38,
+    "resources_with_migx_config": 38,
+    "sections": 198,
+    "form_counts": {
+      "text": 88,
+      "table": 26,
+      "info": 8,
+      "ad_250": 43,
+      "ad_block_120": 4,
+      "tags": 23,
+      "popular_articles": 5,
+      "post_footer": 1
+    },
+    "parents_existing": 36,
+    "parents_within38": 1,
+    "missing_parent_outside38": 2536,
+    "full38_requires_additional_parent": true,
+    "projection_old_id_collisions": 0
+  },
+  "pilot": {
+    "old_id": 1586,
+    "source_uri": "kvn/league/lampa/",
+    "title": "Центральная Лига Москвы и Подмосковья",
+    "collection": "kvn",
+    "target_id": "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+    "id_strategy": "UUIDv5 NAMESPACE_URL + https://humorpedia.ru/legacy/modx/site_content/1586; same _id/id; module IDs bound to source IDs",
+    "slug": "lampa",
+    "full_path": "kvn/league/lampa",
+    "canonical_url": "https://humorpedia.ru/kvn/league/lampa",
+    "parent": {
+      "kind": "kvn",
+      "id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "row_sha256": "842ec97cb18ec7ce29bc0a17e0da6bc06215edd99cc40b2c9e7e031a75d28540",
+      "old_id": {
+        "$numberInt": "1503"
+      },
+      "slug": "league",
+      "full_path": "kvn/league",
+      "child_kvn_ids_present": false,
+      "child_kvn_ids_before": null
+    },
+    "parent_only_mutation": "Append target_id once to child_kvn_ids; preserve every other parent field; no lost updates/preimage drift allowed",
+    "status": "published",
+    "old_urls": [
+      "/kvn/league/lampa/",
+      "/kvn/lampa",
+      "/kvn/lampa.html"
+    ],
+    "modules": [
+      {
+        "source_section": 0,
+        "source_id": "text-lampa",
+        "target_id": "modx-1586-text-lampa",
+        "type": "text_block",
+        "title": "Центральная Лига Москвы и Подмосковья",
+        "content_chars": 1922,
+        "content_sha256": "3b7d99de2761355d17a6c74593a1f6609271ad4b68453a5af4fbce316c514aae",
+        "visible": true,
+        "order": 0
+      },
+      {
+        "source_section": 2,
+        "source_id": "text-lampa2",
+        "target_id": "modx-1586-text-lampa2",
+        "type": "text_block",
+        "title": "Чемпионы лиги (нулевые)",
+        "content_chars": 2562,
+        "content_sha256": "1270ef48e0e960e7b7738800bc117ba73a943662a643d30cfe593199f3dd26e5",
+        "visible": true,
+        "order": 1
+      },
+      {
+        "source_section": 4,
+        "source_id": "text-lampa3",
+        "target_id": "modx-1586-text-lampa3",
+        "type": "text_block",
+        "title": "Чемпионы лиги (десятые)",
+        "content_chars": 3552,
+        "content_sha256": "d9b0843747c81542963b495bb7ba7fb328fa90619bfe68c127b03762aa5e8476",
+        "visible": true,
+        "order": 2
+      },
+      {
+        "source_section": 6,
+        "source_id": "text-lampa4",
+        "target_id": "modx-1586-text-lampa4",
+        "type": "text_block",
+        "title": "Чемпионы лиги (двадцатые)",
+        "content_chars": 1870,
+        "content_sha256": "6c19dee8e11f11c70780071ea4173a3593e56a1c6ccf199b58a4cdb491e91131",
+        "visible": true,
+        "order": 3
+      },
+      {
+        "source_section": 7,
+        "source_id": "text-lampa5",
+        "target_id": "modx-1586-text-lampa5",
+        "type": "text_block",
+        "title": "Чемпионы спецпроекта",
+        "content_chars": 1355,
+        "content_sha256": "224cd2db117a56d98d2e4da98c53f5996b33a0c4b85cf0ffd2da0e62a38d27a1",
+        "visible": true,
+        "order": 4
+      }
+    ],
+    "omitted_legacy_widgets": [
+      {
+        "source_section": 1,
+        "source_id": "ad_250",
+        "form": "ad_250",
+        "reason": "Advertising not restored; tag values preserved in page tags, not legacy widget"
+      },
+      {
+        "source_section": 3,
+        "source_id": "ad_block_120",
+        "form": "ad_block_120",
+        "reason": "Advertising not restored; tag values preserved in page tags, not legacy widget"
+      },
+      {
+        "source_section": 5,
+        "source_id": "ad_block_120_2",
+        "form": "ad_block_120",
+        "reason": "Advertising not restored; tag values preserved in page tags, not legacy widget"
+      },
+      {
+        "source_section": 8,
+        "source_id": "ad_250_2",
+        "form": "ad_250",
+        "reason": "Advertising not restored; tag values preserved in page tags, not legacy widget"
+      },
+      {
+        "source_section": 9,
+        "source_id": "tags",
+        "form": "tags",
+        "reason": "Advertising not restored; tag values preserved in page tags, not legacy widget"
+      }
+    ],
+    "tag_names": [
+      "Флэш-Рояль",
+      "Обычные люди",
+      "Имени меня",
+      "Дети Тьюринга",
+      "Парапапарам",
+      "Плюшки",
+      "Евгений Донских",
+      "Доброжелательный Роман",
+      "Леон Киллер",
+      "Город Развлечений",
+      "Владимир Костур",
+      "Сборная МАИ",
+      "Сега Мега Драйв 16 бит",
+      "Подъём",
+      "Олег Валенцов",
+      "Чуваши",
+      "Сборная ГУУ",
+      "Сборная Физтеха",
+      "Молодёжная сборная",
+      "Колосок",
+      "Чупа-Чупс",
+      "Сборная МИИТа",
+      "ФАС",
+      "Малина",
+      "КВН Лампа",
+      "Рубен Партевян",
+      "Слёзы богатыря",
+      "СГВ",
+      "Оборович"
+    ],
+    "stored_html_policy": "Keep all five content strings byte-for-byte, original titles/order; no new global link fallback; source metadata retained in ignored provenance manifest only",
+    "metadata_policy": "Existing humorpedia.ru SEO contract; no duplicate full description block; derive SEO description from source first text using existing text helper",
+    "tables": 4,
+    "content_chars": 11261,
+    "html_media_refs": 0,
+    "source_inline_modx_snippets": 0,
+    "incoming_literal_hrefs": 199,
+    "incoming_keys": [
+      "kvn/lampa",
+      "kvn/league/lampa"
+    ],
+    "outgoing_literal_hrefs": 22,
+    "outgoing_existing_published_targets": 21,
+    "outgoing_unavailable": [
+      "kvn/lampa/finals.html"
+    ],
+    "new_missing_entity": false,
+    "explicit_non_goals": [
+      "No finals1603 or other37resource restoration",
+      "No MSL2536 parent restoration",
+      "No season_data creation or canonical seasons/participations/tournaments change",
+      "No actual main/storage/VPS apply or indexing change",
+      "No create_kvn/API fixes bundled"
+    ],
+    "publication_scope": "isolated_copy_only_source_published_1",
+    "level": 2,
+    "level_basis": "Path depth kvn/league/lampa; parent projection omits level; do not add or change parent.level",
+    "season_data_policy": "Omitted: non-season legacy page; {} incorrectly selects SeasonDetailPage in React, null rejected by KVN Dict model. No canonical season created."
+  },
+  "expected_counts": {
+    "rows": 25621,
+    "inserted_records": 1,
+    "existing_records_changed": 1,
+    "existing_parent_fields_changed": [
+      "child_kvn_ids"
+    ],
+    "existing_records_deleted": 0,
+    "existing_rows_byte_identical": 25619,
+    "unresolved_literal_keys": 72,
+    "fully_removed_keys": [
+      "kvn/lampa",
+      "kvn/league/lampa"
+    ],
+    "additional_unresolved_literal_keys_allowed": [
+      "kvn/lampa/finals.html"
+    ],
+    "explanation": "73 current keys minus2 revived paths plus1 raw .html spelling of the already missing finals page. Forecast only; actual new-copy resolver audit is required."
+  },
+  "evidence": {
+    ".cache/r13n/sql-content-readiness.json": "5f56541596030946ef819488fd189952207170504758d14f3e1ccfe096ced8b8",
+    ".cache/r13n/parsed-content-inventory.json": "d8854631322b75862894a6f3833f8fffa288c9e89287a2e9e256d72a3d6ee743",
+    ".cache/r13n/parent-identity-review.json": "ce756c882adf3178e3154f9d4e93d9dababe3e3c26d4d0e415efca8ad9ec6eed",
+    ".cache/r13n/import-readiness-review.json": "dd71c2a98a9e2f0cd5673c49ca89f1a95d3ff751aba1b48a0d7ea2be15abd8ac",
+    ".cache/r13n/lampa-pilot-contract-review.json": "eb1e44511bf9afd2d0180b11a313d71a78ae8aa0bf66485f174a182f4c83cd18",
+    ".cache/r13n/lampa-link-readiness.json": "8875d5f9ee6230f5048abfae3fab8b53febd1697dd5eaaa4d905a238f8d284c8"
+  },
+  "execution_acceptance": {
+    "full_task_accepted": true,
+    "copy_path": ".cache/r13n/copy-v2/patched.jsonl",
+    "copy_sha256": "e352e7a17b8e43660a09a7b6b6397654333aed2b912a64318702c68ab6619001",
+    "rows": 25621,
+    "structural": "PASS",
+    "resolver_unresolved_before": 73,
+    "resolver_unresolved_after": 72,
+    "relation_findings": 0,
+    "native_run_id": "bfd630734d024d0b8848320c0c13dd97",
+    "native_api_react_navigation": "PASS",
+    "real_clicks": 4,
+    "pageerrors": 0,
+    "non_view_fixture_fields_unchanged": true,
+    "fixture_only_source_identity_records": 2,
+    "native_cleanup": "PASS",
+    "html_scope": "KVN SPA shell only; no raw KVN content/canonical or HTTP301 claim",
+    "frontend_release_id": "1bc6820bb6cc2e3c0099106d7b1aed96ece05e21dbe6c736571c7115ba2378d6",
+    "main_unchanged": true
+  },
+  "expected_only": false,
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "proposal_validation": {
+    "status": "PASS_WITH_BOUNDARIES",
+    "review_path": ".cache/r13n/proposal-review.json",
+    "review_sha256": "b267d104ca25cbe291c49b3b5b8bdcccaea564f0b4f4a362b0c7efeb546b2d9e",
+    "runtime_acceptance": false,
+    "data_applied": false,
+    "apply_guards": [
+      "Exact old_id1586 and old_urls",
+      "Exact parent UUID/full_path/slug and raw row preimage",
+      "Only parent.child_kvn_ids mutation",
+      "No canonical seasons/tournaments/participations change"
+    ]
+  },
+  "approval": {
+    "date": "2026-10-23",
+    "source": "Direct user reply to R13n Lampa pilot approval question",
+    "scope": "Exactly one published Lampa KVN doc old_id1586 on a new isolated copy and only parent1503 child_kvn_ids append;5texts/4tables/29tags;advertising/tag widget omitted;nootherresources/season/main/24SMI/VPS/indexing"
+  },
+  "payload_source": {
+    "path": ".cache/r13n/legacy-resources.json",
+    "sha256": "0f87fd63dc0aa520ea6273ab525d563fa563df44b6cb9f825eb895dc367014e7"
+  },
+  "execution_checkpoint": {
+    "copy_path": ".cache/r13n/copy-v2/patched.jsonl",
+    "sha256": "e352e7a17b8e43660a09a7b6b6397654333aed2b912a64318702c68ab6619001",
+    "tests": {
+      "converter": 7,
+      "target_navigation": 9,
+      "frontend_suites": 59,
+      "frontend_tests": 367
+    },
+    "structural_audit": "PASS",
+    "offline_audit": "PASS",
+    "native_acceptance": "PASS within user-approved existing SPA contract; KVN HTML301 deferred"
+  },
+  "navigation_fix_approval": {
+    "source": "Direct user reply 2026-10-23",
+    "approved": true,
+    "scope": "Minimal absolute child/breadcrumb paths in SectionDetailPage, own worktree only"
+  },
+  "execution_evidence": {
+    ".cache/r13n/prepare-copy.py": "fe4b19ab1e80f20b442a3dee24a7e265a15cf6b947efb1788b977b0542a41d36",
+    ".cache/r13n/test-prepare-copy.py": "8240ee26cf9a22f2e4d88b347ae4bea969642b1742c573c5d76c752052694870",
+    ".cache/r13n/copy-v2/acceptance.json": "bde73675060694488bec33a1690fb440a19fe821accdb11bd780bb6dd06e78e0",
+    ".cache/r13n/independent-copy-audit.json": "2dfb933024d19abbd3104775a92330269bb58cbf6a4be860c8ed95c4833c4d31",
+    ".cache/r13n/audits/summary.json": "c2f731828ffe83aa3d2cd90a33ad30826bde30cff0137c85f64dc02c7d92fc58",
+    ".cache/r13n/navigation-sidecar-readonly.json": "5156e14ab50f7d78494d9e196c8b6c1080e1927a47bd5e5883ac18da06f65bd6",
+    ".cache/r13n/navigation-review.json": "0e0d84b9c659e1ccdebcc98c45f9b2f97a0ec2ef497a734c708e515a030ebbb6",
+    ".cache/r13n/main-after-pilot.json": "460a79e92257ec119986441bb244da0ced7e5e6f0724f9faac8780d3393c3964",
+    ".cache/r13n/native-pages/bfd630734d024d0b8848320c0c13dd97/closed/links-http.json": "a8e5759bafd9f8d64bec16138568c8de75b9767e60a287297306b3f6ab7d3dbd",
+    ".cache/r13n/native-pages/bfd630734d024d0b8848320c0c13dd97/closed/links-browser.json": "36d10a6e9796fbf12bd5b95b19f08289f6543418284a363a2157531f71c1e5b3",
+    ".cache/r13n/native-pages/bfd630734d024d0b8848320c0c13dd97/cleanup.json": "c9d4fbe248cf81fc845c04221181830e90f835822ffaa025947a0a0a48882a16",
+    ".cache/r13n/final-scope-review.json": "2b31df75d543c0cb7dbc09ddaf660bf7cea9d5dbe9dc32e91288269744f58e30",
+    ".cache/r13n/precommit-navigation-tests.log": "5c1cdecc7fb9be5d366cdb7b833b5b1c1e997e824a463042def3c89edc3dc885"
+  },
+  "spa_contract_acceptance": {
+    "date": "2026-10-23",
+    "source": "Direct user instruction: accept R13n in current SPA contract, KVN HTML/301 a separate task",
+    "approved": true,
+    "current_scope": "KVN SPA shell/noindex, native API and React rendering/navigation, projected-copy invariants",
+    "deferred": "KVN server HTML metadata/content and HTTP301; separate plan and approval before implementation",
+    "publication_authorized": true
+  },
+  "prepared_document": {
+    "_id": "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+    "article_ids": [],
+    "child_kvn_ids": [],
+    "content_type": "kvn",
+    "created_at": {
+      "$date": {
+        "$numberLong": "1713791953000"
+      }
+    },
+    "description": null,
+    "facts": {},
+    "facts_order": [],
+    "full_path": "kvn/league/lampa",
+    "id": "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+    "level": 2,
+    "modules": [
+      {
+        "data": {
+          "anchor_id": "text-lampa",
+          "content": "<p>Центральная Лига Москвы и Подмосковья (ЦЛМиП, &laquo;Лампа&raquo;) &ndash; главная лига московского движения нетелевизионного КВН.</p>\n<div>Официальная Московская студенческая лига существует с 2003 года, статус Центральной получила в 2004 году.</div>\n<div>Место проведения игр: &laquo;Планета КВН&raquo; (Москва)</div>\n<div>Директор лиги: Рубен Партевян</div>\n<p>Редакторы лиги (сезон 2023): <a href=\"people/evgenij-donskikh.html\">Евгений Донских</a>, <a href=\"people/oleg-valentsov.html\">Олег Валенцов</a>, <a href=\"people/vladimir-kostur.html\">Владимир Костур</a>, <a href=\"people/dmitry-arteev.html\">Дмитрий Артеев</a></p>\n<h3>Интересные факты</h3>\n<p>Через эту лигу прошло большое количество будущих чемпионов и финалистов Высшей лиги КВН (&laquo;Обычные люди&raquo;, &laquo;Фёдор Двинятин&raquo;, &laquo;Парапапарам&raquo;, &laquo;Сборная Физтеха&raquo;, &laquo;Спарта&raquo;, &laquo;Сборная города Мурманска&raquo;, &laquo;Сборная цирка&raquo;, &laquo;Плюшки&raquo; и другие).&nbsp;</p>\n<p class=\"western\">В 2010 и 2011 годах лигу выигрывала по сути одна и та же команда. В 2010 году выиграла команда &laquo;ФАС&raquo;, представляющая МЭИ, но на следующий год ребята объединились с командой &laquo;Сборная Физтеха&raquo; и уже дальше представляли именно этот ВУЗ.</p>\n<p>В 2019 году команда &laquo;Дети Тюрьринга&raquo;, выиграв &laquo;лампу&raquo; напрямую попала в Высшую лигу, минуя участие в телевизионных лигах МС КВН (Международной, Первой или Премьер-лиге). Спустя два года команда &laquo;Колосок&raquo; повторила этот успех.</p>\n<p>Также существуют межрегиональные и региональные лиги КВН Москвы и Московской области, куда выходят &laquo;МСЛ&raquo;, &laquo;Подмосковная лига&raquo;, &laquo;МСЛ-2&raquo;, &laquo;Первая лига Московской области&raquo; и лига особого статуса &laquo;Подъём&raquo;.</p>\n<p>Статистику финалов лиги можно посмотреть на <a href=\"kvn/lampa/finals.html\">отдельной странице</a>.</p>",
+          "title": "Центральная Лига Москвы и Подмосковья"
+        },
+        "id": "modx-1586-text-lampa",
+        "order": 0,
+        "type": "text_block",
+        "visible": true
+      },
+      {
+        "data": {
+          "anchor_id": "text-lampa2",
+          "content": "<p>В &laquo;нулевые&raquo; Центральную лигу Москвы и Подмосковья выигрывали в основном столичные команды. Среди них будущие чемпионы (&laquo;Обычные люди&raquo;) и финалисты (&laquo;Парапапарам&raquo;) &laquo;вышки&raquo;, а также яркая команда &laquo;Сега Мега Драв 16 бит&raquo;. Единственные представители других городов России &ndash; это будущие участники различных команд красноярского КВН (&laquo;Малина&raquo;).</p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><strong>Чемпион</strong></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2003</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/sbornaya-guu.html\">Сборная ГУУ</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2004</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\">Сборная МИИТа</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2005</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/obuchnie-lyudi.html\">Обычные люди</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2006</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\">Слёзы богатыря (РосНОУ)</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\">Запал-Малина Project (Малина)</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Красноярск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/parapaparam.html\">Парапапарам</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/sega.html\">Сега Мега Драйв 16 бит</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+          "title": "Чемпионы лиги (нулевые)"
+        },
+        "id": "modx-1586-text-lampa2",
+        "order": 1,
+        "type": "text_block",
+        "visible": true
+      },
+      {
+        "data": {
+          "anchor_id": "text-lampa3",
+          "content": "<p>В &laquo;десятые&raquo; география чемпионов &laquo;Лампы&raquo; разнообразилась. За десять лет лигу выигрывали команды из десяти городов. Среди победителей будущие финалисты &laquo;вышки&raquo;: &laquo;Сборная Физтеха&raquo;, &laquo;Плюшки&raquo; и &laquo;Имени меня&raquo;. Также в этом десятилетии случилось событие &ndash; чемпион &laquo;Лампы&raquo; 2019 года (&laquo;Дети Тьюринга&raquo;) попали в Высшую лигу напрямую без участия в других телевизионных лигах МС КВН.</p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><strong>Чемпион</strong></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\">ФАС (МЭИ)</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/fiztech.html\">Сборная Физтеха</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Долгопрудный</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/omichi.html\">Молодёжная сборная</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Омск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/gorod-razvlecheniy.html\">Город Развлечений</a></div>\n<div align=\"center\">СГВ</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Серпухов</div>\n<div align=\"center\">Владимир</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/roman.html\">Доброжелательный Роман</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Санкт-Петербург</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/plyoshki.html\">Плюшки им. Ярослава Гашека</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Тверь</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\">Чуваши ЧГУ</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Чебоксары</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\">Сборная МАИ</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/imenimenya.html\">Имени меня</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Королёв</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/deti-turinga.html\">Дети Тьюринга</a></div>\n<div align=\"center\">Подъём (Сборная МВД России)</div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Минск</div>\n<div align=\"center\">Россия</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+          "title": "Чемпионы лиги (десятые)"
+        },
+        "id": "modx-1586-text-lampa3",
+        "order": 2,
+        "type": "text_block",
+        "visible": true
+      },
+      {
+        "data": {
+          "anchor_id": "text-lampa4",
+          "content": "<p>В &laquo;двадцатые&raquo; помимо основного турнира &laquo;Лампы&raquo; в двух сезонах проводились &laquo;Спецпроекты&raquo;, в которых принимали участие опытные команды, в том числе участники Высшей лиги. В основном турнире лиги чемпионы 2021 года (&laquo;Колосок&raquo;) повторили путь &laquo;Детей Тьюринга&raquo;, сразу попав в Высшую лигу.</p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><strong>Чемпион</strong></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/leon-killer.html\">Леон Киллер</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Екатеринбург</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/kolosok.html\">Колосок</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Михайловск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/imeni-renata.html\">Им. Рената Абдулкеримова</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td>\n<div align=\"center\">2023</div>\n</td>\n<td>\n<div align=\"center\"><a href=\"kvn/team/oborovich.html\">Оборович</a></div>\n</td>\n<td>\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td>\n<div align=\"center\">2024</div>\n</td>\n<td>\n<div align=\"center\">Сезон не завершён</div>\n</td>\n<td>\n<div align=\"center\">...</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+          "title": "Чемпионы лиги (двадцатые)"
+        },
+        "id": "modx-1586-text-lampa4",
+        "order": 3,
+        "type": "text_block",
+        "visible": true
+      },
+      {
+        "data": {
+          "anchor_id": "text-lampa5",
+          "content": "<p class=\"western\">Дважды Центральная Лига Москвы и Подмосковья проводила Спецпроекты ЦЛМиП для опытных команд. И оба раза спецпроекты выигрывали опытные квнщики. В первый раз будущие чемпионы Высшей лиги - &laquo;Флэш-рояль&raquo;, а во второй раз команда, составленная из будущих финалистов &laquo;вышки&raquo; - &laquo;Хип-хоп трио &laquo;Чупа-чупс&raquo;.</p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><strong>Чемпион</strong></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/royalflush.html\">Флэш-Рояль</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Ростов-на-Дону</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"96\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"369\">\n<div align=\"center\"><a href=\"kvn/team/chupa-chups.html\">Хип-хоп трио &laquo;Чупа-чупс&raquo;</a></div>\n</td>\n<td valign=\"top\" width=\"227\">\n<div align=\"center\">Владивосток</div>\n<div align=\"center\">Нижний Новгород</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+          "title": "Чемпионы спецпроекта"
+        },
+        "id": "modx-1586-text-lampa5",
+        "order": 4,
+        "type": "text_block",
+        "visible": true
+      }
+    ],
+    "name": "Центральная Лига Москвы и Подмосковья",
+    "old_id": {
+      "$numberInt": "1586"
+    },
+    "old_urls": [
+      "/kvn/league/lampa/",
+      "/kvn/lampa",
+      "/kvn/lampa.html"
+    ],
+    "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+    "person_ids": [],
+    "poster": null,
+    "related_kvn_ids": [],
+    "seo": {
+      "keywords": [],
+      "meta_description": "Центральная Лига Москвы и Подмосковья (ЦЛМиП, «Лампа») – главная лига московского движения нетелевизионного КВН. Официальная Московская студенческая лига сущест",
+      "meta_title": "Центральная Лига Москвы и Подмосковья",
+      "og_image": null
+    },
+    "slug": "lampa",
+    "social_links": {},
+    "status": "published",
+    "tags": [
+      "Флэш-Рояль",
+      "Обычные люди",
+      "Имени меня",
+      "Дети Тьюринга",
+      "Парапапарам",
+      "Плюшки",
+      "Евгений Донских",
+      "Доброжелательный Роман",
+      "Леон Киллер",
+      "Город Развлечений",
+      "Владимир Костур",
+      "Сборная МАИ",
+      "Сега Мега Драйв 16 бит",
+      "Подъём",
+      "Олег Валенцов",
+      "Чуваши",
+      "Сборная ГУУ",
+      "Сборная Физтеха",
+      "Молодёжная сборная",
+      "Колосок",
+      "Чупа-Чупс",
+      "Сборная МИИТа",
+      "ФАС",
+      "Малина",
+      "КВН Лампа",
+      "Рубен Партевян",
+      "Слёзы богатыря",
+      "СГВ",
+      "Оборович"
+    ],
+    "team_ids": [],
+    "title": "Центральная Лига Москвы и Подмосковья",
+    "updated_at": {
+      "$date": {
+        "$numberLong": "1719658960000"
+      }
+    },
+    "views": 0
+  },
+  "prepared_parent_change": {
+    "after": [
+      "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8"
+    ],
+    "before": null,
+    "id": "febed962-e6b4-4c23-8106-a53830089b32",
+    "only_field": "child_kvn_ids"
+  }
+}

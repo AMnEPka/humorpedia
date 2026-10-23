@@ -13,6 +13,10 @@ import { LeagueSeasonsNav } from '../components/LeagueSeasonsNav';
 import SeasonDetailPage from './SeasonDetailPage';
 import { usePageTitle } from '@/utils/pageTitle';
 
+function sectionPath(path) {
+  return `/${String(path || '').replace(/^\/+/, '')}`;
+}
+
 function stripHtml(input) {
   if (typeof input !== 'string') return '';
   // Prefer a real HTML parser instead of regex-based stripping.
@@ -387,7 +391,7 @@ export default function SectionDetailPage() {
             {section.breadcrumbs.map((crumb, idx) => (
               <li key={idx} className="flex items-center gap-2">
                 <ChevronRight className="h-4 w-4" />
-                <Link to={crumb.full_path} className="hover:text-blue-600">
+                <Link to={sectionPath(crumb.full_path)} className="hover:text-blue-600">
                   {crumb.title}
                 </Link>
               </li>
@@ -510,7 +514,7 @@ export default function SectionDetailPage() {
                   <Card
                     key={child.id || child._id}
                     className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => navigate(child.full_path || `/${child.slug}`)}
+                    onClick={() => navigate(sectionPath(child.full_path || child.slug))}
                   >
                     <CardHeader>
                       <CardTitle className="text-lg">{child.name || child.title}</CardTitle>

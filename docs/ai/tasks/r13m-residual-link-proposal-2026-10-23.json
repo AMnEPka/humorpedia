@@ -3751,5 +3751,16 @@
     "date": "2026-10-23",
     "source": "Direct user reply to R13m approval question",
     "scope": "Exactly2label-specific hrefs on isolated copy; Антон Шастун and «Чехов и Кукота» only; Партизаны unchanged; no38resource import,main,24SMI,VPS"
+  },
+  "publication": {
+    "commit": "bb3221dee5810871a00e117473167ad4f47e6273",
+    "branch": "codex/local-page-builder",
+    "pushed": true,
+    "ci_run": 39966829017,
+    "ci_url": "https://github.com/AMnEPka/humorpedia/actions/runs/39966829017",
+    "ci_status": "completed",
+    "ci_conclusion": "success",
+    "jobs_passed": 5,
+    "browser_scenarios_passed": 3
   }
 }

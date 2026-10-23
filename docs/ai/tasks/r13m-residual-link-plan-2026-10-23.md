@@ -1,6 +1,6 @@
 # R13m — остаток внутренних ссылок и две контекстные правки
 
-Дата:23.10.2026. Статус: **две замены согласованы и приняты на изолированной копии; публикация разрешена пользователем**.
+Дата:23.10.2026. Статус: **две замены согласованы и приняты на изолированной копии; опубликованbb3221d, GitHub CI success**.
 
 Ветка `codex/local-page-builder`, тот же worktree `r5-zip-operations/humorpedia`, HEAD до незакоммиченных изменений `1e80a34213652ad66244bfde9785b6c53534df10`. R13l опубликован этим SHA; [GitHub CI39945508291](https://github.com/AMnEPka/humorpedia/actions/runs/39945508291) completed/success, все5jobs и3browser-сценария success. Основной стенд остаётся на main, импорт24СМИ/VPS не затрагиваются.
 
@@ -124,3 +124,9 @@ HEAD до незакоммиченных изменений `1e80a34213652ad6624
 Граница: это принятая projection25,620records, а не полноценный Mongo release archive. В native fixture остаётся прежнее предупреждение: unique `kvn.id` не создан из-за duplicate null; startup и проверяемые endpoints завершились. Исключённая сломанная цель не открывалась в браузере; сохранность исходного stored field подтверждена полным equality, публичный text-only результат — API. Новые full backend/build/CI не запускались без изменения продукта; сохранён R13l CI39945508291 на1e80a34,5jobs/3browser-сценария success.
 
 Пользователь разрешил отдельный commit/push R13m с документацией и проверкой CI; на момент этой контрольной точки публикация ещё не выполнена. Следующий объём —73 неподтверждённых keys и отдельный scoped dry-run восстановления38 SQL resources; импорт этих страниц не согласован. Основной стенд и VPS не переключать.
+
+## Публикация и продолжение23.10.2026
+
+R13m с документацией опубликован отдельным `bb3221dee5810871a00e117473167ad4f47e6273` в `origin/codex/local-page-builder`. [GitHub CI39966829017](https://github.com/AMnEPka/humorpedia/actions/runs/39966829017) completed/success,attempt1 на точном SHA:5jobs и3browser-сценария success. Evidence `.cache/r13n/r13m-ci-{run,jobs}-final.json`.
+
+Продолжение — [R13n](r13n-legacy-content-pilot-plan-2026-10-23.md): read-only восстановление исходного payload38SQLresources и проверка родителей/контрактов. Данные не импортированы; предложен отдельный пилот одной league-страницы Лампы с точным scope для согласования.

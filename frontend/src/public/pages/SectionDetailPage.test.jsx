@@ -1,6 +1,6 @@
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import SectionDetailPage from './SectionDetailPage';
 import publicApi from '../utils/api';
 
@@ -38,9 +38,14 @@ afterEach(async () => {
   jest.restoreAllMocks();
 });
 
+function CurrentPath() {
+  return <p data-testid="current-path">{useLocation().pathname}</p>;
+}
+
 async function render(path) {
   await act(async () => root.render(
     <MemoryRouter initialEntries={[path]}>
+      <CurrentPath />
       <Routes>
         <Route path="/current-section" element={<p>Актуальный раздел</p>} />
         <Route path="*" element={<SectionDetailPage />} />
@@ -63,4 +68,30 @@ test.each(['missing', 'failed'])('shows not found when redirect lookup is %s', a
   expect(publicApi.lookupRedirect).toHaveBeenCalledWith('/legacy.html');
   expect(host.textContent).toContain('Раздел не найден');
   expect(host.textContent).not.toContain('Актуальный раздел');
+});
+
+
+test.each(['kvn/league/lampa', '/kvn/league/lampa', undefined])('opens a child from the site root for full_path=%s', async (fullPath) => {
+  publicApi.lookupRedirect.mockResolvedValue({ data: { found: false } });
+  publicApi.getKvnByPath.mockResolvedValue({ data: {
+    title: 'Лиги МС КВН',
+    children: [{ id: 'lampa', title: 'Лампа', slug: 'lampa', full_path: fullPath }],
+  } });
+  await render('/kvn/league');
+  const card = Array.from(host.querySelectorAll('div.font-semibold')).find(node => node.textContent === 'Лампа');
+  expect(card).toBeTruthy();
+  await act(async () => card.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  expect(host.querySelector('[data-testid="current-path"]').textContent).toBe(fullPath ? '/kvn/league/lampa' : '/lampa');
+});
+
+test.each(['kvn/league', '/kvn/league'])('opens a breadcrumb from the site root for full_path=%s', async (fullPath) => {
+  publicApi.lookupRedirect.mockResolvedValue({ data: { found: false } });
+  publicApi.getKvnByPath.mockResolvedValue({ data: {
+    title: 'Лампа', breadcrumbs: [{ id: 'league', title: 'Лиги МС КВН', full_path: fullPath }],
+  } });
+  await render('/kvn/league/lampa');
+  const link = Array.from(host.querySelectorAll('a')).find(node => node.textContent === 'Лиги МС КВН');
+  expect(link).toBeTruthy();
+  await act(async () => link.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 })));
+  expect(host.querySelector('[data-testid="current-path"]').textContent).toBe('/kvn/league');
 });
