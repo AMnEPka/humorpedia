@@ -1,0 +1,2896 @@
+{
+  "schema_version": 1,
+  "task": "R13l",
+  "date": "2026-10-23",
+  "status": "implemented_and_accepted_on_isolated_copy",
+  "approved": true,
+  "branch": "codex/local-page-builder",
+  "base_commit": "8ddd3964633700be03e4a1245ab3cfc79d18b1a8",
+  "source_copy": ".cache/r13k/copy/patched.jsonl",
+  "source_sha256": "2512f09db268aa68fa59248dca8c8078ab4f33084ce0f4f6edadfaa5464df678",
+  "source_rows": 25620,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "counts": {
+    "keys": 73,
+    "rules": 75,
+    "anchors": 319,
+    "fields": 247,
+    "documents": 205,
+    "hidden_anchors": 10,
+    "hidden_fields": 8,
+    "source_statuses": [
+      "published"
+    ],
+    "unsupported": 0,
+    "plan_sha256": "f7fa3352d5e2454d4df048864575eb5bbfdc8ac39e273bbe39a36cfaa157020a",
+    "target_urls": 71,
+    "document_targets": 69,
+    "static_catalog_targets": 2
+  },
+  "field_plan": ".cache/r13l/exact-href-plan.json",
+  "mappings": [
+    {
+      "key": "igra-na-tnt",
+      "target": "/shows/igra",
+      "target_collection": "shows",
+      "target_id": "9d3fc455-3345-41e1-bbc5-9e775fa3d291",
+      "target_title": "ИГРА",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1644,
+      "resource_uri": "igra/",
+      "resource_title": "ИГРА",
+      "sql_line": 764860,
+      "anchor_labels": [
+        "«ИГРА»",
+        "«ИГРА!»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/igra-na-tnt"
+      ],
+      "literal_anchor_occurrences": 15,
+      "fields": 15,
+      "documents": 15,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "improv-kom",
+      "target": "/shows/improv-teams",
+      "target_collection": "shows",
+      "target_id": "9c1ab030-71d1-4db8-ac89-a33b88c31a03",
+      "target_title": "Импровизация. Команды",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1618,
+      "resource_uri": "improv-teams/",
+      "resource_title": "ИК",
+      "sql_line": 764833,
+      "anchor_labels": [
+        "«Импровизация. Команды»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/improv-kom"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "improv-kom/league/hard/2023v",
+      "target": "/shows/improv-teams/league/hard/2023v",
+      "target_collection": "shows",
+      "target_id": "1a1457b6-52be-4885-8c28-2c8a30909439",
+      "target_title": "Сезон 2023 (весна) Сцена «Хард»",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2214,
+      "resource_uri": "proekty/improv-kom/league/hard/2023v.html",
+      "resource_title": "Сезон 2023 (весна) Сцена «Хард»",
+      "sql_line": 765273,
+      "anchor_labels": [
+        "2023в"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/improv-kom/league/hard/2023v"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "improv-teams/beshenniye",
+      "target": "/shows/improv-teams/teams/besheniye",
+      "target_collection": "teams",
+      "target_id": "ed2078a5-6e27-48dc-ab48-5eb7126b02b2",
+      "target_title": "Бешеные",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1912,
+      "resource_uri": "improv-teams/besheniye.html",
+      "resource_title": "Бешеные",
+      "sql_line": 765112,
+      "anchor_labels": [
+        "Бешеные"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/improv-teams/beshenniye"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "improv-teams/kino",
+      "target": "/shows/improv-teams/rounds/kino",
+      "target_collection": "shows",
+      "target_id": "ac650606-aaa0-48b1-9c2d-7361be191e7b",
+      "target_title": "Раунд «Кинопремия» (Импровизация. Команды)",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1914,
+      "resource_uri": "improv-teams/rounds/kino.html",
+      "resource_title": "Раунд «Кинопремия» (Импровизация. Команды)",
+      "sql_line": 765114,
+      "anchor_labels": [
+        "Кинопремия"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/improv-teams/kino"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "improvkom-tajnyie",
+      "target": "/shows/improv-teams/teams/tainyie",
+      "target_collection": "teams",
+      "target_id": "2bcc59cb-674f-4c09-bb36-d32cb497b487",
+      "target_title": "Тайные",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1863,
+      "resource_uri": "improv-teams/tainyie.html",
+      "resource_title": "Тайные",
+      "sql_line": 765062,
+      "anchor_labels": [
+        "«Тайные»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/improvkom-tajnyie"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kazan",
+      "target": "/city/kazan",
+      "target_collection": "cities",
+      "target_id": "8bfb1b3d-18d5-4ccc-a8bf-c5f00294fc9e",
+      "target_title": "Казань",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2104,
+      "resource_uri": "city/kazan.html",
+      "resource_title": "Казань",
+      "sql_line": 765188,
+      "anchor_labels": [
+        "Казань"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kazan"
+      ],
+      "literal_anchor_occurrences": 4,
+      "fields": 4,
+      "documents": 4,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "krasnoyarsk",
+      "target": "/city/krasnoyarsk",
+      "target_collection": "cities",
+      "target_id": "e30f8105-bf5c-4c70-8292-5f83c422ce9a",
+      "target_title": "Красноярск",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2079,
+      "resource_uri": "city/krasnoyarsk.html",
+      "resource_title": "Красноярск",
+      "sql_line": 765162,
+      "anchor_labels": [
+        "Красноярск"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/krasnoyarsk"
+      ],
+      "literal_anchor_occurrences": 11,
+      "fields": 11,
+      "documents": 11,
+      "hidden_occurrences": 1
+    },
+    {
+      "key": "moscow",
+      "target": "/city/moscow",
+      "target_collection": "cities",
+      "target_id": "c6116941-e110-40f4-8c8d-80b6add1d950",
+      "target_title": "Москва",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2069,
+      "resource_uri": "city/moscow.html",
+      "resource_title": "Москва",
+      "sql_line": 765152,
+      "anchor_labels": [
+        "Москва"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/moscow"
+      ],
+      "literal_anchor_occurrences": 53,
+      "fields": 53,
+      "documents": 53,
+      "hidden_occurrences": 6
+    },
+    {
+      "key": "saratov",
+      "target": "/city/saratov",
+      "target_collection": "cities",
+      "target_id": "0222e4ea-327b-4aa4-a6b9-dc9e736af5f3",
+      "target_title": "Саратов",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2071,
+      "resource_uri": "city/saratov.html",
+      "resource_title": "Саратов",
+      "sql_line": 765154,
+      "anchor_labels": [
+        "Саратов"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/saratov"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvn/premier-liga/2023",
+      "target": "/kvn/premier-liga/pl-2023",
+      "target_collection": "kvn",
+      "target_id": "e9f2591d-c223-486b-8140-9fb869ca31ed",
+      "target_title": "Сезон 2023 Премьер-лиги КВН",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1549,
+      "resource_uri": "kvn/premier-liga/2023.html",
+      "resource_title": "Сезон 2023 Премьер-лиги КВН",
+      "sql_line": 764766,
+      "anchor_labels": [
+        "2023 года",
+        "Премьер-лиги",
+        "Премьер-лиги КВН",
+        "Премьер лиги",
+        "2023",
+        "Премьер-лиге",
+        "Премьер-лиги КВН 2023",
+        "< cезон 2023",
+        "сезон 2023 >"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvn/premier-liga/2023"
+      ],
+      "literal_anchor_occurrences": 38,
+      "fields": 38,
+      "documents": 37,
+      "hidden_occurrences": 1
+    },
+    {
+      "key": "kvn/premier-liga/sezon-2025-premer-ligi-kvn",
+      "target": "/kvn/premier-liga/pl-2025",
+      "target_collection": "kvn",
+      "target_id": "ccf975cd-7ee4-4570-8b3e-60feefc2f668",
+      "target_title": "Сезон 2025 Премьер-лиги",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3489,
+      "resource_uri": "kvn/premier-liga/2025.html",
+      "resource_title": "Сезон 2025 Премьер-лиги",
+      "sql_line": 766517,
+      "anchor_labels": [
+        " Премьер-лиги КВН"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvn/premier-liga/sezon-2025-premer-ligi-kvn"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvn/zvolki",
+      "target": "/kvn/teams/zlye-volki",
+      "target_collection": "teams",
+      "target_id": "dd288bfd-b689-4454-9aeb-e7e4670a97d1",
+      "target_title": "Злые волки",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2217,
+      "resource_uri": "kvn/zlye-volki.html",
+      "resource_title": "Злые волки",
+      "sql_line": 765276,
+      "anchor_labels": [
+        "«Злых Волков»",
+        "«Злые волки»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvn/zvolki"
+      ],
+      "literal_anchor_occurrences": 7,
+      "fields": 7,
+      "documents": 6,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvnteam/bortsy",
+      "target": "/kvn/teams/bortsy",
+      "target_collection": "teams",
+      "target_id": "1c0db10f-0be7-4d0f-94a1-deb1342d7baa",
+      "target_title": "Борцы",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1075,
+      "resource_uri": "kvn/team/bortsy.html",
+      "resource_title": "Борцы",
+      "sql_line": 764351,
+      "anchor_labels": [
+        "Борцы (2018-2019)",
+        "«Борцы»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvnteam/bortsy"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 1
+    },
+    {
+      "key": "kvnteam/kamyzyaki",
+      "target": "/kvn/teams/kamyzyaki",
+      "target_collection": "teams",
+      "target_id": "00ccdefd-58fa-44b1-b3e4-bd3b9fdeee7b",
+      "target_title": "Камызяки",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1071,
+      "resource_uri": "kvn/team/kamyzyaki.html",
+      "resource_title": "Камызяки",
+      "sql_line": 764347,
+      "anchor_labels": [
+        "«Камызякам»",
+        "«Камызяки»",
+        "Камызяки"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvnteam/kamyzyaki"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvnteam/raisy",
+      "target": "/kvn/teams/raisy",
+      "target_collection": "teams",
+      "target_id": "328e8a0f-d615-489d-8d23-10966d258534",
+      "target_title": "Раисы",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1064,
+      "resource_uri": "kvn/team/raisy.html",
+      "resource_title": "Раисы",
+      "sql_line": 764340,
+      "anchor_labels": [
+        "Раисы (2017)",
+        "«Раисы»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvnteam/raisy"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 1
+    },
+    {
+      "key": "kvnteam/severyane",
+      "target": "/kvn/teams/severyane",
+      "target_collection": "teams",
+      "target_id": "66dd69b4-c09c-4b2a-87e6-5eb101a11145",
+      "target_title": "Северяне",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1095,
+      "resource_uri": "kvn/team/severyane.html",
+      "resource_title": "Северяне",
+      "sql_line": 764372,
+      "anchor_labels": [
+        "Северяне"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvnteam/severyane"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvnteam/sssr",
+      "target": "/kvn/teams/sssr",
+      "target_collection": "teams",
+      "target_id": "54ca49a6-facb-45a9-9405-e9291172b5b7",
+      "target_title": "Сборная СССР",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1076,
+      "resource_uri": "kvn/team/sssr.html",
+      "resource_title": "Сборная СССР",
+      "sql_line": 764352,
+      "anchor_labels": [
+        "«Сборной СССР»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/kvnteam/sssr"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "novosti/kvn/team/soyuz",
+      "target": "/kvn/teams/soyuz",
+      "target_collection": "teams",
+      "target_id": "9db58f29-dee2-4a43-90f4-4f45bd7a1cbf",
+      "target_title": "Союз",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1072,
+      "resource_uri": "kvn/team/soyuz.html",
+      "resource_title": "Союз",
+      "sql_line": 764348,
+      "anchor_labels": [
+        "«Союз»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/novosti/kvn/team/soyuz"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "oshuitelnoe-xou",
+      "target": "/shows/medium-quality/ox",
+      "target_collection": "shows",
+      "target_id": "4399d149-71e0-4da6-8420-d43415bc9973",
+      "target_title": "Ошуительное Хоу",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1718,
+      "resource_uri": "medium-quality/ox/",
+      "resource_title": "Ошуительное Хоу",
+      "sql_line": 764932,
+      "anchor_labels": [
+        "«Ошуительное хоу»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/oshuitelnoe-xou"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "news/kopiya-otseni-komandu-master-musi",
+      "target": "/news/otseni-komandu-master-musi",
+      "target_collection": "news",
+      "target_id": "7ebca765-63a1-44db-9e05-0cf8e9a8cb55",
+      "target_title": "Оцени команду «Мастер Муси»",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2271,
+      "resource_uri": "novosti/otseni-komandu-master-musi.html",
+      "resource_title": "Оцени команду «Мастер Муси»",
+      "sql_line": 765329,
+      "anchor_labels": [
+        "Оценить «Мастер Муси»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/news/kopiya-otseni-komandu-master-musi"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "proekty",
+      "target": "/shows/standup",
+      "target_collection": "shows",
+      "target_id": "8f8f1bb5-b56c-49ee-8162-6e20b8f6200d",
+      "target_title": "Stand Up на ТНТ",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1637,
+      "resource_uri": "show/standup.html",
+      "resource_title": "Stand Up на ТНТ",
+      "sql_line": 764853,
+      "anchor_labels": [
+        "«Stand Up»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/proekty/"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "proekty/medium-quality/improkom",
+      "target": "/shows/medium-quality/improkom",
+      "target_collection": "shows",
+      "target_id": "4f496b95-c7cd-4b50-be59-c3f82574704b",
+      "target_title": "ИМПРОКОМ",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2287,
+      "resource_uri": "medium-quality/improkom/",
+      "resource_title": "ИМПРОКОМ",
+      "sql_line": 765343,
+      "anchor_labels": [
+        "ИМПРОКОМ"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/proekty/medium-quality/improkom"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "proekty/medium-quality/money-mic/money-mic-1-y-sezon",
+      "target": "/shows/money-mic/season1",
+      "target_collection": "shows",
+      "target_id": "2b8c1047-00bd-44a5-b2db-d019b4083d24",
+      "target_title": "Money Mic (1-й сезон)",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2298,
+      "resource_uri": "money-mic/season1.html",
+      "resource_title": "Money Mic (1-й сезон)",
+      "sql_line": 765355,
+      "anchor_labels": [
+        "Первый"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/proekty/medium-quality/money-mic/money-mic-1-y-sezon"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "proekty/medium-quality/oshuitelnoe-xou",
+      "target": "/shows/medium-quality/ox",
+      "target_collection": "shows",
+      "target_id": "4399d149-71e0-4da6-8420-d43415bc9973",
+      "target_title": "Ошуительное Хоу",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1718,
+      "resource_uri": "medium-quality/ox/",
+      "resource_title": "Ошуительное Хоу",
+      "sql_line": 764932,
+      "anchor_labels": [
+        "ОХ"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/proekty/medium-quality/oshuitelnoe-xou"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "proekty/zvezdy-ntv/team/sbornaya-dagestana",
+      "target": "/shows/zvezdy-ntv/teams/sbornaya-dagestana",
+      "target_collection": "teams",
+      "target_id": "6d2d57af-f695-4a68-8a4b-a7c2d186bda4",
+      "target_title": "Сборная Дагестана",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3596,
+      "resource_uri": "zvezdy-ntv/team/sbornaya-dagestana.html",
+      "resource_title": "Сборная Дагестана",
+      "sql_line": 766622,
+      "anchor_labels": [
+        "«Сборная Дагестана»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/proekty/zvezdy-ntv/team/sbornaya-dagestana"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "shows/igra/team",
+      "target": "/shows/igra/teams",
+      "target_collection": "shows",
+      "target_id": "e7b71917-f841-42e1-9934-af4a6aa556ff",
+      "target_title": "Команды шоу «ИГРА»",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1758,
+      "resource_uri": "igra/team/",
+      "resource_title": "Команды шоу «ИГРА»",
+      "sql_line": 764957,
+      "anchor_labels": [
+        "Команды проекта"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/shows/igra/team"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "shows/liga-gorodov/team",
+      "target": "/shows/liga-gorodov/teams",
+      "target_collection": "shows",
+      "target_id": "5ec7af2b-5ccc-481e-8f65-9329a0df49e7",
+      "target_title": "Команды «Лиги городов»",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1771,
+      "resource_uri": "liga-gorodov/team/",
+      "resource_title": "Команды ЛГ",
+      "sql_line": 764970,
+      "anchor_labels": [
+        "Команды шоу"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/shows/liga-gorodov/team"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "shows/zvezdy-ntv/team",
+      "target": "/shows/zvezdy-ntv/teams",
+      "target_collection": "shows",
+      "target_id": "a7e33084-33db-45a7-818f-421c458cab44",
+      "target_title": "Команды шоу «Звёзды»",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1775,
+      "resource_uri": "zvezdy-ntv/team/",
+      "resource_title": "Команды шоу «Звёзды»",
+      "sql_line": 764974,
+      "anchor_labels": [
+        "отдельной страничке"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/shows/zvezdy-ntv/team"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "smeh",
+      "target": "/shows/smeh-bez-pravil",
+      "target_collection": "shows",
+      "target_id": "e9586fe9-7eb8-4e64-86b5-25ff7255190a",
+      "target_title": "Смех без правил",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1626,
+      "resource_uri": "smeh-bez-pravil/",
+      "resource_title": "Смех без правил",
+      "sql_line": 764841,
+      "anchor_labels": [
+        "«Смех без правил»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/smeh"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "smeh-sezon-9",
+      "target": "/shows/smeh-bez-pravil/season9",
+      "target_collection": "shows",
+      "target_id": "7ab094d4-9662-49a5-97bc-bcbbab516d6a",
+      "target_title": "Смех без правил (9-й сезон)",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 1700,
+      "resource_uri": "smeh-bez-pravil/season9.html",
+      "resource_title": "Смех без правил (9-й сезон)",
+      "sql_line": 764916,
+      "anchor_labels": [
+        "«Золотой турнир»"
+      ],
+      "proof": "Reviewed authored anchor context, same existing published target UUID/old_id and MODX identity",
+      "old_href_variants": [
+        "/smeh-sezon-9"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvnteam/soyuz",
+      "target": "/kvn/teams/soyuz",
+      "target_collection": "teams",
+      "target_id": "9db58f29-dee2-4a43-90f4-4f45bd7a1cbf",
+      "target_title": "Союз",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": {
+        "anchor_labels": [
+          "Союз (2014)",
+          "«СОЮЗ»",
+          "«Союз»"
+        ]
+      },
+      "resource_id": 1072,
+      "resource_uri": "kvn/team/soyuz.html",
+      "resource_title": "Союз",
+      "sql_line": 764348,
+      "anchor_labels": [
+        "Союз (2014)",
+        "«СОЮЗ»",
+        "«Союз»"
+      ],
+      "proof": "Author worked with KVN team in2014; player family and KVN summer-cup tandem with DALS; not show namesakes",
+      "old_href_variants": [
+        "/kvnteam/soyuz"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvnteam/soyuz",
+      "target": "/shows/studiya-soyuz",
+      "target_collection": "shows",
+      "target_id": "e2841bad-eb63-4e65-bf7e-8f9ff49ce771",
+      "target_title": "Студия Союз",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": {
+        "anchor_labels": [
+          "«Студии Союз»"
+        ]
+      },
+      "resource_id": 1638,
+      "resource_uri": "show/studiya-soyuz.html",
+      "resource_title": "Студия Союз",
+      "sql_line": 764854,
+      "anchor_labels": [
+        "«Студии Союз»"
+      ],
+      "proof": "Poor Songs lyric pages explicitly name Студия Союз as producing show; separate published show card",
+      "old_href_variants": [
+        "/kvnteam/soyuz"
+      ],
+      "literal_anchor_occurrences": 8,
+      "fields": 8,
+      "documents": 8,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvn/team",
+      "target": "/kvn/teams/royalflush",
+      "target_collection": "teams",
+      "target_id": "86914e03-a5f6-46d5-be37-e082aa1bd529",
+      "target_title": "Флэш-Рояль",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": {
+        "anchor_labels": [
+          "команду «Флэш-Рояль»"
+        ]
+      },
+      "resource_id": 1037,
+      "resource_uri": "kvn/team/royalflush.html",
+      "resource_title": "Флэш-Рояль",
+      "sql_line": 764313,
+      "anchor_labels": [
+        "команду «Флэш-Рояль»"
+      ],
+      "proof": "Denis Gvozdev in Open Microphone season5 biography explicitly played for team Флэш-Рояль in Premier league",
+      "old_href_variants": [
+        "/kvn/team"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvn/team",
+      "target": "/kvn/teams",
+      "target_collection": "static",
+      "target_id": null,
+      "target_title": "Команды КВН",
+      "target_status": null,
+      "target_scope": "existing_static_catalog",
+      "selector": {
+        "anchor_labels": [
+          "команд КВН"
+        ]
+      },
+      "resource_id": null,
+      "resource_uri": null,
+      "resource_title": null,
+      "sql_line": null,
+      "anchor_labels": [
+        "команд КВН"
+      ],
+      "proof": "KVN отбивки page says full alphabetical team list; frontend App.jsx173 and resolver STATIC_PATHS",
+      "old_href_variants": [
+        "/kvn/team/"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kvnteam",
+      "target": "/kvn/teams",
+      "target_collection": "static",
+      "target_id": null,
+      "target_title": "Команды КВН",
+      "target_status": null,
+      "target_scope": "existing_static_catalog",
+      "selector": null,
+      "resource_id": null,
+      "resource_uri": null,
+      "resource_title": null,
+      "sql_line": null,
+      "anchor_labels": [
+        "Команды КВН"
+      ],
+      "proof": "Existing catalog route App.jsx173/184 and resolver STATIC_PATHS; labels identify catalog",
+      "old_href_variants": [
+        "/kvnteam/"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "quiz",
+      "target": "/quizzes",
+      "target_collection": "static",
+      "target_id": null,
+      "target_title": "Квизы",
+      "target_status": null,
+      "target_scope": "existing_static_catalog",
+      "selector": null,
+      "resource_id": null,
+      "resource_uri": null,
+      "resource_title": null,
+      "sql_line": null,
+      "anchor_labels": [
+        "здесь",
+        "«Квизы»"
+      ],
+      "proof": "Existing catalog route App.jsx173/184 and resolver STATIC_PATHS; labels identify catalog",
+      "old_href_variants": [
+        "/quiz/"
+      ],
+      "literal_anchor_occurrences": 10,
+      "fields": 10,
+      "documents": 5,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "akhmedova",
+      "target": "/people/yuliya-akhmedova",
+      "target_collection": "people",
+      "target_id": "6ebfcbdd-9026-4231-8618-cfd01d504351",
+      "target_title": "Ахмедова Юлия",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 124,
+      "resource_uri": "people/yuliya-akhmedova.html",
+      "resource_title": "Ахмедова Юлия",
+      "sql_line": 763393,
+      "anchor_labels": [
+        "Юлия Ахмедова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/akhmedova"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "dorohov",
+      "target": "/people/denis-dorohov",
+      "target_collection": "people",
+      "target_id": "54089f4a-8e9b-4f5a-9538-e41e23046d02",
+      "target_title": "Дорохов Денис",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 149,
+      "resource_uri": "people/denis-dorohov.html",
+      "resource_title": "Дорохов Денис",
+      "sql_line": 763419,
+      "anchor_labels": [
+        "Денис Дорохов"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/dorohov"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "imyagkova",
+      "target": "/people/irina-myagkova",
+      "target_collection": "people",
+      "target_id": "156fe673-675f-4e30-bada-f56c4779890d",
+      "target_title": "Мягкова Ирина",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 140,
+      "resource_uri": "people/irina-myagkova.html",
+      "resource_title": "Мягкова Ирина",
+      "sql_line": 763409,
+      "anchor_labels": [
+        "Ирина Мягкова",
+        "Ирины Мягковой"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/imyagkova"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "kositsyn",
+      "target": "/people/roman-kositsyn",
+      "target_collection": "people",
+      "target_id": "810175cc-34ab-45a1-acbf-5e1f881e61b6",
+      "target_title": "Косицын Роман",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 134,
+      "resource_uri": "people/roman-kositsyn.html",
+      "resource_title": "Косицын Роман",
+      "sql_line": 763403,
+      "anchor_labels": [
+        "Роман «Кос» Косицын",
+        "Романа Косицына",
+        "Роман «Кос» Косицын",
+        "Роман Косицын"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/kositsyn"
+      ],
+      "literal_anchor_occurrences": 4,
+      "fields": 4,
+      "documents": 4,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "lshkolnik",
+      "target": "/people/leonid-shkolnik",
+      "target_collection": "people",
+      "target_id": "25cf75d1-519d-43da-91d5-d367353be316",
+      "target_title": "Школьник Леонид",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 137,
+      "resource_uri": "people/leonid-shkolnik.html",
+      "resource_title": "Школьник Леонид",
+      "sql_line": 763406,
+      "anchor_labels": [
+        "Леонид Школьник",
+        "Леониду Школьнику"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/lshkolnik"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "nkrasnova",
+      "target": "/people/natalya-krasnova",
+      "target_collection": "people",
+      "target_id": "60f921e5-c31b-4a6a-8efb-67ec3763fc13",
+      "target_title": "Краснова Наталья",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 147,
+      "resource_uri": "people/natalya-krasnova.html",
+      "resource_title": "Краснова Наталья",
+      "sql_line": 763416,
+      "anchor_labels": [
+        "Наталья Краснова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/nkrasnova"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "pavelvolya",
+      "target": "/people/pavel-volya",
+      "target_collection": "people",
+      "target_id": "32a22316-7e00-4ef0-966b-9056497945e3",
+      "target_title": "Воля Павел",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 135,
+      "resource_uri": "people/pavel-volya.html",
+      "resource_title": "Воля Павел",
+      "sql_line": 763404,
+      "anchor_labels": [
+        "Павел «Снежок» Воля",
+        "Павлом Волей"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/pavelvolya"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/aleshin-vlados",
+      "target": "/people/vlados-aleshin",
+      "target_collection": "people",
+      "target_id": "01b18689-9d85-4755-9089-fd38abfd1427",
+      "target_title": "Алёшин Владос",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2993,
+      "resource_uri": "people/vlados-aleshin.html",
+      "resource_title": "Алёшин Владос",
+      "sql_line": 766025,
+      "anchor_labels": [
+        "Владос Алёшин"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/aleshin-vlados"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/aslamova-ekaterina",
+      "target": "/people/ekaterina-aslamova",
+      "target_collection": "people",
+      "target_id": "08ec54ef-fc9a-4d47-84da-b4b07ab465e8",
+      "target_title": "Асламова Екатерина",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3659,
+      "resource_uri": "people/ekaterina-aslamova.html",
+      "resource_title": "Асламова Екатерина",
+      "sql_line": 766681,
+      "anchor_labels": [
+        "Екатерина Асламова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/aslamova-ekaterina"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/beloborodov-gosha",
+      "target": "/people/gosha-beloborodov",
+      "target_collection": "people",
+      "target_id": "c67a3653-fbbd-4190-a03f-1455c9f3c726",
+      "target_title": "Белобородов Гоша",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3017,
+      "resource_uri": "people/gosha-beloborodov.html",
+      "resource_title": "Белобородов Гоша",
+      "sql_line": 766049,
+      "anchor_labels": [
+        "Гоша Белобородов",
+        "Георгий Белобородов"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/beloborodov-gosha"
+      ],
+      "literal_anchor_occurrences": 5,
+      "fields": 5,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/davydov-roman",
+      "target": "/people/roman-davydov",
+      "target_collection": "people",
+      "target_id": "01934d9d-9490-4eeb-99f7-fb77ab03d130",
+      "target_title": "Давыдов Роман",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3662,
+      "resource_uri": "people/roman-davydov.html",
+      "resource_title": "Давыдов Роман",
+      "sql_line": 766684,
+      "anchor_labels": [
+        "Роман Давыдов"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/davydov-roman"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/dmitrypeshkov",
+      "target": "/people/dmitry-peshkov",
+      "target_collection": "people",
+      "target_id": "6112264b-3e4e-4862-b020-75d80eb06e15",
+      "target_title": "Горький Митя",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 182,
+      "resource_uri": "people/dmitry-peshkov.html",
+      "resource_title": "Горький Митя",
+      "sql_line": 763452,
+      "anchor_labels": [
+        "Митя Горький"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/dmitrypeshkov"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/gazal-polina",
+      "target": "/people/polina-gazal",
+      "target_collection": "people",
+      "target_id": "024c9841-09aa-48aa-8abf-3be1254efde1",
+      "target_title": "Газаль Полина",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2985,
+      "resource_uri": "people/polina-gazal.html",
+      "resource_title": "Газаль Полина",
+      "sql_line": 766017,
+      "anchor_labels": [
+        "Полина Газаль"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/gazal-polina"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/ginovyan-samvel",
+      "target": "/people/samvel-ginovyan",
+      "target_collection": "people",
+      "target_id": "6bc5a9c2-b0d1-4a7a-afc3-5164f3a30776",
+      "target_title": "Гиновян Самвел",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2991,
+      "resource_uri": "people/samvel-ginovyan.html",
+      "resource_title": "Гиновян Самвел",
+      "sql_line": 766023,
+      "anchor_labels": [
+        "Самвел Гиновян"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/ginovyan-samvel"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/gudkov-aleksandr",
+      "target": "/people/aleksandr-gudkov",
+      "target_collection": "people",
+      "target_id": "55301bbb-aadf-4f45-93af-b7ce5cd08aef",
+      "target_title": "Гудков Александр",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2994,
+      "resource_uri": "people/aleksandr-gudkov.html",
+      "resource_title": "Гудков Александр",
+      "sql_line": 766026,
+      "anchor_labels": [
+        "Александр Гудков",
+        "Александром Гудковым",
+        "Александра Гудкова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/gudkov-aleksandr"
+      ],
+      "literal_anchor_occurrences": 15,
+      "fields": 15,
+      "documents": 11,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/korobeynikov-vladislav",
+      "target": "/people/vladislav-korobeynikov",
+      "target_collection": "people",
+      "target_id": "c1e2aa9e-b132-45b8-8f8e-e0aabbea1979",
+      "target_title": "Коробейников Владислав",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3028,
+      "resource_uri": "people/vladislav-korobeynikov.html",
+      "resource_title": "Коробейников Владислав",
+      "sql_line": 766060,
+      "anchor_labels": [
+        "Влад Коробейников"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/korobeynikov-vladislav"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/kotofeeva-katya",
+      "target": "/people/katya-kotofeeva",
+      "target_collection": "people",
+      "target_id": "64326de7-eaf5-4fe4-b9d8-5922d870246e",
+      "target_title": "Котофеева Катя",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2882,
+      "resource_uri": "people/katya-kotofeeva.html",
+      "resource_title": "Котофеева Катя",
+      "sql_line": 765919,
+      "anchor_labels": [
+        "Катя Котофеева",
+        "Екатерина Котофеева"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/kotofeeva-katya"
+      ],
+      "literal_anchor_occurrences": 5,
+      "fields": 5,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/krasilnikova-ulyana",
+      "target": "/people/ulyana-krasilnikova",
+      "target_collection": "people",
+      "target_id": "0f508644-5fc6-4a76-b5ba-80e7a6fbdecc",
+      "target_title": "Красильникова Ульяна",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2964,
+      "resource_uri": "people/ulyana-krasilnikova.html",
+      "resource_title": "Красильникова Ульяна",
+      "sql_line": 765995,
+      "anchor_labels": [
+        "Ульяна Красильникова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/krasilnikova-ulyana"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/kudinova-svetlana",
+      "target": "/people/svetlana-kudinova",
+      "target_collection": "people",
+      "target_id": "6a623d64-ad0e-4e1e-87b8-437b1a083d24",
+      "target_title": "Кудинова Светлана",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3660,
+      "resource_uri": "people/svetlana-kudinova.html",
+      "resource_title": "Кудинова Светлана",
+      "sql_line": 766682,
+      "anchor_labels": [
+        "Светлана Кудинова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/kudinova-svetlana"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/kurmangaliev-karim",
+      "target": "/people/karim-kurmangaliev",
+      "target_collection": "people",
+      "target_id": "0035e008-8231-46b1-9548-beb4402a74c9",
+      "target_title": "Курмангалиев Карим",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3027,
+      "resource_uri": "people/karim-kurmangaliev.html",
+      "resource_title": "Курмангалиев Карим",
+      "sql_line": 766059,
+      "anchor_labels": [
+        "Карим Курмангалиев"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/kurmangaliev-karim"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/lomakina-valeriya",
+      "target": "/people/valeriya-lomakina",
+      "target_collection": "people",
+      "target_id": "3ec9dd44-1de5-4b1d-9725-610494763351",
+      "target_title": "Ломакина Валерия",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2989,
+      "resource_uri": "people/valeriya-lomakina.html",
+      "resource_title": "Ломакина Валерия",
+      "sql_line": 766021,
+      "anchor_labels": [
+        "Лера Ломакина",
+        " Лера Ломакина "
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/lomakina-valeriya"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/menshikova-ekaterina",
+      "target": "/people/ekaterina-menshikova",
+      "target_collection": "people",
+      "target_id": "b84e0e18-0c37-4bc2-baa8-dbea534bb7b4",
+      "target_title": "Меншикова Екатерина",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3658,
+      "resource_uri": "people/ekaterina-menshikova.html",
+      "resource_title": "Меншикова Екатерина",
+      "sql_line": 766680,
+      "anchor_labels": [
+        "Екатерина Меншикова"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/menshikova-ekaterina"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/mirzalizade-idrak",
+      "target": "/people/idrak-mirzalizade",
+      "target_collection": "people",
+      "target_id": "78ff4853-f7a3-4479-a98e-0f537dda13fe",
+      "target_title": "Мирзализаде Идрак",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2992,
+      "resource_uri": "people/idrak-mirzalizade.html",
+      "resource_title": "Мирзализаде Идрак",
+      "sql_line": 766024,
+      "anchor_labels": [
+        "Идрак Мирзализаде"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/mirzalizade-idrak"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/morgachev-vladimir",
+      "target": "/people/vladimir-morgachev",
+      "target_collection": "people",
+      "target_id": "1643b0e3-dae6-4312-b351-a8df135bdf18",
+      "target_title": "Моргачёв Владимир",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3026,
+      "resource_uri": "people/vladimir-morgachev.html",
+      "resource_title": "Моргачёв Владимир",
+      "sql_line": 766058,
+      "anchor_labels": [
+        "Владимир Моргачёв",
+        "Моргачёв"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/morgachev-vladimir"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/myasoedov-sergey",
+      "target": "/people/sergey-myasoedov",
+      "target_collection": "people",
+      "target_id": "1d3402e5-febd-48f9-8767-5a993edc064d",
+      "target_title": "Мясоедов Сергей",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3009,
+      "resource_uri": "people/sergey-myasoedov.html",
+      "resource_title": "Мясоедов Сергей",
+      "sql_line": 766041,
+      "anchor_labels": [
+        "Сергеем Мясоедовым",
+        "Сергей Мясоедов",
+        "Сергей Мясоедов",
+        "Мясоедов"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/myasoedov-sergey"
+      ],
+      "literal_anchor_occurrences": 11,
+      "fields": 11,
+      "documents": 9,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/petrov-egor",
+      "target": "/people/egor-petrov",
+      "target_collection": "people",
+      "target_id": "af5769ce-b656-47f9-a564-e126da995424",
+      "target_title": "Петров Егор",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2894,
+      "resource_uri": "people/egor-petrov.html",
+      "resource_title": "Петров Егор",
+      "sql_line": 765930,
+      "anchor_labels": [
+        "Егор Петров"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/petrov-egor"
+      ],
+      "literal_anchor_occurrences": 4,
+      "fields": 4,
+      "documents": 4,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/pihulya-maksim",
+      "target": "/people/maksim-pihulya",
+      "target_collection": "people",
+      "target_id": "4dc2c7cb-0389-4361-adc5-8de382800d36",
+      "target_title": "Пихуля Максим",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2988,
+      "resource_uri": "people/maksim-pihulya.html",
+      "resource_title": "Пихуля Максим",
+      "sql_line": 766020,
+      "anchor_labels": [
+        "Макс Пихуля",
+        "Макс Пихуля ",
+        "Макс Пихуля "
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/pihulya-maksim"
+      ],
+      "literal_anchor_occurrences": 5,
+      "fields": 5,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/polomina-yuliya",
+      "target": "/people/yuliya-polomina",
+      "target_collection": "people",
+      "target_id": "f35e77ca-b915-4e06-a0ef-54b9709af257",
+      "target_title": "Поломина Юлия",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2968,
+      "resource_uri": "people/yuliya-polomina.html",
+      "resource_title": "Поломина Юлия",
+      "sql_line": 765999,
+      "anchor_labels": [
+        "Юля Поломина"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/polomina-yuliya"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/saleev-andrey",
+      "target": "/people/andrey-saleev",
+      "target_collection": "people",
+      "target_id": "0721a421-5b65-40bb-ad93-7a51aa499663",
+      "target_title": "Салеев Андрей",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2987,
+      "resource_uri": "people/andrey-saleev.html",
+      "resource_title": "Салеев Андрей",
+      "sql_line": 766019,
+      "anchor_labels": [
+        "Андрей Салеев"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/saleev-andrey"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/sergeyskachkov",
+      "target": "/people/sergey-skachkov",
+      "target_collection": "people",
+      "target_id": "db1c210d-b56a-454a-889f-6d410de3dae8",
+      "target_title": "Скачков Сергей",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 181,
+      "resource_uri": "people/sergey-skachkov.html",
+      "resource_title": "Скачков Сергей",
+      "sql_line": 763451,
+      "anchor_labels": [
+        "Сергей Скачков",
+        "Скачков "
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/sergeyskachkov"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/shabanov",
+      "target": "/people/alexander-shabanov",
+      "target_collection": "people",
+      "target_id": "d35822c8-795c-4392-b420-0c3de7468ad1",
+      "target_title": "Бурдашев Александр",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 123,
+      "resource_uri": "people/alexander-shabanov.html",
+      "resource_title": "Бурдашев Александр",
+      "sql_line": 763392,
+      "anchor_labels": [
+        "Александр «Бурдашев» Шабанов"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/shabanov"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/tsarukaev-chermen",
+      "target": "/people/chermen-tsarukaev",
+      "target_collection": "people",
+      "target_id": "f1baf906-dac1-414c-94ed-db2845b607f4",
+      "target_title": "Царукаев Чермен",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 3029,
+      "resource_uri": "people/chermen-tsarukaev.html",
+      "resource_title": "Царукаев Чермен",
+      "sql_line": 766061,
+      "anchor_labels": [
+        "Чермен Царукаев",
+        "Царукаев"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/tsarukaev-chermen"
+      ],
+      "literal_anchor_occurrences": 7,
+      "fields": 7,
+      "documents": 5,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/vartanyants-zamrat",
+      "target": "/people/zamrat-vartanyants",
+      "target_collection": "people",
+      "target_id": "574eaee4-e9f6-4b8e-b225-0dc1c1aab09d",
+      "target_title": "Вартанянц Замрат",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2888,
+      "resource_uri": "people/zamrat-vartanyants.html",
+      "resource_title": "Вартанянц Замрат",
+      "sql_line": 765925,
+      "anchor_labels": [
+        "Замрат Вартанянц ",
+        "Замрат Вартанянц"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/vartanyants-zamrat"
+      ],
+      "literal_anchor_occurrences": 6,
+      "fields": 4,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "people/zulfugarov-kamil",
+      "target": "/people/kamil-zulfugarov",
+      "target_collection": "people",
+      "target_id": "f9fd3e83-6def-4e06-8cc2-cfc8b8e89f13",
+      "target_title": "Зулфугаров Камиль",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 2990,
+      "resource_uri": "people/kamil-zulfugarov.html",
+      "resource_title": "Зулфугаров Камиль",
+      "sql_line": 766022,
+      "anchor_labels": [
+        "Камиль Зулфугаров"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/people/zulfugarov-kamil"
+      ],
+      "literal_anchor_occurrences": 7,
+      "fields": 7,
+      "documents": 4,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "sergei-brysev",
+      "target": "/people/sergey-brysev",
+      "target_collection": "people",
+      "target_id": "a5225883-cb8e-4ebb-a06a-ef66c32e1936",
+      "target_title": "Брысев Сергей",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 161,
+      "resource_uri": "people/sergey-brysev.html",
+      "resource_title": "Брысев Сергей",
+      "sql_line": 763431,
+      "anchor_labels": [
+        "Сергей Брысев"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/sergei-brysev"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "shabanov",
+      "target": "/people/alexander-shabanov",
+      "target_collection": "people",
+      "target_id": "d35822c8-795c-4392-b420-0c3de7468ad1",
+      "target_title": "Бурдашев Александр",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 123,
+      "resource_uri": "people/alexander-shabanov.html",
+      "resource_title": "Бурдашев Александр",
+      "sql_line": 763392,
+      "anchor_labels": [
+        "Александр Бурдашев"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/shabanov"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "shastunimakar",
+      "target": "/people/shastun-i-makar",
+      "target_collection": "people",
+      "target_id": "383da97e-b583-4cba-b00c-73e8be89f99f",
+      "target_title": "Дуэт «Шастун и Макар»",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 115,
+      "resource_uri": "people/shastun-i-makar.html",
+      "resource_title": "Дуэт «Шастун и Макар»",
+      "sql_line": 763384,
+      "anchor_labels": [
+        "«Шастун и Макар»"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/shastunimakar"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0
+    },
+    {
+      "key": "smatvienko",
+      "target": "/people/sergey-matvienko",
+      "target_collection": "people",
+      "target_id": "a1f9f1ba-0ba9-4661-a49b-db386e938b59",
+      "target_title": "Матвиенко Сергей",
+      "target_status": "published",
+      "target_scope": "existing_published_document",
+      "selector": null,
+      "resource_id": 138,
+      "resource_uri": "people/sergey-matvienko.html",
+      "resource_title": "Матвиенко Сергей",
+      "sql_line": 763407,
+      "anchor_labels": [
+        "Сергей Матвиенко"
+      ],
+      "proof": "Exact visible/current full-name identity and published target UUID/old_id; inflected/short labels reviewed in the same source-key context",
+      "old_href_variants": [
+        "/smatvienko"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0
+    }
+  ],
+  "holdouts": [
+    {
+      "key": "all-users/profile-preview",
+      "occurrences": 4,
+      "pages": 3,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/articles/vzglyad-na-rossiyskiy-yumor-iz-usa",
+        "/news/mark-hilkevich-narisoval-sharzh-na-finalistov-vysshey-ligi-kvn-2024-goda"
+      ]
+    },
+    {
+      "key": "chekhovikukota",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "same source URL is shown as both a duet name and the distinct team label «Партизаны»; projection does not prove these labels identify one target",
+      "source_examples": [
+        "/shows/smeh-bez-pravil/season5",
+        "/shows/ubojnaya-liga"
+      ]
+    },
+    {
+      "key": "kvn/asia",
+      "occurrences": 23,
+      "pages": 23,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/nastya-gurova",
+        "/people/natasha-fridman"
+      ]
+    },
+    {
+      "key": "kvn/dalnevostochnaya-liga/2025",
+      "occurrences": 14,
+      "pages": 12,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/multiplex",
+        "/kvn/teams/da-my-damy"
+      ]
+    },
+    {
+      "key": "kvn/golosyashiy-kivin/1995",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/golosyashiy-kivin"
+      ]
+    },
+    {
+      "key": "kvn/golosyashiy-kivin/2021",
+      "occurrences": 9,
+      "pages": 9,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/yusif-yusifov",
+        "/people/lena-ugleva"
+      ]
+    },
+    {
+      "key": "kvn/golosyashiy-kivin/2022",
+      "occurrences": 18,
+      "pages": 18,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/ekaterina-fedorova",
+        "/people/ekaterina-olinchuk"
+      ]
+    },
+    {
+      "key": "kvn/golosyashiy-kivin/2023",
+      "occurrences": 12,
+      "pages": 12,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/filipp-isachenko",
+        "/people/andrey-isaev"
+      ]
+    },
+    {
+      "key": "kvn/golosyashiy-kivin/2024",
+      "occurrences": 4,
+      "pages": 3,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/kolosok",
+        "/news/efir-golosyashchego-kivina-1-yanvarya"
+      ]
+    },
+    {
+      "key": "kvn/golosyashiy-kivin/2025",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/porshni",
+        "/kvn/golosyashiy-kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-1990",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/vl-kvn/vl-1990",
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-1991",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/kivin",
+        "/kvn/vl-kvn/vl-1991"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-1993",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/vl-kvn/vl-1993",
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2015",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/vl-kvn/vl-2015",
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2016",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/gorizont",
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2017",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2018",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/planeta-sochi",
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2019",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/kivin"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2022",
+      "occurrences": 18,
+      "pages": 18,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/omskaya-sbornaya",
+        "/kvn/teams/rovenki"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2023",
+      "occurrences": 9,
+      "pages": 9,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/dnk",
+        "/kvn/teams/bez-grani"
+      ]
+    },
+    {
+      "key": "kvn/kivin/kivin-2024",
+      "occurrences": 25,
+      "pages": 25,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/polina-gorinova",
+        "/people/anton-baryilik"
+      ]
+    },
+    {
+      "key": "kvn/krasnodarskaya-liga",
+      "occurrences": 24,
+      "pages": 23,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/irina-asalieva",
+        "/people/olga-kartunkova"
+      ]
+    },
+    {
+      "key": "kvn/lampa",
+      "occurrences": 172,
+      "pages": 170,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/maksim-antosyak",
+        "/people/alexander-scheglov"
+      ]
+    },
+    {
+      "key": "kvn/lampa/finals",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/articles/a-vy-znali-chto-2",
+        "/kvn/teams/barricadnaya"
+      ]
+    },
+    {
+      "key": "kvn/league/2021",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn",
+        "/kvn/league"
+      ]
+    },
+    {
+      "key": "kvn/league/2022",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn",
+        "/kvn/league"
+      ]
+    },
+    {
+      "key": "kvn/league/2023",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn",
+        "/kvn/league"
+      ]
+    },
+    {
+      "key": "kvn/league/2024",
+      "occurrences": 16,
+      "pages": 9,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/itogi-tsentralnoy-uralskoy-ligi-kvn",
+        "/news/itogi-tsentralnoy-uralskoy-ligi-kvn"
+      ]
+    },
+    {
+      "key": "kvn/league/2025",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn",
+        "/kvn/league"
+      ]
+    },
+    {
+      "key": "kvn/league/asia",
+      "occurrences": 7,
+      "pages": 6,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/kopy",
+        "/kvn/teams/obskoe-more"
+      ]
+    },
+    {
+      "key": "kvn/league/krasnodarskaya-liga",
+      "occurrences": 5,
+      "pages": 5,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/samaya-grustnaya-rok-gruppa",
+        "/kvn/teams/tverskoy-bulvar"
+      ]
+    },
+    {
+      "key": "kvn/league/lampa",
+      "occurrences": 26,
+      "pages": 22,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/mma-sechenova",
+        "/kvn/teams/omichi"
+      ]
+    },
+    {
+      "key": "kvn/league/msl/2024",
+      "occurrences": 9,
+      "pages": 9,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/moi-rodnye",
+        "/kvn/teams/nrp"
+      ]
+    },
+    {
+      "key": "kvn/league/neva",
+      "occurrences": 3,
+      "pages": 3,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/zapakh-grushi",
+        "/kvn"
+      ]
+    },
+    {
+      "key": "kvn/league/povolzhye",
+      "occurrences": 7,
+      "pages": 7,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/sbornaya-guu",
+        "/kvn/teams/pogivem-uvidim"
+      ]
+    },
+    {
+      "key": "kvn/league/southwest",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn",
+        "/kvn/league"
+      ]
+    },
+    {
+      "key": "kvn/league/start",
+      "occurrences": 5,
+      "pages": 4,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/dmitry-sorokin",
+        "/news/den-rozhdeniya-stantsii-sportivnoy"
+      ]
+    },
+    {
+      "key": "kvn/league/tikhookeanskaya",
+      "occurrences": 5,
+      "pages": 4,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/itogi-tsentralnoy-tihookeanskoy-ligi-kvn",
+        "/news/itogi-tsentralnoy-tihookeanskoy-ligi-kvn"
+      ]
+    },
+    {
+      "key": "kvn/league/trempel",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn",
+        "/kvn/league"
+      ]
+    },
+    {
+      "key": "kvn/league/ural",
+      "occurrences": 4,
+      "pages": 3,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/itogi-tsentralnoy-uralskoy-ligi-kvn",
+        "/news/itogi-tsentralnoy-uralskoy-ligi-kvn"
+      ]
+    },
+    {
+      "key": "kvn/neva",
+      "occurrences": 20,
+      "pages": 20,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/egor-trunov",
+        "/people/alexander-scheglov"
+      ]
+    },
+    {
+      "key": "kvn/povolzhye",
+      "occurrences": 26,
+      "pages": 26,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/maria-komarova",
+        "/people/raphael-nasuibullin"
+      ]
+    },
+    {
+      "key": "kvn/southwest",
+      "occurrences": 16,
+      "pages": 16,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/liza-panfilova",
+        "/people/vladimir-tararukin"
+      ]
+    },
+    {
+      "key": "kvn/specproekt/sp-2021",
+      "occurrences": 4,
+      "pages": 4,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/teams/deti-turinga",
+        "/kvn/teams/bgu"
+      ]
+    },
+    {
+      "key": "kvn/specproekt/sp-2022",
+      "occurrences": 11,
+      "pages": 11,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/anastasia-korkhova",
+        "/people/liza-konovalenko"
+      ]
+    },
+    {
+      "key": "kvn/start",
+      "occurrences": 18,
+      "pages": 18,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/igor-tarletskiy",
+        "/people/roman-podolyak"
+      ]
+    },
+    {
+      "key": "kvn/teams/mifu-drevney-greece",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/dmitry-arefiev"
+      ]
+    },
+    {
+      "key": "kvn/teams/vo-vse-tyazhkie",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/ml-kvn/ml-2018"
+      ]
+    },
+    {
+      "key": "kvn/tikhookeanskaya",
+      "occurrences": 5,
+      "pages": 5,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/vlas-slugachev",
+        "/kvn/teams/azbuka"
+      ]
+    },
+    {
+      "key": "kvn/ural",
+      "occurrences": 14,
+      "pages": 14,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/tatiana-suvorina",
+        "/people/nastya-gurova"
+      ]
+    },
+    {
+      "key": "kvn/vysshaya-liga/referee/2022",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/kvn/vl-kvn/referee-vysshaya-liga",
+        "/kvn/vl-kvn/vl-2022"
+      ]
+    },
+    {
+      "key": "people/Anastasia-Agafonova",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/raisy",
+        "/shows/zvezdy-ntv/teams/raisy"
+      ]
+    },
+    {
+      "key": "people/alexander-kalambet",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/people/olga-egorcheva",
+        "/shows/openmicrophone/season7"
+      ]
+    },
+    {
+      "key": "people/alexander-pikalov",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/95-kvartal"
+      ]
+    },
+    {
+      "key": "people/egor-borikov",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/stella-magnetis"
+      ]
+    },
+    {
+      "key": "people/elena-gordeeva",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/people/roman-postovalov"
+      ]
+    },
+    {
+      "key": "people/elena-kravets",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/95-kvartal"
+      ]
+    },
+    {
+      "key": "people/gavriil-gordeev",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/people/oleg-vereschagin"
+      ]
+    },
+    {
+      "key": "people/ksenia-rogozhina",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/shows/liga-gorodov/teams/salavat",
+        "/kvn/teams/gorod-kras-devushek"
+      ]
+    },
+    {
+      "key": "people/romashov-konstantin",
+      "occurrences": 3,
+      "pages": 2,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/people/vladimir-morgachev",
+        "/news/bitvy-za-vremya-final"
+      ]
+    },
+    {
+      "key": "people/sarkisyan-artashes",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/articles/kuda-propal-tash-sarkisyan"
+      ]
+    },
+    {
+      "key": "people/stas-rudnitskiy",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/kembridge"
+      ]
+    },
+    {
+      "key": "people/vladimir-fedorov",
+      "occurrences": 2,
+      "pages": 2,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/bomond",
+        "/kvn/teams/ananas"
+      ]
+    },
+    {
+      "key": "people/yuriy-krapov",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "no unique current person record is supported by visible full-name labels",
+      "source_examples": [
+        "/kvn/teams/95-kvartal"
+      ]
+    },
+    {
+      "key": "plohie-pesni/text10",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/shows/plohie-pesni"
+      ]
+    },
+    {
+      "key": "podcasts-109800058",
+      "occurrences": 2,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/novyy-proekt-ot-medium-quality-vspomnit-vse",
+        "/news/novyy-proekt-ot-medium-quality-vspomnit-vse"
+      ]
+    },
+    {
+      "key": "proekty/medium-quality/blicz-krik",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/rustam-reptiloid"
+      ]
+    },
+    {
+      "key": "proekty/medium-quality/istoriya-na-noch",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/evgenij-chebatkov"
+      ]
+    },
+    {
+      "key": "proekty/medium-quality/roast-battle-lc",
+      "occurrences": 3,
+      "pages": 3,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/sasha-ni",
+        "/people/roman-kositsyn"
+      ]
+    },
+    {
+      "key": "roast-battle-lc",
+      "occurrences": 2,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/lyubimye-komedii-komikov",
+        "/news/lyubimye-komedii-komikov"
+      ]
+    },
+    {
+      "key": "shastun",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "visible labels match multiple current person records",
+      "source_examples": [
+        "/shows/ne-spat/season3"
+      ]
+    },
+    {
+      "key": "stati-po-tegu",
+      "occurrences": 6,
+      "pages": 3,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/7-vypuska-money-mic",
+        "/news/7-vypuska-money-mic"
+      ]
+    },
+    {
+      "key": "video-63032186_456239420",
+      "occurrences": 2,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/news/mezhdunarodnaya-liga-vyshla-v-efir",
+        "/news/mezhdunarodnaya-liga-vyshla-v-efir"
+      ]
+    },
+    {
+      "key": "ya-sebya-znayu",
+      "occurrences": 1,
+      "pages": 1,
+      "reason": "Not included: no approved exact existing-target mapping; requires separate identity/content review",
+      "source_examples": [
+        "/people/azamat-musagaliev"
+      ]
+    }
+  ],
+  "expected_unresolved_after_execution": 74,
+  "expected_only": false,
+  "execution_acceptance": {
+    "date": "2026-10-23",
+    "task": "R13l",
+    "base_commit": "8ddd3964633700be03e4a1245ab3cfc79d18b1a8",
+    "status": "accepted_on_isolated_copy",
+    "native_run": "009f559f3d5a4353b9f458d5b46c1637",
+    "release_id": "340fa99dc58ed63e53a92bd50009ba386b1ec5f9dcf80af25cccdddec5506a7b",
+    "source_sha256": "2512f09db268aa68fa59248dca8c8078ab4f33084ce0f4f6edadfaa5464df678",
+    "output_sha256": "9d2fcb72a5a893bcb0f0aa4d7a12e88b0575956fd150bbe66508046ed6da2209",
+    "plan_sha256": "f7fa3352d5e2454d4df048864575eb5bbfdc8ac39e273bbe39a36cfaa157020a",
+    "records": 25620,
+    "changed_documents": 205,
+    "changed_fields": 247,
+    "href_edits": 319,
+    "keys": 73,
+    "rules": 75,
+    "hidden_edits": 10,
+    "hidden_fields": 8,
+    "document_targets": 69,
+    "static_catalog_targets": 2,
+    "copy_guard_tests_passed": 5,
+    "independent_snapshot_check": "PASS",
+    "unchanged_records": 25415,
+    "relation_findings": 0,
+    "seasons": 122,
+    "participations": 9276,
+    "original_unresolved": 147,
+    "unresolved": 74,
+    "api_html_sources_passed": 205,
+    "api_html_document_targets_passed": 69,
+    "catalogs": [
+      {
+        "path": "/kvn/teams",
+        "kind": "static",
+        "html": 200,
+        "listing_api": 200,
+        "items": 24,
+        "total": 1123,
+        "expected_heading": "Команды"
+      },
+      {
+        "path": "/quizzes",
+        "kind": "static",
+        "html": 200,
+        "listing_api": 200,
+        "items": 11,
+        "total": 11,
+        "expected_heading": "Квизы и тесты"
+      }
+    ],
+    "browser_clicks_passed": 21,
+    "browser_source_kinds": [
+      "people",
+      "articles",
+      "teams",
+      "shows",
+      "news",
+      "kvn"
+    ],
+    "browser_target_headings": "exact normalized equality",
+    "browser_pageerrors": 0,
+    "before_snapshot": {
+      "run_id": "009f559f3d5a4353b9f458d5b46c1637",
+      "records": 25620,
+      "non_view_domain_fields_unchanged": true,
+      "scope": "Own seeded projection only; runtime view counters excluded; bounded batches"
+    },
+    "after_snapshot": {
+      "run_id": "009f559f3d5a4353b9f458d5b46c1637",
+      "records": 25620,
+      "non_view_domain_fields_unchanged": true,
+      "scope": "Own seeded projection only; runtime view counters excluded; bounded batches"
+    },
+    "hidden_scope": "All10 exact spans in8 fields verified offline; expected target sets checked in parent API, not each response field; hidden modules not enabled in UI",
+    "browser_scope": "Six source kinds and15 context-specific cases; selected visible exact-label links, not all319 edits. Legacy season modules intentionally suppressed in React remain offline/API coverage only. Conditional foreign-agent assertion unexercised because no target has flag true.",
+    "cleanup": {
+      "containers": [],
+      "network_removed": true,
+      "images_removed": [
+        "hp-r13l-pages-009f559f3d5a4353b9f458d5b46c1637-backend:latest",
+        "hp-r13l-pages-009f559f3d5a4353b9f458d5b46c1637-gateway:latest"
+      ],
+      "error": null
+    },
+    "main": {
+      "branch": "main",
+      "head": "ca46155a9640d4723c07b9fd1762a6e639563414",
+      "clean": true,
+      "containers": [
+        {
+          "name": "/humorpedia-backend",
+          "id": "6e4c35677d2a72b057feb89645f1c3cbba2546dfbb2f3bd808d9825faae12745",
+          "started_at": "2026-10-21T08:50:48.954791227Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-frontend",
+          "id": "0cba07b3a129fc37659eed76782d66501a9856cca7c16a7d9ce3b1b56272da15",
+          "started_at": "2026-10-21T08:50:49.201030699Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-mongodb",
+          "id": "21cb1fd6939deb55c77cf3ac88b233c3d3e63d963aa115568e5f7183e027985a",
+          "started_at": "2026-10-20T05:53:53.11828567Z",
+          "restarts": 0,
+          "state": "running",
+          "health": "healthy"
+        }
+      ],
+      "http_3000": 200,
+      "http_8001_health": 200
+    },
+    "product_code_changed": false,
+    "full_backend_rerun": false,
+    "retained_ci": {
+      "commit": "8ddd3964633700be03e4a1245ab3cfc79d18b1a8",
+      "run": 39926764123,
+      "conclusion": "success",
+      "jobs": 5,
+      "browser_scenarios": 3
+    },
+    "fixture_warning": "kvn.id unique index: duplicate null ids in projected import; startup completed, API/browser passed. This projection is not a full release archive.",
+    "failed_native_attempts": [
+      {
+        "run": "2f2654d8030d4b908edf95cb65c357c4",
+        "cause": "test harness whole-file snapshot read hit OSError12 before startup; fixed by bounded streaming",
+        "api_browser_executed": false,
+        "resources_removed": true,
+        "shutdown_guard_error": true
+      },
+      {
+        "run": "80f158de68104a1290ed62632dedc2c3",
+        "cause": "checker generic source selection escaped source kind; fixed preferred field/kind assertion",
+        "http_passed": true,
+        "browser_clicks_completed": 4,
+        "cleanup_error": null
+      },
+      {
+        "run": "a38a91cf55d04e0c8fce110c9b71ac0a",
+        "cause": "checker sampled intentionally suppressed legacy season module; switched KVN sample to rendered article",
+        "http_passed": true,
+        "browser_clicks_completed": 5,
+        "cleanup_error": null
+      },
+      {
+        "run": "c57b7056f8b8472ea96b48d2c43f72b5",
+        "cause": "checker locator detached during React render; wait networkidle and live exact-label locator",
+        "http_passed": true,
+        "browser_clicks_completed": 10,
+        "cleanup_error": null
+      }
+    ],
+    "committed": false,
+    "pushed": false,
+    "apply_to_main": false,
+    "deploy_to_vps": false,
+    "final_scope_review": {
+      "path": ".cache/r13l/final-scope-review.json",
+      "sha256": "cbca4ae367bfaffd5945a9eff58eff7e9a5dfdec659dbcafdb301b785e0a2f5c",
+      "status": "PASS_WITH_BOUNDARIES",
+      "scope": "Independent snapshot comparison plus read-only final native artifact review; boundaries in review JSON",
+      "blockers": []
+    },
+    "browser_blocked_external_origins": [
+      "https://sun9-33.userapi.com",
+      "https://sun9-34.userapi.com",
+      "https://sun9-39.userapi.com",
+      "https://sun9-69.userapi.com"
+    ],
+    "publication_authorized": true
+  },
+  "invariants": [
+    "Exact href spans only; visible labels,nested HTML,other attributes,query,fragment preserved",
+    "Two mixed keys use explicit label selectors per occurrence, not one global target",
+    "Source snapshot immutable; new exclusive output only after approval, guarded by source/plan/field hashes and typed IDs",
+    "No new/deleted records or status changes; R13i identities,R13h media,season projections preserved",
+    "Static targets use existing App.jsx routes and STATIC_PATHS; no fabricated DB IDs",
+    "No global slug fallback, no main,24SMI,VPS or indexing changes"
+  ],
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "proposal_validation": {
+    "scope": "Read-only only; no copy produced and no source values rewritten",
+    "review_path": ".cache/r13l/proposal-review.json",
+    "review_sha256": "2ca6929fd190402ebb319152ddb9b05a4e6407bc3bd2a99dddbc00b16d0b8e68",
+    "checks_passed": 9,
+    "checks_failed": 0,
+    "preimages_verified": 247,
+    "spans_verified": 319,
+    "hidden_spans": 10,
+    "hidden_fields": 8,
+    "document_target_identities": 69,
+    "static_catalog_targets": 2,
+    "unsupported": 0,
+    "blockers": [],
+    "runtime_acceptance": false
+  },
+  "approval": {
+    "date": "2026-10-23",
+    "source": "Direct user reply to R13l approval question",
+    "scope": "Full75rules/73keys/319href/205documents including10hidden and two mixed-key label splits, two existing catalogs, isolated copy only; no main,24SMI,VPS"
+  }
+}

@@ -1,6 +1,6 @@
 # R13k — точное восстановление оставшихся prefix/path href
 
-Дата:23.10.2026. Статус: **согласовано и принято на изолированной копии23.10.2026; публикация разрешена пользователем**.
+Дата:23.10.2026. Статус: **согласовано и принято на изолированной копии23.10.2026; опубликовано8ddd396, GitHub CI success**.
 
 Ветка `codex/local-page-builder`, worktree `r5-zip-operations/humorpedia`, HEAD `5ab9154c14f475ef06fe8aa3ec34aaa786e52821`.
 
@@ -188,3 +188,9 @@ Run `40b758e9618046a6b9b1ed8a6e45af86` прошёл15кликов и after snaps
 Пользователь разрешил отдельный commit/push R13k с документацией. В тот же пакет входят накопленные обновления статусов публикации R13j/CI. Основной стенд не переключать, на VPS не выкладывать.
 
 Остаток147 keys, включая festival KiViN-2024, требует отдельного точного review; общий slug fallback запрещён прежними решениями. Поиск8 оригинальных season posters,111external/embed URL, применение согласованной demo-policy к полноценному release archive, интеграция и dev-sync после интеграции остаются отдельными этапами. Новые изменения данных сверх102 mappings не выполнялись.
+
+## Публикация и продолжение23.10.2026
+
+R13k и документация опубликованы отдельным `8ddd3964633700be03e4a1245ab3cfc79d18b1a8`, push в `origin/codex/local-page-builder`. [GitHub39926764123](https://github.com/AMnEPka/humorpedia/actions/runs/39926764123) completed/success,attempt1 на точном SHA: все5jobs и3browser-сценария success. Evidence `.cache/r13l/r13k-ci-{run,jobs}-final.json`.
+
+Продолжение [R13l](r13l-reviewed-link-plan-2026-10-23.md) согласовано и принято на изолированной копии:75правил/73keys/319href/247fields/205docs,hidden10;69published targets+2существующих каталога. API/HTML205+69+2 и browser21 PASS,unresolved74. Исходник R13k неизменен; R13l не закоммичен. Main/24СМИ/VPS unchanged.

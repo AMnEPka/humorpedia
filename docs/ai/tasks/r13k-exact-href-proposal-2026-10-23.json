@@ -2702,5 +2702,16 @@
     "date": "2026-10-23",
     "scope": "All102 exact mappings,782 href,422 documents,9 hidden href on isolated derived copy; festival excluded; main,24SMI,VPS unchanged",
     "source": "Direct user reply to R13k approval question"
+  },
+  "publication": {
+    "commit": "8ddd3964633700be03e4a1245ab3cfc79d18b1a8",
+    "branch": "codex/local-page-builder",
+    "pushed": true,
+    "ci_run": 39926764123,
+    "ci_url": "https://github.com/AMnEPka/humorpedia/actions/runs/39926764123",
+    "ci_status": "completed",
+    "ci_conclusion": "success",
+    "jobs_passed": 5,
+    "browser_scenarios_passed": 3
   }
 }
