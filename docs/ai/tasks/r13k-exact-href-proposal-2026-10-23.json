@@ -1,0 +1,2706 @@
+{
+  "schema_version": 1,
+  "task": "R13k",
+  "status": "implemented_and_accepted_on_isolated_copy",
+  "approved": true,
+  "date": "2026-10-23",
+  "branch": "codex/local-page-builder",
+  "base_commit": "5ab9154c14f475ef06fe8aa3ec34aaa786e52821",
+  "source_copy": ".cache/r13j/copy/patched.jsonl",
+  "source_sha256": "90e38c00f870bcbf28702675097eb752b8304148f5556d61d481e8985f9e4ea7",
+  "source_rows": 25620,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "counts": {
+    "keys": 102,
+    "anchors": 782,
+    "fields": 548,
+    "documents": 422,
+    "hidden_anchors": 9,
+    "source_statuses": [
+      "published"
+    ],
+    "unsupported": 0,
+    "plan_sha256": "b8f9a556bba7c9b3fd7b05873225b19e2299eebd7cc30a0a57f78281b791d3d2",
+    "targets": 99
+  },
+  "field_plan": ".cache/r13k/exact-href-plan.json",
+  "mappings": [
+    {
+      "key": "Improv/gromkiy-vopros",
+      "target": "/shows/medium-quality/improkom/gromkiy-vopros",
+      "target_collection": "shows",
+      "target_id": "882c81c8-0e4a-4660-860d-95ada6e6a9ee",
+      "target_title": "Громкий вопрос",
+      "target_status": "published",
+      "resource_id": 1682,
+      "resource_uri": "medium-quality/improkom/gromkiy-vopros.html",
+      "resource_title": "Громкий вопрос",
+      "sql_line": 764898,
+      "anchor_labels": [
+        "Список вопросов из шоу"
+      ],
+      "old_href_variants": [
+        "/Improv/gromkiy-vopros"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "dvij/jam",
+      "target": "/shows/medium-quality/dvij/jam",
+      "target_collection": "shows",
+      "target_id": "588af0a4-ac03-412a-a5db-16eb6cfef6b3",
+      "target_title": "JAM",
+      "target_status": "published",
+      "resource_id": 1774,
+      "resource_uri": "medium-quality/dvij/jam.html",
+      "resource_title": "JAM",
+      "sql_line": 764973,
+      "anchor_labels": [
+        "«JAM»"
+      ],
+      "old_href_variants": [
+        "/dvij/jam"
+      ],
+      "literal_anchor_occurrences": 5,
+      "fields": 5,
+      "documents": 5,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "eople/vadim-postilnyij",
+      "target": "/people/vadim-postilnyij",
+      "target_collection": "people",
+      "target_id": "b18ac736-b2aa-489c-9ce1-0bdf595b41f8",
+      "target_title": "Постильный Вадим",
+      "target_status": "published",
+      "resource_id": 177,
+      "resource_uri": "people/vadim-postilnyij.html",
+      "resource_title": "Постильный Вадим",
+      "sql_line": 763447,
+      "anchor_labels": [
+        "Вадим Постильный"
+      ],
+      "old_href_variants": [
+        "/eople/vadim-postilnyij"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvn/teams/vladivostok",
+      "target": "/kvn/teams/sbornaya-vladivostoka",
+      "target_collection": "teams",
+      "target_id": "5f54ede4-b724-4d8f-affa-cb4103a17f26",
+      "target_title": "Сборная Владивостока",
+      "target_status": "published",
+      "resource_id": 2373,
+      "resource_uri": "kvn/team/sbornaya-vladivostoka.html",
+      "resource_title": "Сборная Владивостока",
+      "sql_line": 765429,
+      "anchor_labels": [
+        "«Сборной Владивостока»",
+        "Сборная Владивостока",
+        "«Сборная Владивостока»"
+      ],
+      "old_href_variants": [
+        "/kvn/teams/vladivostok"
+      ],
+      "literal_anchor_occurrences": 8,
+      "fields": 8,
+      "documents": 8,
+      "hidden_occurrences": 2,
+      "decision": "context_corrects_false_slug_candidate",
+      "rejected_slug_candidate": {
+        "collection": "cities",
+        "url": "/city/vladivostok",
+        "title": "Владивосток"
+      }
+    },
+    {
+      "key": "kvn/vysshaya-liga/referee-vysshaya-liga",
+      "target": "/kvn/vl-kvn/referee-vysshaya-liga",
+      "target_collection": "kvn",
+      "target_id": "602d3fb7-1324-46e3-be4d-176b4337b9de",
+      "target_title": "Члены жюри Высшей лиги",
+      "target_status": "published",
+      "resource_id": 1517,
+      "resource_uri": "kvn/vysshaya-liga/referee/",
+      "resource_title": "Члены жюри Высшей лиги",
+      "sql_line": 764738,
+      "anchor_labels": [
+        "член жюри",
+        "постоянный член жюри игр КВН"
+      ],
+      "old_href_variants": [
+        "/kvn/vysshaya-liga/referee-vysshaya-liga"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/25",
+      "target": "/kvn/teams/25",
+      "target_collection": "teams",
+      "target_id": "70ba2fd1-bd7a-4bc1-88d9-c8fb290e24e5",
+      "target_title": "25-ая",
+      "target_status": "published",
+      "resource_id": 1046,
+      "resource_uri": "kvn/team/25.html",
+      "resource_title": "25-ая",
+      "sql_line": 764322,
+      "anchor_labels": [
+        "«25-ая»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/25"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/asia-mix",
+      "target": "/kvn/teams/asia-mix",
+      "target_collection": "teams",
+      "target_id": "40f359be-3327-496f-b549-adaaceca23b1",
+      "target_title": "Азия MIX",
+      "target_status": "published",
+      "resource_id": 1092,
+      "resource_uri": "kvn/team/asia-mix.html",
+      "resource_title": "Азия MIX",
+      "sql_line": 764369,
+      "anchor_labels": [
+        "Азия MIX (2015-2018)",
+        "«Азия MIX»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/asia-mix"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/bdsm",
+      "target": "/kvn/teams/bdsm",
+      "target_collection": "teams",
+      "target_id": "a8321427-fe5c-4432-ba9e-006818d71f15",
+      "target_title": "Будем дружить семьями",
+      "target_status": "published",
+      "resource_id": 1124,
+      "resource_uri": "kvn/team/bdsm.html",
+      "resource_title": "Будем дружить семьями",
+      "sql_line": 764401,
+      "anchor_labels": [
+        "«Будем дружить семьями»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/bdsm"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/brodyagi",
+      "target": "/kvn/teams/brodyagi",
+      "target_collection": "teams",
+      "target_id": "a63d1a99-17dd-4267-96d7-1fe2d8666daf",
+      "target_title": "Махачкалинские бродяги",
+      "target_status": "published",
+      "resource_id": 1087,
+      "resource_uri": "kvn/team/brodyagi.html",
+      "resource_title": "Махачкалинские бродяги",
+      "sql_line": 764364,
+      "anchor_labels": [
+        "«Махачкалинские бродяги»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/brodyagi"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/chistye-prudy",
+      "target": "/kvn/teams/chistye-prudy",
+      "target_collection": "teams",
+      "target_id": "402721d4-752d-4681-b1c1-aa41500e4a5b",
+      "target_title": "Чистые пруды",
+      "target_status": "published",
+      "resource_id": 1118,
+      "resource_uri": "kvn/team/chistye-prudy.html",
+      "resource_title": "Чистые пруды",
+      "sql_line": 764395,
+      "anchor_labels": [
+        "«Чистые пруды»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/chistye-prudy"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/chp",
+      "target": "/kvn/teams/chp",
+      "target_collection": "teams",
+      "target_id": "823cb029-49d6-4c0a-8a0e-0886c26d2335",
+      "target_title": "ЧП",
+      "target_status": "published",
+      "resource_id": 1044,
+      "resource_uri": "kvn/team/chp.html",
+      "resource_title": "ЧП",
+      "sql_line": 764320,
+      "anchor_labels": [
+        "команды КВН «ЧП»",
+        "ЧП"
+      ],
+      "old_href_variants": [
+        "/kvnteam/chp"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/dals",
+      "target": "/kvn/teams/dals",
+      "target_collection": "teams",
+      "target_id": "1700a991-786c-4779-9615-4e6650d67d73",
+      "target_title": "ДАЛС",
+      "target_status": "published",
+      "resource_id": 1034,
+      "resource_uri": "kvn/team/dals.html",
+      "resource_title": "ДАЛС",
+      "sql_line": 764310,
+      "anchor_labels": [
+        "«ДАЛС»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/dals"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/devchonki",
+      "target": "/kvn/teams/devchonki",
+      "target_collection": "teams",
+      "target_id": "3489aae0-e578-486f-803a-e1fbe8eae102",
+      "target_title": "Девчонки",
+      "target_status": "published",
+      "resource_id": 1100,
+      "resource_uri": "kvn/team/devchonki.html",
+      "resource_title": "Девчонки",
+      "sql_line": 764377,
+      "anchor_labels": [
+        "«Девчонки»",
+        "Девчонки"
+      ],
+      "old_href_variants": [
+        "/kvnteam/devchonki"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/dlsh",
+      "target": "/kvn/teams/dlsh",
+      "target_collection": "teams",
+      "target_id": "66d408ec-8e14-42de-9044-37f73a6c448e",
+      "target_title": "Дети лейтенанта Шмидта",
+      "target_status": "published",
+      "resource_id": 1054,
+      "resource_uri": "kvn/team/dlsh.html",
+      "resource_title": "Дети лейтенанта Шмидта",
+      "sql_line": 764330,
+      "anchor_labels": [
+        "Дети лейтенанта Шмидта"
+      ],
+      "old_href_variants": [
+        "/kvnteam/dlsh"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/doktor-hauss",
+      "target": "/kvn/teams/doktor-hauss",
+      "target_collection": "teams",
+      "target_id": "76da1ddb-17db-4732-a82f-9241201e32d4",
+      "target_title": "Доктор Хаусс",
+      "target_status": "published",
+      "resource_id": 1099,
+      "resource_uri": "kvn/team/doktor-hauss.html",
+      "resource_title": "Доктор Хаусс",
+      "sql_line": 764376,
+      "anchor_labels": [
+        "«Доктор Хаусс»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/doktor-hauss"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/electroshock",
+      "target": "/kvn/teams/electroshock",
+      "target_collection": "teams",
+      "target_id": "d1c783a8-def0-48ea-a320-303b944a3609",
+      "target_title": "Электрошок",
+      "target_status": "published",
+      "resource_id": 1127,
+      "resource_uri": "kvn/team/electroshock.html",
+      "resource_title": "Электрошок",
+      "sql_line": 764404,
+      "anchor_labels": [
+        "команды КВН «Электрошок»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/electroshock"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/g-drive",
+      "target": "/kvn/teams/g-drive",
+      "target_collection": "teams",
+      "target_id": "9cae97b7-b07e-4fe7-8420-ba1e460f5517",
+      "target_title": "G-Drive",
+      "target_status": "published",
+      "resource_id": 1121,
+      "resource_uri": "kvn/team/g-drive.html",
+      "resource_title": "G-Drive",
+      "sql_line": 764398,
+      "anchor_labels": [
+        "«G-Drive»",
+        "G-Drive"
+      ],
+      "old_href_variants": [
+        "/kvnteam/g-drive"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/holodnie-goroda",
+      "target": "/kvn/teams/holodnie-goroda",
+      "target_collection": "teams",
+      "target_id": "ea6e4f07-8893-4718-a7a2-c4e44d734a87",
+      "target_title": "Сборная холодных КВН городов",
+      "target_status": "published",
+      "resource_id": 1130,
+      "resource_uri": "kvn/team/holodnie-goroda.html",
+      "resource_title": "Сборная холодных КВН городов",
+      "sql_line": 764407,
+      "anchor_labels": [
+        "«Сборная холодных КВН городов»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/holodnie-goroda"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/imenimenya",
+      "target": "/kvn/teams/imenimenya",
+      "target_collection": "teams",
+      "target_id": "5950ca6d-0649-49d4-9c56-48c1bf9d057c",
+      "target_title": "Имени меня",
+      "target_status": "published",
+      "resource_id": 1040,
+      "resource_uri": "kvn/team/imenimenya.html",
+      "resource_title": "Имени меня",
+      "sql_line": 764316,
+      "anchor_labels": [
+        "«Имени меня»",
+        "Имени меня"
+      ],
+      "old_href_variants": [
+        "/kvnteam/imenimenya"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/krasniy-lis",
+      "target": "/kvn/teams/krasniy-lis",
+      "target_collection": "teams",
+      "target_id": "e533e5ed-b2ea-46e1-9fe0-2e7fae98e40b",
+      "target_title": "Красный лис",
+      "target_status": "published",
+      "resource_id": 1102,
+      "resource_uri": "kvn/team/krasniy-lis.html",
+      "resource_title": "Красный лис",
+      "sql_line": 764379,
+      "anchor_labels": [
+        "Красный Лис"
+      ],
+      "old_href_variants": [
+        "/kvnteam/krasniy-lis"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/mdudikov",
+      "target": "/kvn/teams/mdudikov",
+      "target_collection": "teams",
+      "target_id": "e68866dc-e6d5-4d7b-8163-8cdfbfee3f0c",
+      "target_title": "Михаил Дудиков",
+      "target_status": "published",
+      "resource_id": 1052,
+      "resource_uri": "kvn/team/mdudikov.html",
+      "resource_title": "Михаил Дудиков",
+      "sql_line": 764328,
+      "anchor_labels": [
+        "Михаил Дудиков"
+      ],
+      "old_href_variants": [
+        "/kvnteam/mdudikov"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/megapolis",
+      "target": "/kvn/teams/megapolis",
+      "target_collection": "teams",
+      "target_id": "32b01475-b45c-4429-9aac-1759d564ce27",
+      "target_title": "Мегаполис",
+      "target_status": "published",
+      "resource_id": 1039,
+      "resource_uri": "kvn/team/megapolis.html",
+      "resource_title": "Мегаполис",
+      "sql_line": 764315,
+      "anchor_labels": [
+        "«Мегаполис»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/megapolis"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/napoleon-dinamit",
+      "target": "/kvn/teams/napoleon-dinamit",
+      "target_collection": "teams",
+      "target_id": "31dda75d-396d-4666-836d-e5f3dbfce0e0",
+      "target_title": "Наполеон Динамит",
+      "target_status": "published",
+      "resource_id": 1038,
+      "resource_uri": "kvn/team/napoleon-dinamit.html",
+      "resource_title": "Наполеон Динамит",
+      "sql_line": 764314,
+      "anchor_labels": [
+        "Наполеон Динамит (2019)",
+        "«Наполеон Динамит»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/napoleon-dinamit"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/ne-takaya",
+      "target": "/kvn/teams/ne-takaya",
+      "target_collection": "teams",
+      "target_id": "da11220c-279c-405d-b891-65ab1831323e",
+      "target_title": "Не такая",
+      "target_status": "published",
+      "resource_id": 1079,
+      "resource_uri": "kvn/team/ne-takaya.html",
+      "resource_title": "Не такая",
+      "sql_line": 764355,
+      "anchor_labels": [
+        "Не такая"
+      ],
+      "old_href_variants": [
+        "/kvnteam/ne-takaya"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/neudergimyij-djo",
+      "target": "/kvn/teams/neudergimyij-djo",
+      "target_collection": "teams",
+      "target_id": "217c6d29-6f8b-474c-ad9b-349bc451408a",
+      "target_title": "Неудержимый Джо",
+      "target_status": "published",
+      "resource_id": 1093,
+      "resource_uri": "kvn/team/neudergimyij-djo.html",
+      "resource_title": "Неудержимый Джо",
+      "sql_line": 764370,
+      "anchor_labels": [
+        "«Неудержимый Джо»",
+        "Неудержимый Джо"
+      ],
+      "old_href_variants": [
+        "/kvnteam/neudergimyij-djo"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/novyie-armyane",
+      "target": "/kvn/teams/novyie-armyane",
+      "target_collection": "teams",
+      "target_id": "9bf26027-3ef8-451c-bb91-1b536742cdfb",
+      "target_title": "Новые армяне",
+      "target_status": "published",
+      "resource_id": 1053,
+      "resource_uri": "kvn/team/novyie-armyane.html",
+      "resource_title": "Новые армяне",
+      "sql_line": 764329,
+      "anchor_labels": [
+        "Новые армяне"
+      ],
+      "old_href_variants": [
+        "/kvnteam/novyie-armyane"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/planeta-sochi",
+      "target": "/kvn/teams/planeta-sochi",
+      "target_collection": "teams",
+      "target_id": "2e9326de-77bf-41ea-9624-1a6ad3979688",
+      "target_title": "Планета Сочи",
+      "target_status": "published",
+      "resource_id": 1116,
+      "resource_uri": "kvn/team/planeta-sochi.html",
+      "resource_title": "Планета Сочи",
+      "sql_line": 764393,
+      "anchor_labels": [
+        "«Планета Сочи",
+        "«Планета Сочи»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/planeta-sochi"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/poligraf",
+      "target": "/kvn/teams/poligraf",
+      "target_collection": "teams",
+      "target_id": "54e401e1-2ef6-40eb-9107-a21bd6308742",
+      "target_title": "Полиграф Полиграфыч",
+      "target_status": "published",
+      "resource_id": 1042,
+      "resource_uri": "kvn/team/poligraf.html",
+      "resource_title": "Полиграф Полиграфыч",
+      "sql_line": 764318,
+      "anchor_labels": [
+        "«Полиграф Полиграфыч»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/poligraf"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/proigryivatel",
+      "target": "/kvn/teams/proigryivatel",
+      "target_collection": "teams",
+      "target_id": "4c1308b8-ea5a-4489-98fd-65aee8b72baf",
+      "target_title": "Проигрыватель",
+      "target_status": "published",
+      "resource_id": 1085,
+      "resource_uri": "kvn/team/proigryivatel.html",
+      "resource_title": "Проигрыватель",
+      "sql_line": 764361,
+      "anchor_labels": [
+        "«Проигрыватель»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/proigryivatel"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/radio-svoboda",
+      "target": "/kvn/teams/radio-svoboda",
+      "target_collection": "teams",
+      "target_id": "bcd67966-17d3-43f0-835c-1a7b631cf570",
+      "target_title": "Радио Свобода",
+      "target_status": "published",
+      "resource_id": 1119,
+      "resource_uri": "kvn/team/radio-svoboda.html",
+      "resource_title": "Радио Свобода",
+      "sql_line": 764396,
+      "anchor_labels": [
+        "«Радио Свобода»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/radio-svoboda"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/rosatom",
+      "target": "/kvn/teams/rosatom",
+      "target_collection": "teams",
+      "target_id": "ecc763c7-904a-4078-b2d2-463499687d02",
+      "target_title": "Сборная молодых учёных Росатома",
+      "target_status": "published",
+      "resource_id": 1115,
+      "resource_uri": "kvn/team/rosatom.html",
+      "resource_title": "Сборная молодых учёных Росатома",
+      "sql_line": 764392,
+      "anchor_labels": [
+        "Сборная Росатома"
+      ],
+      "old_href_variants": [
+        "/kvnteam/rosatom"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/royalflush",
+      "target": "/kvn/teams/royalflush",
+      "target_collection": "teams",
+      "target_id": "86914e03-a5f6-46d5-be37-e082aa1bd529",
+      "target_title": "Флэш-Рояль",
+      "target_status": "published",
+      "resource_id": 1037,
+      "resource_uri": "kvn/team/royalflush.html",
+      "resource_title": "Флэш-Рояль",
+      "sql_line": 764313,
+      "anchor_labels": [
+        "«Флэш-Рояль»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/royalflush"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/rudn-united",
+      "target": "/kvn/teams/rudn-united",
+      "target_collection": "teams",
+      "target_id": "23e6374a-fbe5-4e70-9526-5b01ba46387d",
+      "target_title": "Женская сборная РУДН",
+      "target_status": "published",
+      "resource_id": 1104,
+      "resource_uri": "kvn/team/rudn-united.html",
+      "resource_title": "Женская сборная РУДН",
+      "sql_line": 764381,
+      "anchor_labels": [
+        "«Женская сборная РУДН»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/rudn-united"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/russkaya-doroga",
+      "target": "/kvn/teams/russkaya-doroga",
+      "target_collection": "teams",
+      "target_id": "69392e8b-95f6-4307-9cec-e4286aad2416",
+      "target_title": "Русская дорога",
+      "target_status": "published",
+      "resource_id": 1069,
+      "resource_uri": "kvn/team/russkaya-doroga.html",
+      "resource_title": "Русская дорога",
+      "sql_line": 764345,
+      "anchor_labels": [
+        "«Русская дорога»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/russkaya-doroga"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/sbornaya-buvshikh",
+      "target": "/kvn/teams/sbornaya-buvshikh",
+      "target_collection": "teams",
+      "target_id": "fa9bae00-b14b-4cf4-b453-452782381c2d",
+      "target_title": "Сборная бывших",
+      "target_status": "published",
+      "resource_id": 1105,
+      "resource_uri": "kvn/team/sbornaya-buvshikh.html",
+      "resource_title": "Сборная бывших",
+      "sql_line": 764382,
+      "anchor_labels": [
+        "«Сборная Тульской области»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/sbornaya-buvshikh"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/sbornaya-murmanska",
+      "target": "/kvn/teams/sbornaya-murmanska",
+      "target_collection": "teams",
+      "target_id": "2369fb71-06b0-4437-b24f-96fb7b46f620",
+      "target_title": "Сборная города Мурманска",
+      "target_status": "published",
+      "resource_id": 1107,
+      "resource_uri": "kvn/team/sbornaya-murmanska.html",
+      "resource_title": "Сборная города Мурманска",
+      "sql_line": 764384,
+      "anchor_labels": [
+        "Сборная Мурманска"
+      ],
+      "old_href_variants": [
+        "/kvnteam/sbornaya-murmanska"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/semejnyie-shtuchki",
+      "target": "/kvn/teams/semejnyie-shtuchki",
+      "target_collection": "teams",
+      "target_id": "10bdd152-4bb3-479b-96b9-c44f733dfb71",
+      "target_title": "Семейные штучки",
+      "target_status": "published",
+      "resource_id": 1103,
+      "resource_uri": "kvn/team/semejnyie-shtuchki.html",
+      "resource_title": "Семейные штучки",
+      "sql_line": 764380,
+      "anchor_labels": [
+        "Семейные штучки"
+      ],
+      "old_href_variants": [
+        "/kvnteam/semejnyie-shtuchki"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/sportivnaya",
+      "target": "/kvn/teams/sportivnaya",
+      "target_collection": "teams",
+      "target_id": "5714b239-0687-4018-baab-b31044494716",
+      "target_title": "Станция Спортивная",
+      "target_status": "published",
+      "resource_id": 1041,
+      "resource_uri": "kvn/team/sportivnaya.html",
+      "resource_title": "Станция Спортивная",
+      "sql_line": 764317,
+      "anchor_labels": [
+        "«Станция Спортивная»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/sportivnaya"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/tak-to",
+      "target": "/kvn/teams/tak-to",
+      "target_collection": "teams",
+      "target_id": "ef6075da-2216-4995-84cd-0ec79c0d6b7e",
+      "target_title": "Так-то",
+      "target_status": "published",
+      "resource_id": 1045,
+      "resource_uri": "kvn/team/tak-to.html",
+      "resource_title": "Так-то",
+      "sql_line": 764321,
+      "anchor_labels": [
+        "«Так-то»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/tak-to"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/uralskie-dvorniki",
+      "target": "/kvn/teams/uralskie-dvorniki",
+      "target_collection": "teams",
+      "target_id": "de1b8192-25d6-42b6-bcfe-e93b5fc696ce",
+      "target_title": "Уральские дворники",
+      "target_status": "published",
+      "resource_id": 1083,
+      "resource_uri": "kvn/team/uralskie-dvorniki.html",
+      "resource_title": "Уральские дворники",
+      "sql_line": 764359,
+      "anchor_labels": [
+        "«Уральские дворники»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/uralskie-dvorniki"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/volzhane",
+      "target": "/kvn/teams/volzhane",
+      "target_collection": "teams",
+      "target_id": "536027e2-2fcc-40e0-ac45-f7c653740db8",
+      "target_title": "Волжане",
+      "target_status": "published",
+      "resource_id": 1136,
+      "resource_uri": "kvn/team/volzhane.html",
+      "resource_title": "Волжане",
+      "sql_line": 764413,
+      "anchor_labels": [
+        "«Волжане»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/volzhane"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/ya-obidelas",
+      "target": "/kvn/teams/ya-obidelas",
+      "target_collection": "teams",
+      "target_id": "d0befc62-277c-4e15-9ef2-66f2522b8e5f",
+      "target_title": "Я обиделась",
+      "target_status": "published",
+      "resource_id": 1096,
+      "resource_uri": "kvn/team/ya-obidelas.html",
+      "resource_title": "Я обиделась",
+      "sql_line": 764373,
+      "anchor_labels": [
+        "«Я обиделась»",
+        "Я обиделась"
+      ],
+      "old_href_variants": [
+        "/kvnteam/ya-obidelas"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/yura",
+      "target": "/kvn/teams/yura",
+      "target_collection": "teams",
+      "target_id": "4a41142c-9d51-4469-97a2-dd79927c91f1",
+      "target_title": "Юра",
+      "target_status": "published",
+      "resource_id": 1114,
+      "resource_uri": "kvn/team/yura.html",
+      "resource_title": "Юра",
+      "sql_line": 764391,
+      "anchor_labels": [
+        "«Юра»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/yura"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "kvnteam/zabaykalsky-krai",
+      "target": "/kvn/teams/zabaykalsky-krai",
+      "target_collection": "teams",
+      "target_id": "5e71a743-bc02-480a-b7e2-58b498c5b156",
+      "target_title": "Сборная Забайкальского края",
+      "target_status": "published",
+      "resource_id": 1120,
+      "resource_uri": "kvn/team/zabaykalsky-krai.html",
+      "resource_title": "Сборная Забайкальского края",
+      "sql_line": 764397,
+      "anchor_labels": [
+        "«Сборная Забайкальского края»"
+      ],
+      "old_href_variants": [
+        "/kvnteam/zabaykalsky-krai"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 1,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "liga-gorodov/team/izhitsa.htmlhttps:/humorpedia.ru/kvn/team/macleod",
+      "target": "/shows/liga-gorodov/teams/izhitsa",
+      "target_collection": "teams",
+      "target_id": "65954666-6737-4496-8326-69425a18e4a2",
+      "target_title": "Ижица",
+      "target_status": "published",
+      "resource_id": 1935,
+      "resource_uri": "liga-gorodov/team/izhitsa.html",
+      "resource_title": "Ижица (ЛГ)",
+      "sql_line": 765135,
+      "anchor_labels": [
+        "«Ижица»"
+      ],
+      "old_href_variants": [
+        "/liga-gorodov/team/izhitsa.htmlhttps:/humorpedia.ru/kvn/team/macleod"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "context_corrects_false_slug_candidate",
+      "rejected_slug_candidate": {
+        "collection": "teams",
+        "url": "/kvn/teams/macleod",
+        "title": "Ижица"
+      }
+    },
+    {
+      "key": "medium-quality/cbd",
+      "target": "/shows/cbd",
+      "target_collection": "shows",
+      "target_id": "31f9cea5-476c-4d3e-907e-b8e8bc8945e1",
+      "target_title": "Что было дальше?",
+      "target_status": "published",
+      "resource_id": 1735,
+      "resource_uri": "cbd.html",
+      "resource_title": "Что было дальше?",
+      "sql_line": 764935,
+      "anchor_labels": [
+        "ЧБД",
+        "«Что было дальше?»"
+      ],
+      "old_href_variants": [
+        "/medium-quality/cbd"
+      ],
+      "literal_anchor_occurrences": 8,
+      "fields": 8,
+      "documents": 5,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "novosti/kvn/team/ue",
+      "target": "/kvn/teams/ue",
+      "target_collection": "teams",
+      "target_id": "1d1c0ccb-1c72-4146-ac91-6b649bf4b950",
+      "target_title": "УЕздный город",
+      "target_status": "published",
+      "resource_id": 1063,
+      "resource_uri": "kvn/team/ue.html",
+      "resource_title": "УЕздный город",
+      "sql_line": 764339,
+      "anchor_labels": [
+        "«Уездный Город»"
+      ],
+      "old_href_variants": [
+        "/novosti/kvn/team/ue"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "novosti/people/konstantin-belevtsev",
+      "target": "/people/konstantin-belevtsev",
+      "target_collection": "people",
+      "target_id": "a8afbafd-3152-4ee9-9c7c-e2bf542ee749",
+      "target_title": "Белевцев Константин",
+      "target_status": "published",
+      "resource_id": 654,
+      "resource_uri": "people/konstantin-belevtsev.html",
+      "resource_title": "Белевцев Константин",
+      "sql_line": 763929,
+      "anchor_labels": [
+        "Константин Белевцев"
+      ],
+      "old_href_variants": [
+        "/novosti/people/konstantin-belevtsev"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "people/kvn/team/sok",
+      "target": "/kvn/teams/sok",
+      "target_collection": "teams",
+      "target_id": "b49d5395-b75f-4c14-aa0c-3dd6e77b0bef",
+      "target_title": "СОК",
+      "target_status": "published",
+      "resource_id": 1183,
+      "resource_uri": "kvn/team/sok.html",
+      "resource_title": "СОК",
+      "sql_line": 764461,
+      "anchor_labels": [
+        "«СОК»"
+      ],
+      "old_href_variants": [
+        "/people/kvn/team/sok"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "people/proekty/standupclub1",
+      "target": "/shows/standupclub1",
+      "target_collection": "shows",
+      "target_id": "a5edf5cc-4d28-4bfa-8fcf-4432b97c4e82",
+      "target_title": "Stand Up Club #1",
+      "target_status": "published",
+      "resource_id": 1631,
+      "resource_uri": "standupclub1/",
+      "resource_title": "Stand Up Club #1",
+      "sql_line": 764847,
+      "anchor_labels": [
+        "«Stand Up Club #1»"
+      ],
+      "old_href_variants": [
+        "/people/proekty/standupclub1"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/22-komika",
+      "target": "/shows/22-komika",
+      "target_collection": "shows",
+      "target_id": "becdb1d1-6417-4c20-b359-5e2536518ef7",
+      "target_title": "22 комика",
+      "target_status": "published",
+      "resource_id": 1653,
+      "resource_uri": "show/22-komika.html",
+      "resource_title": "22 комика",
+      "sql_line": 764869,
+      "anchor_labels": [
+        "«22 комика»"
+      ],
+      "old_href_variants": [
+        "/proekty/22-komika"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/bar-v-bolshom-gorode",
+      "target": "/shows/bar-v-bolshom-gorode",
+      "target_collection": "shows",
+      "target_id": "04ebf785-6309-426c-9c32-d88455c7e59d",
+      "target_title": "Бар в большом городе",
+      "target_status": "published",
+      "resource_id": 1627,
+      "resource_uri": "show/bar-v-bolshom-gorode.html",
+      "resource_title": "Бар в большом городе",
+      "sql_line": 764842,
+      "anchor_labels": [
+        "«Бар в большом городе»"
+      ],
+      "old_href_variants": [
+        "/proekty/bar-v-bolshom-gorode"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/big-show",
+      "target": "/shows/big-show",
+      "target_collection": "shows",
+      "target_id": "a8d14142-c7aa-4b95-8f48-aeef3134cebd",
+      "target_title": "Большое шоу",
+      "target_status": "published",
+      "resource_id": 1656,
+      "resource_uri": "show/big-show.html",
+      "resource_title": "Большое шоу",
+      "sql_line": 764872,
+      "anchor_labels": [
+        "«Большое шоу»",
+        "«Большого шоу»",
+        "«Большого шоу",
+        "Страница шоу"
+      ],
+      "old_href_variants": [
+        "/proekty/big-show"
+      ],
+      "literal_anchor_occurrences": 22,
+      "fields": 22,
+      "documents": 18,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/central-microphone",
+      "target": "/shows/central-microphone",
+      "target_collection": "shows",
+      "target_id": "f52f58ad-2ab5-471c-aa97-36e5a3ea0459",
+      "target_title": "Центральный Микрофон",
+      "target_status": "published",
+      "resource_id": 1648,
+      "resource_uri": "show/central-microphone.html",
+      "resource_title": "Центральный Микрофон",
+      "sql_line": 764864,
+      "anchor_labels": [
+        "«Центральный микрофон»"
+      ],
+      "old_href_variants": [
+        "/proekty/central-microphone"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/comedy-battle",
+      "target": "/shows/comedy-battle",
+      "target_collection": "shows",
+      "target_id": "3c5dfcd1-eca7-476b-9fa0-7c0718a7c821",
+      "target_title": "Comedy Баттл",
+      "target_status": "published",
+      "resource_id": 1629,
+      "resource_uri": "comedy-battle/",
+      "resource_title": "Comedy Баттл",
+      "sql_line": 764845,
+      "anchor_labels": [
+        "«Comedy Баттл»",
+        "«Comedy Баттл» "
+      ],
+      "old_href_variants": [
+        "/proekty/comedy-battle"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/comedy-club",
+      "target": "/shows/comedy-club",
+      "target_collection": "shows",
+      "target_id": "29fe0ef1-6d7d-4a6e-9f78-3c1cf816f98a",
+      "target_title": "Comedy Club",
+      "target_status": "published",
+      "resource_id": 1615,
+      "resource_uri": "comedy-club.html",
+      "resource_title": "Comedy Club",
+      "sql_line": 764830,
+      "anchor_labels": [
+        "Comedy Club"
+      ],
+      "old_href_variants": [
+        "/proekty/comedy-club"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/comedywoman",
+      "target": "/shows/comedywoman",
+      "target_collection": "shows",
+      "target_id": "f1be16d8-9f80-441b-9471-4051b3d4bd3d",
+      "target_title": "Comedy Woman",
+      "target_status": "published",
+      "resource_id": 1622,
+      "resource_uri": "show/comedywoman.html",
+      "resource_title": "Comedy Woman",
+      "sql_line": 764837,
+      "anchor_labels": [
+        "«Comedy Woman»",
+        "Comedy Woman"
+      ],
+      "old_href_variants": [
+        "/proekty/comedywoman"
+      ],
+      "literal_anchor_occurrences": 26,
+      "fields": 26,
+      "documents": 24,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/improv",
+      "target": "/shows/improv",
+      "target_collection": "shows",
+      "target_id": "71c57269-8ba6-43f4-96b9-47d899694e97",
+      "target_title": "Импровизация",
+      "target_status": "published",
+      "resource_id": 1619,
+      "resource_uri": "improv/",
+      "resource_title": "Импровизация",
+      "sql_line": 764834,
+      "anchor_labels": [
+        "«Импровизация»",
+        "«Импровизаторы»"
+      ],
+      "old_href_variants": [
+        "/proekty/improv"
+      ],
+      "literal_anchor_occurrences": 7,
+      "fields": 7,
+      "documents": 7,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/improv-teams",
+      "target": "/shows/improv-teams",
+      "target_collection": "shows",
+      "target_id": "9c1ab030-71d1-4db8-ac89-a33b88c31a03",
+      "target_title": "Импровизация. Команды",
+      "target_status": "published",
+      "resource_id": 1618,
+      "resource_uri": "improv-teams/",
+      "resource_title": "ИК",
+      "sql_line": 764833,
+      "anchor_labels": [
+        "«Импровизация. Команды»"
+      ],
+      "old_href_variants": [
+        "/proekty/improv-teams/"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/komandy",
+      "target": "/shows/komandy",
+      "target_collection": "shows",
+      "target_id": "dbdb0694-42f5-44c3-be72-3709e5ad72f2",
+      "target_title": "Команды",
+      "target_status": "published",
+      "resource_id": 3678,
+      "resource_uri": "show/komandy.html",
+      "resource_title": "Команды",
+      "sql_line": 766700,
+      "anchor_labels": [
+        "«Команды»"
+      ],
+      "old_href_variants": [
+        "/proekty/komandy"
+      ],
+      "literal_anchor_occurrences": 8,
+      "fields": 8,
+      "documents": 8,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/leningradskij-stand-up-club",
+      "target": "/shows/leningradskij-stand-up-club",
+      "target_collection": "shows",
+      "target_id": "5e00cb8d-bded-4932-902e-8e2e83220105",
+      "target_title": "Ленинградский Stand-up клуб",
+      "target_status": "published",
+      "resource_id": 1647,
+      "resource_uri": "show/leningradskij-stand-up-club.html",
+      "resource_title": "Ленинградский Stand-up клуб",
+      "sql_line": 764863,
+      "anchor_labels": [
+        "«Ленинградский Stand-Up клуб»"
+      ],
+      "old_href_variants": [
+        "/proekty/leningradskij-stand-up-club"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality",
+      "target": "/shows/medium-quality",
+      "target_collection": "shows",
+      "target_id": "77c952bf-b05d-4aec-a1f4-01b11911046d",
+      "target_title": "Medium Quality",
+      "target_status": "published",
+      "resource_id": 1630,
+      "resource_uri": "medium-quality/",
+      "resource_title": "Medium Quality",
+      "sql_line": 764846,
+      "anchor_labels": [
+        "Medium Quality",
+        "Medium Quality Production"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/",
+        "/proekty/medium-quality"
+      ],
+      "literal_anchor_occurrences": 22,
+      "fields": 22,
+      "documents": 17,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/bad-company",
+      "target": "/shows/medium-quality/bad-company",
+      "target_collection": "shows",
+      "target_id": "8b3ef2e7-02ce-4b21-a2ee-6c0b9d30f0d4",
+      "target_title": "Bad Company",
+      "target_status": "published",
+      "resource_id": 2253,
+      "resource_uri": "medium-quality/bad-company.html",
+      "resource_title": "Bad Company",
+      "sql_line": 765312,
+      "anchor_labels": [
+        "Bad Company",
+        "«Bad Company»"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/bad-company"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/cbd",
+      "target": "/shows/cbd",
+      "target_collection": "shows",
+      "target_id": "31f9cea5-476c-4d3e-907e-b8e8bc8945e1",
+      "target_title": "Что было дальше?",
+      "target_status": "published",
+      "resource_id": 1735,
+      "resource_uri": "cbd.html",
+      "resource_title": "Что было дальше?",
+      "sql_line": 764935,
+      "anchor_labels": [
+        "«Что было дальше?»",
+        "ЧБД."
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/cbd"
+      ],
+      "literal_anchor_occurrences": 13,
+      "fields": 13,
+      "documents": 10,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/easycom",
+      "target": "/shows/medium-quality/easycom",
+      "target_collection": "shows",
+      "target_id": "7afb8714-0dad-4dfd-84be-717962c21c30",
+      "target_title": "easycom",
+      "target_status": "published",
+      "resource_id": 2279,
+      "resource_uri": "medium-quality/easycom.html",
+      "resource_title": "easycom",
+      "sql_line": 765335,
+      "anchor_labels": [
+        "easycom",
+        "«Натальной карте»"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/easycom"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/kanal-azamata-musagalieva",
+      "target": "/shows/medium-quality/kanal-azamata-musagalieva",
+      "target_collection": "shows",
+      "target_id": "775ace75-1356-4301-a5cc-80f6648fa13b",
+      "target_title": "Канал Азамата Мусагалиева",
+      "target_status": "published",
+      "resource_id": 2295,
+      "resource_uri": "medium-quality/kanal-azamata-musagalieva.html",
+      "resource_title": "Канал Азамата Мусагалиева",
+      "sql_line": 765351,
+      "anchor_labels": [
+        "Азамат Мусагалиев"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/kanal-azamata-musagalieva"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/komyuniti",
+      "target": "/shows/medium-quality/komyuniti",
+      "target_collection": "shows",
+      "target_id": "a3e3eacb-1f08-4d1d-9d45-fedd6c4ce472",
+      "target_title": "Комьюнити",
+      "target_status": "published",
+      "resource_id": 2288,
+      "resource_uri": "medium-quality/komyuniti.html",
+      "resource_title": "Комьюнити",
+      "sql_line": 765344,
+      "anchor_labels": [
+        "Комьюнити"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/komyuniti"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/labelcom",
+      "target": "/shows/medium-quality/labelcom",
+      "target_collection": "shows",
+      "target_id": "26e5a791-2b53-4724-8282-6954362893d2",
+      "target_title": "LABELCOM",
+      "target_status": "published",
+      "resource_id": 2280,
+      "resource_uri": "medium-quality/labelcom.html",
+      "resource_title": "LABELCOM",
+      "sql_line": 765336,
+      "anchor_labels": [
+        "LABELCOM"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/labelcom"
+      ],
+      "literal_anchor_occurrences": 4,
+      "fields": 4,
+      "documents": 4,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/labelplay",
+      "target": "/shows/medium-quality/labelplay",
+      "target_collection": "shows",
+      "target_id": "1c61f5d8-82f1-4070-9e91-6075eddb3216",
+      "target_title": "LabelPlay",
+      "target_status": "published",
+      "resource_id": 2283,
+      "resource_uri": "medium-quality/labelplay.html",
+      "resource_title": "LabelPlay",
+      "sql_line": 765339,
+      "anchor_labels": [
+        "LabelPlay"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/labelplay"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/labelsmart",
+      "target": "/shows/medium-quality/labelsmart",
+      "target_collection": "shows",
+      "target_id": "76c82dd7-4958-47ab-8cee-c6c5c52fa037",
+      "target_title": "LABELSMART",
+      "target_status": "published",
+      "resource_id": 2284,
+      "resource_uri": "medium-quality/labelsmart.html",
+      "resource_title": "LABELSMART",
+      "sql_line": 765340,
+      "anchor_labels": [
+        "LABELSMART"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/labelsmart"
+      ],
+      "literal_anchor_occurrences": 5,
+      "fields": 5,
+      "documents": 4,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/lena-kuka-crew",
+      "target": "/shows/lena-kuka-crew",
+      "target_collection": "shows",
+      "target_id": "f37d984c-286b-4c9b-9e84-9740ed6966db",
+      "target_title": "Lena Kuka Crew",
+      "target_status": "published",
+      "resource_id": 2285,
+      "resource_uri": "lena-kuka-crew.html",
+      "resource_title": "Lena Kuka Crew",
+      "sql_line": 765341,
+      "anchor_labels": [
+        "Lena Kuka Crew",
+        "«Лена Кука»"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/lena-kuka-crew"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/match",
+      "target": "/shows/medium-quality/match",
+      "target_collection": "shows",
+      "target_id": "0264510e-0d31-46c0-b4b0-5fe3db3d11a8",
+      "target_title": "Мэтч",
+      "target_status": "published",
+      "resource_id": 2290,
+      "resource_uri": "medium-quality/match.html",
+      "resource_title": "Мэтч",
+      "sql_line": 765346,
+      "anchor_labels": [
+        "Мэтч"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/match"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/money-mic",
+      "target": "/shows/money-mic",
+      "target_collection": "shows",
+      "target_id": "383db49d-abae-4a53-9592-c4d444e2cfee",
+      "target_title": "Money Mic",
+      "target_status": "published",
+      "resource_id": 2289,
+      "resource_uri": "money-mic/",
+      "resource_title": "Money Mic",
+      "sql_line": 765345,
+      "anchor_labels": [
+        "Money Mic"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/money-mic"
+      ],
+      "literal_anchor_occurrences": 8,
+      "fields": 8,
+      "documents": 8,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/outside-stand-up",
+      "target": "/shows/medium-quality/outside-stand-up",
+      "target_collection": "shows",
+      "target_id": "94107ca9-7848-483e-b1f4-2531ed0dd04b",
+      "target_title": "Outside Stand Up",
+      "target_status": "published",
+      "resource_id": 1732,
+      "resource_uri": "medium-quality/outside-stand-up.html",
+      "resource_title": "Outside Stand Up",
+      "sql_line": 764934,
+      "anchor_labels": [
+        "Outside Stand Up"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/outside-stand-up"
+      ],
+      "literal_anchor_occurrences": 6,
+      "fields": 6,
+      "documents": 4,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/ploshchadka",
+      "target": "/shows/medium-quality/ploshchadka",
+      "target_collection": "shows",
+      "target_id": "862cf81f-ea67-41a2-91ad-a7c759eb7363",
+      "target_title": "Площадка",
+      "target_status": "published",
+      "resource_id": 2292,
+      "resource_uri": "medium-quality/ploshchadka.html",
+      "resource_title": "Площадка",
+      "sql_line": 765348,
+      "anchor_labels": [
+        "Площадка"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/ploshchadka"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/proekty-mq-i-winline",
+      "target": "/shows/medium-quality/proekty-mq-i-winline",
+      "target_collection": "shows",
+      "target_id": "5ca5356a-e2a4-45df-9470-36d379dcce28",
+      "target_title": "Проекты MQ и Winline",
+      "target_status": "published",
+      "resource_id": 2294,
+      "resource_uri": "medium-quality/proekty-mq-i-winline.html",
+      "resource_title": "Проекты MQ и Winline",
+      "sql_line": 765350,
+      "anchor_labels": [
+        "Список проектов"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/proekty-mq-i-winline"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/medium-quality/slowslowcow",
+      "target": "/shows/medium-quality/slowslowcow",
+      "target_collection": "shows",
+      "target_id": "419aac00-5ea2-4239-92ee-7cb522ed4857",
+      "target_title": "SlowSlowCow",
+      "target_status": "published",
+      "resource_id": 2286,
+      "resource_uri": "medium-quality/slowslowcow.html",
+      "resource_title": "SlowSlowCow",
+      "sql_line": 765342,
+      "anchor_labels": [
+        "SlowSlowCow"
+      ],
+      "old_href_variants": [
+        "/proekty/medium-quality/slowslowcow"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/mezhdu-nami-show",
+      "target": "/shows/mezhdu-nami-show",
+      "target_collection": "shows",
+      "target_id": "d7c4bc74-2e8f-4c25-8e68-4384076154de",
+      "target_title": "Между нами шоу",
+      "target_status": "published",
+      "resource_id": 1639,
+      "resource_uri": "show/mezhdu-nami-show.html",
+      "resource_title": "Между нами шоу",
+      "sql_line": 764855,
+      "anchor_labels": [
+        "«Между нами шоу»"
+      ],
+      "old_href_variants": [
+        "/proekty/mezhdu-nami-show"
+      ],
+      "literal_anchor_occurrences": 14,
+      "fields": 14,
+      "documents": 14,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/miniatures",
+      "target": "/shows/miniatures",
+      "target_collection": "shows",
+      "target_id": "bd14a972-7be5-4dd7-a7b2-bb92c10dca15",
+      "target_title": "Это миниатюры",
+      "target_status": "published",
+      "resource_id": 1655,
+      "resource_uri": "show/miniatures.html",
+      "resource_title": "Это миниатюры",
+      "sql_line": 764871,
+      "anchor_labels": [
+        "Это миниатюры»",
+        "«Это миниатюры»"
+      ],
+      "old_href_variants": [
+        "/proekty/miniatures"
+      ],
+      "literal_anchor_occurrences": 13,
+      "fields": 13,
+      "documents": 12,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/ne-spat",
+      "target": "/shows/ne-spat",
+      "target_collection": "shows",
+      "target_id": "6af47be9-831f-4f23-952c-d945766468ce",
+      "target_title": "Не спать",
+      "target_status": "published",
+      "resource_id": 1616,
+      "resource_uri": "ne-spat/",
+      "resource_title": "Не спать",
+      "sql_line": 764831,
+      "anchor_labels": [
+        "«Не спать»"
+      ],
+      "old_href_variants": [
+        "/proekty/ne-spat"
+      ],
+      "literal_anchor_occurrences": 14,
+      "fields": 14,
+      "documents": 14,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/odnazhdyi-v-rossii",
+      "target": "/shows/odnazhdyi-v-rossii",
+      "target_collection": "shows",
+      "target_id": "d02ba5c6-a296-40cb-a4fd-2f1c3cf50b20",
+      "target_title": "Однажды в России",
+      "target_status": "published",
+      "resource_id": 1621,
+      "resource_uri": "show/odnazhdyi-v-rossii.html",
+      "resource_title": "Однажды в России",
+      "sql_line": 764836,
+      "anchor_labels": [
+        "«Однажды в России»",
+        ","
+      ],
+      "old_href_variants": [
+        "/proekty/odnazhdyi-v-rossii"
+      ],
+      "literal_anchor_occurrences": 28,
+      "fields": 26,
+      "documents": 21,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/osp-studiya",
+      "target": "/shows/osp-studiya",
+      "target_collection": "shows",
+      "target_id": "252aa40a-2e86-49f3-acb4-a43d763b4ae8",
+      "target_title": "О.С.П.-студия",
+      "target_status": "published",
+      "resource_id": 1645,
+      "resource_uri": "show/osp-studiya.html",
+      "resource_title": "О.С.П.-студия",
+      "sql_line": 764861,
+      "anchor_labels": [
+        "«О.С.П.-студия»",
+        "«33 квадратных метра»/«О.С.П Студия»",
+        "«О.С.П.–студия»"
+      ],
+      "old_href_variants": [
+        "/proekty/osp-studiya"
+      ],
+      "literal_anchor_occurrences": 5,
+      "fields": 5,
+      "documents": 5,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/outside-stand-up",
+      "target": "/shows/medium-quality/outside-stand-up",
+      "target_collection": "shows",
+      "target_id": "94107ca9-7848-483e-b1f4-2531ed0dd04b",
+      "target_title": "Outside Stand Up",
+      "target_status": "published",
+      "resource_id": 1732,
+      "resource_uri": "medium-quality/outside-stand-up.html",
+      "resource_title": "Outside Stand Up",
+      "sql_line": 764934,
+      "anchor_labels": [
+        "Outside Stand Up"
+      ],
+      "old_href_variants": [
+        "/proekty/outside-stand-up"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/plohie-pesni",
+      "target": "/shows/plohie-pesni",
+      "target_collection": "shows",
+      "target_id": "76192b1e-d4e8-4682-9b13-57734d9db6f9",
+      "target_title": "Плохие песни («Студия Союз»)",
+      "target_status": "published",
+      "resource_id": 1635,
+      "resource_uri": "plohie-pesni/",
+      "resource_title": "Плохие песни («Студия Союз»)",
+      "sql_line": 764851,
+      "anchor_labels": [
+        "«Плохие песни»",
+        "Список текстов «Плохих песен»"
+      ],
+      "old_href_variants": [
+        "/proekty/plohie-pesni"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/prozharka-na-tnt",
+      "target": "/shows/prozharka-na-tnt",
+      "target_collection": "shows",
+      "target_id": "3f914baf-7830-4d54-9b95-267f0f5ba67f",
+      "target_title": "Прожарка на ТНТ",
+      "target_status": "published",
+      "resource_id": 1617,
+      "resource_uri": "show/prozharka-na-tnt.html",
+      "resource_title": "Прожарка на ТНТ",
+      "sql_line": 764832,
+      "anchor_labels": [
+        "«Прожарка»",
+        "«Прожарка на ТНТ»",
+        "«Прожарки»",
+        " «Прожарка на ТНТ»"
+      ],
+      "old_href_variants": [
+        "/proekty/prozharka-na-tnt"
+      ],
+      "literal_anchor_occurrences": 24,
+      "fields": 24,
+      "documents": 22,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/rassmeshi-komika",
+      "target": "/shows/rassmeshi-komika",
+      "target_collection": "shows",
+      "target_id": "304dccc4-bfb7-4ba4-bb6a-d881f0c58635",
+      "target_title": "Рассмеши комика",
+      "target_status": "published",
+      "resource_id": 1646,
+      "resource_uri": "show/rassmeshi-komika.html",
+      "resource_title": "Рассмеши комика",
+      "sql_line": 764862,
+      "anchor_labels": [
+        "«Рассмеши комика»",
+        "«Рассмеши комика!»",
+        "«Рассмеши комика",
+        "«Рассмеши комика»,",
+        " «Рассмеши комика»"
+      ],
+      "old_href_variants": [
+        "/proekty/rassmeshi-komika"
+      ],
+      "literal_anchor_occurrences": 31,
+      "fields": 31,
+      "documents": 31,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/smeh-bez-pravil",
+      "target": "/shows/smeh-bez-pravil",
+      "target_collection": "shows",
+      "target_id": "e9586fe9-7eb8-4e64-86b5-25ff7255190a",
+      "target_title": "Смех без правил",
+      "target_status": "published",
+      "resource_id": 1626,
+      "resource_uri": "smeh-bez-pravil/",
+      "resource_title": "Смех без правил",
+      "sql_line": 764841,
+      "anchor_labels": [
+        "«Смех без правил»",
+        "«Смеха без правил»",
+        "«Смех без правил».",
+        "«Смех без Правил»",
+        "«Смехе без правил»"
+      ],
+      "old_href_variants": [
+        "/proekty/smeh-bez-pravil"
+      ],
+      "literal_anchor_occurrences": 34,
+      "fields": 34,
+      "documents": 30,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/smetanatv",
+      "target": "/shows/smetanatv",
+      "target_collection": "shows",
+      "target_id": "a525fd5b-3247-45c0-ac4e-cba7b433c156",
+      "target_title": "СметанаТВ",
+      "target_status": "published",
+      "resource_id": 2299,
+      "resource_uri": "show/smetanatv.html",
+      "resource_title": "СметанаТВ",
+      "sql_line": 765356,
+      "anchor_labels": [
+        "«Сметана ТВ»",
+        "«СметанаТВ»"
+      ],
+      "old_href_variants": [
+        "/proekty/smetanatv"
+      ],
+      "literal_anchor_occurrences": 11,
+      "fields": 11,
+      "documents": 10,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/smex-v-bolshom-gorode",
+      "target": "/shows/smex-v-bolshom-gorode",
+      "target_collection": "shows",
+      "target_id": "0e720e87-81bc-49a0-a8e5-fe171f4b1797",
+      "target_title": "Смех в большом городе",
+      "target_status": "published",
+      "resource_id": 1641,
+      "resource_uri": "show/smex-v-bolshom-gorode.html",
+      "resource_title": "Смех в большом городе",
+      "sql_line": 764857,
+      "anchor_labels": [
+        "«Смеха в большом городе»",
+        "«Смех в большом городе»"
+      ],
+      "old_href_variants": [
+        "/proekty/smex-v-bolshom-gorode"
+      ],
+      "literal_anchor_occurrences": 3,
+      "fields": 3,
+      "documents": 3,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/standup",
+      "target": "/shows/standup",
+      "target_collection": "shows",
+      "target_id": "8f8f1bb5-b56c-49ee-8162-6e20b8f6200d",
+      "target_title": "Stand Up на ТНТ",
+      "target_status": "published",
+      "resource_id": 1637,
+      "resource_uri": "show/standup.html",
+      "resource_title": "Stand Up на ТНТ",
+      "sql_line": 764853,
+      "anchor_labels": [
+        "«Stand Up»",
+        "«Stand Up",
+        "Stand Up",
+        "«Stand Up на ТНТ»",
+        "»",
+        "«StandUp»",
+        "Stand Up на ТНТ",
+        "«Stand Up» на ТНТ"
+      ],
+      "old_href_variants": [
+        "/proekty/standup"
+      ],
+      "literal_anchor_occurrences": 101,
+      "fields": 99,
+      "documents": 82,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/standup-history",
+      "target": "/shows/standup-history",
+      "target_collection": "shows",
+      "target_id": "c969b562-e9e2-47cb-8eab-b6e6a526b21d",
+      "target_title": "Хронология Stand Up на Руси",
+      "target_status": "published",
+      "resource_id": 1650,
+      "resource_uri": "show/standup-history.html",
+      "resource_title": "Хронология Stand Up на Руси",
+      "sql_line": 764866,
+      "anchor_labels": [
+        "став первым стендап-комиком"
+      ],
+      "old_href_variants": [
+        "/proekty/standup-history"
+      ],
+      "literal_anchor_occurrences": 1,
+      "fields": 1,
+      "documents": 1,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/standup-underground",
+      "target": "/shows/standup-underground",
+      "target_collection": "shows",
+      "target_id": "579148b2-718f-4d81-b5b4-d8e1651d0d8c",
+      "target_title": "Стендап Андеграунд",
+      "target_status": "published",
+      "resource_id": 1640,
+      "resource_uri": "show/standup-underground.html",
+      "resource_title": "Стендап Андеграунд",
+      "sql_line": 764856,
+      "anchor_labels": [
+        "«Стендап Андеграунд»",
+        "«Стендап андеграунд»"
+      ],
+      "old_href_variants": [
+        "/proekty/standup-underground"
+      ],
+      "literal_anchor_occurrences": 33,
+      "fields": 33,
+      "documents": 31,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/standupclub1",
+      "target": "/shows/standupclub1",
+      "target_collection": "shows",
+      "target_id": "a5edf5cc-4d28-4bfa-8fcf-4432b97c4e82",
+      "target_title": "Stand Up Club #1",
+      "target_status": "published",
+      "resource_id": 1631,
+      "resource_uri": "standupclub1/",
+      "resource_title": "Stand Up Club #1",
+      "sql_line": 764847,
+      "anchor_labels": [
+        "«Standup Club #1»",
+        "«Stand Up Club #1»",
+        "Stand Up Club #1",
+        "«Стендап-клуб № 1»",
+        "Стендап-клуба №1",
+        "Stand Up Club #1.",
+        "клуба"
+      ],
+      "old_href_variants": [
+        "/proekty/standupclub1"
+      ],
+      "literal_anchor_occurrences": 70,
+      "fields": 70,
+      "documents": 54,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/standupwomen",
+      "target": "/shows/standupwomen",
+      "target_collection": "shows",
+      "target_id": "8ac49241-58ab-4e86-95fd-f1afb161bbef",
+      "target_title": "Женский стендап",
+      "target_status": "published",
+      "resource_id": 1624,
+      "resource_uri": "show/standupwomen.html",
+      "resource_title": "Женский стендап",
+      "sql_line": 764839,
+      "anchor_labels": [
+        "«Женский стендап»",
+        "«Женского стендапа»",
+        "«Женский Стендап»"
+      ],
+      "old_href_variants": [
+        "/proekty/standupwomen"
+      ],
+      "literal_anchor_occurrences": 65,
+      "fields": 65,
+      "documents": 50,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/stendap-ruletka",
+      "target": "/shows/stendap-ruletka",
+      "target_collection": "shows",
+      "target_id": "aeffab43-cf43-45d4-9b91-917557396c79",
+      "target_title": "Стендап рулетка",
+      "target_status": "published",
+      "resource_id": 3284,
+      "resource_uri": "show/stendap-ruletka.html",
+      "resource_title": "Стендап рулетка",
+      "sql_line": 766310,
+      "anchor_labels": [
+        "«Стендап рулетка»"
+      ],
+      "old_href_variants": [
+        "/proekty/stendap-ruletka"
+      ],
+      "literal_anchor_occurrences": 23,
+      "fields": 23,
+      "documents": 12,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/studiya-soyuz",
+      "target": "/shows/studiya-soyuz",
+      "target_collection": "shows",
+      "target_id": "e2841bad-eb63-4e65-bf7e-8f9ff49ce771",
+      "target_title": "Студия Союз",
+      "target_status": "published",
+      "resource_id": 1638,
+      "resource_uri": "show/studiya-soyuz.html",
+      "resource_title": "Студия Союз",
+      "sql_line": 764854,
+      "anchor_labels": [
+        "«Студия «СОЮЗ»",
+        "«Студия СОЮЗ»"
+      ],
+      "old_href_variants": [
+        "/proekty/studiya-soyuz"
+      ],
+      "literal_anchor_occurrences": 2,
+      "fields": 2,
+      "documents": 2,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/superliga",
+      "target": "/shows/superliga",
+      "target_collection": "shows",
+      "target_id": "2821620c-8592-4966-a629-bd76a5131a0e",
+      "target_title": "Суперлига",
+      "target_status": "published",
+      "resource_id": 1652,
+      "resource_uri": "show/superliga.html",
+      "resource_title": "Суперлига",
+      "sql_line": 764868,
+      "anchor_labels": [
+        "«Суперлига»",
+        "«Суперлиги»"
+      ],
+      "old_href_variants": [
+        "/proekty/superliga"
+      ],
+      "literal_anchor_occurrences": 8,
+      "fields": 8,
+      "documents": 7,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/ubojnaya-liga",
+      "target": "/shows/ubojnaya-liga",
+      "target_collection": "shows",
+      "target_id": "fdf9cf6c-fd3b-41e5-ad96-9f474c7047f3",
+      "target_title": "Убойная лига",
+      "target_status": "published",
+      "resource_id": 1628,
+      "resource_uri": "show/ubojnaya-liga.html",
+      "resource_title": "Убойная лига",
+      "sql_line": 764843,
+      "anchor_labels": [
+        "«Убойная лига»",
+        "«Убойной лиги»",
+        "«Убойной лиге»"
+      ],
+      "old_href_variants": [
+        "/proekty/ubojnaya-liga"
+      ],
+      "literal_anchor_occurrences": 20,
+      "fields": 20,
+      "documents": 18,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/ubojnoj-nochi",
+      "target": "/shows/ubojnoj-nochi",
+      "target_collection": "shows",
+      "target_id": "b5358cc9-0a6c-4143-a438-a25a634c1319",
+      "target_title": "Убойной ночи",
+      "target_status": "published",
+      "resource_id": 1620,
+      "resource_uri": "show/ubojnoj-nochi.html",
+      "resource_title": "Убойной ночи",
+      "sql_line": 764835,
+      "anchor_labels": [
+        "«Убойной ночи»"
+      ],
+      "old_href_variants": [
+        "/proekty/ubojnoj-nochi"
+      ],
+      "literal_anchor_occurrences": 9,
+      "fields": 9,
+      "documents": 9,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/ubojnyij-vecher",
+      "target": "/shows/ubojnyij-vecher",
+      "target_collection": "shows",
+      "target_id": "683502d6-0927-47a5-b6dc-5f7cac26c034",
+      "target_title": "Убойный вечер",
+      "target_status": "published",
+      "resource_id": 1623,
+      "resource_uri": "show/ubojnyij-vecher.html",
+      "resource_title": "Убойный вечер",
+      "sql_line": 764838,
+      "anchor_labels": [
+        "«Убойный вечер»"
+      ],
+      "old_href_variants": [
+        "/proekty/ubojnyij-vecher"
+      ],
+      "literal_anchor_occurrences": 4,
+      "fields": 4,
+      "documents": 4,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/uralskie-pelmeni-show",
+      "target": "/shows/uralskie-pelmeni-show",
+      "target_collection": "shows",
+      "target_id": "2836ecdc-f64f-4874-9b4a-1372ca75ffcc",
+      "target_title": "Шоу «Уральские пельмени»",
+      "target_status": "published",
+      "resource_id": 1643,
+      "resource_uri": "show/uralskie-pelmeni-show.html",
+      "resource_title": "Шоу «Уральские пельмени»",
+      "sql_line": 764859,
+      "anchor_labels": [
+        "«Уральские пельмени»",
+        "шоу «Уральские пельмени»",
+        "«Уральских пельменей»",
+        "«Уральских Пельменей»"
+      ],
+      "old_href_variants": [
+        "/proekty/uralskie-pelmeni-show"
+      ],
+      "literal_anchor_occurrences": 18,
+      "fields": 18,
+      "documents": 14,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    },
+    {
+      "key": "proekty/zvezdy-ntv/team/zhenshchiny",
+      "target": "/shows/zvezdy-ntv/teams/zhenshchiny",
+      "target_collection": "teams",
+      "target_id": "2b21de12-3ebb-4e71-bdf7-d56b4a11818d",
+      "target_title": "Женщины",
+      "target_status": "published",
+      "resource_id": 3657,
+      "resource_uri": "zvezdy-ntv/team/zhenshchiny.html",
+      "resource_title": "Женщины",
+      "sql_line": 766679,
+      "anchor_labels": [
+        "«Женщины»"
+      ],
+      "old_href_variants": [
+        "/proekty/zvezdy-ntv/team/zhenshchiny"
+      ],
+      "literal_anchor_occurrences": 4,
+      "fields": 4,
+      "documents": 4,
+      "hidden_occurrences": 0,
+      "decision": "reviewed_legacy_identity_and_anchor_context",
+      "rejected_slug_candidate": null
+    }
+  ],
+  "exclusions": [
+    {
+      "key": "kvn/kivin/kivin-2024",
+      "legacy_resource_id": 1614,
+      "rejected_news_old_id": 2377,
+      "reason": "festival identity differs from news"
+    }
+  ],
+  "evidence_notes": [
+    {
+      "key": "kvn/teams/vladivostok",
+      "reason": "Source anchor labels identify KVN team Сборная Владивостока, not city; exact legacy team resource2373."
+    },
+    {
+      "key": "liga-gorodov/team/izhitsa.htmlhttps:/humorpedia.ru/kvn/team/macleod",
+      "reason": "Source biography of Максим Снигирёв explicitly names Лига Городов team Ижица. Preserve label; replace malformed href with league team resource1935, not KVN MacLeod resource1255."
+    },
+    {
+      "key": "kvnteam/sbornaya-buvshikh",
+      "reason": "Target history explicitly states former name Сборная Тульской области until2018; preserve historical label."
+    },
+    {
+      "key": "proekty/medium-quality/easycom",
+      "reason": "Target history states Натальная карта began on easycom and VK community was renamed; preserve authored label and target identity."
+    },
+    {
+      "key": "proekty/improv",
+      "reason": "Target history explicitly covers the return on СТС under name Импровизаторы; preserve existing labels."
+    },
+    {
+      "key": "proekty/osp-studiya",
+      "reason": "Target introduction and roles section cover both О.С.П.-студия and33 квадратных метра; preserve combined source label."
+    },
+    {
+      "key": "proekty/standup-history",
+      "reason": "Target chronology explicitly mentions Иван Абрамов as first musical stand-up comedian, matching source timeline."
+    },
+    {
+      "key": "Improv/gromkiy-vopros",
+      "reason": "Source ИМПРОКОМ paragraph and child target discuss Громкий вопрос; label Список вопросов из шоу retained."
+    }
+  ],
+  "invariants": [
+    "Only quoted href value spans in approved source fields; no label, markup, attributes, query or fragment changes",
+    "No new/deleted records; preserve typed IDs, statuses, season projections, media and R13i corrections",
+    "No global slug fallback or new resolver aliases",
+    "Source and existing copies immutable; new output only after approval; field/source/plan hash and exact count guards",
+    "No main,24SMI,VPS or indexing changes; projected copy is not a release archive"
+  ],
+  "expected_unresolved_after_execution": 147,
+  "expected_only": false,
+  "execution_acceptance": {
+    "date": "2026-10-23",
+    "task": "R13k",
+    "base_commit": "5ab9154c14f475ef06fe8aa3ec34aaa786e52821",
+    "native_run": "19e128a31ad94b4791c58e1d605b5fcc",
+    "release_id": "340fa99dc58ed63e53a92bd50009ba386b1ec5f9dcf80af25cccdddec5506a7b",
+    "source_sha256": "90e38c00f870bcbf28702675097eb752b8304148f5556d61d481e8985f9e4ea7",
+    "output_sha256": "2512f09db268aa68fa59248dca8c8078ab4f33084ce0f4f6edadfaa5464df678",
+    "records": 25620,
+    "changed_documents": 422,
+    "changed_fields": 548,
+    "href_edits": 782,
+    "keys": 102,
+    "hidden_edits": 9,
+    "hidden_fields": 4,
+    "targets": 99,
+    "copy_guard_tests_passed": 5,
+    "independent_snapshot_check": "passed",
+    "byte_identical_unchanged_rows": 25198,
+    "relation_findings": 0,
+    "participations": 9276,
+    "original_unresolved": 249,
+    "unresolved": 147,
+    "api_html_sources_passed": 422,
+    "api_html_targets_passed": 99,
+    "browser_clicks_passed": 15,
+    "browser_target_headings": "exact normalized equality",
+    "browser_pageerrors": 0,
+    "before_snapshot": {
+      "run_id": "19e128a31ad94b4791c58e1d605b5fcc",
+      "records": 25620,
+      "non_view_domain_fields_unchanged": true,
+      "scope": "Own seeded projection only; runtime view counters excluded"
+    },
+    "after_snapshot": {
+      "run_id": "19e128a31ad94b4791c58e1d605b5fcc",
+      "records": 25620,
+      "non_view_domain_fields_unchanged": true,
+      "scope": "Own seeded projection only; runtime view counters excluded"
+    },
+    "hidden_scope": "All9 exact spans verified offline; parent API expected target sets verified, not every hidden response field; hidden modules not enabled in UI",
+    "browser_scope": "Six source-kind navigation scenarios and nine selected link scenarios; generic shows navigation may use an existing breadcrumb to same canonical target; not all782 anchors were clicked",
+    "cleanup": {
+      "containers": [],
+      "network_removed": true,
+      "images_removed": [
+        "hp-r13k-pages-19e128a31ad94b4791c58e1d605b5fcc-backend:latest",
+        "hp-r13k-pages-19e128a31ad94b4791c58e1d605b5fcc-gateway:latest"
+      ],
+      "error": null
+    },
+    "main": {
+      "branch": "main",
+      "head": "ca46155a9640d4723c07b9fd1762a6e639563414",
+      "clean": true,
+      "containers_unchanged": true,
+      "restarts": 0,
+      "mongo_health": "healthy",
+      "http_3000": 200,
+      "http_8001_health": 200
+    },
+    "product_code_changed": false,
+    "full_backend_rerun": false,
+    "retained_backend_evidence": {
+      "commit": "5ab9154c14f475ef06fe8aa3ec34aaa786e52821",
+      "passed": 1200,
+      "skipped": 16,
+      "run": ".cache/r13j/native-pages/7065f5c18d86471a9f825b7f8052ce98/backend-suite.log",
+      "ci_run": 39914279710,
+      "ci_jobs_success": 5
+    },
+    "apply_to_main": false,
+    "deploy_to_vps": false,
+    "final_scope_review": {
+      "path": ".cache/r13k/final-scope-review.json",
+      "sha256": "83b0ab0865ab1dcb64fb84ae743c8edd10bc3e1456a8bdccd40ca48a2d617cd4",
+      "scope": "Static and artifact review of final native19e128; snapshot-only independent reviewer remains separate",
+      "blockers": [],
+      "boundary": "15 navigation clicks, not all edited href spans; six source kinds and nine context-specific cases"
+    },
+    "publication_authorized": true
+  },
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "proposal_validation": {
+    "scope": "Read-only only; no data values rewritten and no new content copy created",
+    "preimages": ".cache/r13k/preimage-validation.json",
+    "raw_target_ids": ".cache/r13k/target-id-validation.json",
+    "independent_review": ".cache/r13k/mapping-review.json",
+    "independent_review_sha256": "e9a90f397b3a0e64035a9b75472119ed9ce63b63c231a05398f106ecb7b29718",
+    "historical_evidence": ".cache/r13k/historical-target-evidence.json",
+    "blockers": [],
+    "source_preimages_passed": 548,
+    "href_slices_passed": 782,
+    "raw_targets_passed": 99,
+    "overlaps": 0,
+    "hidden_fields": 4,
+    "runtime_acceptance": false
+  },
+  "approval": {
+    "date": "2026-10-23",
+    "scope": "All102 exact mappings,782 href,422 documents,9 hidden href on isolated derived copy; festival excluded; main,24SMI,VPS unchanged",
+    "source": "Direct user reply to R13k approval question"
+  }
+}

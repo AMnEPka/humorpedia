@@ -1963,5 +1963,16 @@
     "scope": "Projection copy; main/24SMI/VPS untouched; view counters only runtime exception",
     "full_release_preimage_required": true
   },
-  "publication_authorized": true
+  "publication_authorized": true,
+  "publication": {
+    "commit": "5ab9154c14f475ef06fe8aa3ec34aaa786e52821",
+    "branch": "codex/local-page-builder",
+    "pushed": true,
+    "ci_run": 39914279710,
+    "ci_url": "https://github.com/AMnEPka/humorpedia/actions/runs/39914279710",
+    "ci_status": "completed",
+    "ci_conclusion": "success",
+    "jobs_passed": 5,
+    "browser_scenarios_passed": 3
+  }
 }

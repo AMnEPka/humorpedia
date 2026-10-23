@@ -180,3 +180,9 @@ Evidence `.cache/r13j/{acceptance-final.json,quiz-red.log,quiz-green.log}`, `cop
 Финальный read-only контроль: основной checkout clean main `ca46155a9640d4723c07b9fd1762a6e639563414`; прежние backend/frontend/Mongo container IDs/StartedAt, restarts0, HTTP3000 и8001/api/health200. Импорт24СМИ и VPS не изменялись. Публикация R13j с документацией разрешена пользователем; новый CI проверяется после push.
 
 Следующий остаток очереди:249 unresolved keys. Для проанализированных prefix/path/склеенных href подготовить новые точные доказательства и mappings; не применять общий slug fallback. Поиск8 оригинальных season posters,111 external/embed URL, полный release с demo-policy и интеграция — отдельные этапы; main/VPS пока не переключать.
+
+## Публикация и продолжение23.10.2026
+
+R13j вместе с документацией опубликован отдельным коммитом `5ab9154c14f475ef06fe8aa3ec34aaa786e52821`, push в `origin/codex/local-page-builder`. [GitHub CI39914279710](https://github.com/AMnEPka/humorpedia/actions/runs/39914279710) completed/success, attempt1 на точном SHA: backend/frontend/windows-tools/mongodb-integration/browser-smoke — success; все3 browser-сценария success. Evidence `.cache/r13k/r13j-ci-{run,jobs}-final.json`.
+
+Продолжение — [R13k](r13k-exact-href-plan-2026-10-23.md):102 mappings согласованы и приняты только на новой копии,782href/548fields/422docs,hidden9;unresolved147,API/HTML422+99/browser15 PASS. R13j snapshot неизменен. Публикация R13k разрешена; main/импорт24СМИ/VPS не затрагиваются.
