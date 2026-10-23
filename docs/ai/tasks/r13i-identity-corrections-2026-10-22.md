@@ -4,7 +4,7 @@
 
 ## Статус и границы
 
-R13h опубликован отдельным `7678c4b`: восстановленные media и WebP MIME с документацией. [CI39844032265](https://github.com/AMnEPka/humorpedia/actions/runs/39844032265) completed/success на точном SHA; все5 jobs и три browser-сценария success. Evidence: `.cache/r13i/r13h-ci-{run,jobs}-final.json`. R13i — следующий пакет из [R13g](r13g-migration-readiness-2026-10-22.md): **Оба согласованных исправления выполнены и приняты только на изолированной копии.** Ровно2 документа изменены из25,620; API, React4 страницы и media150 PASS. Продуктовый код не менялся. Пользователь поручил отдельный commit/push R13i с документацией и проверку CI.
+R13h опубликован отдельным `7678c4b`: восстановленные media и WebP MIME с документацией. [CI39844032265](https://github.com/AMnEPka/humorpedia/actions/runs/39844032265) completed/success на точном SHA; все5 jobs и три browser-сценария success. Evidence: `.cache/r13i/r13h-ci-{run,jobs}-final.json`. R13i — следующий пакет из [R13g](r13g-migration-readiness-2026-10-22.md): **Оба согласованных исправления выполнены и приняты только на изолированной копии.** Ровно2 документа изменены из25,620; API, React4 страницы и media150 PASS. Продуктовый код не менялся. R13i с документацией опубликован отдельным `ef2a704df959d37ca5a92695a1481809768a3737` в `origin/codex/local-page-builder`. [GitHub39847257115](https://github.com/AMnEPka/humorpedia/actions/runs/39847257115) completed/success на точном SHA, attempt1: все5 jobs и три browser-сценария success. Evidence `.cache/r13j/r13i-ci-{run,jobs}-final.json`.
 
 Пользователь согласовал две конкретные операции; производная копия R13h projections подготовлена с guards и проверена. Основной checkout остаётся на main; primary Mongo/media, импорт24СМИ и VPS не изменяются. Индексация выключена. Это не полный release archive и не команда переноса.
 
@@ -87,6 +87,8 @@ Evidence: `.cache/r13i/copy/{prepare-acceptance,acceptance}.json`, `audits/{cont
 
 Повтор: `BROWSER_BUILD_DIR=.cache/r13f/frontend-build node .cache/r13i/run-native.cjs` (переменную задать синтаксисом оболочки). Runner создаёт новый UUID, требует подготовленный seed и staging R13h, очищает только owned ресурсы. Для новой offline preparation нужен новый пустой output. `validate-final.cjs` намеренно пишет final copy exclusive-create; для повторной приёмки требуется новый output, существующие evidence не перетирать.
 
-Финальный read-only контроль: primary clean main `ca46155a9640d4723c07b9fd1762a6e639563414`, прежние backend/frontend/Mongo container IDs и StartedAt, restarts=0; HTTP3000 и8001/api/health200. Импорт24СМИ и VPS не изменялись. Пользователь поручил отдельный commit/push R13i с документацией и проверку CI.
+Финальный read-only контроль: primary clean main `ca46155a9640d4723c07b9fd1762a6e639563414`, прежние backend/frontend/Mongo container IDs и StartedAt, restarts=0; HTTP3000 и8001/api/health200. Импорт24СМИ и VPS не изменялись. R13i опубликованef2a704, GitHub39847257115 completed/success.
 
 Следующий пункт плана: review неразрешённых внутренних ссылок R13g — сначала точный пакет194 однозначных кандидатов/21 неоднозначной ссылки с первоисточниками и проверкой на копии. Автоматическая замена по одному slug не согласована. Полный release archive, demo-policy при переносе,8 оригинальных season posters и интеграция/main/dev-sync остаются отдельными работами; VPS запрещён текущим поручением.
+
+Продолжение: [R13j](r13j-link-repair-plan-2026-10-22.md) подготовил quiz contract diagnostic (7 корректных targets, остальные2570keys неизменны) и неприменённый88-key href proposal. Объём реализации ожидает выбора пользователя по AGENTS.md.

@@ -1,0 +1,1967 @@
+{
+  "schema_version": 1,
+  "task": "R13j",
+  "status": "implemented_and_accepted_on_isolated_copy",
+  "approved": true,
+  "worktree_branch": "codex/local-page-builder",
+  "base_commit": "ef2a704df959d37ca5a92695a1481809768a3737",
+  "source_copy": ".cache/r13i/copy/patched.jsonl",
+  "source_sha256": "7439abd0b81796875960d270735d3efd1f0acea2738d84dcd61b740862e58aeb",
+  "source_rows": 25620,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "recommended_scope": {
+    "quiz_contract_fix": {
+      "description": "Include quizzes in old_url lookup; no global slug fallback; preserve published/archive behavior",
+      "diagnostic_only": {
+        "scope": "Read-only isolated module variant; product code and snapshot unchanged",
+        "keys": 2577,
+        "before_resolved": 2233,
+        "unchanged": 2570,
+        "variant_resolved": 2240,
+        "changed": {
+          "quiz/big-show": {
+            "before": null,
+            "after": "/quizzes/bolshoe-shou"
+          },
+          "quiz/humorquiz-1": {
+            "before": null,
+            "after": "/quizzes/humorquiz-1"
+          },
+          "quiz/humorquiz-2": {
+            "before": null,
+            "after": "/quizzes/humorquiz-2"
+          },
+          "quiz/humorquiz-3": {
+            "before": null,
+            "after": "/quizzes/humorquiz-3"
+          },
+          "quiz/humorquiz-4": {
+            "before": null,
+            "after": "/quizzes/humorquiz-4"
+          },
+          "quiz/improkom": {
+            "before": null,
+            "after": "/quizzes/improkom"
+          },
+          "quiz/kvn-xx-veka": {
+            "before": null,
+            "after": "/quizzes/kvn-xx-veka"
+          }
+        },
+        "quiz_old_url_collisions": {}
+      }
+    },
+    "exact_href_replacements": {
+      "counts": {
+        "keys": 88,
+        "anchors": 759,
+        "fields": 429,
+        "documents": 379,
+        "hidden_anchors": 46,
+        "source_statuses": [
+          "published"
+        ],
+        "unsupported": 0,
+        "plan_sha256": "028c5f983d35c2b48f3a1eee77077ca7d22ba249663c496cc0f59123c94bfd20"
+      },
+      "field_plan": ".cache/r13j/exact-href-plan.json",
+      "field_plan_sha256": "028c5f983d35c2b48f3a1eee77077ca7d22ba249663c496cc0f59123c94bfd20",
+      "mappings": [
+        {
+          "key": "anton-baryilik",
+          "target": "/people/anton-baryilik",
+          "target_collection": "people",
+          "target_id": "a5a32f45-de84-48ee-9aea-809f84fb57d8",
+          "target_status": "published",
+          "resource_id": 1020,
+          "resource_uri": "people/anton-baryilik.html",
+          "resource_title": "Барылик Антон",
+          "sql_line": 764296,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Антон Барылик"
+          ],
+          "old_href_variants": [
+            "/anton-baryilik"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "armavir",
+          "target": "/city/armavir",
+          "target_collection": "cities",
+          "target_id": "6f408d6e-4d12-4084-ac45-8f13ae8a0cee",
+          "target_status": "published",
+          "resource_id": 2082,
+          "resource_uri": "city/armavir.html",
+          "resource_title": "Армавир",
+          "sql_line": 765165,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Армавир"
+          ],
+          "old_href_variants": [
+            "/armavir"
+          ],
+          "occurrences": 7,
+          "source_documents": 7
+        },
+        {
+          "key": "astrakhan",
+          "target": "/city/astrakhan",
+          "target_collection": "cities",
+          "target_id": "b72027b4-02bf-4a2c-861b-26b89307f3af",
+          "target_status": "published",
+          "resource_id": 2107,
+          "resource_uri": "city/astrakhan.html",
+          "resource_title": "Астрахань",
+          "sql_line": 765191,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Астраханская область",
+            "Астрахань"
+          ],
+          "old_href_variants": [
+            "/astrakhan"
+          ],
+          "occurrences": 8,
+          "source_documents": 8
+        },
+        {
+          "key": "big-show",
+          "target": "/shows/big-show",
+          "target_collection": "shows",
+          "target_id": "a8d14142-c7aa-4b95-8f48-aeef3134cebd",
+          "target_status": "published",
+          "resource_id": 1656,
+          "resource_uri": "show/big-show.html",
+          "resource_title": "Большое шоу",
+          "sql_line": 764872,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Большое шоу»",
+            "«Большого шоу»"
+          ],
+          "old_href_variants": [
+            "/big-show"
+          ],
+          "occurrences": 7,
+          "source_documents": 6
+        },
+        {
+          "key": "big-vopros",
+          "target": "/shows/big-vopros",
+          "target_collection": "shows",
+          "target_id": "1bb74b94-0d6c-44c9-b278-1949cab98309",
+          "target_status": "published",
+          "resource_id": 1651,
+          "resource_uri": "show/big-vopros.html",
+          "resource_title": "Большой вопрос",
+          "sql_line": 764867,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Большой Вопрос»",
+            "«Большой вопрос»"
+          ],
+          "old_href_variants": [
+            "/big-vopros"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "bishkek",
+          "target": "/city/bishkek",
+          "target_collection": "cities",
+          "target_id": "cfc8ac00-cde0-4a12-b8c7-f076c0ba9be9",
+          "target_status": "published",
+          "resource_id": 2114,
+          "resource_uri": "city/bishkek.html",
+          "resource_title": "Бишкек",
+          "sql_line": 765198,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Бишкек"
+          ],
+          "old_href_variants": [
+            "/bishkek"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "bitva-za-vremya",
+          "target": "/shows/bitva-za-vremya",
+          "target_collection": "shows",
+          "target_id": "c6c4ab22-899f-468c-bcee-059e43ac6c11",
+          "target_status": "published",
+          "resource_id": 1661,
+          "resource_uri": "show/bitva-za-vremya/",
+          "resource_title": "Битва за время",
+          "sql_line": 764877,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Битва за время»",
+            "«Битве за время»",
+            "«Битвы за время»",
+            "Битва за время"
+          ],
+          "old_href_variants": [
+            "/bitva-za-vremya"
+          ],
+          "occurrences": 24,
+          "source_documents": 24
+        },
+        {
+          "key": "bryansk",
+          "target": "/city/bryansk",
+          "target_collection": "cities",
+          "target_id": "42c6312e-53ae-4b2a-a348-fd25d42919e8",
+          "target_status": "published",
+          "resource_id": 2101,
+          "resource_uri": "city/bryansk.html",
+          "resource_title": "Брянск",
+          "sql_line": 765185,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Брянск"
+          ],
+          "old_href_variants": [
+            "/bryansk"
+          ],
+          "occurrences": 5,
+          "source_documents": 5
+        },
+        {
+          "key": "bryuxoveczkaya",
+          "target": "/city/bryuxoveczkaya",
+          "target_collection": "cities",
+          "target_id": "39f2b101-83af-4b61-895b-bb4934bca9e0",
+          "target_status": "published",
+          "resource_id": 2083,
+          "resource_uri": "city/bryuxoveczkaya.html",
+          "resource_title": "Брюховецкая",
+          "sql_line": 765166,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Брюховецкая"
+          ],
+          "old_href_variants": [
+            "/bryuxoveczkaya"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "central-microphone",
+          "target": "/shows/central-microphone",
+          "target_collection": "shows",
+          "target_id": "f52f58ad-2ab5-471c-aa97-36e5a3ea0459",
+          "target_status": "published",
+          "resource_id": 1648,
+          "resource_uri": "show/central-microphone.html",
+          "resource_title": "Центральный Микрофон",
+          "sql_line": 764864,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Центральный микрофон»"
+          ],
+          "old_href_variants": [
+            "/central-microphone"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "chelyabinsk",
+          "target": "/city/chelyabinsk",
+          "target_collection": "cities",
+          "target_id": "8bbc6e5d-8218-4ae7-86ef-68f632166de3",
+          "target_status": "published",
+          "resource_id": 2090,
+          "resource_uri": "city/chelyabinsk.html",
+          "resource_title": "Челябинск",
+          "sql_line": 765174,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Челябинск",
+            "Челябинская область",
+            "Челябинск "
+          ],
+          "old_href_variants": [
+            "/chelyabinsk"
+          ],
+          "occurrences": 19,
+          "source_documents": 19
+        },
+        {
+          "key": "chita",
+          "target": "/city/chita",
+          "target_collection": "cities",
+          "target_id": "243c6748-7a76-4955-b65c-905f43e95943",
+          "target_status": "published",
+          "resource_id": 2113,
+          "resource_uri": "city/chita.html",
+          "resource_title": "Чита",
+          "sql_line": 765197,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Чита"
+          ],
+          "old_href_variants": [
+            "/chita"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "comedywoman",
+          "target": "/shows/comedywoman",
+          "target_collection": "shows",
+          "target_id": "f1be16d8-9f80-441b-9471-4051b3d4bd3d",
+          "target_status": "published",
+          "resource_id": 1622,
+          "resource_uri": "show/comedywoman.html",
+          "resource_title": "Comedy Woman",
+          "sql_line": 764837,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Comedy Woman»",
+            "Comedy Woman",
+            "шоу «Comedy Woman»"
+          ],
+          "old_href_variants": [
+            "/comedywoman"
+          ],
+          "occurrences": 21,
+          "source_documents": 20
+        },
+        {
+          "key": "comigration",
+          "target": "/shows/comigration",
+          "target_collection": "shows",
+          "target_id": "81d4b832-89e1-41b2-8230-3917352e3f19",
+          "target_status": "published",
+          "resource_id": 3022,
+          "resource_uri": "show/comigration.html",
+          "resource_title": "comigration",
+          "sql_line": 766054,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "comigration"
+          ],
+          "old_href_variants": [
+            "/comigration"
+          ],
+          "occurrences": 5,
+          "source_documents": 4
+        },
+        {
+          "key": "comment-out",
+          "target": "/shows/comment-out",
+          "target_collection": "shows",
+          "target_id": "d45ab3db-04b3-4e24-ad8f-c9df92dd00b5",
+          "target_status": "published",
+          "resource_id": 1634,
+          "resource_uri": "show/comment-out.html",
+          "resource_title": "Comment Out (Чикен Карри)",
+          "sql_line": 764850,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«CommentOut»",
+            "«Comment Out» "
+          ],
+          "old_href_variants": [
+            "/comment-out"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "daniil-pehtelev",
+          "target": "/people/daniil-pehtelev",
+          "target_collection": "people",
+          "target_id": "d0d3539e-a18d-43ed-86c2-5c85bb3fbefd",
+          "target_status": "published",
+          "resource_id": 972,
+          "resource_uri": "people/daniil-pehtelev.html",
+          "resource_title": "Пехтелев Даниил",
+          "sql_line": 764247,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Даниил Пехтелев"
+          ],
+          "old_href_variants": [
+            "/daniil-pehtelev"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "denis-spis",
+          "target": "/people/denis-spis",
+          "target_collection": "people",
+          "target_id": "d3baa853-c72a-4912-9dfc-f90f7f16e477",
+          "target_status": "published",
+          "resource_id": 993,
+          "resource_uri": "people/denis-spis.html",
+          "resource_title": "Спис Денис",
+          "sql_line": 764268,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Денис Спис"
+          ],
+          "old_href_variants": [
+            "/denis-spis"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "dgu",
+          "target": "/kvn/teams/dgu",
+          "target_collection": "teams",
+          "target_id": "d7139a92-f87c-4f65-8349-c5014e6263f7",
+          "target_status": "published",
+          "resource_id": 1078,
+          "resource_uri": "kvn/team/dgu.html",
+          "resource_title": "ДГУ",
+          "sql_line": 764354,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«ДГУ»"
+          ],
+          "old_href_variants": [
+            "/dgu"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "dmitry-peshkov",
+          "target": "/people/dmitry-peshkov",
+          "target_collection": "people",
+          "target_id": "6112264b-3e4e-4862-b020-75d80eb06e15",
+          "target_status": "published",
+          "resource_id": 182,
+          "resource_uri": "people/dmitry-peshkov.html",
+          "resource_title": "Горький Митя",
+          "sql_line": 763452,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Митя Горький"
+          ],
+          "old_href_variants": [
+            "/dmitry-peshkov"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "donetsk",
+          "target": "/city/donetsk",
+          "target_collection": "cities",
+          "target_id": "91da4716-e333-447e-af73-d57bdb83ef81",
+          "target_status": "published",
+          "resource_id": 2099,
+          "resource_uri": "city/donetsk.html",
+          "resource_title": "Донецк",
+          "sql_line": 765183,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Донецк"
+          ],
+          "old_href_variants": [
+            "/donetsk"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "dvij",
+          "target": "/shows/medium-quality/dvij",
+          "target_collection": "shows",
+          "target_id": "2529b3c7-d545-4c0d-8fde-c5976b7caf4d",
+          "target_status": "published",
+          "resource_id": 1662,
+          "resource_uri": "medium-quality/dvij/",
+          "resource_title": "ДВИЖ",
+          "sql_line": 764878,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«ДВИЖ»",
+            "ДВИЖ"
+          ],
+          "old_href_variants": [
+            "/dvij/"
+          ],
+          "occurrences": 8,
+          "source_documents": 8
+        },
+        {
+          "key": "ekb",
+          "target": "/city/ekb",
+          "target_collection": "cities",
+          "target_id": "ca7aec9c-c0cd-48c5-9a52-1e88853f3198",
+          "target_status": "published",
+          "resource_id": 2089,
+          "resource_uri": "city/ekb.html",
+          "resource_title": "Екатеринбург",
+          "sql_line": 765173,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Екатеринбург",
+            "Свердловск",
+            "Екатеринбурге"
+          ],
+          "old_href_variants": [
+            "/ekb"
+          ],
+          "occurrences": 22,
+          "source_documents": 22
+        },
+        {
+          "key": "erevan",
+          "target": "/city/erevan",
+          "target_collection": "cities",
+          "target_id": "6e8437d8-0ffc-4e34-9759-029b9439c45c",
+          "target_status": "published",
+          "resource_id": 2081,
+          "resource_uri": "city/erevan.html",
+          "resource_title": "Ереван",
+          "sql_line": 765164,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Ереван"
+          ],
+          "old_href_variants": [
+            "/erevan"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "gomel",
+          "target": "/city/gomel",
+          "target_collection": "cities",
+          "target_id": "d44f54c8-435c-4bd9-a260-a58bbcd875c8",
+          "target_status": "published",
+          "resource_id": 2102,
+          "resource_uri": "city/gomel.html",
+          "resource_title": "Гомель",
+          "sql_line": 765186,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Гомель"
+          ],
+          "old_href_variants": [
+            "/gomel"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "iks",
+          "target": "/shows/iks",
+          "target_collection": "shows",
+          "target_id": "f1313d0c-1bb7-4e5a-98fa-c0de373304f6",
+          "target_status": "published",
+          "resource_id": 2182,
+          "resource_uri": "proekty/iks.html",
+          "resource_title": "ИКС",
+          "sql_line": 765240,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«ИКС»"
+          ],
+          "old_href_variants": [
+            "/iks/"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "improv-comedy",
+          "target": "/shows/improv-comedy",
+          "target_collection": "shows",
+          "target_id": "3b015e4b-c1d2-4711-bab4-7570673b4e73",
+          "target_status": "published",
+          "resource_id": 1632,
+          "resource_uri": "show/improv-comedy.html",
+          "resource_title": "Импров-комеди (Improv comedy)",
+          "sql_line": 764848,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Импров-комеди (Импровизация)",
+            "Импров-камеди"
+          ],
+          "old_href_variants": [
+            "/improv-comedy"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "irkutsk",
+          "target": "/city/irkutsk",
+          "target_collection": "cities",
+          "target_id": "c8a5c7d0-7f67-45ac-b74d-7e07d13832a0",
+          "target_status": "published",
+          "resource_id": 2088,
+          "resource_uri": "city/irkutsk.html",
+          "resource_title": "Иркутск",
+          "sql_line": 765172,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Иркутск",
+            "Иркутск "
+          ],
+          "old_href_variants": [
+            "/irkutsk"
+          ],
+          "occurrences": 9,
+          "source_documents": 9
+        },
+        {
+          "key": "kemerovo",
+          "target": "/city/kemerovo",
+          "target_collection": "cities",
+          "target_id": "ecaa9061-fb79-432e-b310-cfcd3f841f5a",
+          "target_status": "published",
+          "resource_id": 2106,
+          "resource_uri": "city/kemerovo.html",
+          "resource_title": "Кемерово",
+          "sql_line": 765190,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Кемеровская область",
+            "Кемерово"
+          ],
+          "old_href_variants": [
+            "/kemerovo"
+          ],
+          "occurrences": 10,
+          "source_documents": 10
+        },
+        {
+          "key": "khabarovsk",
+          "target": "/city/khabarovsk",
+          "target_collection": "cities",
+          "target_id": "0fc54412-40df-49b5-bcee-d74017591c21",
+          "target_status": "published",
+          "resource_id": 2111,
+          "resource_uri": "city/khabarovsk.html",
+          "resource_title": "Хабаровск",
+          "sql_line": 765195,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Хабаровский край"
+          ],
+          "old_href_variants": [
+            "/khabarovsk"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "kharkiv",
+          "target": "/city/kharkiv",
+          "target_collection": "cities",
+          "target_id": "ed38bed8-66a0-4b8c-9368-3760ecd5429b",
+          "target_status": "published",
+          "resource_id": 2085,
+          "resource_uri": "city/kharkiv.html",
+          "resource_title": "Харьков",
+          "sql_line": 765169,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Харьков",
+            "Харькова"
+          ],
+          "old_href_variants": [
+            "/kharkiv"
+          ],
+          "occurrences": 4,
+          "source_documents": 4
+        },
+        {
+          "key": "kirov",
+          "target": "/city/kirov",
+          "target_collection": "cities",
+          "target_id": "7a81f68c-72e5-46e0-b184-5e3bccf203e3",
+          "target_status": "published",
+          "resource_id": 2087,
+          "resource_uri": "city/kirov.html",
+          "resource_title": "Киров",
+          "sql_line": 765171,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Киров"
+          ],
+          "old_href_variants": [
+            "/kirov"
+          ],
+          "occurrences": 5,
+          "source_documents": 5
+        },
+        {
+          "key": "kontakti",
+          "target": "/shows/kontakti",
+          "target_collection": "shows",
+          "target_id": "0b8ec7ab-284a-4226-846e-5b2d95e53a3f",
+          "target_status": "published",
+          "resource_id": 1714,
+          "resource_uri": "show/kontakti.html",
+          "resource_title": "Шоу «Контакты»",
+          "sql_line": 764931,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Контакты»"
+          ],
+          "old_href_variants": [
+            "/kontakti"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "krasnodar",
+          "target": "/city/krasnodar",
+          "target_collection": "cities",
+          "target_id": "282174a3-094e-46f0-85d2-b502b18dccef",
+          "target_status": "published",
+          "resource_id": 2092,
+          "resource_uri": "city/krasnodar.html",
+          "resource_title": "Краснодар",
+          "sql_line": 765176,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Краснодарский край",
+            "Краснодар"
+          ],
+          "old_href_variants": [
+            "/krasnodar"
+          ],
+          "occurrences": 18,
+          "source_documents": 18
+        },
+        {
+          "key": "krivoy-rog",
+          "target": "/city/krivoy-rog",
+          "target_collection": "cities",
+          "target_id": "d7a1df1c-bfa5-4c9d-b1dc-be6d54517f5d",
+          "target_status": "published",
+          "resource_id": 2110,
+          "resource_uri": "city/krivoy-rog.html",
+          "resource_title": "Кривой Рог",
+          "sql_line": 765194,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Кривой Рог"
+          ],
+          "old_href_variants": [
+            "/krivoy-rog"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "kursk",
+          "target": "/city/kursk",
+          "target_collection": "cities",
+          "target_id": "7a226d06-aa84-41b9-a612-3cd1994b5058",
+          "target_status": "published",
+          "resource_id": 2074,
+          "resource_uri": "city/kursk.html",
+          "resource_title": "Курск",
+          "sql_line": 765157,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Курск",
+            "Курская область"
+          ],
+          "old_href_variants": [
+            "/kursk"
+          ],
+          "occurrences": 18,
+          "source_documents": 18
+        },
+        {
+          "key": "kyiv",
+          "target": "/city/kyiv",
+          "target_collection": "cities",
+          "target_id": "8e862385-8b3a-4a23-9e9d-72137a115474",
+          "target_status": "published",
+          "resource_id": 2096,
+          "resource_uri": "city/kyiv.html",
+          "resource_title": "Киев",
+          "sql_line": 765180,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Киева",
+            "Киев"
+          ],
+          "old_href_variants": [
+            "/kyiv"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "leningradskij-stand-up-club",
+          "target": "/shows/leningradskij-stand-up-club",
+          "target_collection": "shows",
+          "target_id": "5e00cb8d-bded-4932-902e-8e2e83220105",
+          "target_status": "published",
+          "resource_id": 1647,
+          "resource_uri": "show/leningradskij-stand-up-club.html",
+          "resource_title": "Ленинградский Stand-up клуб",
+          "sql_line": 764863,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Ленинградский Stand-up клуб»",
+            "«Ленинградский Stand-Up клуб»"
+          ],
+          "old_href_variants": [
+            "/leningradskij-stand-up-club"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "liga-ploxix-shutok",
+          "target": "/shows/liga-ploxix-shutok",
+          "target_collection": "shows",
+          "target_id": "d83847ed-3d50-4f08-8eb3-28cb3c54586d",
+          "target_status": "published",
+          "resource_id": 1633,
+          "resource_uri": "show/liga-ploxix-shutok.html",
+          "resource_title": "Лига Плохих Шуток (Чикен Карри)",
+          "sql_line": 764849,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Лига плохих шуток»"
+          ],
+          "old_href_variants": [
+            "/liga-ploxix-shutok"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "maria-komarova",
+          "target": "/people/maria-komarova",
+          "target_collection": "people",
+          "target_id": "05fca40b-2836-4c0c-9cee-a3556bed98d5",
+          "target_status": "published",
+          "resource_id": 511,
+          "resource_uri": "people/maria-komarova.html",
+          "resource_title": "Комарова Мария",
+          "sql_line": 763785,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Мария Комарова"
+          ],
+          "old_href_variants": [
+            "/maria-komarova"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "mezhdu-nami-show",
+          "target": "/shows/mezhdu-nami-show",
+          "target_collection": "shows",
+          "target_id": "d7c4bc74-2e8f-4c25-8e68-4384076154de",
+          "target_status": "published",
+          "resource_id": 1639,
+          "resource_uri": "show/mezhdu-nami-show.html",
+          "resource_title": "Между нами шоу",
+          "sql_line": 764855,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Между нами шоу»"
+          ],
+          "old_href_variants": [
+            "/mezhdu-nami-show"
+          ],
+          "occurrences": 21,
+          "source_documents": 21
+        },
+        {
+          "key": "milan-isaev",
+          "target": "/people/milan-isaev",
+          "target_collection": "people",
+          "target_id": "826fe0a8-4e44-40b5-9fe5-809321940356",
+          "target_status": "published",
+          "resource_id": 988,
+          "resource_uri": "people/milan-isaev.html",
+          "resource_title": "Исаев Милан",
+          "sql_line": 764263,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Милан Исаев"
+          ],
+          "old_href_variants": [
+            "/milan-isaev"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "miniatures",
+          "target": "/shows/miniatures",
+          "target_collection": "shows",
+          "target_id": "bd14a972-7be5-4dd7-a7b2-bb92c10dca15",
+          "target_status": "published",
+          "resource_id": 1655,
+          "resource_uri": "show/miniatures.html",
+          "resource_title": "Это миниатюры",
+          "sql_line": 764871,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Это миниатюры»",
+            "«Это Миниатюры»"
+          ],
+          "old_href_variants": [
+            "/miniatures"
+          ],
+          "occurrences": 17,
+          "source_documents": 17
+        },
+        {
+          "key": "minsk",
+          "target": "/city/minsk",
+          "target_collection": "cities",
+          "target_id": "ca059847-ac5f-4beb-b387-0dd90ae09770",
+          "target_status": "published",
+          "resource_id": 2075,
+          "resource_uri": "city/minsk.html",
+          "resource_title": "Минск",
+          "sql_line": 765158,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Минск",
+            "Минская область",
+            "минской",
+            "Минске",
+            "Минск "
+          ],
+          "old_href_variants": [
+            "/minsk"
+          ],
+          "occurrences": 30,
+          "source_documents": 30
+        },
+        {
+          "key": "ml-2019",
+          "target": "/kvn/ml-kvn/ml-2019",
+          "target_collection": "kvn",
+          "target_id": "d3ef5408-9bda-49b3-87fd-ef252bd0dc2a",
+          "target_status": "published",
+          "resource_id": 1573,
+          "resource_uri": "kvn/mezhdunarodnaya-liga/2019.html",
+          "resource_title": "Сезон 2019 Международной лиги",
+          "sql_line": 764788,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Сезон 2019 года"
+          ],
+          "old_href_variants": [
+            "/ml-2019"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "ml-kvn",
+          "target": "/kvn/ml-kvn",
+          "target_collection": "kvn",
+          "target_id": "2521f24a-b972-4de7-ad74-a4d21e8a45aa",
+          "target_status": "published",
+          "resource_id": 1490,
+          "resource_uri": "kvn/mezhdunarodnaya-liga",
+          "resource_title": "Международная",
+          "sql_line": 764717,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Международной лиге МС КВН"
+          ],
+          "old_href_variants": [
+            "/ml-kvn/"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "murmansk",
+          "target": "/city/murmansk",
+          "target_collection": "cities",
+          "target_id": "73d774e5-6f71-485a-ae45-4d68c6ad4742",
+          "target_status": "published",
+          "resource_id": 2094,
+          "resource_uri": "city/murmansk.html",
+          "resource_title": "Мурманск",
+          "sql_line": 765178,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Мурманская область",
+            "Мурманск"
+          ],
+          "old_href_variants": [
+            "/murmansk"
+          ],
+          "occurrences": 6,
+          "source_documents": 6
+        },
+        {
+          "key": "n-novgorod",
+          "target": "/city/n-novgorod",
+          "target_collection": "cities",
+          "target_id": "a3ddc1eb-9119-4b19-a315-6d39f8ab5d0b",
+          "target_status": "published",
+          "resource_id": 2091,
+          "resource_uri": "city/n-novgorod.html",
+          "resource_title": "Нижний Новгород",
+          "sql_line": 765175,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Нижний Новгород",
+            " Нижний Новгород "
+          ],
+          "old_href_variants": [
+            "/n-novgorod"
+          ],
+          "occurrences": 17,
+          "source_documents": 17
+        },
+        {
+          "key": "ne-v-forme",
+          "target": "/kvn/teams/ne-v-forme",
+          "target_collection": "teams",
+          "target_id": "5c758f73-36b3-47c5-b7ad-ecf22166dd8f",
+          "target_status": "published",
+          "resource_id": 1427,
+          "resource_uri": "kvn/team/ne-v-forme.html",
+          "resource_title": "Не в форме",
+          "sql_line": 764707,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Не в форме»"
+          ],
+          "old_href_variants": [
+            "/ne-v-forme"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "neryungri",
+          "target": "/city/neryungri",
+          "target_collection": "cities",
+          "target_id": "7ef01268-f715-42be-af61-368d3b1bf74e",
+          "target_status": "published",
+          "resource_id": 2076,
+          "resource_uri": "city/neryungri.html",
+          "resource_title": "Нерюнгри",
+          "sql_line": 765159,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Нерюнгри"
+          ],
+          "old_href_variants": [
+            "/neryungri"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "nikolaj-grigorev",
+          "target": "/people/nikolaj-grigorev",
+          "target_collection": "people",
+          "target_id": "100d1c90-b9f3-48f7-bfb5-0afdeafb142d",
+          "target_status": "published",
+          "resource_id": 997,
+          "resource_uri": "people/nikolaj-grigorev.html",
+          "resource_title": "Григорьев Николай",
+          "sql_line": 764272,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Николаем Григорьевым"
+          ],
+          "old_href_variants": [
+            "/nikolaj-grigorev"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "novosibirsk",
+          "target": "/city/novosibirsk",
+          "target_collection": "cities",
+          "target_id": "1ea8c73f-a91d-4e4d-8be3-95a096ba9a43",
+          "target_status": "published",
+          "resource_id": 2080,
+          "resource_uri": "city/novosibirsk.html",
+          "resource_title": "Новосибирск",
+          "sql_line": 765163,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Новосибирск",
+            "Новосибирская область"
+          ],
+          "old_href_variants": [
+            "/novosibirsk"
+          ],
+          "occurrences": 17,
+          "source_documents": 17
+        },
+        {
+          "key": "nyagan",
+          "target": "/city/nyagan",
+          "target_collection": "cities",
+          "target_id": "1bf2ed7b-578d-442e-a680-6d00a1c3bf32",
+          "target_status": "published",
+          "resource_id": 2077,
+          "resource_uri": "city/nyagan.html",
+          "resource_title": "Нягань",
+          "sql_line": 765160,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Нягань"
+          ],
+          "old_href_variants": [
+            "/nyagan"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "odessa",
+          "target": "/city/odessa",
+          "target_collection": "cities",
+          "target_id": "9c5943f4-fd6b-4756-b217-5074575a68f0",
+          "target_status": "published",
+          "resource_id": 2095,
+          "resource_uri": "city/odessa.html",
+          "resource_title": "Одесса",
+          "sql_line": 765179,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Одесса"
+          ],
+          "old_href_variants": [
+            "/odessa"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "odnazhdyi-v-rossii",
+          "target": "/shows/odnazhdyi-v-rossii",
+          "target_collection": "shows",
+          "target_id": "d02ba5c6-a296-40cb-a4fd-2f1c3cf50b20",
+          "target_status": "published",
+          "resource_id": 1621,
+          "resource_uri": "show/odnazhdyi-v-rossii.html",
+          "resource_title": "Однажды в России",
+          "sql_line": 764836,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "шоу «Однажды в России»",
+            "«Однажды в России»"
+          ],
+          "old_href_variants": [
+            "/odnazhdyi-v-rossii"
+          ],
+          "occurrences": 31,
+          "source_documents": 31
+        },
+        {
+          "key": "osp-studiya",
+          "target": "/shows/osp-studiya",
+          "target_collection": "shows",
+          "target_id": "252aa40a-2e86-49f3-acb4-a43d763b4ae8",
+          "target_status": "published",
+          "resource_id": 1645,
+          "resource_uri": "show/osp-studiya.html",
+          "resource_title": "О.С.П.-студия",
+          "sql_line": 764861,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«О.С.П.-студии»",
+            "«О.С.П. – студия»",
+            "«О.С.П.-студия»"
+          ],
+          "old_href_variants": [
+            "/osp-studiya"
+          ],
+          "occurrences": 4,
+          "source_documents": 4
+        },
+        {
+          "key": "penza",
+          "target": "/city/penza",
+          "target_collection": "cities",
+          "target_id": "755a187c-c68f-4786-ac94-2f92e20ae175",
+          "target_status": "published",
+          "resource_id": 2086,
+          "resource_uri": "city/penza.html",
+          "resource_title": "Пенза",
+          "sql_line": 765170,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Пенза"
+          ],
+          "old_href_variants": [
+            "/penza"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "perm",
+          "target": "/city/perm",
+          "target_collection": "cities",
+          "target_id": "42f3fe63-53f1-4e26-92d2-d3b4612c69eb",
+          "target_status": "published",
+          "resource_id": 2108,
+          "resource_uri": "city/perm.html",
+          "resource_title": "Пермь",
+          "sql_line": 765192,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Пермь",
+            "Пермский край"
+          ],
+          "old_href_variants": [
+            "/perm"
+          ],
+          "occurrences": 9,
+          "source_documents": 9
+        },
+        {
+          "key": "please-ne-rasskazivai",
+          "target": "/shows/please-ne-rasskazivai",
+          "target_collection": "shows",
+          "target_id": "57fb9374-af7e-4f3c-bc52-416f368d4a1b",
+          "target_status": "published",
+          "resource_id": 1657,
+          "resource_uri": "show/please-ne-rasskazivai.html",
+          "resource_title": "Пожалуйста, не рассказывай!",
+          "sql_line": 764873,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Пожалуйста, не рассказывай!»"
+          ],
+          "old_href_variants": [
+            "/please-ne-rasskazivai"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "po-situaczii",
+          "target": "/kvn/teams/po-situaczii",
+          "target_collection": "teams",
+          "target_id": "401fbe41-f509-48f5-a925-0082315186d2",
+          "target_status": "published",
+          "resource_id": 1416,
+          "resource_uri": "kvn/team/po-situaczii.html",
+          "resource_title": "По ситуации",
+          "sql_line": 764696,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«По ситуации»"
+          ],
+          "old_href_variants": [
+            "/po-situaczii"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "prozharka-na-tnt",
+          "target": "/shows/prozharka-na-tnt",
+          "target_collection": "shows",
+          "target_id": "3f914baf-7830-4d54-9b95-267f0f5ba67f",
+          "target_status": "published",
+          "resource_id": 1617,
+          "resource_uri": "show/prozharka-na-tnt.html",
+          "resource_title": "Прожарка на ТНТ",
+          "sql_line": 764832,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Прожарки»",
+            "«Прожарка на ТНТ»"
+          ],
+          "old_href_variants": [
+            "/prozharka-na-tnt"
+          ],
+          "occurrences": 5,
+          "source_documents": 5
+        },
+        {
+          "key": "rassmeshi-komika",
+          "target": "/shows/rassmeshi-komika",
+          "target_collection": "shows",
+          "target_id": "304dccc4-bfb7-4ba4-bb6a-d881f0c58635",
+          "target_status": "published",
+          "resource_id": 1646,
+          "resource_uri": "show/rassmeshi-komika.html",
+          "resource_title": "Рассмеши комика",
+          "sql_line": 764862,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Рассмеши комика»",
+            "«Рассмеши Комика»",
+            "Рассмеши комика",
+            "«Рассмеши комика!»"
+          ],
+          "old_href_variants": [
+            "/rassmeshi-komika"
+          ],
+          "occurrences": 18,
+          "source_documents": 18
+        },
+        {
+          "key": "roman-maslov",
+          "target": "/people/roman-maslov",
+          "target_collection": "people",
+          "target_id": "22fc77c4-3625-4e8c-8c00-58a9a1c7bf50",
+          "target_status": "published",
+          "resource_id": 293,
+          "resource_uri": "people/roman-maslov.html",
+          "resource_title": "Маслов Роман",
+          "sql_line": 763564,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Романом Масловым"
+          ],
+          "old_href_variants": [
+            "/roman-maslov"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "rostov-on-don",
+          "target": "/city/rostov-on-don",
+          "target_collection": "cities",
+          "target_id": "bac7a411-6613-4a20-b021-73137cef976a",
+          "target_status": "published",
+          "resource_id": 2093,
+          "resource_uri": "city/rostov-on-don.html",
+          "resource_title": "Ростов-на-Дону",
+          "sql_line": 765177,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Ростовская область",
+            "Ростов-на-Дону"
+          ],
+          "old_href_variants": [
+            "/rostov-on-don"
+          ],
+          "occurrences": 18,
+          "source_documents": 18
+        },
+        {
+          "key": "ryazan",
+          "target": "/city/ryazan",
+          "target_collection": "cities",
+          "target_id": "461470cf-1a97-4dc2-a78a-e37ce9893e8a",
+          "target_status": "published",
+          "resource_id": 2098,
+          "resource_uri": "city/ryazan.html",
+          "resource_title": "Рязань",
+          "sql_line": 765182,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Рязань"
+          ],
+          "old_href_variants": [
+            "/ryazan"
+          ],
+          "occurrences": 3,
+          "source_documents": 3
+        },
+        {
+          "key": "samara",
+          "target": "/city/samara",
+          "target_collection": "cities",
+          "target_id": "b6cd9e8f-5274-40cf-b232-214be22dec79",
+          "target_status": "published",
+          "resource_id": 2103,
+          "resource_uri": "city/samara.html",
+          "resource_title": "Самара",
+          "sql_line": 765187,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Самара"
+          ],
+          "old_href_variants": [
+            "/samara"
+          ],
+          "occurrences": 11,
+          "source_documents": 11
+        },
+        {
+          "key": "smex-v-bolshom-gorode",
+          "target": "/shows/smex-v-bolshom-gorode",
+          "target_collection": "shows",
+          "target_id": "0e720e87-81bc-49a0-a8e5-fe171f4b1797",
+          "target_status": "published",
+          "resource_id": 1641,
+          "resource_uri": "show/smex-v-bolshom-gorode.html",
+          "resource_title": "Смех в большом городе",
+          "sql_line": 764857,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Смех в большом городе»"
+          ],
+          "old_href_variants": [
+            "/smex-v-bolshom-gorode"
+          ],
+          "occurrences": 11,
+          "source_documents": 11
+        },
+        {
+          "key": "spb",
+          "target": "/city/spb",
+          "target_collection": "cities",
+          "target_id": "82c18b08-e00a-419b-8663-9f7dd5c1adf7",
+          "target_status": "published",
+          "resource_id": 2070,
+          "resource_uri": "city/spb.html",
+          "resource_title": "Санкт-Петербург",
+          "sql_line": 765153,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Ленинград",
+            "Санкт-Петербург",
+            "Ленинградская область",
+            "Санкт-Петербурга",
+            "питерские"
+          ],
+          "old_href_variants": [
+            "/spb"
+          ],
+          "occurrences": 41,
+          "source_documents": 41
+        },
+        {
+          "key": "standup",
+          "target": "/shows/standup",
+          "target_collection": "shows",
+          "target_id": "8f8f1bb5-b56c-49ee-8162-6e20b8f6200d",
+          "target_status": "published",
+          "resource_id": 1637,
+          "resource_uri": "show/standup.html",
+          "resource_title": "Stand Up на ТНТ",
+          "sql_line": 764853,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "»",
+            "«Stand Up»",
+            "«StandUp»",
+            "«Stand Up на ТНТ»",
+            "«Stand Up» на «ТНТ»",
+            "«Stand Up» на ТНТ",
+            " «Stand Up»"
+          ],
+          "old_href_variants": [
+            "/standup"
+          ],
+          "occurrences": 24,
+          "source_documents": 23
+        },
+        {
+          "key": "standup-underground",
+          "target": "/shows/standup-underground",
+          "target_collection": "shows",
+          "target_id": "579148b2-718f-4d81-b5b4-d8e1651d0d8c",
+          "target_status": "published",
+          "resource_id": 1640,
+          "resource_uri": "show/standup-underground.html",
+          "resource_title": "Стендап Андеграунд",
+          "sql_line": 764856,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Стендап Андеграунд»"
+          ],
+          "old_href_variants": [
+            "/standup-underground"
+          ],
+          "occurrences": 4,
+          "source_documents": 4
+        },
+        {
+          "key": "standupwomen",
+          "target": "/shows/standupwomen",
+          "target_collection": "shows",
+          "target_id": "8ac49241-58ab-4e86-95fd-f1afb161bbef",
+          "target_status": "published",
+          "resource_id": 1624,
+          "resource_uri": "show/standupwomen.html",
+          "resource_title": "Женский стендап",
+          "sql_line": 764839,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Женский стендап»",
+            "шоу «Женский стендап»",
+            "«Женский Стендап»"
+          ],
+          "old_href_variants": [
+            "/standupwomen"
+          ],
+          "occurrences": 4,
+          "source_documents": 4
+        },
+        {
+          "key": "stavropol",
+          "target": "/city/stavropol",
+          "target_collection": "cities",
+          "target_id": "1a7ed3ce-f101-4b6b-bc5f-6ae676eef15d",
+          "target_status": "published",
+          "resource_id": 2078,
+          "resource_uri": "city/stavropol.html",
+          "resource_title": "Ставрополь",
+          "sql_line": 765161,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Ставропольский край",
+            "Ставрополь",
+            "Ставрополе"
+          ],
+          "old_href_variants": [
+            "/stavropol"
+          ],
+          "occurrences": 12,
+          "source_documents": 12
+        },
+        {
+          "key": "stendap-artyuhova",
+          "target": "/news/stendap-artyuhova",
+          "target_collection": "news",
+          "target_id": "a646db52-f3c5-46ba-b354-446a1b5c0cbb",
+          "target_status": "published",
+          "resource_id": 2845,
+          "resource_uri": "novosti/stendap-artyuhova.html",
+          "resource_title": "Стендап Артюхова",
+          "sql_line": 765881,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "вышел первый сольный"
+          ],
+          "old_href_variants": [
+            "/stendap-artyuhova"
+          ],
+          "occurrences": 2,
+          "source_documents": 1
+        },
+        {
+          "key": "studiya-soyuz",
+          "target": "/shows/studiya-soyuz",
+          "target_collection": "shows",
+          "target_id": "e2841bad-eb63-4e65-bf7e-8f9ff49ce771",
+          "target_status": "published",
+          "resource_id": 1638,
+          "resource_uri": "show/studiya-soyuz.html",
+          "resource_title": "Студия Союз",
+          "sql_line": 764854,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Студия Союз»",
+            "«Студии СОЮЗ»",
+            "«Студия СОЮЗ»",
+            "«Студии Союз»"
+          ],
+          "old_href_variants": [
+            "/studiya-soyuz"
+          ],
+          "occurrences": 10,
+          "source_documents": 8
+        },
+        {
+          "key": "superliga",
+          "target": "/shows/superliga",
+          "target_collection": "shows",
+          "target_id": "2821620c-8592-4966-a629-bd76a5131a0e",
+          "target_status": "published",
+          "resource_id": 1652,
+          "resource_uri": "show/superliga.html",
+          "resource_title": "Суперлига",
+          "sql_line": 764868,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Суперлига»",
+            "шоу «Суперлига»",
+            "«Суперлига",
+            " «Суперлига»",
+            "«Суперлиги»,",
+            "«Суперлиги»",
+            "«Суперлига»,",
+            "«Суперлига».",
+            "«Суперлига» на СТС"
+          ],
+          "old_href_variants": [
+            "/superliga"
+          ],
+          "occurrences": 76,
+          "source_documents": 76
+        },
+        {
+          "key": "tambov",
+          "target": "/city/tambov",
+          "target_collection": "cities",
+          "target_id": "4700cf54-4605-4907-8d4c-f3df6d68ef81",
+          "target_status": "published",
+          "resource_id": 2097,
+          "resource_uri": "city/tambov.html",
+          "resource_title": "Тамбов",
+          "sql_line": 765181,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Тамбов"
+          ],
+          "old_href_variants": [
+            "/tambov"
+          ],
+          "occurrences": 10,
+          "source_documents": 10
+        },
+        {
+          "key": "tomsk",
+          "target": "/city/tomsk",
+          "target_collection": "cities",
+          "target_id": "2b49fd89-27e6-4c16-a5fd-aa7e0825da47",
+          "target_status": "published",
+          "resource_id": 2073,
+          "resource_uri": "city/tomsk.html",
+          "resource_title": "Томск",
+          "sql_line": 765156,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Томск",
+            "Томск ",
+            "Томская область"
+          ],
+          "old_href_variants": [
+            "/tomsk"
+          ],
+          "occurrences": 18,
+          "source_documents": 18
+        },
+        {
+          "key": "tyumen",
+          "target": "/city/tyumen",
+          "target_collection": "cities",
+          "target_id": "5dce63ca-c69a-4ac1-91b7-b9ff631ecb67",
+          "target_status": "published",
+          "resource_id": 2100,
+          "resource_uri": "city/tyumen.html",
+          "resource_title": "Тюмень",
+          "sql_line": 765184,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Тюмень",
+            "Тюмени"
+          ],
+          "old_href_variants": [
+            "/tyumen"
+          ],
+          "occurrences": 6,
+          "source_documents": 6
+        },
+        {
+          "key": "ubojnaya-liga",
+          "target": "/shows/ubojnaya-liga",
+          "target_collection": "shows",
+          "target_id": "fdf9cf6c-fd3b-41e5-ad96-9f474c7047f3",
+          "target_status": "published",
+          "resource_id": 1628,
+          "resource_uri": "show/ubojnaya-liga.html",
+          "resource_title": "Убойная лига",
+          "sql_line": 764843,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Убойная лига»",
+            "«Убойной лиги»",
+            "«Убойной Лиги»",
+            "«Убойную лигу»"
+          ],
+          "old_href_variants": [
+            "/ubojnaya-liga"
+          ],
+          "occurrences": 17,
+          "source_documents": 17
+        },
+        {
+          "key": "ubojnoj-nochi",
+          "target": "/shows/ubojnoj-nochi",
+          "target_collection": "shows",
+          "target_id": "b5358cc9-0a6c-4143-a438-a25a634c1319",
+          "target_status": "published",
+          "resource_id": 1620,
+          "resource_uri": "show/ubojnoj-nochi.html",
+          "resource_title": "Убойной ночи",
+          "sql_line": 764835,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Убойной ночи»"
+          ],
+          "old_href_variants": [
+            "/ubojnoj-nochi"
+          ],
+          "occurrences": 6,
+          "source_documents": 6
+        },
+        {
+          "key": "ubojnyij-vecher",
+          "target": "/shows/ubojnyij-vecher",
+          "target_collection": "shows",
+          "target_id": "683502d6-0927-47a5-b6dc-5f7cac26c034",
+          "target_status": "published",
+          "resource_id": 1623,
+          "resource_uri": "show/ubojnyij-vecher.html",
+          "resource_title": "Убойный вечер",
+          "sql_line": 764838,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "«Убойный вечер»"
+          ],
+          "old_href_variants": [
+            "/ubojnyij-vecher"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        },
+        {
+          "key": "uralskie-pelmeni-show",
+          "target": "/shows/uralskie-pelmeni-show",
+          "target_collection": "shows",
+          "target_id": "2836ecdc-f64f-4874-9b4a-1372ca75ffcc",
+          "target_status": "published",
+          "resource_id": 1643,
+          "resource_uri": "show/uralskie-pelmeni-show.html",
+          "resource_title": "Шоу «Уральские пельмени»",
+          "sql_line": 764859,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "шоу «Уральские пельмени»",
+            "«Уральские пельмени»",
+            "шоу «Уральские пельмени»",
+            "собственного шоу",
+            "Шоу «Уральские пельмени»"
+          ],
+          "old_href_variants": [
+            "/uralskie-pelmeni-show"
+          ],
+          "occurrences": 7,
+          "source_documents": 6
+        },
+        {
+          "key": "viktor-shhetkov",
+          "target": "/people/viktor-shhetkov",
+          "target_collection": "people",
+          "target_id": "05a1c4a3-d4e9-4c37-80a5-2d8f239446ea",
+          "target_status": "published",
+          "resource_id": 1001,
+          "resource_uri": "people/viktor-shhetkov.html",
+          "resource_title": "Щетков Виктор",
+          "sql_line": 764276,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Виктор Щетков"
+          ],
+          "old_href_variants": [
+            "/viktor-shhetkov"
+          ],
+          "occurrences": 5,
+          "source_documents": 5
+        },
+        {
+          "key": "vladikavkaz",
+          "target": "/city/vladikavkaz",
+          "target_collection": "cities",
+          "target_id": "90eafbd2-be64-4373-9351-80eb046f1a0e",
+          "target_status": "published",
+          "resource_id": 2109,
+          "resource_uri": "city/vladikavkaz.html",
+          "resource_title": "Владикавказ",
+          "sql_line": 765193,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Орджоникидзе"
+          ],
+          "old_href_variants": [
+            "/vladikavkaz"
+          ],
+          "occurrences": 2,
+          "source_documents": 2
+        },
+        {
+          "key": "vladivostok",
+          "target": "/city/vladivostok",
+          "target_collection": "cities",
+          "target_id": "ba7d78c6-dfce-4405-b1f1-a689297943b9",
+          "target_status": "published",
+          "resource_id": 2084,
+          "resource_uri": "city/vladivostok.html",
+          "resource_title": "Владивосток",
+          "sql_line": 765167,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Владивосток",
+            "Владивостока"
+          ],
+          "old_href_variants": [
+            "/vladivostok"
+          ],
+          "occurrences": 16,
+          "source_documents": 15
+        },
+        {
+          "key": "volgograd",
+          "target": "/city/volgograd",
+          "target_collection": "cities",
+          "target_id": "1ad4aca8-9998-4a8b-b2f8-c3780384d1a2",
+          "target_status": "published",
+          "resource_id": 2112,
+          "resource_uri": "city/volgograd.html",
+          "resource_title": "Волгоград",
+          "sql_line": 765196,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Волгоград",
+            "Волгограда"
+          ],
+          "old_href_variants": [
+            "/volgograd"
+          ],
+          "occurrences": 4,
+          "source_documents": 4
+        },
+        {
+          "key": "voronezh",
+          "target": "/city/voronezh",
+          "target_collection": "cities",
+          "target_id": "a667a68c-c9d4-494e-92bd-9a67a5f8ffdf",
+          "target_status": "published",
+          "resource_id": 2072,
+          "resource_uri": "city/voronezh.html",
+          "resource_title": "Воронеж",
+          "sql_line": 765155,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Воронеж",
+            "Воронеж "
+          ],
+          "old_href_variants": [
+            "/voronezh"
+          ],
+          "occurrences": 18,
+          "source_documents": 18
+        },
+        {
+          "key": "yaroslavl",
+          "target": "/city/yaroslavl",
+          "target_collection": "cities",
+          "target_id": "8d7f8ae3-5d0d-4159-8a02-36481f313e80",
+          "target_status": "published",
+          "resource_id": 2105,
+          "resource_uri": "city/yaroslavl.html",
+          "resource_title": "Ярославль",
+          "sql_line": 765189,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Ярославль",
+            "Ярославской области"
+          ],
+          "old_href_variants": [
+            "/yaroslavl"
+          ],
+          "occurrences": 10,
+          "source_documents": 10
+        },
+        {
+          "key": "zoya-yarovitsyna",
+          "target": "/people/zoya-yarovitsyna",
+          "target_collection": "people",
+          "target_id": "bc87d772-95f1-4662-af18-18d2c728c456",
+          "target_status": "published",
+          "resource_id": 189,
+          "resource_uri": "people/zoya-yarovitsyna.html",
+          "resource_title": "Яровицына Зоя",
+          "sql_line": 763459,
+          "proof": "Exact unique MODX alias with same target old_id; source anchor labels reviewed",
+          "anchor_labels": [
+            "Зоя Яровицына"
+          ],
+          "old_href_variants": [
+            "/zoya-yarovitsyna"
+          ],
+          "occurrences": 1,
+          "source_documents": 1
+        }
+      ]
+    }
+  },
+  "invariants": [
+    "Only declared href value spans; retain tag, quote style, labels, other attributes, query and fragment",
+    "Field preimage SHA and typed source ID guards; duplicate or unexpected count refuses apply",
+    "All source snapshots immutable; only derived copy",
+    "No aliases based only on last slug, no new editorial facts, no new/deleted docs",
+    "Full release transfer requires fresh complete preimages; raw projection is not a release archive"
+  ],
+  "deferred": {
+    "additional_one_slug_candidates": 104,
+    "ambiguous_keys": 21,
+    "no_slug_candidates": 129,
+    "note": "Four quiz ambiguities and two unique quiz candidates plus wrong-slug big-show are addressed by declared quiz-contract fix; no blanket decisions for rest"
+  },
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "approval": {
+    "date": "2026-10-23",
+    "scope": "Both quiz contract fix and exact88 href replacements only on derived copy; includes declared hidden module occurrences; no main/24SMI/VPS"
+  },
+  "execution_acceptance": {
+    "date": "2026-10-23",
+    "task": "R13j",
+    "native_run": "9b782104cb9f41f792fe85220c30bdcc",
+    "full_backend_run": "7065f5c18d86471a9f825b7f8052ce98",
+    "backend_tests_passed": 1200,
+    "backend_tests_skipped": 16,
+    "quiz_and_modx_tests_passed": 42,
+    "copy_guard_tests_passed": 5,
+    "source_sha256": "7439abd0b81796875960d270735d3efd1f0acea2738d84dcd61b740862e58aeb",
+    "patched_sha256": "90e38c00f870bcbf28702675097eb752b8304148f5556d61d481e8985f9e4ea7",
+    "records": 25620,
+    "changed_documents": 379,
+    "changed_fields": 429,
+    "href_edits": 759,
+    "hidden_href_edits": 46,
+    "source_pages_http_api": 379,
+    "target_pages_http_api": 95,
+    "browser_scenarios": 14,
+    "browser_pageerrors": 0,
+    "unresolved_before": 344,
+    "unresolved_after": 249,
+    "remaining_findings": 0,
+    "identities_and_media_preserved": true,
+    "cleanup": {
+      "containers": [],
+      "network_removed": true,
+      "images_removed": [
+        "hp-r13j-pages-9b782104cb9f41f792fe85220c30bdcc-backend:latest",
+        "hp-r13j-pages-9b782104cb9f41f792fe85220c30bdcc-gateway:latest"
+      ],
+      "error": null
+    },
+    "scope": "Projection copy; main/24SMI/VPS untouched; view counters only runtime exception",
+    "full_release_preimage_required": true
+  },
+  "publication_authorized": true
+}

@@ -48,7 +48,7 @@ URL_BUILDERS: Dict[str, Callable[[dict], str]] = {
     "quizzes": lambda d: f"/quizzes/{d['slug']}",
     "cities": lambda d: f"/city/{d['slug']}",
 }
-OLD_URL_COLLECTIONS = ("people", "teams", "kvn", "shows", "articles", "news", "cities")
+OLD_URL_COLLECTIONS = ("people", "teams", "kvn", "shows", "articles", "news", "cities", "quizzes")
 
 
 def link_key(href: str) -> Optional[str]:
