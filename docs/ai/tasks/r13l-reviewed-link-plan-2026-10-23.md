@@ -1,6 +1,6 @@
 # R13l — контекстные исправления оставшихся ссылок
 
-Дата:23.10.2026. Статус: **весь пакет согласован и принят на изолированной копии; публикация разрешена пользователем**.
+Дата:23.10.2026. Статус: **весь пакет согласован и принят на изолированной копии; опубликован1e80a34, GitHub CI success**.
 
 Ветка `codex/local-page-builder`, тот же worktree `r5-zip-operations/humorpedia`, HEAD `8ddd3964633700be03e4a1245ab3cfc79d18b1a8`.
 
@@ -156,3 +156,9 @@ Evidence: `.cache/r13l/acceptance-final.json`, `native-pages/009f559f3d5a4353b9f
 ### Следующий этап
 
 Пользователь разрешил отдельный commit/push R13l с документацией и проверкой GitHub CI. Публикация на момент этой контрольной точки ещё не выполнена.74 неподтверждённых keys сохранены в JSON без автоматической подмены.8 оригинальных season posters,111external/embed URL, полноценный release archive, интеграция и dev-sync после интеграции остаются отдельными этапами. Main и VPS сейчас не переключать; индексация остаётся выключенной.
+
+## Публикация и продолжение23.10.2026
+
+R13l с документацией опубликован отдельным `1e80a34213652ad66244bfde9785b6c53534df10` в `origin/codex/local-page-builder`. [GitHub39945508291](https://github.com/AMnEPka/humorpedia/actions/runs/39945508291) completed/success на точном SHA,attempt1: все5jobs и3browser-сценария success. Evidence `.cache/r13m/r13l-ci-{run,jobs}-final.json`.
+
+Продолжение [R13m](r13m-residual-link-plan-2026-10-23.md): обе точные label-specific замены согласованы и приняты на новой копии;API/HTML2+2+excluded source/browser2 PASS,unresolved73. Партизаны stored unchanged,API оставляет прежний текст. Исходник R13l неизменен; R13m не закоммичен.

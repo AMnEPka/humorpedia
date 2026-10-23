@@ -2892,5 +2892,16 @@
     "date": "2026-10-23",
     "source": "Direct user reply to R13l approval question",
     "scope": "Full75rules/73keys/319href/205documents including10hidden and two mixed-key label splits, two existing catalogs, isolated copy only; no main,24SMI,VPS"
+  },
+  "publication": {
+    "commit": "1e80a34213652ad66244bfde9785b6c53534df10",
+    "branch": "codex/local-page-builder",
+    "pushed": true,
+    "ci_run": 39945508291,
+    "ci_url": "https://github.com/AMnEPka/humorpedia/actions/runs/39945508291",
+    "ci_status": "completed",
+    "ci_conclusion": "success",
+    "jobs_passed": 5,
+    "browser_scenarios_passed": 3
   }
 }

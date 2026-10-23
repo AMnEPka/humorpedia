@@ -1,0 +1,3755 @@
+{
+  "schema_version": 1,
+  "task": "R13m",
+  "date": "2026-10-23",
+  "status": "implemented_and_accepted_on_isolated_copy",
+  "approved": true,
+  "branch": "codex/local-page-builder",
+  "base_commit": "1e80a34213652ad66244bfde9785b6c53534df10",
+  "source_copy": ".cache/r13l/copy/patched.jsonl",
+  "source_sha256": "9d2fcb72a5a893bcb0f0aa4d7a12e88b0575956fd150bbe66508046ed6da2209",
+  "source_rows": 25620,
+  "review_counts": {
+    "keys": 74,
+    "literal_anchors": 636,
+    "field_key_occurrences": 609,
+    "source_documents": 456,
+    "nonpeople_keys": 57,
+    "nonpeople_anchors": 590,
+    "people_profile_tag_keys": 17,
+    "people_profile_tag_anchors": 46
+  },
+  "counts": {
+    "keys": 2,
+    "rules": 2,
+    "anchors": 2,
+    "fields": 2,
+    "documents": 2,
+    "hidden_anchors": 0,
+    "hidden_fields": 0,
+    "source_statuses": [
+      "published"
+    ],
+    "unsupported": 0,
+    "plan_sha256": "420118c913837ad2e88b1ad176437eaaf55f163f54586e1a295550c8160d9158",
+    "target_urls": 2,
+    "document_targets": 2,
+    "static_catalog_targets": 0
+  },
+  "mappings": [
+    {
+      "key": "chekhovikukota",
+      "target": "/people/chekhov-i-kukota",
+      "target_collection": "people",
+      "target_id": "df2371ba-1c12-43a2-aeb0-5e04ada904ae",
+      "target_title": "Дуэт «Чехов и Кукота»",
+      "target_status": "published",
+      "old_id": 131,
+      "old_urls": [
+        "/people/chekhov-i-kukota.html"
+      ],
+      "selector": {
+        "anchor_labels": [
+          "«Чехов и Кукота»"
+        ]
+      },
+      "proof": "published people document full_name is the same duet title; facts name is Михаил Кукота; SQL/current route index identifies unique published non-deleted resource id 131.",
+      "legacy_resource": {
+        "id": 131,
+        "uri": "people/chekhov-i-kukota.html",
+        "pagetitle": "Дуэт «Чехов и Кукота»",
+        "published": 1,
+        "deleted": 0,
+        "parent": 30
+      }
+    },
+    {
+      "key": "shastun",
+      "target": "/people/anton-shastun",
+      "target_collection": "people",
+      "target_id": "f61f7b37-d726-4e23-a495-0a6b996c98dd",
+      "target_title": "Шастун Антон",
+      "target_status": "published",
+      "old_id": 116,
+      "old_urls": [
+        "/people/anton-shastun.html"
+      ],
+      "selector": {
+        "anchor_labels": [
+          "Антон Шастун"
+        ]
+      },
+      "proof": "The sole R13l occurrence is visibly labelled Антон Шастун; current standalone person full_name is Антон Шастун, unique published route and SQL resource id 116. A duet record also has this person as its fact name, but its own full_name is Дуэт «Шастун и Макар» and is not the anchor entity.",
+      "legacy_resource": {
+        "id": 116,
+        "uri": "people/anton-shastun.html",
+        "pagetitle": "Шастун Антон",
+        "published": 1,
+        "deleted": 0,
+        "parent": 30
+      }
+    }
+  ],
+  "exact_field_plan": {
+    "scope": "Proposal only; no source field rewritten",
+    "source_sha256": "9d2fcb72a5a893bcb0f0aa4d7a12e88b0575956fd150bbe66508046ed6da2209",
+    "fields": [
+      {
+        "kind": "shows",
+        "id": "08dac34e-6768-4da8-aca0-4b956563163d",
+        "page": "/shows/ne-spat/season3",
+        "source_status": "published",
+        "path": [
+          "modules",
+          {
+            "$numberInt": "5"
+          },
+          "data",
+          "content"
+        ],
+        "hidden": false,
+        "field_sha256": "de94b599717a57fadb4834fad38afb8145a1b4ecb610f2ad1f343d6cb69de8bd",
+        "matches": [
+          {
+            "key": "shastun",
+            "start": {
+              "$numberInt": "3305"
+            },
+            "end": {
+              "$numberInt": "3313"
+            },
+            "old_href_raw": "/shastun",
+            "label": "Антон Шастун",
+            "new_href_raw": "/people/anton-shastun",
+            "mapping_rule_index": {
+              "$numberInt": "1"
+            },
+            "target_url": "/people/anton-shastun",
+            "target_kind": "people"
+          }
+        ]
+      },
+      {
+        "kind": "shows",
+        "id": "fdf9cf6c-fd3b-41e5-ad96-9f474c7047f3",
+        "page": "/shows/ubojnaya-liga",
+        "source_status": "published",
+        "path": [
+          "modules",
+          {
+            "$numberInt": "9"
+          },
+          "data",
+          "content"
+        ],
+        "hidden": false,
+        "field_sha256": "443391606940f4eefe7a8563f0902c89cbbd2eb3f52b7340af0ec705f754e2e7",
+        "matches": [
+          {
+            "key": "chekhovikukota",
+            "start": {
+              "$numberInt": "816"
+            },
+            "end": {
+              "$numberInt": "831"
+            },
+            "old_href_raw": "/chekhovikukota",
+            "label": "«Чехов и Кукота»",
+            "new_href_raw": "/people/chekhov-i-kukota",
+            "mapping_rule_index": {
+              "$numberInt": "0"
+            },
+            "target_url": "/people/chekhov-i-kukota",
+            "target_kind": "people"
+          }
+        ]
+      }
+    ],
+    "excluded": [
+      {
+        "kind": "shows",
+        "id": "f2728cdb-7aa4-41c5-9cca-622a93d9e23c",
+        "page": "/shows/smeh-bez-pravil/season5",
+        "path": [
+          "modules",
+          {
+            "$numberInt": "5"
+          },
+          "data",
+          "content"
+        ],
+        "key": "chekhovikukota",
+        "start": {
+          "$numberInt": "1837"
+        },
+        "end": {
+          "$numberInt": "1852"
+        },
+        "old_href_raw": "/chekhovikukota",
+        "label": "Партизаны»"
+      }
+    ],
+    "unsupported": []
+  },
+  "field_plan_source": ".cache/r13m/exact-href-plan.json",
+  "field_plan_sha256": "420118c913837ad2e88b1ad176437eaaf55f163f54586e1a295550c8160d9158",
+  "explicit_holdout": [
+    {
+      "source_kind": "shows",
+      "source_id": "f2728cdb-7aa4-41c5-9cca-622a93d9e23c",
+      "page": "/shows/smeh-bez-pravil/season5",
+      "field": [
+        "modules",
+        5,
+        "data",
+        "content"
+      ],
+      "hidden": false,
+      "href": "/chekhovikukota",
+      "label": "Партизаны»",
+      "key": "chekhovikukota"
+    }
+  ],
+  "expected_unresolved_after_execution": 73,
+  "expected_only": false,
+  "execution_acceptance": {
+    "task": "R13m",
+    "date": "2026-10-23",
+    "status": "accepted_on_isolated_copy",
+    "base_commit": "1e80a34213652ad66244bfde9785b6c53534df10",
+    "native_run": "6699ba4c527c4e48bc2512d1652700d1",
+    "release_id": "340fa99dc58ed63e53a92bd50009ba386b1ec5f9dcf80af25cccdddec5506a7b",
+    "source_sha256": "9d2fcb72a5a893bcb0f0aa4d7a12e88b0575956fd150bbe66508046ed6da2209",
+    "output_sha256": "9c63bb45d3a18d66b0798bd81db27308546322db3996cb0cdc12673c379cc308",
+    "plan_sha256": "420118c913837ad2e88b1ad176437eaaf55f163f54586e1a295550c8160d9158",
+    "records": 25620,
+    "changed_documents": 2,
+    "changed_fields": 2,
+    "href_edits": 2,
+    "mapping_rules": 2,
+    "keys": 2,
+    "hidden_edits": 0,
+    "insertions": 0,
+    "deletions": 0,
+    "guard_tests_passed": 5,
+    "independent_snapshot_check": "PASS",
+    "byte_identical_unchanged_rows": 25618,
+    "exclusion": {
+      "source": "/shows/smeh-bez-pravil/season5",
+      "href": "/chekhovikukota",
+      "label": "Партизаны»",
+      "api": 200,
+      "html": {
+        "path": "/shows/smeh-bez-pravil/season5",
+        "status": 200,
+        "noindex": true
+      },
+      "clicked": false,
+      "stored_href_unchanged": true,
+      "public_api_unresolved_anchor_unwrapped": true,
+      "label_retained": true,
+      "scope": "Exact source field equality checked offline; public API preserves existing text-only rendering of unresolved anchor; no broken-target click"
+    },
+    "relation_findings": 0,
+    "seasons": 122,
+    "participations": 9276,
+    "original_unresolved": 74,
+    "unresolved": 73,
+    "residual_scope": "Only shastun old key fully removed; chekhovikukota remains from excluded Партизаны context",
+    "api_html_sources_passed": 2,
+    "api_html_targets_passed": 2,
+    "api_html_excluded_source_passed": true,
+    "browser_clicks_passed": 2,
+    "browser_headings": "Exact normalized visible h1 equality",
+    "browser_pageerrors": 0,
+    "browser_blocked_external_origins": [],
+    "before_snapshot": {
+      "run_id": "6699ba4c527c4e48bc2512d1652700d1",
+      "records": 25620,
+      "non_view_domain_fields_unchanged": true,
+      "scope": "Own seeded projection only; runtime view counters excluded; bounded batches"
+    },
+    "after_snapshot": {
+      "run_id": "6699ba4c527c4e48bc2512d1652700d1",
+      "records": 25620,
+      "non_view_domain_fields_unchanged": true,
+      "scope": "Own seeded projection only; runtime view counters excluded; bounded batches"
+    },
+    "cleanup": {
+      "containers": [],
+      "network_removed": true,
+      "images_removed": [
+        "hp-r13m-pages-6699ba4c527c4e48bc2512d1652700d1-backend:latest",
+        "hp-r13m-pages-6699ba4c527c4e48bc2512d1652700d1-gateway:latest"
+      ],
+      "error": null
+    },
+    "main": {
+      "branch": "main",
+      "head": "ca46155a9640d4723c07b9fd1762a6e639563414",
+      "clean": true,
+      "containers": [
+        {
+          "name": "/humorpedia-backend",
+          "id": "6e4c35677d2a72b057feb89645f1c3cbba2546dfbb2f3bd808d9825faae12745",
+          "started_at": "2026-10-21T08:50:48.954791227Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-frontend",
+          "id": "0cba07b3a129fc37659eed76782d66501a9856cca7c16a7d9ce3b1b56272da15",
+          "started_at": "2026-10-21T08:50:49.201030699Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-mongodb",
+          "id": "21cb1fd6939deb55c77cf3ac88b233c3d3e63d963aa115568e5f7183e027985a",
+          "started_at": "2026-10-20T05:53:53.11828567Z",
+          "restarts": 0,
+          "state": "running",
+          "health": "healthy"
+        }
+      ],
+      "http_3000": 200,
+      "http_8001_health": 200
+    },
+    "product_code_changed": false,
+    "full_backend_rerun": false,
+    "retained_ci": {
+      "commit": "1e80a34213652ad66244bfde9785b6c53534df10",
+      "run": 39945508291,
+      "conclusion": "success",
+      "jobs": 5,
+      "browser_scenarios": 3
+    },
+    "final_scope_review": {
+      "path": ".cache/r13m/final-scope-review.json",
+      "sha256": "89dd2ff428191319f0814542eec51877255190f2fb1ff9c3e1215ba32276179f",
+      "status": "PASS",
+      "blockers": []
+    },
+    "failed_native_attempts": [
+      {
+        "run": "ab739155b7d64635a5b676aedc1d0963",
+        "cause": "Checker incorrectly required unresolved href in API; existing LinkResolver unwraps missing-target anchor to text. Fixed checker only.",
+        "browser_executed": false,
+        "cleanup_error": null
+      }
+    ],
+    "boundary": "Seeded25620-record projection, not a full release archive. Unique kvn.id index warns duplicate null IDs; native startup and tested endpoints passed. Excluded stored field unchanged; public API renders same text without broken anchor; not clicked.",
+    "missing_legacy_resources_imported": false,
+    "committed": false,
+    "pushed": false,
+    "apply_to_main": false,
+    "deploy_to_vps": false,
+    "publication_authorized": true
+  },
+  "reviews": {
+    "nonpeople_source": ".cache/r13m/nonpeople-review.json",
+    "nonpeople_sha256": "ed7295e904b391250c9ba8b4770cbdebb5486c9d6ba4662df22540a3585d3e98",
+    "people_source": ".cache/r13m/people-review.json",
+    "people_sha256": "04132a47a233216664414a8efcaebdce1381383e600e6865070a13a300ae180f"
+  },
+  "classification": {
+    "nonpeople_summary": {
+      "keys": 57,
+      "occurrences": 590,
+      "documents": 432,
+      "categories": {
+        "legacy_resource_absent_from_projection": {
+          "keys": 47,
+          "occurrences": 566
+        },
+        "draft_candidate_requires_separate_decision": {
+          "keys": 3,
+          "occurrences": 6
+        },
+        "no_exact_legacy_or_current_target": {
+          "keys": 5,
+          "occurrences": 14
+        },
+        "relative_vk_resource_requires_external_verification": {
+          "keys": 2,
+          "occurrences": 4
+        }
+      }
+    },
+    "nonpeople": [
+      {
+        "key": "kvn/asia",
+        "occurrences": 23,
+        "documents": 23,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной лиги КВН «Азия»",
+          "«Азия»",
+          "«Азия»,",
+          "КВН «Азия»",
+          "«АЗИЯ»",
+          "«КВН-Азия»"
+        ],
+        "hrefs": [
+          "/kvn/asia"
+        ],
+        "source_examples": [
+          "/people/nastya-gurova",
+          "/people/natasha-fridman",
+          "/people/olga-parfenyuk"
+        ],
+        "legacy_key_reviewed": "kvn/league/asia",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764805,
+            "id": 1590,
+            "pagetitle": "Центральная Лига «Азия»",
+            "alias": "asia",
+            "uri": "kvn/league/asia.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/dalnevostochnaya-liga/2025",
+        "occurrences": 14,
+        "documents": 12,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "2025 года",
+          "Дальневосточная лига: 2025",
+          "Текущий сезон Дальневосточной лиги КВН 2025 года",
+          "2025"
+        ],
+        "hrefs": [
+          "/kvn/dalnevostochnaya-liga/2025"
+        ],
+        "source_examples": [
+          "/kvn/teams/multiplex",
+          "/kvn/teams/da-my-damy",
+          "/kvn/teams/territoriya-svobody"
+        ],
+        "legacy_key_reviewed": "kvn/dalnevostochnaya-liga/2025",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 766654,
+            "id": 3630,
+            "pagetitle": "Сезон 2025 Дальневосточной лиги",
+            "alias": "dl-2025",
+            "uri": "kvn/dalnevostochnaya-liga/2025.html",
+            "parent": 3629,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/golosyashiy-kivin/1995",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "1995"
+        ],
+        "hrefs": [
+          "/kvn/golosyashiy-kivin/1995"
+        ],
+        "source_examples": [
+          "/kvn/golosyashiy-kivin"
+        ],
+        "legacy_key_reviewed": "kvn/golosyashiy-kivin/1995",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764812,
+            "id": 1597,
+            "pagetitle": "Голосящий КиВиН 1995",
+            "alias": "gk-1995",
+            "uri": "kvn/golosyashiy-kivin/1995.html",
+            "parent": 1496,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/golosyashiy-kivin/2021",
+        "occurrences": 9,
+        "documents": 9,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "2021 года",
+          "«Голосящий КиВиН» в Светлогорске",
+          "«Большого КиВиНа в Золотом»",
+          "музыкального фестиваля в Светлогорске",
+          "«Голосящий КиВиН» 2021",
+          "2021"
+        ],
+        "hrefs": [
+          "/kvn/golosyashiy-kivin/2021"
+        ],
+        "source_examples": [
+          "/people/yusif-yusifov",
+          "/people/lena-ugleva",
+          "/people/nastya-izmailova"
+        ],
+        "legacy_key_reviewed": "kvn/golosyashiy-kivin/2021",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764813,
+            "id": 1598,
+            "pagetitle": "Голосящий КиВиН 2021",
+            "alias": "gk-2021",
+            "uri": "kvn/golosyashiy-kivin/2021.html",
+            "parent": 1496,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/golosyashiy-kivin/2022",
+        "occurrences": 18,
+        "documents": 18,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Голосящий КиВиН» в Светлогорске",
+          "«Голосящий КиВиН»",
+          "«Большого КиВиНа в Светлом»",
+          "«Голосящий КиВиН» 2022 года",
+          "2022 году",
+          "2022",
+          "2022 "
+        ],
+        "hrefs": [
+          "/kvn/golosyashiy-kivin/2022"
+        ],
+        "source_examples": [
+          "/people/ekaterina-fedorova",
+          "/people/ekaterina-olinchuk",
+          "/people/alexandra-melkozerova"
+        ],
+        "legacy_key_reviewed": "kvn/golosyashiy-kivin/2022",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764814,
+            "id": 1599,
+            "pagetitle": "Голосящий КиВиН 2022",
+            "alias": "gk-2022",
+            "uri": "kvn/golosyashiy-kivin/2022.html",
+            "parent": 1496,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/golosyashiy-kivin/2023",
+        "occurrences": 12,
+        "documents": 12,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Большого КиВиНа в Тёмном»",
+          "«Малого КиВиНа в Золотом»",
+          "музыкальный фестиваль",
+          "музыкальном фестивале",
+          "2023",
+          "«Голосящий КиВиН» 2023 года",
+          "2023 года",
+          "2023 годов"
+        ],
+        "hrefs": [
+          "/kvn/golosyashiy-kivin/2023"
+        ],
+        "source_examples": [
+          "/people/filipp-isachenko",
+          "/people/andrey-isaev",
+          "/people/maria-kameneva"
+        ],
+        "legacy_key_reviewed": "kvn/golosyashiy-kivin/2023",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764815,
+            "id": 1600,
+            "pagetitle": "Голосящий КиВиН 2023",
+            "alias": "gk-2023",
+            "uri": "kvn/golosyashiy-kivin/2023.html",
+            "parent": 1496,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/golosyashiy-kivin/2024",
+        "occurrences": 6,
+        "documents": 3,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Голосящий КиВиН»",
+          "Голосящий КиВиН 2024",
+          "Список участников",
+          "2024"
+        ],
+        "hrefs": [
+          "/kvn/golosyashiy-kivin/2024"
+        ],
+        "source_examples": [
+          "/kvn/teams/kolosok",
+          "/news/efir-golosyashchego-kivina-1-yanvarya",
+          "/kvn/golosyashiy-kivin"
+        ],
+        "legacy_key_reviewed": "kvn/golosyashiy-kivin/2024",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 765453,
+            "id": 2396,
+            "pagetitle": "Голосящий КиВиН 2024",
+            "alias": "gk-2024",
+            "uri": "kvn/golosyashiy-kivin/2024.html",
+            "parent": 1496,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/golosyashiy-kivin/2025",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "2025 года",
+          "2025"
+        ],
+        "hrefs": [
+          "/kvn/golosyashiy-kivin/2025"
+        ],
+        "source_examples": [
+          "/kvn/teams/porshni",
+          "/kvn/golosyashiy-kivin"
+        ],
+        "legacy_key_reviewed": "kvn/golosyashiy-kivin/2025",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 766671,
+            "id": 3647,
+            "pagetitle": "Голосящий КиВиН 2025",
+            "alias": "golosyashchiy-kivin-2025",
+            "uri": "kvn/golosyashiy-kivin/2025.html",
+            "parent": 1496,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-1990",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-1990"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-1990"
+        ],
+        "source_examples": [
+          "/kvn/vl-kvn/vl-1990",
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-1990",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764827,
+            "id": 1612,
+            "pagetitle": "КиВиН-1990",
+            "alias": "kivin-1990",
+            "uri": "kvn/kivin/kivin-1990.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-1991",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-1991"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-1991"
+        ],
+        "source_examples": [
+          "/kvn/kivin",
+          "/kvn/vl-kvn/vl-1991"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-1991",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764826,
+            "id": 1611,
+            "pagetitle": "КиВиН-1991",
+            "alias": "kivin-1991",
+            "uri": "kvn/kivin/kivin-1991.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-1993",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-1993"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-1993"
+        ],
+        "source_examples": [
+          "/kvn/vl-kvn/vl-1993",
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-1993",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764828,
+            "id": 1613,
+            "pagetitle": "КиВиН-1993",
+            "alias": "kivin-1993",
+            "uri": "kvn/kivin/kivin-1993.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2015",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-2015"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2015"
+        ],
+        "source_examples": [
+          "/kvn/vl-kvn/vl-2015",
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2015",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764821,
+            "id": 1606,
+            "pagetitle": "КиВиН-2015",
+            "alias": "kivin-2015",
+            "uri": "kvn/kivin/kivin-2015.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2016",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-2016"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2016"
+        ],
+        "source_examples": [
+          "/kvn/teams/gorizont",
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2016",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764822,
+            "id": 1607,
+            "pagetitle": "КиВиН-2016",
+            "alias": "kivin-2016",
+            "uri": "kvn/kivin/kivin-2016.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2017",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-2017"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2017"
+        ],
+        "source_examples": [
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2017",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764823,
+            "id": 1608,
+            "pagetitle": "КиВиН-2017",
+            "alias": "kivin-2017",
+            "uri": "kvn/kivin/kivin-2017.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2018",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«КиВиН-2018»",
+          "КиВиН-2018"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2018"
+        ],
+        "source_examples": [
+          "/kvn/teams/planeta-sochi",
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2018",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764824,
+            "id": 1609,
+            "pagetitle": "КиВиН-2018",
+            "alias": "kivin-2018",
+            "uri": "kvn/kivin/kivin-2018.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2019",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "КиВиН-2019"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2019"
+        ],
+        "source_examples": [
+          "/kvn/kivin"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2019",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764825,
+            "id": 1610,
+            "pagetitle": "КиВиН-2019",
+            "alias": "kivin-2019",
+            "uri": "kvn/kivin/kivin-2019.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2022",
+        "occurrences": 18,
+        "documents": 18,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«КиВиН-2022»",
+          "«КиВиНе-2022»",
+          "«Разрыв дня»",
+          "«КиВиН-22»",
+          "сочинском фестивале «КиВиН-2022»",
+          "КиВиНа-2022",
+          "сочинского фестиваля «КиВиН-2022»",
+          "сочинском фестивале «КиВиН»",
+          "сочинском фестивале команд КВН «КиВиН-2022»",
+          "Сочинском фестивале команды КВН «КиВиН-2022»",
+          "КиВиН-2022",
+          "Сочинском фестивале команд КВН «КиВиН-2022»"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2022"
+        ],
+        "source_examples": [
+          "/kvn/teams/omskaya-sbornaya",
+          "/kvn/teams/rovenki",
+          "/kvn/teams/osoboe-mnenie"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2022",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764819,
+            "id": 1604,
+            "pagetitle": "КиВиН-2022",
+            "alias": "kivin-2022",
+            "uri": "kvn/kivin/kivin-2022.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2023",
+        "occurrences": 9,
+        "documents": 9,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«КиВиН-2023»",
+          "КиВиН-2023"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2023"
+        ],
+        "source_examples": [
+          "/kvn/teams/dnk",
+          "/kvn/teams/bez-grani",
+          "/kvn/teams/isadora-duncan"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2023",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764820,
+            "id": 1605,
+            "pagetitle": "КиВиН-2023",
+            "alias": "kivin-2023",
+            "uri": "kvn/kivin/kivin-2023.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/kivin/kivin-2024",
+        "occurrences": 25,
+        "documents": 25,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Кубка чемпионов ",
+          "«КиВиН-2024»",
+          "«КиВиНа-2024»",
+          "«КиВиН»",
+          "Кубка чемпионов КВН 2024 года",
+          "КиВиН-2024"
+        ],
+        "hrefs": [
+          "/kvn/kivin/kivin-2024"
+        ],
+        "source_examples": [
+          "/people/polina-gorinova",
+          "/people/anton-baryilik",
+          "/articles/vysshaya-liga-kvn-i-liga-gorodov-konflikt"
+        ],
+        "legacy_key_reviewed": "kvn/kivin/kivin-2024",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764829,
+            "id": 1614,
+            "pagetitle": "КиВиН-2024",
+            "alias": "kivin-2024",
+            "uri": "kvn/kivin/kivin-2024.html",
+            "parent": 1506,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/krasnodarskaya-liga",
+        "occurrences": 24,
+        "documents": 23,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной Краснодарской лиги",
+          "Центральной Краснодарской лиги КВН",
+          " Краснодарской лиги",
+          "Краснодарской лиги",
+          "Краснодарской",
+          "Центральную Краснодарскую Лигу",
+          "Краснодарской лиг",
+          "Центральной Краснодарской лиги МС КВН",
+          " Краснодарской лиги"
+        ],
+        "hrefs": [
+          "/kvn/krasnodarskaya-liga"
+        ],
+        "source_examples": [
+          "/people/irina-asalieva",
+          "/people/olga-kartunkova",
+          "/people/sergey-myasoedov"
+        ],
+        "legacy_key_reviewed": "kvn/league/krasnodarskaya-liga",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764800,
+            "id": 1585,
+            "pagetitle": "Центральная Краснодарская лига КВН",
+            "alias": "krasnodarskaya-liga",
+            "uri": "kvn/league/krasnodarskaya-liga.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/lampa",
+        "occurrences": 173,
+        "documents": 170,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной лиги Москвы и Подмосковья",
+          "Центральной лиги Москвы и Подмосковья",
+          "ЦЛМиП",
+          "«Лампы»",
+          "Центральной Лиги Москвы и Подмосковья",
+          "Центральную лигу Москвы и Подмосковья",
+          "«лампы»",
+          "Центральной лиге Москвы и Подмосковья",
+          "«Лампе»",
+          "«Лампа»",
+          "«Лампу»",
+          "Центральную Лигу Москвы и Подмосковья",
+          " «Лампа»",
+          "Москвы и Подмосковья",
+          " ",
+          "Спецтурнира Центральной лиги Москвы и Подмосковья",
+          "Центральной",
+          "(ЦЛМиП)",
+          "Лиги Москвы и Подмосковья",
+          "«ЦЛМиП»"
+        ],
+        "hrefs": [
+          "/kvn/lampa/",
+          "/kvn/lampa"
+        ],
+        "source_examples": [
+          "/people/maksim-antosyak",
+          "/people/alexander-scheglov",
+          "/people/maria-komarova"
+        ],
+        "legacy_key_reviewed": "kvn/league/lampa",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764801,
+            "id": 1586,
+            "pagetitle": "Центральная Лига Москвы и Подмосковья",
+            "alias": "lampa",
+            "uri": "kvn/league/lampa/",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/lampa/finals",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Лампы»,",
+          "«Лампы»"
+        ],
+        "hrefs": [
+          "/kvn/lampa/finals"
+        ],
+        "source_examples": [
+          "/articles/a-vy-znali-chto-2",
+          "/kvn/teams/barricadnaya"
+        ],
+        "legacy_key_reviewed": "kvn/lampa/finals",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764818,
+            "id": 1603,
+            "pagetitle": "Финалы Центральной Лиги Москвы и Подмосковья",
+            "alias": "lampa-finals",
+            "uri": "kvn/lampa/finals.html",
+            "parent": 1586,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/2021",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Результаты сезона 2021 в официальных лигах МС КВН"
+        ],
+        "hrefs": [
+          "/kvn/league/2021"
+        ],
+        "source_examples": [
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/2021",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764808,
+            "id": 1593,
+            "pagetitle": "Лиги МС КВН 2021 года",
+            "alias": "2021",
+            "uri": "kvn/league/2021.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/2022",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Результаты сезона 2022 в официальных лигах МС КВН"
+        ],
+        "hrefs": [
+          "/kvn/league/2022"
+        ],
+        "source_examples": [
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/2022",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764810,
+            "id": 1595,
+            "pagetitle": "Лиги МС КВН 2022 года",
+            "alias": "ligi-ms-kvn-2022-goda",
+            "uri": "kvn/league/2022.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/2023",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Результаты сезона 2023 в официальных лигах МС КВН"
+        ],
+        "hrefs": [
+          "/kvn/league/2023"
+        ],
+        "source_examples": [
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/2023",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764811,
+            "id": 1596,
+            "pagetitle": "Лиги МС КВН 2023 года",
+            "alias": "ligi-ms-kvn-2023-goda",
+            "uri": "kvn/league/2023.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/2024",
+        "occurrences": 16,
+        "documents": 9,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Чемпионы различных лиг МС КВН 2024 года",
+          "Результаты сезона 2024 в официальных лигах МС КВН"
+        ],
+        "hrefs": [
+          "/kvn/league/2024"
+        ],
+        "source_examples": [
+          "/news/itogi-tsentralnoy-uralskoy-ligi-kvn",
+          "/news/itogi-tsentralnoy-tihookeanskoy-ligi-kvn",
+          "/news/final-tsentralnoy-ligi-samara"
+        ],
+        "legacy_key_reviewed": "kvn/league/2024",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 766100,
+            "id": 3072,
+            "pagetitle": "Лиги МС КВН 2024 года",
+            "alias": "ligi-ms-kvn-2024-goda",
+            "uri": "kvn/league/2024.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/2025",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Результаты сезона 2025 в официальных лигах МС КВН"
+        ],
+        "hrefs": [
+          "/kvn/league/2025"
+        ],
+        "source_examples": [
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/2025",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 766701,
+            "id": 3681,
+            "pagetitle": "Лиги МС КВН 2025 года",
+            "alias": "ligi-ms-kvn-2025-goda",
+            "uri": "kvn/league/2025.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/asia",
+        "occurrences": 7,
+        "documents": 6,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Азия»",
+          "Центральной лиги КВН «Азия»",
+          "Азия"
+        ],
+        "hrefs": [
+          "/kvn/league/asia"
+        ],
+        "source_examples": [
+          "/kvn/teams/kopy",
+          "/kvn/teams/obskoe-more",
+          "/kvn/teams/territoria-igru"
+        ],
+        "legacy_key_reviewed": "kvn/league/asia",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764805,
+            "id": 1590,
+            "pagetitle": "Центральная Лига «Азия»",
+            "alias": "asia",
+            "uri": "kvn/league/asia.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/krasnodarskaya-liga",
+        "occurrences": 5,
+        "documents": 5,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной Краснодарской лиги",
+          "Центральных Краснодарской",
+          "Центральной Краснодарской Лиги",
+          "Краснодарская"
+        ],
+        "hrefs": [
+          "/kvn/league/krasnodarskaya-liga"
+        ],
+        "source_examples": [
+          "/kvn/teams/samaya-grustnaya-rok-gruppa",
+          "/kvn/teams/tverskoy-bulvar",
+          "/kvn/teams/mega"
+        ],
+        "legacy_key_reviewed": "kvn/league/krasnodarskaya-liga",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764800,
+            "id": 1585,
+            "pagetitle": "Центральная Краснодарская лига КВН",
+            "alias": "krasnodarskaya-liga",
+            "uri": "kvn/league/krasnodarskaya-liga.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/lampa",
+        "occurrences": 26,
+        "documents": 22,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Лампу»",
+          "Центральной Лиги Москвы и Подмосковья",
+          "Центральной лиги Москвы и Подмосковья",
+          "«Лампы»",
+          "«Лампа»",
+          "ЦЛМиП («Лампа»)"
+        ],
+        "hrefs": [
+          "/kvn/league/lampa/"
+        ],
+        "source_examples": [
+          "/kvn/teams/mma-sechenova",
+          "/kvn/teams/omichi",
+          "/kvn/teams/sonya-ericsson"
+        ],
+        "legacy_key_reviewed": "kvn/league/lampa",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764801,
+            "id": 1586,
+            "pagetitle": "Центральная Лига Москвы и Подмосковья",
+            "alias": "lampa",
+            "uri": "kvn/league/lampa/",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/msl/2024",
+        "occurrences": 9,
+        "documents": 9,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Лиги «Молодёжь Москвы»",
+          "Лиги «Молодёжь Москвы» 2024 года",
+          "«Молодёжь Москвы»",
+          "«Молодёжь Москвы» 2024 года"
+        ],
+        "hrefs": [
+          "/kvn/league/msl/2024"
+        ],
+        "source_examples": [
+          "/kvn/teams/moi-rodnye",
+          "/kvn/teams/nrp",
+          "/kvn/teams/sonya-ericsson"
+        ],
+        "legacy_key_reviewed": "kvn/league/msl/2024",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 765591,
+            "id": 2537,
+            "pagetitle": "Лига \"Молодёжь Москвы\" (МСЛ) 2024",
+            "alias": "liga-molodezh-moskvy-msl-2024",
+            "uri": "kvn/league/msl/2024.html",
+            "parent": 2536,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/neva",
+        "occurrences": 3,
+        "documents": 3,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«НЕВА»",
+          "НЕВА"
+        ],
+        "hrefs": [
+          "/kvn/league/neva"
+        ],
+        "source_examples": [
+          "/kvn/teams/zapakh-grushi",
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/neva",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764809,
+            "id": 1594,
+            "pagetitle": "Центральная лига МС КВН «НЕВА»",
+            "alias": "neva",
+            "uri": "kvn/league/neva.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/povolzhye",
+        "occurrences": 7,
+        "documents": 7,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной лиги «Поволжье»",
+          "«Поволжье»",
+          "Поволжье"
+        ],
+        "hrefs": [
+          "/kvn/league/povolzhye"
+        ],
+        "source_examples": [
+          "/kvn/teams/sbornaya-guu",
+          "/kvn/teams/pogivem-uvidim",
+          "/kvn/teams/mondi"
+        ],
+        "legacy_key_reviewed": "kvn/league/povolzhye",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764804,
+            "id": 1589,
+            "pagetitle": "Центральная Лига Поволжье",
+            "alias": "povolzhye",
+            "uri": "kvn/league/povolzhye.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/southwest",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Юго-Западная"
+        ],
+        "hrefs": [
+          "/kvn/league/southwest"
+        ],
+        "source_examples": [
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/southwest",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764806,
+            "id": 1591,
+            "pagetitle": "Центральная Юго-Западная Лига КВН",
+            "alias": "southwest",
+            "uri": "kvn/league/southwest.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/start",
+        "occurrences": 5,
+        "documents": 4,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«СТАРТ»",
+          "Центральной лиги «Старт»",
+          "Старт"
+        ],
+        "hrefs": [
+          "/kvn/league/start"
+        ],
+        "source_examples": [
+          "/people/dmitry-sorokin",
+          "/news/den-rozhdeniya-stantsii-sportivnoy",
+          "/kvn"
+        ],
+        "legacy_key_reviewed": "kvn/league/start",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764802,
+            "id": 1587,
+            "pagetitle": "Центральная Лига Старт",
+            "alias": "start",
+            "uri": "kvn/league/start.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/tikhookeanskaya",
+        "occurrences": 5,
+        "documents": 4,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной Тихоокеанской лиги KBH",
+          "Тихоокеанская",
+          "Тихоокеанская лига"
+        ],
+        "hrefs": [
+          "/kvn/league/tikhookeanskaya"
+        ],
+        "source_examples": [
+          "/news/itogi-tsentralnoy-tihookeanskoy-ligi-kvn",
+          "/kvn",
+          "/kvn/dl-kvn"
+        ],
+        "legacy_key_reviewed": "kvn/league/tikhookeanskaya",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764803,
+            "id": 1588,
+            "pagetitle": "Центральная Тихоокеанская лига КВН",
+            "alias": "tikhookeanskaya",
+            "uri": "kvn/league/tikhookeanskaya.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/trempel",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Тремпель"
+        ],
+        "hrefs": [
+          "/kvn/league/trempel"
+        ],
+        "source_examples": [
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/trempel",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 765389,
+            "id": 2333,
+            "pagetitle": "Центральная лига МС КВН «Тремпель»",
+            "alias": "trempel",
+            "uri": "kvn/league/trempel.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/league/ural",
+        "occurrences": 4,
+        "documents": 3,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной Уральской лиги КВН",
+          "Уральская"
+        ],
+        "hrefs": [
+          "/kvn/league/ural"
+        ],
+        "source_examples": [
+          "/news/itogi-tsentralnoy-uralskoy-ligi-kvn",
+          "/kvn",
+          "/kvn/league"
+        ],
+        "legacy_key_reviewed": "kvn/league/ural",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764807,
+            "id": 1592,
+            "pagetitle": "Центральная Уральская Лига КВН",
+            "alias": "ural",
+            "uri": "kvn/league/ural.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/neva",
+        "occurrences": 21,
+        "documents": 20,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«НЕВА»",
+          "КВН «НЕВА»",
+          "«Нева»",
+          "Центральной лиги ",
+          "Центральной лиги «НЕВА»"
+        ],
+        "hrefs": [
+          "/kvn/neva"
+        ],
+        "source_examples": [
+          "/people/egor-trunov",
+          "/people/alexander-scheglov",
+          "/people/evgeniy-gorodnitskiy"
+        ],
+        "legacy_key_reviewed": "kvn/league/neva",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764809,
+            "id": 1594,
+            "pagetitle": "Центральная лига МС КВН «НЕВА»",
+            "alias": "neva",
+            "uri": "kvn/league/neva.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/povolzhye",
+        "occurrences": 26,
+        "documents": 26,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "«Поволжье»",
+          "Центральной лиги «Поволжье»",
+          "Центральной лиги «Поволжье»",
+          "Лиги КВН «Поволжье»",
+          "Центральной лиги КВН «Поволжье»"
+        ],
+        "hrefs": [
+          "/kvn/povolzhye"
+        ],
+        "source_examples": [
+          "/people/maria-komarova",
+          "/people/raphael-nasuibullin",
+          "/people/grishechkina-evgeniya"
+        ],
+        "legacy_key_reviewed": "kvn/league/povolzhye",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764804,
+            "id": 1589,
+            "pagetitle": "Центральная Лига Поволжье",
+            "alias": "povolzhye",
+            "uri": "kvn/league/povolzhye.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/southwest",
+        "occurrences": 16,
+        "documents": 16,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Юго-Западную лигу",
+          "Юго-Западной",
+          "Юго-Западной лиги",
+          "Центральной Юго-Западной лиги",
+          "Центральной Юго-Западной Лиги"
+        ],
+        "hrefs": [
+          "/kvn/southwest"
+        ],
+        "source_examples": [
+          "/people/liza-panfilova",
+          "/people/vladimir-tararukin",
+          "/people/alexey-lubenko"
+        ],
+        "legacy_key_reviewed": "kvn/league/southwest",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764806,
+            "id": 1591,
+            "pagetitle": "Центральная Юго-Западная Лига КВН",
+            "alias": "southwest",
+            "uri": "kvn/league/southwest.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/specproekt/sp-2021",
+        "occurrences": 4,
+        "documents": 4,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Спецпроекте КВН – 60 лет",
+          "Спецпроект КВНу – 60 лет",
+          "Спецпроект КВН 2021 года",
+          "Спецпроекты КВН"
+        ],
+        "hrefs": [
+          "/kvn/specproekt/sp-2021"
+        ],
+        "source_examples": [
+          "/kvn/teams/deti-turinga",
+          "/kvn/teams/bgu",
+          "/kvn/vl-kvn/vl-2021"
+        ],
+        "legacy_key_reviewed": "kvn/specproekt/sp-2021",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764816,
+            "id": 1601,
+            "pagetitle": "Спецпроект КВН 2021 года",
+            "alias": "sp-2021",
+            "uri": "kvn/specproekt/sp-2021.html",
+            "parent": 1500,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/specproekt/sp-2022",
+        "occurrences": 11,
+        "documents": 11,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Кубка мэра Москвы",
+          "2022 года",
+          "Финал/Кубок мэра Москвы 2022"
+        ],
+        "hrefs": [
+          "/kvn/specproekt/sp-2022"
+        ],
+        "source_examples": [
+          "/people/anastasia-korkhova",
+          "/people/liza-konovalenko",
+          "/people/maxim-gunko"
+        ],
+        "legacy_key_reviewed": "kvn/specproekt/sp-2022",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764817,
+            "id": 1602,
+            "pagetitle": "Кубок Мэра Москвы 2022 года",
+            "alias": "sp-2022",
+            "uri": "kvn/specproekt/sp-2022.html",
+            "parent": 1500,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/start",
+        "occurrences": 18,
+        "documents": 18,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной лиги «Старт»",
+          "«Старт»",
+          "Центральной лиги КВН «Старт»",
+          "СТАРТ"
+        ],
+        "hrefs": [
+          "/kvn/start"
+        ],
+        "source_examples": [
+          "/people/igor-tarletskiy",
+          "/people/roman-podolyak",
+          "/people/nastya-skorik"
+        ],
+        "legacy_key_reviewed": "kvn/league/start",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764802,
+            "id": 1587,
+            "pagetitle": "Центральная Лига Старт",
+            "alias": "start",
+            "uri": "kvn/league/start.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/teams/mifu-drevney-greece",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "draft_candidate_requires_separate_decision",
+        "context_labels": [
+          "«Мифы Древней Греции»"
+        ],
+        "hrefs": [
+          "/kvn/teams/mifu-drevney-greece"
+        ],
+        "source_examples": [
+          "/people/dmitry-arefiev"
+        ],
+        "legacy_key_reviewed": "kvn/teams/mifu-drevney-greece",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": {
+          "id": "b9c1c759-c9b4-42b7-8829-0801e8576998",
+          "old_id": null,
+          "aliases": [],
+          "title": "Мифы Древней Греции",
+          "status": "draft",
+          "kind": "teams",
+          "old_urls": [],
+          "name": "Мифы Древней Греции",
+          "full_path": null,
+          "show_id": null,
+          "team_type": "kvn"
+        },
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/teams/vo-vse-tyazhkie",
+        "occurrences": 10,
+        "documents": 1,
+        "classification": "no_exact_legacy_or_current_target",
+        "context_labels": [
+          "Во все тяжкие (Сосновый бор, ЛО)"
+        ],
+        "hrefs": [
+          "/kvn/teams/vo-vse-tyazhkie"
+        ],
+        "source_examples": [
+          "/kvn/ml-kvn/ml-2018"
+        ],
+        "legacy_key_reviewed": "kvn/teams/vo-vse-tyazhkie",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/tikhookeanskaya",
+        "occurrences": 5,
+        "documents": 5,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной Тихоокеанской лиги КВН",
+          "Тихоокеанской",
+          "Центральной Тихоокеанской Лиги",
+          "Центральной Тихоокеанской лиги"
+        ],
+        "hrefs": [
+          "/kvn/tikhookeanskaya"
+        ],
+        "source_examples": [
+          "/people/vlas-slugachev",
+          "/kvn/teams/azbuka",
+          "/kvn/teams/okean"
+        ],
+        "legacy_key_reviewed": "kvn/league/tikhookeanskaya",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764803,
+            "id": 1588,
+            "pagetitle": "Центральная Тихоокеанская лига КВН",
+            "alias": "tikhookeanskaya",
+            "uri": "kvn/league/tikhookeanskaya.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/ural",
+        "occurrences": 14,
+        "documents": 14,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Центральной Уральской лиги МС КВН",
+          "Центральной Уральской лиги",
+          "Уральской лиги",
+          "«Уральской лиги»",
+          "Центральной Уральской Лиги"
+        ],
+        "hrefs": [
+          "/kvn/ural"
+        ],
+        "source_examples": [
+          "/people/tatiana-suvorina",
+          "/people/nastya-gurova",
+          "/people/natasha-fridman"
+        ],
+        "legacy_key_reviewed": "kvn/league/ural",
+        "legacy_alias_basis": "Exact named league context; explicit path-prefix repair reviewed, not a current href rewrite",
+        "legacy_resources": [
+          {
+            "line": 764807,
+            "id": 1592,
+            "pagetitle": "Центральная Уральская Лига КВН",
+            "alias": "ural",
+            "uri": "kvn/league/ural.html",
+            "parent": 1503,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "kvn/vysshaya-liga/referee/2022",
+        "occurrences": 2,
+        "documents": 2,
+        "classification": "legacy_resource_absent_from_projection",
+        "context_labels": [
+          "Члены жюри Высшей лиги текущего сезона 2022 года",
+          "Члены жюри Высшей лиги 2022 года"
+        ],
+        "hrefs": [
+          "/kvn/vysshaya-liga/referee/2022"
+        ],
+        "source_examples": [
+          "/kvn/vl-kvn/referee-vysshaya-liga",
+          "/kvn/vl-kvn/vl-2022"
+        ],
+        "legacy_key_reviewed": "kvn/vysshaya-liga/referee/2022",
+        "legacy_alias_basis": null,
+        "legacy_resources": [
+          {
+            "line": 764757,
+            "id": 1541,
+            "pagetitle": "Члены жюри Высшей лиги 2022 года",
+            "alias": "referee-2022",
+            "uri": "kvn/vysshaya-liga/referee/2022.html",
+            "parent": 1517,
+            "published": 1,
+            "deleted": 0
+          }
+        ],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "plohie-pesni/text10",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "no_exact_legacy_or_current_target",
+        "context_labels": [
+          "Выпуски 91-100"
+        ],
+        "hrefs": [
+          "/plohie-pesni/text10"
+        ],
+        "source_examples": [
+          "/shows/plohie-pesni"
+        ],
+        "legacy_key_reviewed": "plohie-pesni/text10",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "podcasts-109800058",
+        "occurrences": 2,
+        "documents": 1,
+        "classification": "relative_vk_resource_requires_external_verification",
+        "context_labels": [
+          "здесь"
+        ],
+        "hrefs": [
+          "/podcasts-109800058"
+        ],
+        "source_examples": [
+          "/news/novyy-proekt-ot-medium-quality-vspomnit-vse"
+        ],
+        "legacy_key_reviewed": "podcasts-109800058",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "proekty/medium-quality/blicz-krik",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "no_exact_legacy_or_current_target",
+        "context_labels": [
+          "«Блиц крик»"
+        ],
+        "hrefs": [
+          "/proekty/medium-quality/blicz-krik"
+        ],
+        "source_examples": [
+          "/people/rustam-reptiloid"
+        ],
+        "legacy_key_reviewed": "proekty/medium-quality/blicz-krik",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "proekty/medium-quality/istoriya-na-noch",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "no_exact_legacy_or_current_target",
+        "context_labels": [
+          "«История на ночь»"
+        ],
+        "hrefs": [
+          "/proekty/medium-quality/istoriya-na-noch"
+        ],
+        "source_examples": [
+          "/people/evgenij-chebatkov"
+        ],
+        "legacy_key_reviewed": "proekty/medium-quality/istoriya-na-noch",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "proekty/medium-quality/roast-battle-lc",
+        "occurrences": 3,
+        "documents": 3,
+        "classification": "draft_candidate_requires_separate_decision",
+        "context_labels": [
+          "«Roast Battle LC»"
+        ],
+        "hrefs": [
+          "/proekty/medium-quality/roast-battle-lc"
+        ],
+        "source_examples": [
+          "/people/sasha-ni",
+          "/people/roman-kositsyn",
+          "/people/fedor-xorovodov"
+        ],
+        "legacy_key_reviewed": "proekty/medium-quality/roast-battle-lc",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": {
+          "id": "ca02e72e-9ce8-465b-9431-bdc405ac024b",
+          "old_id": 3299,
+          "aliases": [],
+          "title": "Roast Battle",
+          "status": "draft",
+          "kind": "shows",
+          "old_urls": [
+            "/proekty/medium-quality/labelcom/roast-battle"
+          ],
+          "name": "Roast Battle",
+          "full_path": "medium-quality/labelcom/roast-battle",
+          "show_id": null,
+          "team_type": null
+        },
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "roast-battle-lc",
+        "occurrences": 2,
+        "documents": 1,
+        "classification": "draft_candidate_requires_separate_decision",
+        "context_labels": [
+          "«Прожарка»"
+        ],
+        "hrefs": [
+          "/roast-battle-lc"
+        ],
+        "source_examples": [
+          "/news/lyubimye-komedii-komikov"
+        ],
+        "legacy_key_reviewed": "roast-battle-lc",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": {
+          "id": "ca02e72e-9ce8-465b-9431-bdc405ac024b",
+          "old_id": 3299,
+          "aliases": [],
+          "title": "Roast Battle",
+          "status": "draft",
+          "kind": "shows",
+          "old_urls": [
+            "/proekty/medium-quality/labelcom/roast-battle"
+          ],
+          "name": "Roast Battle",
+          "full_path": "medium-quality/labelcom/roast-battle",
+          "show_id": null,
+          "team_type": null
+        },
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "video-63032186_456239420",
+        "occurrences": 2,
+        "documents": 1,
+        "classification": "relative_vk_resource_requires_external_verification",
+        "context_labels": [
+          "VK Видео"
+        ],
+        "hrefs": [
+          "/video-63032186_456239420"
+        ],
+        "source_examples": [
+          "/news/mezhdunarodnaya-liga-vyshla-v-efir"
+        ],
+        "legacy_key_reviewed": "video-63032186_456239420",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      },
+      {
+        "key": "ya-sebya-znayu",
+        "occurrences": 1,
+        "documents": 1,
+        "classification": "no_exact_legacy_or_current_target",
+        "context_labels": [
+          "«Я себя знаю»"
+        ],
+        "hrefs": [
+          "/ya-sebya-znayu"
+        ],
+        "source_examples": [
+          "/people/azamat-musagaliev"
+        ],
+        "legacy_key_reviewed": "ya-sebya-znayu",
+        "legacy_alias_basis": null,
+        "legacy_resources": [],
+        "current_records_by_exact_old_id": [],
+        "draft_candidate": null,
+        "decision": "holdout_no_data_changed"
+      }
+    ],
+    "people_profile_tag": [
+      {
+        "key": "all-users/profile-preview",
+        "occurrences": 4,
+        "pages": 3,
+        "labels": [
+          "Марк Хилькевич"
+        ],
+        "contexts": [
+          {
+            "source_kind": "articles",
+            "source_id": "1f8002b3-bd03-4407-854f-8e629a3be7e6",
+            "page": "/articles/vzglyad-na-rossiyskiy-yumor-iz-usa",
+            "field": [
+              "modules",
+              1,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/all-users/profile-preview?userid=44",
+            "label": "Марк Хилькевич"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "b38c202f-74c2-4b48-a828-464054e194cf",
+            "page": "/news/mark-hilkevich-narisoval-sharzh-na-finalistov-vysshey-ligi-kvn-2024-goda",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/all-users/profile-preview?userid=44",
+            "label": "Марк Хилькевич"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "b38c202f-74c2-4b48-a828-464054e194cf",
+            "page": "/news/mark-hilkevich-narisoval-sharzh-na-finalistov-vysshey-ligi-kvn-2024-goda",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/all-users/profile-preview?userid=44",
+            "label": "Марк Хилькевич"
+          },
+          {
+            "source_kind": "kvn",
+            "source_id": "361f2d6e-cdd2-45e1-a309-ecf35e15e2d3",
+            "page": "/kvn/sharzhi-marka",
+            "field": [
+              "modules",
+              5,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/all-users/profile-preview?userid=44",
+            "label": "Марк Хилькевич"
+          }
+        ],
+        "review_class": "holdout_profile_identity_not_projected",
+        "reason_holdout": "All four hrefs retain userid=44 and label Марк Хилькевич, across three published source docs, but the R13l projection contains no users/profile collection or user-id-to-person mapping. A same-name person page cannot prove the numeric user identity or that profile-preview should resolve there."
+      },
+      {
+        "key": "chekhovikukota",
+        "occurrences": 2,
+        "pages": 2,
+        "labels": [
+          "«Чехов и Кукота»",
+          "Партизаны»"
+        ],
+        "contexts": [
+          {
+            "source_kind": "shows",
+            "source_id": "f2728cdb-7aa4-41c5-9cca-622a93d9e23c",
+            "page": "/shows/smeh-bez-pravil/season5",
+            "field": [
+              "modules",
+              5,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/chekhovikukota",
+            "label": "Партизаны»"
+          },
+          {
+            "source_kind": "shows",
+            "source_id": "fdf9cf6c-fd3b-41e5-ad96-9f474c7047f3",
+            "page": "/shows/ubojnaya-liga",
+            "field": [
+              "modules",
+              9,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/chekhovikukota",
+            "label": "«Чехов и Кукота»"
+          }
+        ],
+        "review_class": "context_split_candidate",
+        "candidate_mappings": [
+          {
+            "context_label": "«Чехов и Кукота»",
+            "target_route": "/people/chekhov-i-kukota",
+            "target_id": "df2371ba-1c12-43a2-aeb0-5e04ada904ae",
+            "old_id": 131,
+            "target_status": "published",
+            "target_title": "Дуэт «Чехов и Кукота»",
+            "old_urls": [
+              "/people/chekhov-i-kukota.html"
+            ],
+            "source_identity_evidence": "published people document full_name is the same duet title; facts name is Михаил Кукота; SQL/current route index identifies unique published non-deleted resource id 131.",
+            "confidence": "strong for this label-specific context; proposal only",
+            "route_index": {
+              "id": "df2371ba-1c12-43a2-aeb0-5e04ada904ae",
+              "old_id": 131,
+              "aliases": [],
+              "title": "Дуэт «Чехов и Кукота»",
+              "status": "published",
+              "kind": "people",
+              "old_urls": [
+                "/people/chekhov-i-kukota.html"
+              ],
+              "name": null,
+              "full_path": null,
+              "show_id": null,
+              "team_type": null
+            },
+            "sql_resource": {
+              "id": 131,
+              "uri": "people/chekhov-i-kukota.html",
+              "pagetitle": "Дуэт «Чехов и Кукота»",
+              "published": 1,
+              "deleted": 0,
+              "parent": 30
+            }
+          },
+          {
+            "context_label": "Партизаны»",
+            "target_route": null,
+            "target_id": "375818d5-dd08-4d5e-869a-4ee1f9cdc911",
+            "old_id": null,
+            "target_status": "draft",
+            "target_title": "Партизаны",
+            "old_urls": [],
+            "reason_holdout": "The candidate team is draft with no legacy resource id/old_url; the same old key cannot safely be sent to the duet route in this KVN-team context.",
+            "candidate_route": "/kvn/teams/partizany",
+            "route_index": {
+              "id": "375818d5-dd08-4d5e-869a-4ee1f9cdc911",
+              "old_id": null,
+              "aliases": [],
+              "title": "Партизаны",
+              "status": "draft",
+              "kind": "teams",
+              "old_urls": [],
+              "name": "Партизаны",
+              "full_path": null,
+              "show_id": null,
+              "team_type": "kvn"
+            }
+          }
+        ],
+        "historical_alias_evidence": {
+          "source_person_id": "df2371ba-1c12-43a2-aeb0-5e04ada904ae",
+          "field": "modules[].data.content",
+          "evidence": "Current published duet biography explicitly says the duo was initially called «Партизаны» and then became known as «Чехов и Кукота». This supports historical relationship, but does not make the draft KVN team page a published equivalent target."
+        }
+      },
+      {
+        "key": "people/Anastasia-Agafonova",
+        "occurrences": 2,
+        "pages": 2,
+        "labels": [
+          "Анастасия Жукова"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "328e8a0f-d615-489d-8d23-10966d258534",
+            "page": "/kvn/teams/raisy",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/Anastasia-Agafonova",
+            "label": "Анастасия Жукова"
+          },
+          {
+            "source_kind": "teams",
+            "source_id": "96f2703d-b6d0-47c0-8729-7ff55b2407c4",
+            "page": "/shows/zvezdy-ntv/teams/raisy",
+            "field": [
+              "modules",
+              6,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/Anastasia-Agafonova",
+            "label": "Анастасия Жукова"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/alexander-kalambet",
+        "occurrences": 2,
+        "pages": 2,
+        "labels": [
+          "Александр Каламбет",
+          "Александра Каламбета"
+        ],
+        "contexts": [
+          {
+            "source_kind": "people",
+            "source_id": "2cc30f7e-96dc-4a90-b193-63edd2f90801",
+            "page": "/people/olga-egorcheva",
+            "field": [
+              "modules",
+              7,
+              "data",
+              "events",
+              1,
+              "description"
+            ],
+            "hidden": false,
+            "href": "/people/alexander-kalambet",
+            "label": "Александра Каламбета"
+          },
+          {
+            "source_kind": "shows",
+            "source_id": "5cf8082c-9521-4650-afe9-e16fd3bc7f88",
+            "page": "/shows/openmicrophone/season7",
+            "field": [
+              "modules",
+              9,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/alexander-kalambet",
+            "label": "Александр Каламбет"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/alexander-pikalov",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Александр Пикалов"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "8d5a603c-21e2-4c67-9263-62c53ceebca6",
+            "page": "/kvn/teams/95-kvartal",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/alexander-pikalov",
+            "label": "Александр Пикалов"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/egor-borikov",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Егор Бориков"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "d7e02935-692c-4b2d-bc5e-db332eb9bd48",
+            "page": "/kvn/teams/stella-magnetis",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/egor-borikov",
+            "label": "Егор Бориков"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/elena-gordeeva",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Еленой Гордеевой"
+        ],
+        "contexts": [
+          {
+            "source_kind": "people",
+            "source_id": "d6186cef-9fff-4edd-824c-e8a045f39f7a",
+            "page": "/people/roman-postovalov",
+            "field": [
+              "modules",
+              7,
+              "data",
+              "events",
+              0,
+              "description"
+            ],
+            "hidden": false,
+            "href": "/people/elena-gordeeva",
+            "label": "Еленой Гордеевой"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/elena-kravets",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Елена Кравец"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "8d5a603c-21e2-4c67-9263-62c53ceebca6",
+            "page": "/kvn/teams/95-kvartal",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/elena-kravets",
+            "label": "Елена Кравец"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/gavriil-gordeev",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Гавром"
+        ],
+        "contexts": [
+          {
+            "source_kind": "people",
+            "source_id": "ee83b606-2577-4cdd-ab47-72ebe8aab954",
+            "page": "/people/oleg-vereschagin",
+            "field": [
+              "modules",
+              7,
+              "data",
+              "events",
+              2,
+              "description"
+            ],
+            "hidden": false,
+            "href": "/people/gavriil-gordeev",
+            "label": "Гавром"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/ksenia-rogozhina",
+        "occurrences": 2,
+        "pages": 2,
+        "labels": [
+          "Ксения Рогожина"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "470fdedb-b961-446b-b225-fa8f58b6e7b1",
+            "page": "/shows/liga-gorodov/teams/salavat",
+            "field": [
+              "modules",
+              6,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/ksenia-rogozhina",
+            "label": "Ксения Рогожина"
+          },
+          {
+            "source_kind": "teams",
+            "source_id": "a8c54c29-08ef-4daf-8d24-e21dbf76ef42",
+            "page": "/kvn/teams/gorod-kras-devushek",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/ksenia-rogozhina",
+            "label": "Ксения Рогожина"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/romashov-konstantin",
+        "occurrences": 3,
+        "pages": 2,
+        "labels": [
+          "Константином Ромашовым",
+          "Ромашов"
+        ],
+        "contexts": [
+          {
+            "source_kind": "people",
+            "source_id": "1643b0e3-dae6-4312-b351-a8df135bdf18",
+            "page": "/people/vladimir-morgachev",
+            "field": [
+              "modules",
+              6,
+              "data",
+              "events",
+              0,
+              "description"
+            ],
+            "hidden": false,
+            "href": "/people/romashov-konstantin",
+            "label": "Константином Ромашовым"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "b51374fa-3ffe-461d-a7f0-5e2d95a7d597",
+            "page": "/news/bitvy-za-vremya-final",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/romashov-konstantin",
+            "label": "Ромашов"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "b51374fa-3ffe-461d-a7f0-5e2d95a7d597",
+            "page": "/news/bitvy-za-vremya-final",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/romashov-konstantin",
+            "label": "Ромашов"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/sarkisyan-artashes",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Арташеса Саркисяна"
+        ],
+        "contexts": [
+          {
+            "source_kind": "articles",
+            "source_id": "396ed343-52d4-4966-8702-6a2b0d9e0271",
+            "page": "/articles/kuda-propal-tash-sarkisyan",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/sarkisyan-artashes",
+            "label": "Арташеса Саркисяна"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/stas-rudnitskiy",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Стас Рудницкий"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "9410e1d4-1a48-4aa6-8373-05b2b18b9ade",
+            "page": "/kvn/teams/kembridge",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/stas-rudnitskiy",
+            "label": "Стас Рудницкий"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/vladimir-fedorov",
+        "occurrences": 2,
+        "pages": 2,
+        "labels": [
+          "Владимир Федоров"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "263107b2-3f94-4e10-b4b5-24e5e29a373a",
+            "page": "/kvn/teams/bomond",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/vladimir-fedorov",
+            "label": "Владимир Федоров"
+          },
+          {
+            "source_kind": "teams",
+            "source_id": "d5a77788-14d9-40da-9cef-15d03411206f",
+            "page": "/kvn/teams/ananas",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/vladimir-fedorov",
+            "label": "Владимир Федоров"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "people/yuriy-krapov",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Юрий Крапов"
+        ],
+        "contexts": [
+          {
+            "source_kind": "teams",
+            "source_id": "8d5a603c-21e2-4c67-9263-62c53ceebca6",
+            "page": "/kvn/teams/95-kvartal",
+            "field": [
+              "modules",
+              8,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/people/yuriy-krapov",
+            "label": "Юрий Крапов"
+          }
+        ],
+        "review_class": "holdout_no_exact_person_identity",
+        "exact_current_person_matches": [],
+        "reason_holdout": "Authored labels and source contexts are preserved; no unambiguous exact person entity identity is established by the R13l content projection and published SQL target index. Do not infer the destination from the legacy key/slug."
+      },
+      {
+        "key": "shastun",
+        "occurrences": 1,
+        "pages": 1,
+        "labels": [
+          "Антон Шастун"
+        ],
+        "contexts": [
+          {
+            "source_kind": "shows",
+            "source_id": "08dac34e-6768-4da8-aca0-4b956563163d",
+            "page": "/shows/ne-spat/season3",
+            "field": [
+              "modules",
+              5,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/shastun",
+            "label": "Антон Шастун"
+          }
+        ],
+        "review_class": "exact_person_candidate",
+        "candidate_mappings": [
+          {
+            "context_label": "Антон Шастун",
+            "target_route": "/people/anton-shastun",
+            "target_id": "f61f7b37-d726-4e23-a495-0a6b996c98dd",
+            "old_id": 116,
+            "target_status": "published",
+            "target_title": "Шастун Антон",
+            "old_urls": [
+              "/people/anton-shastun.html"
+            ],
+            "source_identity_evidence": "The sole R13l occurrence is visibly labelled Антон Шастун; current standalone person full_name is Антон Шастун, unique published route and SQL resource id 116. A duet record also has this person as its fact name, but its own full_name is Дуэт «Шастун и Макар» and is not the anchor entity.",
+            "confidence": "strong contextual candidate; proposal only",
+            "route_index": {
+              "id": "f61f7b37-d726-4e23-a495-0a6b996c98dd",
+              "old_id": 116,
+              "aliases": [],
+              "title": "Шастун Антон",
+              "status": "published",
+              "kind": "people",
+              "old_urls": [
+                "/people/anton-shastun.html"
+              ],
+              "name": null,
+              "full_path": null,
+              "show_id": null,
+              "team_type": null
+            },
+            "sql_resource": {
+              "id": 116,
+              "uri": "people/anton-shastun.html",
+              "pagetitle": "Шастун Антон",
+              "published": 1,
+              "deleted": 0,
+              "parent": 30
+            }
+          }
+        ]
+      },
+      {
+        "key": "stati-po-tegu",
+        "occurrences": 20,
+        "pages": 3,
+        "labels": [
+          " Алексей Юрьянов",
+          " Антон Горбенко ",
+          " Гурам Амарян",
+          "Roast Battle",
+          "Андрей Серебренников ",
+          "Гурам Амарян",
+          "Егор Котыченко ",
+          "Зоя Яровицына",
+          "Тимур Хамадуллинин",
+          "Эд Дородний "
+        ],
+        "contexts": [
+          {
+            "source_kind": "news",
+            "source_id": "10355975-6cc2-404a-9b54-98d36a356bdf",
+            "page": "/news/7-vypuska-money-mic",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=1216",
+            "label": "Гурам Амарян"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "10355975-6cc2-404a-9b54-98d36a356bdf",
+            "page": "/news/7-vypuska-money-mic",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=1216",
+            "label": "Гурам Амарян"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "3065fc26-c5d2-43e5-9b6e-638093b742ef",
+            "page": "/news/money-mic-9-itogi",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=1216",
+            "label": " Гурам Амарян"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "3065fc26-c5d2-43e5-9b6e-638093b742ef",
+            "page": "/news/money-mic-9-itogi",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=1216",
+            "label": " Гурам Амарян"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4548",
+            "label": "Roast Battle"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=204",
+            "label": "Зоя Яровицына"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4754",
+            "label": "Андрей Серебренников "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4807",
+            "label": "Эд Дородний "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=1089",
+            "label": "Егор Котыченко "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=5367",
+            "label": "Тимур Хамадуллинин"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=296",
+            "label": " Алексей Юрьянов"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4780",
+            "label": " Антон Горбенко "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4548",
+            "label": "Roast Battle"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=204",
+            "label": "Зоя Яровицына"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4754",
+            "label": "Андрей Серебренников "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4807",
+            "label": "Эд Дородний "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=1089",
+            "label": "Егор Котыченко "
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=5367",
+            "label": "Тимур Хамадуллинин"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=296",
+            "label": " Алексей Юрьянов"
+          },
+          {
+            "source_kind": "news",
+            "source_id": "49f76d05-d954-4d42-af1e-b5bf0cb80ded",
+            "page": "/news/roast-battle-6",
+            "field": [
+              "modules",
+              0,
+              "data",
+              "content"
+            ],
+            "hidden": false,
+            "href": "/stati-po-tegu?tag=4780",
+            "label": " Антон Горбенко "
+          }
+        ],
+        "review_class": "holdout_tag_target_not_projected",
+        "href_groups": [
+          {
+            "href": "/stati-po-tegu?tag=1089",
+            "labels": [
+              "Егор Котыченко "
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=1216",
+            "labels": [
+              " Гурам Амарян",
+              "Гурам Амарян"
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=204",
+            "labels": [
+              "Зоя Яровицына"
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=296",
+            "labels": [
+              " Алексей Юрьянов"
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=4548",
+            "labels": [
+              "Roast Battle"
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=4754",
+            "labels": [
+              "Андрей Серебренников "
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=4780",
+            "labels": [
+              " Антон Горбенко "
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=4807",
+            "labels": [
+              "Эд Дородний "
+            ]
+          },
+          {
+            "href": "/stati-po-tegu?tag=5367",
+            "labels": [
+              "Тимур Хамадуллинин"
+            ]
+          }
+        ],
+        "reason_holdout": "The source URLs carry tag query IDs and article/person-like labels, but R13l projects no tag/taxonomy collection or published tag-resource identity. Labels name article topics/entities, not a canonical destination; keep each tag query intact and unresolved until its ID is verified against a tag resource."
+      }
+    ]
+  },
+  "missing_legacy_resources": [
+    {
+      "line": 764757,
+      "id": 1541,
+      "pagetitle": "Члены жюри Высшей лиги 2022 года",
+      "alias": "referee-2022",
+      "uri": "kvn/vysshaya-liga/referee/2022.html",
+      "parent": 1517,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764800,
+      "id": 1585,
+      "pagetitle": "Центральная Краснодарская лига КВН",
+      "alias": "krasnodarskaya-liga",
+      "uri": "kvn/league/krasnodarskaya-liga.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764801,
+      "id": 1586,
+      "pagetitle": "Центральная Лига Москвы и Подмосковья",
+      "alias": "lampa",
+      "uri": "kvn/league/lampa/",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764802,
+      "id": 1587,
+      "pagetitle": "Центральная Лига Старт",
+      "alias": "start",
+      "uri": "kvn/league/start.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764803,
+      "id": 1588,
+      "pagetitle": "Центральная Тихоокеанская лига КВН",
+      "alias": "tikhookeanskaya",
+      "uri": "kvn/league/tikhookeanskaya.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764804,
+      "id": 1589,
+      "pagetitle": "Центральная Лига Поволжье",
+      "alias": "povolzhye",
+      "uri": "kvn/league/povolzhye.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764805,
+      "id": 1590,
+      "pagetitle": "Центральная Лига «Азия»",
+      "alias": "asia",
+      "uri": "kvn/league/asia.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764806,
+      "id": 1591,
+      "pagetitle": "Центральная Юго-Западная Лига КВН",
+      "alias": "southwest",
+      "uri": "kvn/league/southwest.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764807,
+      "id": 1592,
+      "pagetitle": "Центральная Уральская Лига КВН",
+      "alias": "ural",
+      "uri": "kvn/league/ural.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764808,
+      "id": 1593,
+      "pagetitle": "Лиги МС КВН 2021 года",
+      "alias": "2021",
+      "uri": "kvn/league/2021.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764809,
+      "id": 1594,
+      "pagetitle": "Центральная лига МС КВН «НЕВА»",
+      "alias": "neva",
+      "uri": "kvn/league/neva.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764810,
+      "id": 1595,
+      "pagetitle": "Лиги МС КВН 2022 года",
+      "alias": "ligi-ms-kvn-2022-goda",
+      "uri": "kvn/league/2022.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764811,
+      "id": 1596,
+      "pagetitle": "Лиги МС КВН 2023 года",
+      "alias": "ligi-ms-kvn-2023-goda",
+      "uri": "kvn/league/2023.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764812,
+      "id": 1597,
+      "pagetitle": "Голосящий КиВиН 1995",
+      "alias": "gk-1995",
+      "uri": "kvn/golosyashiy-kivin/1995.html",
+      "parent": 1496,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764813,
+      "id": 1598,
+      "pagetitle": "Голосящий КиВиН 2021",
+      "alias": "gk-2021",
+      "uri": "kvn/golosyashiy-kivin/2021.html",
+      "parent": 1496,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764814,
+      "id": 1599,
+      "pagetitle": "Голосящий КиВиН 2022",
+      "alias": "gk-2022",
+      "uri": "kvn/golosyashiy-kivin/2022.html",
+      "parent": 1496,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764815,
+      "id": 1600,
+      "pagetitle": "Голосящий КиВиН 2023",
+      "alias": "gk-2023",
+      "uri": "kvn/golosyashiy-kivin/2023.html",
+      "parent": 1496,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764816,
+      "id": 1601,
+      "pagetitle": "Спецпроект КВН 2021 года",
+      "alias": "sp-2021",
+      "uri": "kvn/specproekt/sp-2021.html",
+      "parent": 1500,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764817,
+      "id": 1602,
+      "pagetitle": "Кубок Мэра Москвы 2022 года",
+      "alias": "sp-2022",
+      "uri": "kvn/specproekt/sp-2022.html",
+      "parent": 1500,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764818,
+      "id": 1603,
+      "pagetitle": "Финалы Центральной Лиги Москвы и Подмосковья",
+      "alias": "lampa-finals",
+      "uri": "kvn/lampa/finals.html",
+      "parent": 1586,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764819,
+      "id": 1604,
+      "pagetitle": "КиВиН-2022",
+      "alias": "kivin-2022",
+      "uri": "kvn/kivin/kivin-2022.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764820,
+      "id": 1605,
+      "pagetitle": "КиВиН-2023",
+      "alias": "kivin-2023",
+      "uri": "kvn/kivin/kivin-2023.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764821,
+      "id": 1606,
+      "pagetitle": "КиВиН-2015",
+      "alias": "kivin-2015",
+      "uri": "kvn/kivin/kivin-2015.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764822,
+      "id": 1607,
+      "pagetitle": "КиВиН-2016",
+      "alias": "kivin-2016",
+      "uri": "kvn/kivin/kivin-2016.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764823,
+      "id": 1608,
+      "pagetitle": "КиВиН-2017",
+      "alias": "kivin-2017",
+      "uri": "kvn/kivin/kivin-2017.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764824,
+      "id": 1609,
+      "pagetitle": "КиВиН-2018",
+      "alias": "kivin-2018",
+      "uri": "kvn/kivin/kivin-2018.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764825,
+      "id": 1610,
+      "pagetitle": "КиВиН-2019",
+      "alias": "kivin-2019",
+      "uri": "kvn/kivin/kivin-2019.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764826,
+      "id": 1611,
+      "pagetitle": "КиВиН-1991",
+      "alias": "kivin-1991",
+      "uri": "kvn/kivin/kivin-1991.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764827,
+      "id": 1612,
+      "pagetitle": "КиВиН-1990",
+      "alias": "kivin-1990",
+      "uri": "kvn/kivin/kivin-1990.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764828,
+      "id": 1613,
+      "pagetitle": "КиВиН-1993",
+      "alias": "kivin-1993",
+      "uri": "kvn/kivin/kivin-1993.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 764829,
+      "id": 1614,
+      "pagetitle": "КиВиН-2024",
+      "alias": "kivin-2024",
+      "uri": "kvn/kivin/kivin-2024.html",
+      "parent": 1506,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 765389,
+      "id": 2333,
+      "pagetitle": "Центральная лига МС КВН «Тремпель»",
+      "alias": "trempel",
+      "uri": "kvn/league/trempel.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 765453,
+      "id": 2396,
+      "pagetitle": "Голосящий КиВиН 2024",
+      "alias": "gk-2024",
+      "uri": "kvn/golosyashiy-kivin/2024.html",
+      "parent": 1496,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 765591,
+      "id": 2537,
+      "pagetitle": "Лига \"Молодёжь Москвы\" (МСЛ) 2024",
+      "alias": "liga-molodezh-moskvy-msl-2024",
+      "uri": "kvn/league/msl/2024.html",
+      "parent": 2536,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 766100,
+      "id": 3072,
+      "pagetitle": "Лиги МС КВН 2024 года",
+      "alias": "ligi-ms-kvn-2024-goda",
+      "uri": "kvn/league/2024.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 766654,
+      "id": 3630,
+      "pagetitle": "Сезон 2025 Дальневосточной лиги",
+      "alias": "dl-2025",
+      "uri": "kvn/dalnevostochnaya-liga/2025.html",
+      "parent": 3629,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 766671,
+      "id": 3647,
+      "pagetitle": "Голосящий КиВиН 2025",
+      "alias": "golosyashchiy-kivin-2025",
+      "uri": "kvn/golosyashiy-kivin/2025.html",
+      "parent": 1496,
+      "published": 1,
+      "deleted": 0
+    },
+    {
+      "line": 766701,
+      "id": 3681,
+      "pagetitle": "Лиги МС КВН 2025 года",
+      "alias": "ligi-ms-kvn-2025-goda",
+      "uri": "kvn/league/2025.html",
+      "parent": 1503,
+      "published": 1,
+      "deleted": 0
+    }
+  ],
+  "missing_legacy_scope": "38 exact SQL resources for47 URL keys absent by old_id from all25620 accepted projection records. Nine explicit short league aliases share legacy targets. No statement about full production DB completeness; no content import or publication authorized by this proposal.",
+  "invariants": [
+    "Exact2 href spans in2 published source docs only; labels/nestedHTML/other attributes/query/fragment unchanged",
+    "Only label «Чехов и Кукота» changes; «Партизаны» sourceID/field/href stays unchanged",
+    "No global aliases, no new/deleted/status changes, no draft publication, no news/parent substitution",
+    "SourceR13l immutable; other fields/typedIDs/media/R13i/seasons/participations must match",
+    "No main,24SMI,VPS or indexing changes"
+  ],
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "proposal_validation": {
+    "status": "PASS",
+    "review_path": ".cache/r13m/proposal-review.json",
+    "review_sha256": "73bc67f7f06def42fc9fe26901423312064ea01b2f7ebe2d0508a7ccfd7836b0",
+    "field_preimages": 2,
+    "exact_spans": 2,
+    "exact_exclusions": 1,
+    "document_target_identities": 2,
+    "blockers": [],
+    "runtime_acceptance": false
+  },
+  "approval": {
+    "date": "2026-10-23",
+    "source": "Direct user reply to R13m approval question",
+    "scope": "Exactly2label-specific hrefs on isolated copy; Антон Шастун and «Чехов и Кукота» only; Партизаны unchanged; no38resource import,main,24SMI,VPS"
+  }
+}
