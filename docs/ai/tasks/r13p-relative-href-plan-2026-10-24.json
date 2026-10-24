@@ -4,7 +4,7 @@
   "date": "2026-10-24",
   "branch": "codex/local-page-builder",
   "base_commit": "f1a37c75d742869ccdebb2da2ee3f5ec9396ce18",
-  "status": "implemented_isolated_acceptance_passed_uncommitted",
+  "status": "published_ci_success",
   "approved": true,
   "source_copy": ".cache/r13o/copy/patched.jsonl",
   "source_sha256": "7834b90269e613ed9d30c851eeb7f71aa692878a419d8d018054af739595f7b3",
@@ -629,8 +629,14 @@
   },
   "publication": {
     "authorized_by_user": "2026-10-24",
-    "status": "ready_for_task_commit",
-    "destination_ref": "refs/heads/codex/local-page-builder",
-    "include_documentation": true
+    "commit": "5a22906ee64bf7b03bc2c5215180508fdfb99560",
+    "remote_ref": "refs/heads/codex/local-page-builder",
+    "remote_sha_verified": true,
+    "github_run_id": 40066682049,
+    "github_status": "completed",
+    "github_conclusion": "success",
+    "github_url": "https://github.com/AMnEPka/humorpedia/actions/runs/40066682049",
+    "jobs_success": 5,
+    "browser_scenarios_success": 3
   }
 }

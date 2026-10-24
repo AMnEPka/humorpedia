@@ -1,6 +1,6 @@
 # R13p — шесть старых href на существующие города и команду
 
-> Согласовано пользователем24.10.2026: шесть точных замен на новой изолированной копии. Реализовано и проверено в текущем worktree; коммит R13p ещё не выполнялся.
+> Согласовано пользователем24.10.2026: шесть точных замен на новой изолированной копии. Реализовано и проверено в текущем worktree; R13p опубликован5a22906, GitHub40066682049 success.
 
 **Дата:**24.10.2026. **Статус:** реализация и изолированная приёмка PASS. Copy R13o сохранена; новая copy R13p содержит только6согласованных href edits.
 
@@ -78,7 +78,7 @@ Evidence `.cache/r13p/identity-review.json`, `source-href-spans.json`, `direct-s
 
 ## Приёмка R13p —24.10.2026
 
-HEAD до незакоммиченных изменений: `f1a37c75d742869ccdebb2da2ee3f5ec9396ce18`, ветка `codex/local-page-builder`. R13o уже опубликован и GitHub CI успешен; R13p пока не коммитился/не публиковался. Продуктовые файлы не менялись.
+HEAD до незакоммиченных изменений: `f1a37c75d742869ccdebb2da2ee3f5ec9396ce18`, ветка `codex/local-page-builder`. R13o уже опубликован и GitHub CI успешен; R13p опубликован24.10.2026 отдельным5a22906; приёмка проводилась до commit. Продуктовые файлы не менялись.
 
 1. Guarded converter:9tests RED→GREEN. Проверены source/plan/field/target identity/status/raw hash drift, неверные/дублированные spans, повторное применение, существующий output, сохранность typed BSON IDs. Frozen apply-plan SHA `7a5d027e2cc85455033f783ec1d280181a65a0b54c9b7e32bdb9a5e457c97977`.
 2. Новая copy `.cache/r13p/copy/patched.jsonl`, SHA `44d72ff221401637ebaf561a97d3ec019903b66faf5ba8fff13a51ed63b33993`. Повтор в отдельный exclusive output дал идентичный SHA.25,630records,6href values/5fields/5docs,0insert/0delete,25,625raw rows byte-identical. Прочие значения изменённых документов, все target rows, parent.child_kvn_ids/aliases/status/media и канонические коллекции сохранены.
@@ -108,3 +108,5 @@ Actual resolver/model/relation выполнялись в `humorpedia-r12b-backen
 ## Публикация24.10.2026
 
 Пользователь поручил отдельный commit/push R13p с документацией и проверку GitHub CI. Приёмка выше относится к неизменённой accepted copy; source/final SHA и23evidence hashes повторно проверены перед публикацией. Назначение: `origin`, точный ref `refs/heads/codex/local-page-builder`; main/24СМИ/VPS не затрагиваются.
+
+R13p опубликован `5a22906ee64bf7b03bc2c5215180508fdfb99560`, `docs(migration): record accepted relative-link recovery (R13p)`:6файлов,765insertions/7deletions. Exact push `HEAD:refs/heads/codex/local-page-builder`, remote SHA проверен. [GitHub40066682049](https://github.com/AMnEPka/humorpedia/actions/runs/40066682049) completed/success на этом SHA:5jobs/3browser-сценария success.

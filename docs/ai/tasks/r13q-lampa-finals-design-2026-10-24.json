@@ -1,0 +1,451 @@
+{
+  "schema_version": 1,
+  "task": "R13q",
+  "date": "2026-10-24",
+  "status": "implemented_isolated_acceptance_passed_uncommitted",
+  "approved": true,
+  "branch": "codex/local-page-builder",
+  "base_commit": "5a22906ee64bf7b03bc2c5215180508fdfb99560",
+  "source_copy": ".cache/r13p/copy/patched.jsonl",
+  "source_sha256": "44d72ff221401637ebaf561a97d3ec019903b66faf5ba8fff13a51ed63b33993",
+  "source_rows": 25630,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "source_payload": ".cache/r13n/legacy-resources.json",
+  "source_payload_sha256": "0f87fd63dc0aa520ea6273ab525d563fa563df44b6cb9f825eb895dc367014e7",
+  "proposed_page": {
+    "old_id": 1603,
+    "id": "82b3fd71-c3f6-5866-aac1-37e390a0ba9e",
+    "id_strategy": "UUIDv5 NAMESPACE_URL + https://humorpedia.ru/legacy/modx/site_content/1603",
+    "_id_equals_id": true,
+    "title": "Финалы Центральной Лиги Москвы и Подмосковья",
+    "name": "Финалы Центральной Лиги Москвы и Подмосковья",
+    "description": "Статистика всех финалов Центральной лиги Москвы и Подмосковья («Лампа») МС КВН.",
+    "slug": "lampa-finals",
+    "full_path": "kvn/league/lampa/lampa-finals",
+    "level": 3,
+    "parent_id": "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+    "status": "published",
+    "old_urls": [
+      "/kvn/lampa/finals.html",
+      "/kvn/lampa/finals"
+    ],
+    "old_url_proofs": {
+      "/kvn/lampa/finals.html": "Exact SQL URI with uri_override=1 plus authored link in Lampa module0",
+      "/kvn/lampa/finals": "Existing literal hrefs in article a-vy-znali-chto-2 and team barricadnaya"
+    },
+    "canonical_decision": "Recommend retaining exact SQL alias lampa-finals under current parent path; historical URI retained as old_urls, no server redirect added",
+    "modules": [
+      {
+        "source_index": 0,
+        "source_id": "text-52972",
+        "id": "modx-1603-text-52972",
+        "type": "text_block",
+        "order": 0,
+        "visible": true,
+        "title": "Финалы Центральной Лиги Москвы и Подмосковья",
+        "anchor_id": "text-52972",
+        "content_sha256": "595a66b589d7868eb46b07eccf6d61cb9c2ac1e7dd2ba8fde04551b2a34a3cf1",
+        "content_chars": 44099,
+        "content_policy": "Preserve exact original content string,19tables,19hrefvalues including unresolved Omskaya; no cleanup/normalization/URL edits"
+      }
+    ],
+    "tags": [],
+    "media_references": 0,
+    "inline_modx": 0,
+    "scope": "new_isolated_copy_only",
+    "omitted_fields": [
+      "season_data"
+    ],
+    "omission_rule": "Do not persist season_data, including model default empty dict; validate constructed document without dumping model defaults"
+  },
+  "parent": {
+    "id": "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+    "old_id": 1586,
+    "full_path": "kvn/league/lampa",
+    "row_sha256": "ffaaf12f6620e13eac2a6927125f51953aae4f7e9e8a7b3810119d67c544bb2a",
+    "child_kvn_ids_before": [],
+    "child_kvn_ids_after": [
+      "82b3fd71-c3f6-5866-aac1-37e390a0ba9e"
+    ],
+    "only_existing_mutation": "Append exactly targetUUID once to child_kvn_ids; allotherparentfields/rawrows unchanged"
+  },
+  "expected_counts": {
+    "rows": 25631,
+    "inserts": 1,
+    "existing_changed_documents": 1,
+    "existing_changed_fields": [
+      "child_kvn_ids"
+    ],
+    "deletes": 0,
+    "unchanged_existing_raw_rows": 25629,
+    "text_blocks": 1,
+    "html_tables": 19,
+    "html_chars": 44099,
+    "authored_hrefs": 19,
+    "authored_unique_keys": 18,
+    "outgoing_resolved_keys": 17,
+    "outgoing_unresolved_keys": 1,
+    "baseline_unresolved_keys": 55,
+    "forecast_unresolved_keys_after": 54,
+    "forecast_only": false,
+    "expected_residual_keys": [
+      "all-users/profile-preview",
+      "chekhovikukota",
+      "kvn/dalnevostochnaya-liga/2025",
+      "kvn/golosyashiy-kivin/1995",
+      "kvn/golosyashiy-kivin/2021",
+      "kvn/golosyashiy-kivin/2022",
+      "kvn/golosyashiy-kivin/2023",
+      "kvn/golosyashiy-kivin/2024",
+      "kvn/golosyashiy-kivin/2025",
+      "kvn/kivin/kivin-1990",
+      "kvn/kivin/kivin-1991",
+      "kvn/kivin/kivin-1993",
+      "kvn/kivin/kivin-2015",
+      "kvn/kivin/kivin-2016",
+      "kvn/kivin/kivin-2017",
+      "kvn/kivin/kivin-2018",
+      "kvn/kivin/kivin-2019",
+      "kvn/kivin/kivin-2022",
+      "kvn/kivin/kivin-2023",
+      "kvn/kivin/kivin-2024",
+      "kvn/league/2021",
+      "kvn/league/2022",
+      "kvn/league/2023",
+      "kvn/league/2024",
+      "kvn/league/2025",
+      "kvn/league/msl/2024",
+      "kvn/specproekt/sp-2021",
+      "kvn/specproekt/sp-2022",
+      "kvn/team/omskaya.html",
+      "kvn/teams/mifu-drevney-greece",
+      "kvn/teams/vo-vse-tyazhkie",
+      "kvn/vysshaya-liga/referee/2022",
+      "people/Anastasia-Agafonova",
+      "people/alexander-kalambet",
+      "people/alexander-pikalov",
+      "people/egor-borikov",
+      "people/elena-gordeeva",
+      "people/elena-kravets",
+      "people/gavriil-gordeev",
+      "people/ksenia-rogozhina",
+      "people/romashov-konstantin",
+      "people/sarkisyan-artashes",
+      "people/stas-rudnitskiy",
+      "people/vladimir-fedorov",
+      "people/yuriy-krapov",
+      "plohie-pesni/text10",
+      "podcasts-109800058",
+      "proekty/medium-quality/blicz-krik",
+      "proekty/medium-quality/istoriya-na-noch",
+      "proekty/medium-quality/roast-battle-lc",
+      "roast-battle-lc",
+      "stati-po-tegu",
+      "video-63032186_456239420",
+      "ya-sebya-znayu"
+    ]
+  },
+  "incoming_contexts": [
+    {
+      "kind": "articles",
+      "id": "a37d3a76-a959-4882-ac83-263d0ddced88",
+      "page": "/articles/a-vy-znali-chto-2",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "hidden": false,
+      "href": "/kvn/lampa/finals",
+      "label": "«Лампы»,"
+    },
+    {
+      "kind": "teams",
+      "id": "4fc7dbae-689c-4769-8c84-f535a9e90e58",
+      "page": "/kvn/teams/barricadnaya",
+      "path": [
+        "modules",
+        6,
+        "data",
+        "content"
+      ],
+      "hidden": false,
+      "href": "/kvn/lampa/finals",
+      "label": "«Лампы»"
+    },
+    {
+      "kind": "kvn",
+      "id": "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+      "page": "/kvn/league/lampa",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "hidden": false,
+      "href": "kvn/lampa/finals.html",
+      "label": "отдельной странице"
+    }
+  ],
+  "outgoing_unresolved_anchors": [
+    {
+      "href": "kvn/team/omskaya.html",
+      "label": "Омская сборная"
+    }
+  ],
+  "outgoing_policy": "Keep all19authoredhrefs exactly; resolver handles17existingtargets; Omskaya remains text, no targetguess/newteam/mapping",
+  "data_policy": {
+    "source_and_allotherexisting_rows": "unchanged except one parent childlist",
+    "prior_R13h_to_R13p_data": "preserved",
+    "canonical_seasons_tournaments_participations": "122/5/9276 unchanged",
+    "HTML301": "Existing accepted SPA-only contract; KVN HTML/301 separate",
+    "fixture_overlays": "Same two source-verified root/league IDs permitted only seed/expected; projection caveat remains"
+  },
+  "evidence": {
+    ".cache/r13q/finals-content-readiness.json": "96e68accc1d143c4364c98a6064876ec61b0e0256ec9c0237a7fa728fcbc382c",
+    ".cache/r13q/finals-link-readiness.json": "68c50f4ada62fa81f306c7710f4176e24064342e0529b96e492ee9d2299bbb01",
+    ".cache/r13q/finals-contract-review.json": "dc45f7d6e80da607e7bd89858caedd96d8379e987010f8c5c862f358b0d201e8",
+    ".cache/r13q/apply-policy.json": "b5c262988af189095f9fd6624bcea0f20fb50fb26861136c358731a8ac6ed3f7",
+    ".cache/r13q/prepare-copy.py": "49baa53c6839167f093ab9d2d810fe76a5e9c34db7b46ec0decf619566690b10",
+    ".cache/r13q/test-prepare-copy.py": "af736228270b90d84742e13c6947048b53439e79a02234b36f2e83ebe8dd298a",
+    ".cache/r13q/tests-red.log": "6b55bcdd8914eaa0c1bcdb3fe6b9b7d70f28767e0abe8c0de4681a939ffe4e17",
+    ".cache/r13q/tests-green.log": "949ad47b25cc4657e4f4e899a98c400b42376cf9c2a78299e2729ab70aa7a377",
+    ".cache/r13q/proposal-review.json": "2d41dea902816c20ec85a1b18a2325e40ba3cafd802cdb490f593f95d3c21dbc",
+    ".cache/r13q/independent-copy-audit.py": "058b1f4083362ac8154dfca83615531446b7f20609a0e901642faa8c87ec7b53",
+    ".cache/r13q/independent-copy-audit.json": "b5adeb01d6ac82b9447d55f70d04ba4a4c68e5b7d410d708beee540713600092",
+    ".cache/r13q/offline-runtime-audit.json": "488bd747c7a0a2ebd27f9dc70bacc4103de6042526d5f65b268f96538fcd1ef3",
+    ".cache/r13q/copy/acceptance.json": "74fb65afc84ac956f6422f2106b234f19ad34b945c93d3f03f1d0ab8baf418be",
+    ".cache/r13q/check-finals.cjs": "103208ce99f1e9012a87dfb0e80e394609b419ee3f73cbbe9de8ad29713a4480",
+    ".cache/r13q/run-native.cjs": "2e98b6637e463dda32c95c5cc7dd070afd0def0fdbb9f587f2e1cea1ca684467",
+    ".cache/r13q/harness/gateway_server.py": "4ce14a0f91e943b7fd98a0896ccf942c9669e77a4576cf1dd2e3ae46ce56dbfa",
+    ".cache/r13q/main-after-acceptance.json": "b51c42a3881d275dc0658100117d3e5f434d86330966a11c2e8ee159dc3b4072",
+    ".cache/r13q/native-pages/b4fe978858994eabb8acffa56943a9d6/result.json": "c78f2a3095bbc4b905939ec72c2d3bf2c1189b62a143814cc71081d12d1ce1a9",
+    ".cache/r13q/native-pages/b4fe978858994eabb8acffa56943a9d6/cleanup.json": "f742f4387cff13e7f00a1465f51b525f8f837a1c407165383ae12493b1300203",
+    ".cache/r13q/native-pages/b4fe978858994eabb8acffa56943a9d6/closed/finals-http.json": "0be81edbf83f065f2edfb18d481bdfbab9b07d31e2411f70425beda00f98317f",
+    ".cache/r13q/native-pages/b4fe978858994eabb8acffa56943a9d6/closed/finals-browser.json": "b7f05cd0eb7f8edb0c6973279ba5d3f0c1c84247cb9476ea069a01ffa0b5af78",
+    ".cache/r13q/final-scope-review.json": "1b9fc39af66599d49a8f632d6f708b79b39d95736024b8bf83be3e3a42e65c9c"
+  },
+  "data_applied": true,
+  "runtime_acceptance": true,
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "approval": {
+    "date": "2026-10-24",
+    "scope": "User approved full isolated package: page1603,sluglampa-finals,all19href retained including Omskaya,onlyparentchildlist"
+  },
+  "data_applied_scope": "Only new isolated .cache/r13q/copy; source copy and main unchanged",
+  "identity_rule": {
+    "sql_resource_id": 1603,
+    "legacy_custom_old_id": "1660",
+    "target_old_id": 1603,
+    "contract": "Modern old_id follows modx_site_content.id as in existing import helpers; do not copy legacy custom old_id field"
+  },
+  "acceptance": {
+    "output_copy": ".cache/r13q/copy/patched.jsonl",
+    "output_sha256": "89dbf5066ef9f8f73a9384a5d647a83be33a6a1426c5112b4238ea9cdd23d6ca",
+    "deterministic_repeat_sha256": "89dbf5066ef9f8f73a9384a5d647a83be33a6a1426c5112b4238ea9cdd23d6ca",
+    "guard_tests": {
+      "red": "8tests/26assertionfailures before implementation",
+      "green": "8passed"
+    },
+    "copy": {
+      "source_rows": 25630,
+      "output_rows": 25631,
+      "deletions": 0,
+      "existing_fields_changed": [
+        "child_kvn_ids"
+      ],
+      "existing_records_changed": 1,
+      "insertions": 1,
+      "unchanged_raw_rows": 25629
+    },
+    "source_content": {
+      "chars": 44099,
+      "tables": 19,
+      "href_occurrences": 19,
+      "unique_keys": 18,
+      "module_count": 1,
+      "source_HTML_byte_equal": true,
+      "season_data_omitted": true
+    },
+    "offline_runtime": {
+      "candidate_model_validated": true,
+      "unresolved_keys": 54,
+      "exact_residual_set": true,
+      "canonical_collisions": 0,
+      "old_url_conflicts": 0,
+      "relation_findings": 0,
+      "seasons": 122,
+      "tournaments": 5,
+      "participations": 9276,
+      "participation_projection_changed": 0,
+      "scope": "Offline in-memory resolver/model/relation audit; no DB client or app lifecycle."
+    },
+    "native": {
+      "run_id": "b4fe978858994eabb8acffa56943a9d6",
+      "release_id": "1bc6820bb6cc2e3c0099106d7b1aed96ece05e21dbe6c736571c7115ba2378d6",
+      "candidate_API_SPA": {
+        "path": "/kvn/league/lampa/lampa-finals",
+        "status": 200,
+        "noindex": true,
+        "scope": "Accepted SPA shell; no KVN server HTML/301 claim"
+      },
+      "incoming_sources_API_SPA_200": 3,
+      "outgoing_targets_API_SPA_200": 17,
+      "tables_rendered": 19,
+      "clicks": [
+        {
+          "kind": "parent-child",
+          "target": "/kvn/league/lampa/lampa-finals",
+          "expected_heading": "Финалы Центральной Лиги Москвы и Подмосковья",
+          "popup": false,
+          "source": "/kvn/league/lampa"
+        },
+        {
+          "kind": "breadcrumb",
+          "target": "/kvn/league/lampa",
+          "expected_heading": "Центральная Лига Москвы и Подмосковья",
+          "popup": false,
+          "source": "/kvn/league/lampa/lampa-finals"
+        },
+        {
+          "kind": "incoming-authored",
+          "target": "/kvn/league/lampa/lampa-finals",
+          "expected_heading": "Финалы Центральной Лиги Москвы и Подмосковья",
+          "popup": true,
+          "source": "/articles/a-vy-znali-chto-2",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "label": "«Лампы»,"
+        },
+        {
+          "kind": "incoming-authored",
+          "target": "/kvn/league/lampa/lampa-finals",
+          "expected_heading": "Финалы Центральной Лиги Москвы и Подмосковья",
+          "popup": false,
+          "source": "/kvn/teams/barricadnaya",
+          "source_field": [
+            "modules",
+            6,
+            "data",
+            "content"
+          ],
+          "label": "«Лампы»"
+        },
+        {
+          "kind": "incoming-authored",
+          "target": "/kvn/league/lampa/lampa-finals",
+          "expected_heading": "Финалы Центральной Лиги Москвы и Подмосковья",
+          "popup": false,
+          "source": "/kvn/league/lampa",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "label": "отдельной странице"
+        },
+        {
+          "kind": "outgoing-authored",
+          "target": "/kvn/league/lampa",
+          "expected_heading": "Центральная Лига Москвы и Подмосковья",
+          "popup": false,
+          "source": "/kvn/league/lampa/lampa-finals",
+          "label": "Центральной лиги Москвы и Подмосковья"
+        },
+        {
+          "kind": "outgoing-authored",
+          "target": "/kvn/teams/armyanskaya-sbornaya",
+          "expected_heading": "Армянская сборная",
+          "popup": false,
+          "source": "/kvn/league/lampa/lampa-finals",
+          "label": "Армянская сборная"
+        }
+      ],
+      "pageerrors": [],
+      "all_nonview_records_unchanged": 25631,
+      "fixture_identity_overlays": 2,
+      "cleanup": {
+        "containers": [],
+        "network_removed": true,
+        "images_removed": [
+          "hp-r13q-pages-b4fe978858994eabb8acffa56943a9d6-backend:latest",
+          "hp-r13q-pages-b4fe978858994eabb8acffa56943a9d6-gateway:latest"
+        ],
+        "error": null
+      },
+      "scope": "Accepted SPA/API/React only, no KVN server HTML301"
+    },
+    "historical_failed_run": {
+      "run_id": "5a82ee46a193458abd42884000c8a240",
+      "accepted": false,
+      "cause": "Checker expected role=link for child Card, but product uses Card onClick; changed only checker to exact CardTitle locator",
+      "cleanup_error": null,
+      "product_data_change": false
+    },
+    "main": {
+      "branch": "main",
+      "head": "ca46155a9640d4723c07b9fd1762a6e639563414",
+      "clean": true,
+      "containers": [
+        {
+          "name": "/humorpedia-backend",
+          "id": "6e4c35677d2a72b057feb89645f1c3cbba2546dfbb2f3bd808d9825faae12745",
+          "started_at": "2026-10-21T08:50:48.954791227Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-frontend",
+          "id": "0cba07b3a129fc37659eed76782d66501a9856cca7c16a7d9ce3b1b56272da15",
+          "started_at": "2026-10-21T08:50:49.201030699Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-mongodb",
+          "id": "21cb1fd6939deb55c77cf3ac88b233c3d3e63d963aa115568e5f7183e027985a",
+          "started_at": "2026-10-20T05:53:53.11828567Z",
+          "restarts": 0,
+          "state": "running",
+          "health": "healthy"
+        }
+      ],
+      "http_3000": 200,
+      "http_8001_health": 200,
+      "unchanged_from_baseline": true,
+      "checked_at": "2026-10-24T05:53:27.385Z"
+    },
+    "manual_screenshots_reviewed": [
+      "finals-top.png",
+      "finals-last-table.png"
+    ],
+    "limitations": [
+      "Snapshot is projected domain data plus2source-verified fixture-only parent/root IDs; not full database readiness.",
+      "Known unique kvn.id/null startup index error from other projected rows remains; no main/index changes.",
+      "All19authoredhref stored unchanged; unresolved Omskaya remains public plain label.",
+      "27otherlegacyresources/8posters/search indexing/server KVN HTML301/main/24SMI/VPS outside scope.",
+      "No R13q commit/push yet; R13p exact SHA5a22906 CI40066682049 is successful."
+    ],
+    "final_review": {
+      "status": "PASS",
+      "blocking_findings": 0,
+      "artifact": ".cache/r13q/final-scope-review.json"
+    }
+  },
+  "publication": {
+    "authorized_by_user": "2026-10-24",
+    "status": "ready_for_task_commit",
+    "destination_ref": "refs/heads/codex/local-page-builder",
+    "include_documentation": true
+  }
+}
