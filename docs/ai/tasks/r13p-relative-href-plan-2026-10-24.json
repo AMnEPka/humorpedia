@@ -1,0 +1,636 @@
+{
+  "schema_version": 1,
+  "task": "R13p",
+  "date": "2026-10-24",
+  "branch": "codex/local-page-builder",
+  "base_commit": "f1a37c75d742869ccdebb2da2ee3f5ec9396ce18",
+  "status": "implemented_isolated_acceptance_passed_uncommitted",
+  "approved": true,
+  "source_copy": ".cache/r13o/copy/patched.jsonl",
+  "source_sha256": "7834b90269e613ed9d30c851eeb7f71aa692878a419d8d018054af739595f7b3",
+  "source_rows": 25630,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "mappings": [
+    {
+      "old_href": "krasnodar.html",
+      "old_key": "krasnodar.html",
+      "label": "Краснодар",
+      "source_page": "/kvn/league/krasnodarskaya-liga",
+      "source_id": "06de1150-587a-5058-ae8e-a332310afed2",
+      "source_old_id": 1585,
+      "target_kind": "cities",
+      "target_id": "282174a3-094e-46f0-85d2-b502b18dccef",
+      "target_old_id": 2092,
+      "target_url": "/city/krasnodar",
+      "target_title": "Краснодар",
+      "target_status": "published",
+      "target_row_sha256": "6e1c0b3d615bf379ab115a9a3f707108517a9691e066162154cf269c128f1666",
+      "sql_resource": {
+        "id": 2092,
+        "pagetitle": "Краснодар",
+        "alias": "krasnodar",
+        "uri": "city/krasnodar.html",
+        "parent": 34,
+        "published": 1,
+        "deleted": 0
+      },
+      "identity_proof": "Unique SQL resource with exact city basename/uri and title matching the anchor label; existing copy record has the exact SQL id as old_id and exact city canonical URL. Source HTML context labels it 'Город проведения'.",
+      "ambiguities": []
+    },
+    {
+      "old_href": "voronezh.html",
+      "old_key": "voronezh.html",
+      "label": "Воронеж",
+      "source_page": "/kvn/league/start",
+      "source_id": "f507ae89-799b-5ff8-b675-6eb9845a66dd",
+      "source_old_id": 1587,
+      "target_kind": "cities",
+      "target_id": "a667a68c-c9d4-494e-92bd-9a67a5f8ffdf",
+      "target_old_id": 2072,
+      "target_url": "/city/voronezh",
+      "target_title": "Воронеж",
+      "target_status": "published",
+      "target_row_sha256": "5353f29504ef46fdd6ad50b6dae83dd231e8a02481b0024e2e6424d06f564dbf",
+      "sql_resource": {
+        "id": 2072,
+        "pagetitle": "Воронеж",
+        "alias": "voronezh",
+        "uri": "city/voronezh.html",
+        "parent": 34,
+        "published": 1,
+        "deleted": 0
+      },
+      "identity_proof": "Unique SQL resource with exact city basename/uri and title matching the anchor label; existing copy record has the exact SQL id as old_id and exact city canonical URL. Source HTML context labels it 'Город проведения'.",
+      "ambiguities": []
+    },
+    {
+      "old_href": "khabarovsk.html",
+      "old_key": "khabarovsk.html",
+      "label": "Хабаровск",
+      "source_page": "/kvn/league/tikhookeanskaya",
+      "source_id": "ba8679d2-413a-5b56-b048-2c16bd5ae0fc",
+      "source_old_id": 1588,
+      "target_kind": "cities",
+      "target_id": "0fc54412-40df-49b5-bcee-d74017591c21",
+      "target_old_id": 2111,
+      "target_url": "/city/khabarovsk",
+      "target_title": "Хабаровск",
+      "target_status": "published",
+      "target_row_sha256": "ec2dd20ec4dbc3ba5f961ca881c946a024e8c988659c99ba0034a96b4f198c13",
+      "sql_resource": {
+        "id": 2111,
+        "pagetitle": "Хабаровск",
+        "alias": "khabarovsk",
+        "uri": "city/khabarovsk.html",
+        "parent": 34,
+        "published": 1,
+        "deleted": 0
+      },
+      "identity_proof": "Unique SQL resource with exact city basename/uri and title matching the anchor label; existing copy record has the exact SQL id as old_id and exact city canonical URL. Source HTML context labels it 'Город проведения'.",
+      "ambiguities": []
+    },
+    {
+      "old_href": "krasnoyarsk.html",
+      "old_key": "krasnoyarsk.html",
+      "label": "Красноярск",
+      "source_page": "/kvn/league/asia",
+      "source_id": "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "source_old_id": 1590,
+      "target_kind": "cities",
+      "target_id": "e30f8105-bf5c-4c70-8292-5f83c422ce9a",
+      "target_old_id": 2079,
+      "target_url": "/city/krasnoyarsk",
+      "target_title": "Красноярск",
+      "target_status": "published",
+      "target_row_sha256": "6a0d51d0d75abd4c7302378229d1f1208737dc2a2e3c06af215c27b22da8bba8",
+      "sql_resource": {
+        "id": 2079,
+        "pagetitle": "Красноярск",
+        "alias": "krasnoyarsk",
+        "uri": "city/krasnoyarsk.html",
+        "parent": 34,
+        "published": 1,
+        "deleted": 0
+      },
+      "identity_proof": "The exact city URI and exact SQL id match the existing cities record; the authored anchor appears in the 'Город проведения' field and its label is Красноярск. The competing team resource has a different SQL id, URI, title and existing target record.",
+      "ambiguities": [
+        "SQL alias 'krasnoyarsk' also belongs to published team resource id 2004 at zvezdy-ntv/team/krasnoyarsk.html; this is not the same URI or title."
+      ]
+    },
+    {
+      "old_href": "ne-v-forme.html",
+      "old_key": "ne-v-forme.html",
+      "label": "Не в форме",
+      "source_page": "/kvn/league/asia",
+      "source_id": "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "source_old_id": 1590,
+      "target_kind": "teams",
+      "target_id": "5c758f73-36b3-47c5-b7ad-ecf22166dd8f",
+      "target_old_id": 1427,
+      "target_url": "/kvn/teams/ne-v-forme",
+      "target_title": "Не в форме",
+      "target_status": "published",
+      "target_row_sha256": "c5e9a27f9d4f4e26d3611cfbc119bf20b18be038b666a9806c2b64cb39e7253f",
+      "sql_resource": {
+        "id": 1427,
+        "pagetitle": "Не в форме",
+        "alias": "ne-v-forme",
+        "uri": "kvn/team/ne-v-forme.html",
+        "parent": 1031,
+        "published": 1,
+        "deleted": 0
+      },
+      "identity_proof": "Unique exact SQL URI/alias and title; existing teams record has the same SQL id as old_id, team_type kvn, and no show_id, so the actual team_url helper yields /kvn/teams/ne-v-forme. Source context is a 2023 participant row alongside two other team links.",
+      "ambiguities": []
+    },
+    {
+      "old_href": "chelyabinsk.html",
+      "old_key": "chelyabinsk.html",
+      "label": "Челябинск",
+      "source_page": "/kvn/league/ural",
+      "source_id": "5f65c970-915b-5395-8371-2a580e5095a1",
+      "source_old_id": 1592,
+      "target_kind": "cities",
+      "target_id": "8bbc6e5d-8218-4ae7-86ef-68f632166de3",
+      "target_old_id": 2090,
+      "target_url": "/city/chelyabinsk",
+      "target_title": "Челябинск",
+      "target_status": "published",
+      "target_row_sha256": "27db33eea764b4a3450582517aa6f6fcb452dd31b96d82e82cc741f5f6b2bc38",
+      "sql_resource": {
+        "id": 2090,
+        "pagetitle": "Челябинск",
+        "alias": "chelyabinsk",
+        "uri": "city/chelyabinsk.html",
+        "parent": 34,
+        "published": 1,
+        "deleted": 0
+      },
+      "identity_proof": "Unique SQL resource with exact city basename/uri and title matching the anchor label; existing copy record has the exact SQL id as old_id and exact city canonical URL. Source HTML context labels it 'Город проведения'.",
+      "ambiguities": []
+    }
+  ],
+  "fields": [
+    {
+      "kind": "kvn",
+      "id": "06de1150-587a-5058-ae8e-a332310afed2",
+      "old_id": 1585,
+      "page": "/kvn/league/krasnodarskaya-liga",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "field_sha256": "bf7b83eb2de567f8bfbe5e0778ff13219d6a7c3e624d3b484252a22a15206410",
+      "matches": [
+        {
+          "mapping_rule_index": 0,
+          "start": 555,
+          "end": 569,
+          "old_href_raw": "krasnodar.html",
+          "new_href_raw": "/city/krasnodar",
+          "label": "Краснодар"
+        }
+      ],
+      "proposed_output_sha256": "91dbe59cd62373716ba67392c2a4727a9fca33e4de25ed5a841edaa2cb6d6b41",
+      "proposed_output_chars": 7925
+    },
+    {
+      "kind": "kvn",
+      "id": "f507ae89-799b-5ff8-b675-6eb9845a66dd",
+      "old_id": 1587,
+      "page": "/kvn/league/start",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "field_sha256": "c278d8767443dc4726f44c457654d6df8e5c4a0e10e0f711ab8667d9bd75e88c",
+      "matches": [
+        {
+          "mapping_rule_index": 1,
+          "start": 254,
+          "end": 267,
+          "old_href_raw": "voronezh.html",
+          "new_href_raw": "/city/voronezh",
+          "label": "Воронеж"
+        }
+      ],
+      "proposed_output_sha256": "1da5c97654bd4d27781efe0b8bccb949c26192a96644a64fe1c6d1fb44ea1a94",
+      "proposed_output_chars": 8465
+    },
+    {
+      "kind": "kvn",
+      "id": "ba8679d2-413a-5b56-b048-2c16bd5ae0fc",
+      "old_id": 1588,
+      "page": "/kvn/league/tikhookeanskaya",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "field_sha256": "c63e0a429f3141cfda5009a51f5f01a8051bdf96369f5d5c454dc2b927d9fa04",
+      "matches": [
+        {
+          "mapping_rule_index": 2,
+          "start": 221,
+          "end": 236,
+          "old_href_raw": "khabarovsk.html",
+          "new_href_raw": "/city/khabarovsk",
+          "label": "Хабаровск"
+        }
+      ],
+      "proposed_output_sha256": "bcf8dda7dc879210d86aed13ab51ff245faba36f52a9850792adc744bb464f09",
+      "proposed_output_chars": 5941
+    },
+    {
+      "kind": "kvn",
+      "id": "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "old_id": 1590,
+      "page": "/kvn/league/asia",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "field_sha256": "a8b91663991a287e74369d04d7a98920d684f499f2d5c820e7334c38fa36a9c2",
+      "matches": [
+        {
+          "mapping_rule_index": 3,
+          "start": 140,
+          "end": 156,
+          "old_href_raw": "krasnoyarsk.html",
+          "new_href_raw": "/city/krasnoyarsk",
+          "label": "Красноярск"
+        },
+        {
+          "mapping_rule_index": 4,
+          "start": 8363,
+          "end": 8378,
+          "old_href_raw": "ne-v-forme.html",
+          "new_href_raw": "/kvn/teams/ne-v-forme",
+          "label": "Не в форме"
+        }
+      ],
+      "proposed_output_sha256": "a60ba3713e3495713b058b6006476e3a6623a237f216894e2bfbd01ebd090642",
+      "proposed_output_chars": 8831
+    },
+    {
+      "kind": "kvn",
+      "id": "5f65c970-915b-5395-8371-2a580e5095a1",
+      "old_id": 1592,
+      "page": "/kvn/league/ural",
+      "path": [
+        "modules",
+        0,
+        "data",
+        "content"
+      ],
+      "field_sha256": "66b47cc391bffec9f08986902152ec02e37d2f7021732a7b57995677d517d72d",
+      "matches": [
+        {
+          "mapping_rule_index": 5,
+          "start": 296,
+          "end": 312,
+          "old_href_raw": "chelyabinsk.html",
+          "new_href_raw": "/city/chelyabinsk",
+          "label": "Челябинск"
+        }
+      ],
+      "proposed_output_sha256": "87cd8a7f6eaf1fc53df3ed62334ffd43b479adfbd60f37a524b7d3b1ed170d11",
+      "proposed_output_chars": 6825
+    }
+  ],
+  "proposed_mutation": "Exactly six href attribute values in five modules[0].data.content fields; preserve all other text/markup/labels/attributes and all other document fields/rows",
+  "expected_counts": {
+    "rows": 25630,
+    "href_edits": 6,
+    "changed_fields": 5,
+    "changed_documents": 5,
+    "inserts": 0,
+    "deletes": 0,
+    "unchanged_raw_rows": 25625,
+    "unresolved_keys_before": 61,
+    "forecast_unresolved_keys_after": 55,
+    "expected_residual_keys": [
+      "all-users/profile-preview",
+      "chekhovikukota",
+      "kvn/dalnevostochnaya-liga/2025",
+      "kvn/golosyashiy-kivin/1995",
+      "kvn/golosyashiy-kivin/2021",
+      "kvn/golosyashiy-kivin/2022",
+      "kvn/golosyashiy-kivin/2023",
+      "kvn/golosyashiy-kivin/2024",
+      "kvn/golosyashiy-kivin/2025",
+      "kvn/kivin/kivin-1990",
+      "kvn/kivin/kivin-1991",
+      "kvn/kivin/kivin-1993",
+      "kvn/kivin/kivin-2015",
+      "kvn/kivin/kivin-2016",
+      "kvn/kivin/kivin-2017",
+      "kvn/kivin/kivin-2018",
+      "kvn/kivin/kivin-2019",
+      "kvn/kivin/kivin-2022",
+      "kvn/kivin/kivin-2023",
+      "kvn/kivin/kivin-2024",
+      "kvn/lampa/finals",
+      "kvn/lampa/finals.html",
+      "kvn/league/2021",
+      "kvn/league/2022",
+      "kvn/league/2023",
+      "kvn/league/2024",
+      "kvn/league/2025",
+      "kvn/league/msl/2024",
+      "kvn/specproekt/sp-2021",
+      "kvn/specproekt/sp-2022",
+      "kvn/teams/mifu-drevney-greece",
+      "kvn/teams/vo-vse-tyazhkie",
+      "kvn/vysshaya-liga/referee/2022",
+      "people/Anastasia-Agafonova",
+      "people/alexander-kalambet",
+      "people/alexander-pikalov",
+      "people/egor-borikov",
+      "people/elena-gordeeva",
+      "people/elena-kravets",
+      "people/gavriil-gordeev",
+      "people/ksenia-rogozhina",
+      "people/romashov-konstantin",
+      "people/sarkisyan-artashes",
+      "people/stas-rudnitskiy",
+      "people/vladimir-fedorov",
+      "people/yuriy-krapov",
+      "plohie-pesni/text10",
+      "podcasts-109800058",
+      "proekty/medium-quality/blicz-krik",
+      "proekty/medium-quality/istoriya-na-noch",
+      "proekty/medium-quality/roast-battle-lc",
+      "roast-battle-lc",
+      "stati-po-tegu",
+      "video-63032186_456239420",
+      "ya-sebya-znayu"
+    ],
+    "forecast_only": false
+  },
+  "data_policy": {
+    "source_KVN_status": "unchanged published",
+    "target_status": "existing published only",
+    "parent_child_kvn_ids": "unchanged from R13o",
+    "old_urls_aliases": "unchanged; no alias addition or global fallback",
+    "HTML_and_301_scope": "Existing accepted SPA contract only; no KVN server HTML/301 expansion",
+    "all_other_data": "unchanged, including all nine R13o pages apart from these six values, Lampa, R13h media/R13i identity fixes and122seasons/5tournaments/9276participations"
+  },
+  "evidence": {
+    ".cache/r13p/identity-review.json": "5eba9f056913795782ec4a156c9de22897cae1229c10a32402befce70e3e5eab",
+    ".cache/r13p/source-href-spans.json": "bb736d1f11417ebc62eb464cd039be343111eee6b049a55f5cc4858c71d82f6c",
+    ".cache/r13p/direct-sql-verification.json": "d2dd9b1b01bc89a7e4f9f356b4c68e0c020b920b2838744fd43c990386c9a741",
+    ".cache/r13p/target-resolver-readiness.json": "9ba5f6cbdb7affd614d80cc2aab3711e2cb20c63bc85dfac454dddb652c685c3",
+    ".cache/r13p/proposal-review.json": "003d0cac9683b72617b35cf277e1973a0b9e263590cdf7ac1ed7a3879295f060",
+    ".cache/r13p/apply-plan.json": "7a5d027e2cc85455033f783ec1d280181a65a0b54c9b7e32bdb9a5e457c97977",
+    ".cache/r13p/prepare-copy.py": "27526ddb3935fb9c3b669d51ad76be258e0c77972b376510a86a75878bf34ab3",
+    ".cache/r13p/test-prepare-copy.py": "d35762d4bac0d1a326c1e4b45caccc947553029e9f150cad1ba0ce59182240e8",
+    ".cache/r13p/tests-red.log": "52c1f2480d9cca3a86ff325c55f3e550bb6aff0ece2c48ffff5ae5908e3d619a",
+    ".cache/r13p/tests-green.log": "f3486a9afbe001e784f66f4130229af35b9bebfaa1c3f6b5165b0410ad3482d3",
+    ".cache/r13p/independent-copy-audit.py": "09e78d4d8097fdd150821440b8b10ee782da03338e6bacc4d3bbf99dc3d1e820",
+    ".cache/r13p/independent-copy-audit.json": "a21e4de7524ffd92f6a385bd2865a1fa0754191b9a5d6bd36bd860705e224a26",
+    ".cache/r13p/offline-runtime-audit.json": "9e849573d4976d0eb3893064be1e5c72f8095d327df9830486fc84dfce7bec1c",
+    ".cache/r13p/copy/acceptance.json": "4bfb7d2f2190ffc1962e222e4d5a521afb63d17d29e7ae1db9c78c0308760fb0",
+    ".cache/r13p/check-links.cjs": "eae0ce66c01be64df0e889d9a54fd9dea164e46a5f5a52909238e71ee54b7ea2",
+    ".cache/r13p/run-native.cjs": "968a9e6e34497d5991e437756fa061cb6cfee6e5d1a62a1ee8641d7895b8c7ba",
+    ".cache/r13p/browser-cases.json": "f4294c1c2323a3fb0dd5c3fdb4a24801939dbb35b48ab8b88bb8ce169a79684a",
+    ".cache/r13p/main-after-acceptance.json": "c242e9adb98559eb75b9875151595e87c3fb19421db7e5881100ccdef71ca909",
+    ".cache/r13p/native-pages/e8798e724037433a8c08d65fd9a8451b/result.json": "5d08bd833d55059e354467cbe575e8d981e01ae57c337370e2e8e01acb4168c1",
+    ".cache/r13p/native-pages/e8798e724037433a8c08d65fd9a8451b/cleanup.json": "c04213c840b3096eb8da4760a685a662e072e9f88348951fa25261e909abfcac",
+    ".cache/r13p/native-pages/e8798e724037433a8c08d65fd9a8451b/closed/links-http.json": "99751d408432c1792fc9d3498e66dd98176be77b65eaf809627cb2abbf9d55ea",
+    ".cache/r13p/native-pages/e8798e724037433a8c08d65fd9a8451b/closed/links-browser.json": "c05eda2e063cb443e9e35920422113a6f942431a4390b8d2d9b580a084fc071d",
+    ".cache/r13p/final-scope-review.json": "72ea9f390039471f29a09314f5066167d18e976ff53d89018a031138835c20c7"
+  },
+  "data_applied": true,
+  "runtime_acceptance": true,
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "approval": {
+    "date": "2026-10-24",
+    "scope": "User approved exactly six href replacements on a new isolated copy; five cities and Ne v forme; no other data changes"
+  },
+  "data_applied_scope": "New isolated .cache/r13p/copy only; source copy, main,24SMI,VPS untouched",
+  "acceptance": {
+    "output_copy": ".cache/r13p/copy/patched.jsonl",
+    "output_sha256": "44d72ff221401637ebaf561a97d3ec019903b66faf5ba8fff13a51ed63b33993",
+    "deterministic_repeat_sha256": "44d72ff221401637ebaf561a97d3ec019903b66faf5ba8fff13a51ed63b33993",
+    "guard_tests": {
+      "red": "9tests failed before implementation (11 assertion failures including subtests)",
+      "green": "9passed"
+    },
+    "counts": {
+      "rows": 25630,
+      "changed_documents": 5,
+      "changed_fields": 5,
+      "href_edits": 6,
+      "unchanged_raw_rows": 25625,
+      "inserts": 0,
+      "deletes": 0
+    },
+    "offline_runtime": {
+      "kvn_models_validated": 9,
+      "unresolved_keys": 55,
+      "exact_residual_set": true,
+      "canonical_collisions": 0,
+      "old_url_conflicts": 0,
+      "relation_findings": 0,
+      "seasons": 122,
+      "tournaments": 5,
+      "participations": 9276,
+      "participation_projection_changed": 0,
+      "scope": "Offline in-memory model/resolver/relation audit; no DB client or application runtime."
+    },
+    "r13o": {
+      "pages": 9,
+      "modules": 12,
+      "tables": 23,
+      "tags": 167,
+      "href_attributes": 121,
+      "html_chars": 58108,
+      "html_chars_from_r13o": 58097,
+      "planned_href_length_delta": 11,
+      "inline_ad_snippets_remaining": 0
+    },
+    "native": {
+      "run_id": "e8798e724037433a8c08d65fd9a8451b",
+      "release_id": "1bc6820bb6cc2e3c0099106d7b1aed96ece05e21dbe6c736571c7115ba2378d6",
+      "source_API_SPA_200": 5,
+      "target_API_SPA_200": 6,
+      "noindex": true,
+      "authored_clicks": [
+        {
+          "source": "/kvn/league/krasnodarskaya-liga",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "target": "/city/krasnodar",
+          "label": "Краснодар",
+          "expected_heading": "Краснодар",
+          "target_old_id": 2092,
+          "clicked": true,
+          "opened_popup": false,
+          "stored_attributes_preserved": true
+        },
+        {
+          "source": "/kvn/league/start",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "target": "/city/voronezh",
+          "label": "Воронеж",
+          "expected_heading": "Воронеж",
+          "target_old_id": 2072,
+          "clicked": true,
+          "opened_popup": false,
+          "stored_attributes_preserved": true
+        },
+        {
+          "source": "/kvn/league/tikhookeanskaya",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "target": "/city/khabarovsk",
+          "label": "Хабаровск",
+          "expected_heading": "Хабаровск",
+          "target_old_id": 2111,
+          "clicked": true,
+          "opened_popup": false,
+          "stored_attributes_preserved": true
+        },
+        {
+          "source": "/kvn/league/asia",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "target": "/city/krasnoyarsk",
+          "label": "Красноярск",
+          "expected_heading": "Красноярск",
+          "target_old_id": 2079,
+          "clicked": true,
+          "opened_popup": false,
+          "stored_attributes_preserved": true
+        },
+        {
+          "source": "/kvn/league/asia",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "target": "/kvn/teams/ne-v-forme",
+          "label": "Не в форме",
+          "expected_heading": "Не в форме",
+          "target_old_id": 1427,
+          "clicked": true,
+          "opened_popup": false,
+          "stored_attributes_preserved": true
+        },
+        {
+          "source": "/kvn/league/ural",
+          "source_field": [
+            "modules",
+            0,
+            "data",
+            "content"
+          ],
+          "target": "/city/chelyabinsk",
+          "label": "Челябинск",
+          "expected_heading": "Челябинск",
+          "target_old_id": 2090,
+          "clicked": true,
+          "opened_popup": false,
+          "stored_attributes_preserved": true
+        }
+      ],
+      "pageerrors": [],
+      "all_nonview_domain_records_unchanged": 25630,
+      "fixture_identity_overlays": 2,
+      "cleanup": {
+        "containers": [],
+        "network_removed": true,
+        "images_removed": [
+          "hp-r13p-pages-e8798e724037433a8c08d65fd9a8451b-backend:latest",
+          "hp-r13p-pages-e8798e724037433a8c08d65fd9a8451b-gateway:latest"
+        ],
+        "error": null
+      },
+      "scope": "Accepted SPA/API/React; no new server HTML/301 coverage"
+    },
+    "manual_screenshots_reviewed": [
+      "target-krasnoyarsk.png",
+      "target-ne-v-forme.png"
+    ],
+    "main": {
+      "branch": "main",
+      "head": "ca46155a9640d4723c07b9fd1762a6e639563414",
+      "clean": true,
+      "containers": [
+        {
+          "name": "/humorpedia-backend",
+          "id": "6e4c35677d2a72b057feb89645f1c3cbba2546dfbb2f3bd808d9825faae12745",
+          "started_at": "2026-10-21T08:50:48.954791227Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-frontend",
+          "id": "0cba07b3a129fc37659eed76782d66501a9856cca7c16a7d9ce3b1b56272da15",
+          "started_at": "2026-10-21T08:50:49.201030699Z",
+          "restarts": 0,
+          "state": "running",
+          "health": null
+        },
+        {
+          "name": "/humorpedia-mongodb",
+          "id": "21cb1fd6939deb55c77cf3ac88b233c3d3e63d963aa115568e5f7183e027985a",
+          "started_at": "2026-10-20T05:53:53.11828567Z",
+          "restarts": 0,
+          "state": "running",
+          "health": "healthy"
+        }
+      ],
+      "http_3000": 200,
+      "http_8001_health": 200,
+      "unchanged_from_baseline": true,
+      "checked_at": "2026-10-24T05:27:23.898Z"
+    },
+    "limitations": [
+      "Input projection lacks two parent/root id fields: seed/expected fixture alone overlays the same two source-verified IDs as R13o; JSONL copy unchanged by overlays.",
+      "Native startup retains known unique kvn.id/null index warning on unrelated projected documents. This does not establish full DB/index readiness.",
+      "Search indexing remains off; KVN server HTML/301 is separate;55other unresolved keys and8missing season posters remain outside scope.",
+      "Local isolated data acceptance is not a merge/deploy/primary database migration."
+    ],
+    "final_review": {
+      "status": "PASS",
+      "blocking_findings": 0,
+      "artifact": ".cache/r13p/final-scope-review.json"
+    }
+  },
+  "publication": {
+    "authorized_by_user": "2026-10-24",
+    "status": "ready_for_task_commit",
+    "destination_ref": "refs/heads/codex/local-page-builder",
+    "include_documentation": true
+  }
+}

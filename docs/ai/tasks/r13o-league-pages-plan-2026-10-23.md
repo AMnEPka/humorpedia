@@ -2,7 +2,7 @@
 
 > Исполнителю: после явного согласования использовать `superpowers:executing-plans`; до этого разрешено только read-only исследование.
 
-**Дата:**23.10.2026. **Статус:** пакет реализован и проверен на новой изолированной копии; offline/native API/React/final review PASS;24.10.2026пользователь разрешил отдельный commit/push и проверку CI.
+**Дата:**23.10.2026. **Статус:** пакет реализован и проверен на новой изолированной копии; offline/native API/React/final review PASS;опубликованf1a37c7,GitHub40065160349 success.
 
 **Цель:** восстановить девять обычных страниц лиг под existing parent1503 по принятой схеме R13n, сохранив содержимое и навигацию в текущем SPA-контракте.
 
@@ -118,3 +118,7 @@ Main boundary `.cache/r13o/main-after-acceptance.json`: clean main `ca46155a9640
 Новых полных suite/build не запускалось: продуктовый diff пуст, использован тот же release `1bc6820bb6cc2e3c0099106d7b1aed96ece05e21dbe6c736571c7115ba2378d6`, проверенный R13n CI39974726532. Этот CI не подменяет новую data/API/React приёмку R13o. На этапе реализации commit/push не выполнялись;24.10.2026пользователь поручил опубликовать R13o отдельным коммитом с документацией и проверить GitHub CI.
 
 Финальный независимый review всей области R13o: **PASS,0blocking findings**, `.cache/r13o/final-scope-review.json`; повторно сверены source/final SHA, raw-delta, HTML/счётчики,27click artifacts и границы fixture/SPA. Этап R13o завершён в согласованном объёме на копии.
+
+## Публикация24.10.2026
+
+R13o опубликован отдельным `f1a37c75d742869ccdebb2da2ee3f5ec9396ce18`, `docs(migration): record accepted nine-league recovery (R13o)`:6файлов,2072insertions/4deletions. Exact push `HEAD:refs/heads/codex/local-page-builder`, remote SHA проверен. [GitHub40065160349](https://github.com/AMnEPka/humorpedia/actions/runs/40065160349) completed/success на этом SHA:5jobs/3browser-сценария success.

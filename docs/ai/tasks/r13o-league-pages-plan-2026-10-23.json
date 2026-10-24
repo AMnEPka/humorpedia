@@ -2,7 +2,7 @@
   "schema_version": 1,
   "task": "R13o",
   "date": "2026-10-23",
-  "status": "implemented_verified_on_isolated_copy",
+  "status": "published_ci_success",
   "approved": true,
   "branch": "codex/local-page-builder",
   "base_commit": "aab3d5b0c6943f7c508649ddfa1d9a36c9d923ba",
@@ -1924,8 +1924,14 @@
   },
   "publication": {
     "authorized_by_user": "2026-10-24",
-    "status": "ready_for_task_commit",
-    "destination_ref": "refs/heads/codex/local-page-builder",
-    "include_documentation": true
+    "commit": "f1a37c75d742869ccdebb2da2ee3f5ec9396ce18",
+    "remote_ref": "refs/heads/codex/local-page-builder",
+    "remote_sha_verified": true,
+    "github_run_id": 40065160349,
+    "github_status": "completed",
+    "github_conclusion": "success",
+    "github_url": "https://github.com/AMnEPka/humorpedia/actions/runs/40065160349",
+    "jobs_success": 5,
+    "browser_scenarios_success": 3
   }
 }
