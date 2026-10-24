@@ -1,6 +1,6 @@
 # R13n — готовность legacy-контента и пилот «Лампы»
 
-Дата:23.10.2026. Статус: **R13n принят пользователем в действующем SPA-контракте; данные копии и navigation fix проверены, готовится отдельный commit/push**.
+Дата:23.10.2026. Статус: **R13n принят пользователем в действующем SPA-контракте; данные копии и navigation fix проверены, опубликован отдельным aab3d5b; GitHub CI39974726532 success**.
 
 Ветка `codex/local-page-builder`, тот же worktree `r5-zip-operations/humorpedia`. HEAD до незакоммиченных изменений `bb3221dee5810871a00e117473167ad4f47e6273`. R13m опубликован этим SHA; [GitHub CI39966829017](https://github.com/AMnEPka/humorpedia/actions/runs/39966829017) completed/success на точном SHA:5jobs/3browser-сценария success. Serving/indexing основного стенда не переключаются, main/24СМИ/VPS не затрагиваются.
 
@@ -114,3 +114,7 @@ Regression tests: RED ровно2navigation failures → GREEN9tests; покры
 ## Окончательное согласование и доставка
 
 23.10.2026 пользователь явно принял текущий SPA-контракт: R13n не обещает серверный HTML-контент/canonical/301 для KVN. Отдельная задача KVN HTML/301 внесена в общий план; она не блокирует принятую копию и исправленную навигацию. В JSON сохранён точный документ1586 (Extended JSON) и guarded parent delta: это reviewable пакет, а не автоматическая запись в основную БД. SQL, полная projection, sidecar и логи остаются ignored.
+
+## Публикация R13n
+
+Отдельный коммит `aab3d5b0c6943f7c508649ddfa1d9a36c9d923ba`, `fix(content): accept Lampa pilot and root section navigation (R13n)`:8файлов,647insertions/6deletions. Push выполнен только в `refs/heads/codex/local-page-builder`, remote SHA проверен. [GitHub39974726532](https://github.com/AMnEPka/humorpedia/actions/runs/39974726532) запущен на точном SHA; completed/success:5jobs,3browser-сценария success. Product code включает минимальный navigation fix, поэтому прежний R13m CI не заменяет этот запуск.

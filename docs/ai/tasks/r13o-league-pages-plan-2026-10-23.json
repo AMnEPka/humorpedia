@@ -1,0 +1,1931 @@
+{
+  "schema_version": 1,
+  "task": "R13o",
+  "date": "2026-10-23",
+  "status": "implemented_verified_on_isolated_copy",
+  "approved": true,
+  "branch": "codex/local-page-builder",
+  "base_commit": "aab3d5b0c6943f7c508649ddfa1d9a36c9d923ba",
+  "source_copy": ".cache/r13n/copy-v2/patched.jsonl",
+  "source_sha256": "e352e7a17b8e43660a09a7b6b6397654333aed2b912a64318702c68ab6619001",
+  "source_rows": 25621,
+  "sql_sha256": "d4a2e0930ebc676aca939ad569c54bc82e7470184ca0c40ede63e9a19898cf19",
+  "payload_source": {
+    "path": ".cache/r13o/legacy-resources.json",
+    "sha256": "5ed0ecc7981ccd1e845daeb3412190651e5adc0ddf7cf67cc786be727916eeb6"
+  },
+  "scope": "Nine ordinary KVN leagues on a new derived copy; no source/main writes; exact spans and parent childlist change only",
+  "parent": {
+    "id": "febed962-e6b4-4c23-8106-a53830089b32",
+    "old_id": 1503,
+    "full_path": "kvn/league",
+    "row_sha256": "19cae04e51b0df92caae0f898026cfe771fc2dad8cd2d48e532e68453ddc3219",
+    "child_kvn_ids_before": [
+      "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8"
+    ]
+  },
+  "parent_only_mutation": "Append exactly the nine proposed target UUIDs in ascending old_id order, once; preserve existing Lampa child and all other parent values",
+  "pages": [
+    {
+      "old_id": 1585,
+      "title": "Центральная Краснодарская лига КВН",
+      "slug": "krasnodarskaya-liga",
+      "target_id": "06de1150-587a-5058-ae8e-a332310afed2",
+      "target_full_path": "kvn/league/krasnodarskaya-liga",
+      "old_urls_proposed": [
+        "/kvn/krasnodarskaya-liga",
+        "/kvn/krasnodarskaya-liga.html",
+        "/kvn/league/krasnodarskaya-liga.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-22699",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Краснодарская лига КВН",
+          "content_chars": 7963,
+          "content_sha256": "cf4d88654881dbeefaf4e628ea6dd1830e61f2eee707b142e384f72ab8ee3102",
+          "output_content_sha256": "bf7b83eb2de567f8bfbe5e0778ff13219d6a7c3e624d3b484252a22a15206410",
+          "output_content_chars": 7924,
+          "exact_inline_ad_deletions": 1,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Флэш-Рояль",
+        "Краснодар",
+        "Соучастники",
+        "Это они",
+        "Поморы",
+        "Сборная СКФУ",
+        "Четыре татарина",
+        "Сборная Батайска",
+        "Батя против",
+        "Мега",
+        "7 холмов",
+        "Южнее некуда",
+        "Город 313",
+        "БАК",
+        "Одесские мансы",
+        "Краснодарский проспект",
+        "Цвет граната",
+        "Самая культурная сборная",
+        "Центральная Краснодарская лига КВН",
+        "Сборная Чечни",
+        "Дети Новодворской",
+        "Эльбрус-экспресс",
+        "Маленькая страна",
+        "Летняя сборная",
+        "Подозрительные люди"
+      ],
+      "tables": 3,
+      "authored_hrefs": 21,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/krasnodarskaya-liga",
+          "occurrences": 24
+        },
+        {
+          "key": "kvn/league/krasnodarskaya-liga",
+          "occurrences": 5
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1587,
+      "title": "Центральная Лига Старт",
+      "slug": "start",
+      "target_id": "f507ae89-799b-5ff8-b675-6eb9845a66dd",
+      "target_full_path": "kvn/league/start",
+      "old_urls_proposed": [
+        "/kvn/league/start.html",
+        "/kvn/start",
+        "/kvn/start.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-23872",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Лига Старт",
+          "content_chars": 8503,
+          "content_sha256": "8dfee1b716a8c312f093b53d5231728e51d92dea643b9549554171ddc956648f",
+          "output_content_sha256": "c278d8767443dc4726f44c457654d6df8e5c4a0e10e0f711ab8667d9bd75e88c",
+          "output_content_chars": 8464,
+          "exact_inline_ad_deletions": 1,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Я обиделась",
+        "Остановите плёнку",
+        "Приказ 390",
+        "Курортный тариф",
+        "Седьмое небо",
+        "Сборная города Краснодара",
+        "Бывало и Хуже",
+        "Сборная ВГАУ",
+        "Первая олимпийская",
+        "Лонг-Айленд",
+        "Сборная Баку",
+        "Сборная Ставрополя",
+        "Новые металлурги",
+        "Лига КВН Старт",
+        "Большой Сочи",
+        "Дом Культуры",
+        "ВИВТ",
+        "Зелёный патруль",
+        "Братья по-разному",
+        "Какие люди",
+        "Первая столица",
+        "Милицейская академия",
+        "БВ",
+        "Сборная Брюховецкой",
+        "Голливуд Шрёдингера",
+        "Туапсе тоже курорт",
+        "Естественный отбор"
+      ],
+      "tables": 3,
+      "authored_hrefs": 17,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/start",
+          "occurrences": 5
+        },
+        {
+          "key": "kvn/start",
+          "occurrences": 18
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1588,
+      "title": "Центральная Тихоокеанская лига КВН",
+      "slug": "tikhookeanskaya",
+      "target_id": "ba8679d2-413a-5b56-b048-2c16bd5ae0fc",
+      "target_full_path": "kvn/league/tikhookeanskaya",
+      "old_urls_proposed": [
+        "/kvn/league/tikhookeanskaya.html",
+        "/kvn/tikhookeanskaya",
+        "/kvn/tikhookeanskaya.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-30788",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Тихоокеанская лига КВН",
+          "content_chars": 5940,
+          "content_sha256": "c63e0a429f3141cfda5009a51f5f01a8051bdf96369f5d5c454dc2b927d9fa04",
+          "output_content_sha256": "c63e0a429f3141cfda5009a51f5f01a8051bdf96369f5d5c454dc2b927d9fa04",
+          "output_content_chars": 5940,
+          "exact_inline_ad_deletions": 0,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Хабаровск",
+        "Азбука",
+        "Сборная магаданцев",
+        "Сборная Благовещенска",
+        "Женская сборная ТОГУ",
+        "people",
+        "Тихоокеанская лига КВН",
+        "Сборная Железки",
+        "7-й отдел",
+        "Сделано в Хабаровске",
+        "Будет не больно",
+        "Свобода Сахалин",
+        "Метрополитен",
+        "Золотой Рог",
+        "Фраза силы",
+        "Сборная Хабаровского района",
+        "Океан"
+      ],
+      "tables": 3,
+      "authored_hrefs": 4,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/tikhookeanskaya",
+          "occurrences": 5
+        },
+        {
+          "key": "kvn/tikhookeanskaya",
+          "occurrences": 5
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1589,
+      "title": "Центральная Лига Поволжье",
+      "slug": "povolzhye",
+      "target_id": "5b553d01-9860-5ee2-9a13-9cec21c9a975",
+      "target_full_path": "kvn/league/povolzhye",
+      "old_urls_proposed": [
+        "/kvn/league/povolzhye.html",
+        "/kvn/povolzhye",
+        "/kvn/povolzhye.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-78711",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Лига Поволжье",
+          "content_chars": 8378,
+          "content_sha256": "0ff1b26252e8ce24d2807fd932f83e017dd5be8bec66c9e2c89ca0de6bf6c7e3",
+          "output_content_sha256": "66264342fd83103311781a8b4a58c8f10e23f4cb7deb4b1646c82472cd47fd4c",
+          "output_content_chars": 8339,
+          "exact_inline_ad_deletions": 1,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Свои секреты",
+        "Селивановы",
+        "Казань",
+        "Девчонки",
+        "Улица Плеханова",
+        "Друзья",
+        "Татары",
+        "СОК",
+        "9 1/2 людей",
+        "Сура",
+        "Каракуз",
+        "Партия",
+        "ТГНГУ",
+        "Мисс Мира",
+        "ЧОП Шифер",
+        "Сурский край",
+        "Полярный экспресс",
+        "Лига КВН Поволжье",
+        "Малые народы",
+        "ВАГС",
+        "ГУУ",
+        "Приора",
+        "ИНЭКА",
+        "Сборная Саранска",
+        "Ирина Михална",
+        "СВ",
+        "Монди СЛПК",
+        "Шарашкина контора",
+        "Регион-13"
+      ],
+      "tables": 3,
+      "authored_hrefs": 19,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/povolzhye",
+          "occurrences": 7
+        },
+        {
+          "key": "kvn/povolzhye",
+          "occurrences": 26
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1590,
+      "title": "Центральная Лига «Азия»",
+      "slug": "asia",
+      "target_id": "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "target_full_path": "kvn/league/asia",
+      "old_urls_proposed": [
+        "/kvn/asia",
+        "/kvn/asia.html",
+        "/kvn/league/asia.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-40440",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Лига «Азия»",
+          "content_chars": 8863,
+          "content_sha256": "bc7fa5c4f1ca900bf85e57bc28cf641f13ffb983d7a04a39cffa49d8a55910ed",
+          "output_content_sha256": "a8b91663991a287e74369d04d7a98920d684f499f2d5c820e7334c38fa36a9c2",
+          "output_content_chars": 8824,
+          "exact_inline_ad_deletions": 1,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Гураны",
+        "Левый берег",
+        "Сердце Сибири",
+        "Забайкальский край",
+        "Сельскохозяйственная академия",
+        "ИГУ",
+        "Плохая компания",
+        "Территория Игры",
+        "Без вариантов",
+        "МаксимуМ",
+        "Сборная ТПУ",
+        "Азбука",
+        "Иркутские декабристы",
+        "Дальневосточные ворота",
+        "Забайкальский вариант",
+        "Новосиб",
+        "Иркутск.ru",
+        "Проспект Мира",
+        "Молодые люди",
+        "Школа Макаренко",
+        "КВН лига Азия",
+        "Большой Норильск",
+        "Сборная КузГТУ",
+        "Кино",
+        "Берег Байкала"
+      ],
+      "tables": 3,
+      "authored_hrefs": 23,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/asia",
+          "occurrences": 23
+        },
+        {
+          "key": "kvn/league/asia",
+          "occurrences": 7
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1591,
+      "title": "Центральная Юго-Западная Лига КВН",
+      "slug": "southwest",
+      "target_id": "bec1c73b-c434-5783-96e3-ff8ca8cf603a",
+      "target_full_path": "kvn/league/southwest",
+      "old_urls_proposed": [
+        "/kvn/league/southwest.html",
+        "/kvn/southwest",
+        "/kvn/southwest.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-87157",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Юго-Западная Лига КВН",
+          "content_chars": 428,
+          "content_sha256": "a70f0d29020273ff4343c52530d54fb4ae77056e42fca2e1cc96f47ebb53a5ef",
+          "output_content_sha256": "a70f0d29020273ff4343c52530d54fb4ae77056e42fca2e1cc96f47ebb53a5ef",
+          "output_content_chars": 428,
+          "exact_inline_ad_deletions": 0,
+          "source_section_name": "Текст"
+        },
+        {
+          "source_index": 1,
+          "source_id": "table",
+          "source_form": "table",
+          "target_type": "text_block",
+          "title": "Чемпионы Юго-Западной лиги (десятые)",
+          "content_chars": 3178,
+          "content_sha256": "a12b6d535d41da12c1d6b05f14a1f133498d3cc32c8c46f2a79567ae52cd5ee1",
+          "output_content_sha256": "a12b6d535d41da12c1d6b05f14a1f133498d3cc32c8c46f2a79567ae52cd5ee1",
+          "output_content_chars": 3178,
+          "exact_inline_ad_deletions": 0,
+          "source_section_name": "Чемпионы Юго-Западной лиги (десятые)"
+        },
+        {
+          "source_index": 3,
+          "source_id": "table_2",
+          "source_form": "table",
+          "target_type": "text_block",
+          "title": "Чемпионы Юго-Западной лиги (двадцатые)",
+          "content_chars": 1644,
+          "content_sha256": "ce200301a6b0d4ca2e1df33215e99cf6ae32ad5123df59d31060aa34309cc2d8",
+          "output_content_sha256": "ce200301a6b0d4ca2e1df33215e99cf6ae32ad5123df59d31060aa34309cc2d8",
+          "output_content_chars": 1644,
+          "exact_inline_ad_deletions": 0,
+          "source_section_name": "Чемпионы Юго-Западной лиги (двадцатые)"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 2,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 4,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Проигрыватель",
+        "Женская сборная РУДН",
+        "Радио Свобода",
+        "G-Drive",
+        "Юго-Западная лига КВН",
+        "Такая история",
+        "Ровеньки",
+        "Мама будет рада",
+        "Сборная бывших",
+        "Шурочка",
+        "Рожала знаю",
+        "Провинциальные города",
+        "Разборная Ростова",
+        "ПТЗ",
+        "Поморские",
+        "Сборная Егорьевска"
+      ],
+      "tables": 2,
+      "authored_hrefs": 14,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/southwest",
+          "occurrences": 2
+        },
+        {
+          "key": "kvn/southwest",
+          "occurrences": 16
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "table": 2,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1592,
+      "title": "Центральная Уральская Лига КВН",
+      "slug": "ural",
+      "target_id": "5f65c970-915b-5395-8371-2a580e5095a1",
+      "target_full_path": "kvn/league/ural",
+      "old_urls_proposed": [
+        "/kvn/league/ural.html",
+        "/kvn/ural",
+        "/kvn/ural.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-69061",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная Уральская Лига КВН",
+          "content_chars": 6863,
+          "content_sha256": "d0638098f406c398b5ce6531e2129c923fe4f0980699b0669baf58015ffd83fb",
+          "output_content_sha256": "66b47cc391bffec9f08986902152ec02e37d2f7021732a7b57995677d517d72d",
+          "output_content_chars": 6824,
+          "exact_inline_ad_deletions": 1,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Наполеон Динамит",
+        "Союз",
+        "Город N",
+        "Театр Уральского Зрителя",
+        "Сборная Ямала",
+        "Джентльмены удачи",
+        "Диаманты",
+        "Проект 63",
+        "Ирина Михайловна",
+        "Провинция",
+        "Уральская лига КВН",
+        "Сборная Кыргызстана",
+        "Нижегородская сборная",
+        "Сборная ЮУрГУ",
+        "Человек смеющийся",
+        "Восход",
+        "Поздравлямба",
+        "Казахи Челябинска",
+        "Дети неба"
+      ],
+      "tables": 3,
+      "authored_hrefs": 13,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/ural",
+          "occurrences": 4
+        },
+        {
+          "key": "kvn/ural",
+          "occurrences": 14
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 1594,
+      "title": "Центральная лига МС КВН «НЕВА»",
+      "slug": "neva",
+      "target_id": "c286c963-a2d2-56c5-97d4-5dca87be18e4",
+      "target_full_path": "kvn/league/neva",
+      "old_urls_proposed": [
+        "/kvn/league/neva.html",
+        "/kvn/neva",
+        "/kvn/neva.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-54580",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная лига МС КВН «НЕВА»",
+          "content_chars": 4111,
+          "content_sha256": "18b0aa8cb6ea032281a5def8476756e3fac711bae7d5be796f8cb14e654f5247",
+          "output_content_sha256": "013adc946f3202fe0de970edb1f799fa8e18ecbde5e4c0abfbe6c8328df4995e",
+          "output_content_chars": 4072,
+          "exact_inline_ad_deletions": 1,
+          "source_section_name": "Текст"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 1,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 2,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "Санкт-Петербург",
+        "Тимофей Куц",
+        "КВН",
+        "Дмитрий Бушуев",
+        "Константин Подольский",
+        "НЕВА"
+      ],
+      "tables": 2,
+      "authored_hrefs": 6,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/neva",
+          "occurrences": 3
+        },
+        {
+          "key": "kvn/neva",
+          "occurrences": 20
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    },
+    {
+      "old_id": 2333,
+      "title": "Центральная лига МС КВН «Тремпель»",
+      "slug": "trempel",
+      "target_id": "e27f7ef7-92cd-5620-88dc-f6062d8025ce",
+      "target_full_path": "kvn/league/trempel",
+      "old_urls_proposed": [
+        "/kvn/league/trempel.html",
+        "/kvn/trempel",
+        "/kvn/trempel.html"
+      ],
+      "modules": [
+        {
+          "source_index": 0,
+          "source_id": "text-trempel",
+          "source_form": "text",
+          "target_type": "text_block",
+          "title": "Центральная лига МС КВН «Тремпель»",
+          "content_chars": 1247,
+          "content_sha256": "cb60ed10d523e5009438e0dedfae61d983b82427be20f2b8136ceee2027dc793",
+          "output_content_sha256": "cb60ed10d523e5009438e0dedfae61d983b82427be20f2b8136ceee2027dc793",
+          "output_content_chars": 1247,
+          "exact_inline_ad_deletions": 0,
+          "source_section_name": "Текст"
+        },
+        {
+          "source_index": 1,
+          "source_id": "table",
+          "source_form": "table",
+          "target_type": "text_block",
+          "title": "Таблица",
+          "content_chars": 1213,
+          "content_sha256": "7d5597082cd6beec6c39c1dc21c8975febe43dd906755504b4efb3078e031d5b",
+          "output_content_sha256": "7d5597082cd6beec6c39c1dc21c8975febe43dd906755504b4efb3078e031d5b",
+          "output_content_chars": 1213,
+          "exact_inline_ad_deletions": 0,
+          "source_section_name": "Таблица"
+        }
+      ],
+      "omitted": [
+        {
+          "source_index": 2,
+          "source_id": "ad_250",
+          "source_form": "ad_250"
+        },
+        {
+          "source_index": 3,
+          "source_id": "tags",
+          "source_form": "tags"
+        }
+      ],
+      "tag_names": [
+        "КВН",
+        "КВН Тремпель",
+        "Белгород"
+      ],
+      "tables": 1,
+      "authored_hrefs": 4,
+      "incoming_unresolved_keys": [
+        {
+          "key": "kvn/league/trempel",
+          "occurrences": 2
+        }
+      ],
+      "source_forms": {
+        "text": 1,
+        "table": 1,
+        "ad_250": 1,
+        "tags": 1
+      },
+      "media_refs": 0,
+      "script_elements": 0
+    }
+  ],
+  "source_html_policy": "Preserve all authored HTML characters except six separately listed exact inline YandexAds fragments; never rewrite existing documents or other hrefs",
+  "inline_ad_removal_plan": [
+    {
+      "old_id": 1585,
+      "source_section": 0,
+      "source_content_sha256": "cf4d88654881dbeefaf4e628ea6dd1830e61f2eee707b142e384f72ab8ee3102",
+      "literal_fragment": "[[$yandexAds_adder?&nbsp; &amp;num=16]]",
+      "start": 3381,
+      "end": 3420,
+      "occurrences": 1,
+      "output_content_sha256": "bf7b83eb2de567f8bfbe5e0778ff13219d6a7c3e624d3b484252a22a15206410",
+      "removed_chars": 39,
+      "other_characters_preserved": true
+    },
+    {
+      "old_id": 1587,
+      "source_section": 0,
+      "source_content_sha256": "8dfee1b716a8c312f093b53d5231728e51d92dea643b9549554171ddc956648f",
+      "literal_fragment": "[[$yandexAds_adder?&nbsp; &amp;num=16]]",
+      "start": 3942,
+      "end": 3981,
+      "occurrences": 1,
+      "output_content_sha256": "c278d8767443dc4726f44c457654d6df8e5c4a0e10e0f711ab8667d9bd75e88c",
+      "removed_chars": 39,
+      "other_characters_preserved": true
+    },
+    {
+      "old_id": 1589,
+      "source_section": 0,
+      "source_content_sha256": "0ff1b26252e8ce24d2807fd932f83e017dd5be8bec66c9e2c89ca0de6bf6c7e3",
+      "literal_fragment": "[[$yandexAds_adder?&nbsp; &amp;num=16]]",
+      "start": 3817,
+      "end": 3856,
+      "occurrences": 1,
+      "output_content_sha256": "66264342fd83103311781a8b4a58c8f10e23f4cb7deb4b1646c82472cd47fd4c",
+      "removed_chars": 39,
+      "other_characters_preserved": true
+    },
+    {
+      "old_id": 1590,
+      "source_section": 0,
+      "source_content_sha256": "bc7fa5c4f1ca900bf85e57bc28cf641f13ffb983d7a04a39cffa49d8a55910ed",
+      "literal_fragment": "[[$yandexAds_adder?&nbsp; &amp;num=16]]",
+      "start": 3782,
+      "end": 3821,
+      "occurrences": 1,
+      "output_content_sha256": "a8b91663991a287e74369d04d7a98920d684f499f2d5c820e7334c38fa36a9c2",
+      "removed_chars": 39,
+      "other_characters_preserved": true
+    },
+    {
+      "old_id": 1592,
+      "source_section": 0,
+      "source_content_sha256": "d0638098f406c398b5ce6531e2129c923fe4f0980699b0669baf58015ffd83fb",
+      "literal_fragment": "[[$yandexAds_adder?&nbsp; &amp;num=16]]",
+      "start": 2215,
+      "end": 2254,
+      "occurrences": 1,
+      "output_content_sha256": "66b47cc391bffec9f08986902152ec02e37d2f7021732a7b57995677d517d72d",
+      "removed_chars": 39,
+      "other_characters_preserved": true
+    },
+    {
+      "old_id": 1594,
+      "source_section": 0,
+      "source_content_sha256": "18b0aa8cb6ea032281a5def8476756e3fac711bae7d5be796f8cb14e654f5247",
+      "literal_fragment": "[[$yandexAds_adder?&nbsp; &amp;num=16]]",
+      "start": 789,
+      "end": 828,
+      "occurrences": 1,
+      "output_content_sha256": "013adc946f3202fe0de970edb1f799fa8e18ecbde5e4c0abfbe6c8328df4995e",
+      "removed_chars": 39,
+      "other_characters_preserved": true
+    }
+  ],
+  "unresolved_authored_anchors": [
+    {
+      "old_id": 1585,
+      "source_section": 0,
+      "href": "krasnodar.html",
+      "label": "Краснодар",
+      "action_proposed": "Preserve exact stored href; current public resolver renders its label as text. No target substitution."
+    },
+    {
+      "old_id": 1587,
+      "source_section": 0,
+      "href": "voronezh.html",
+      "label": "Воронеж",
+      "action_proposed": "Preserve exact stored href; current public resolver renders its label as text. No target substitution."
+    },
+    {
+      "old_id": 1588,
+      "source_section": 0,
+      "href": "khabarovsk.html",
+      "label": "Хабаровск",
+      "action_proposed": "Preserve exact stored href; current public resolver renders its label as text. No target substitution."
+    },
+    {
+      "old_id": 1590,
+      "source_section": 0,
+      "href": "krasnoyarsk.html",
+      "label": "Красноярск",
+      "action_proposed": "Preserve exact stored href; current public resolver renders its label as text. No target substitution."
+    },
+    {
+      "old_id": 1590,
+      "source_section": 0,
+      "href": "ne-v-forme.html",
+      "label": "Не в форме",
+      "action_proposed": "Preserve exact stored href; current public resolver renders its label as text. No target substitution."
+    },
+    {
+      "old_id": 1592,
+      "source_section": 0,
+      "href": "chelyabinsk.html",
+      "label": "Челябинск",
+      "action_proposed": "Preserve exact stored href; current public resolver renders its label as text. No target substitution."
+    }
+  ],
+  "unresolved_href_policy": "Keep these exact six stored hrefs and authored labels. Existing public resolver renders unavailable target anchors as text. No inferred URL substitution, alias fallback or new target creation.",
+  "expected_counts": {
+    "source_records": 25621,
+    "proposed_inserts": 9,
+    "proposed_parent_fields_changed": 1,
+    "proposed_final_records": 25630,
+    "source_forms": {
+      "text": 9,
+      "ad_250": 9,
+      "tags": 9,
+      "table": 3
+    },
+    "new_modules": 12,
+    "tags_total": 167,
+    "tables": 23,
+    "authored_hrefs": 121,
+    "content_chars": 58331,
+    "revived_literal_keys": 17,
+    "revived_incoming_occurrences": 186,
+    "authored_unique_keys": 107,
+    "already_resolved_outgoing_keys": 101,
+    "unresolved_outgoing_literal_anchors": 6,
+    "forecast_unresolved_keys": 61,
+    "exact_inline_ad_deletions": 6,
+    "output_content_chars": 58097
+  },
+  "identity_policy": "UUIDv5 NAMESPACE_URL + https://humorpedia.ru/legacy/modx/site_content/<old_id>; same _id/id; source-bound module IDs",
+  "page_policy": {
+    "collection": "kvn",
+    "status": "published_only_in_isolated_copy_as_in_SQL",
+    "level": 2,
+    "season_data": "OMITTED: ordinary non-year legacy KVN page, not null or {}",
+    "poster": null,
+    "description": null,
+    "seo": "Existing meta_title and first source text excerpt through existing plain_text helper; do not duplicate full content as description",
+    "tags": "Exact per-page tag names, 167 total entries across pages; no legacy tags widget",
+    "modules": "12 text_block modules;9 source text plus3 source table. Tables remain HTML in content, not native table type requiring rows. Preserve titles/order/source anchor IDs."
+  },
+  "expected_copy_invariants": {
+    "rows": 25630,
+    "new_documents": 9,
+    "existing_parent_documents_changed": 1,
+    "existing_parent_fields_changed": [
+      "child_kvn_ids"
+    ],
+    "existing_records_deleted": 0,
+    "existing_rows_byte_identical": 25620,
+    "canonical_seasons_unchanged": 122,
+    "tournaments_unchanged": 5,
+    "participations_unchanged": 9276,
+    "new_source_html_chars": 58097,
+    "stored_html_tables": 23,
+    "other_existing_data_unchanged": true
+  },
+  "link_forecast": {
+    "baseline_unresolved_keys": 72,
+    "revived_incoming_literal_keys": 17,
+    "revived_existing_occurrences": 186,
+    "outgoing_unique_keys": 107,
+    "currently_resolved_outgoing_keys": 101,
+    "new_unresolved_literal_keys": [
+      "chelyabinsk.html",
+      "khabarovsk.html",
+      "krasnodar.html",
+      "krasnoyarsk.html",
+      "ne-v-forme.html",
+      "voronezh.html"
+    ],
+    "forecast_final_unresolved_keys": 61,
+    "exact_expected_residual_keys": [
+      "all-users/profile-preview",
+      "chekhovikukota",
+      "chelyabinsk.html",
+      "khabarovsk.html",
+      "krasnodar.html",
+      "krasnoyarsk.html",
+      "kvn/dalnevostochnaya-liga/2025",
+      "kvn/golosyashiy-kivin/1995",
+      "kvn/golosyashiy-kivin/2021",
+      "kvn/golosyashiy-kivin/2022",
+      "kvn/golosyashiy-kivin/2023",
+      "kvn/golosyashiy-kivin/2024",
+      "kvn/golosyashiy-kivin/2025",
+      "kvn/kivin/kivin-1990",
+      "kvn/kivin/kivin-1991",
+      "kvn/kivin/kivin-1993",
+      "kvn/kivin/kivin-2015",
+      "kvn/kivin/kivin-2016",
+      "kvn/kivin/kivin-2017",
+      "kvn/kivin/kivin-2018",
+      "kvn/kivin/kivin-2019",
+      "kvn/kivin/kivin-2022",
+      "kvn/kivin/kivin-2023",
+      "kvn/kivin/kivin-2024",
+      "kvn/lampa/finals",
+      "kvn/lampa/finals.html",
+      "kvn/league/2021",
+      "kvn/league/2022",
+      "kvn/league/2023",
+      "kvn/league/2024",
+      "kvn/league/2025",
+      "kvn/league/msl/2024",
+      "kvn/specproekt/sp-2021",
+      "kvn/specproekt/sp-2022",
+      "kvn/teams/mifu-drevney-greece",
+      "kvn/teams/vo-vse-tyazhkie",
+      "kvn/vysshaya-liga/referee/2022",
+      "ne-v-forme.html",
+      "people/Anastasia-Agafonova",
+      "people/alexander-kalambet",
+      "people/alexander-pikalov",
+      "people/egor-borikov",
+      "people/elena-gordeeva",
+      "people/elena-kravets",
+      "people/gavriil-gordeev",
+      "people/ksenia-rogozhina",
+      "people/romashov-konstantin",
+      "people/sarkisyan-artashes",
+      "people/stas-rudnitskiy",
+      "people/vladimir-fedorov",
+      "people/yuriy-krapov",
+      "plohie-pesni/text10",
+      "podcasts-109800058",
+      "proekty/medium-quality/blicz-krik",
+      "proekty/medium-quality/istoriya-na-noch",
+      "proekty/medium-quality/roast-battle-lc",
+      "roast-battle-lc",
+      "stati-po-tegu",
+      "video-63032186_456239420",
+      "voronezh.html",
+      "ya-sebya-znayu"
+    ],
+    "forecast_only": true,
+    "missing_entities_not_inferred_from_literal_keys": true
+  },
+  "checks_before_approval": {
+    "scope": "Read-only preflight only; no transform/API/UI acceptance",
+    "typed_id_old_id_full_path_old_url_collisions": 0,
+    "cross_collection_full_path_collisions": 0,
+    "retained_html_inline_modx_snippets": 6,
+    "unknown_retained_inline_modx_snippets": 0,
+    "nonempty_tv_outside_config_tags": 0,
+    "new_modules_preserve_relative_source_order": true,
+    "ordinary_non_year_league_slugs": true,
+    "new_season_data_not_planned": true
+  },
+  "non_goals": [
+    "No remaining28 original resources, finals1603, year/festival/special/season pages or extra parent2536",
+    "No canonical seasons/tournaments/participations reconstruction",
+    "No six old href or aliases repair; no global link fallback",
+    "No KVN server HTML/301 expansion; current accepted SPA contract only",
+    "No full export-local, main DB/media/indexing changes,24SMI or VPS deployment"
+  ],
+  "evidence": {
+    ".cache/r13o/league-batch-readiness.json": "fa4811ace1d4fb96e7f65562691a58fa196210554196f0b2c931ac68187a2d4f",
+    ".cache/r13o/outgoing-link-readiness.json": "27994847a89e8e860a7a974c8e56aa8a46e19de442309567ba42a47ba1126c6f",
+    ".cache/r13o/unresolved-authored-anchors.json": "d5fa03a36b6cd83d6fd08412e9c7f2a00bd074919fd6c331d239f4f42f6d5d1d",
+    ".cache/r13o/inline-ad-removal-plan.json": "6dbbbc5edc35a83cc955836b90d8b45fdfc1754ac324cfe8343d70acb8cc6752",
+    ".cache/r13o/module-readiness-review.json": "d43a9c4698492490d98944919acca07b50eaaa9ce4f26375a680f7a10abc1f28",
+    ".cache/r13o/main-after-design.json": "3173da0e79c4b6cdde27797bcace84020064bea90e72fde53c9865ba4f784a99"
+  },
+  "apply_to_main": false,
+  "deploy_to_vps": false,
+  "data_applied": true,
+  "runtime_acceptance": true,
+  "proposal_validation": {
+    "status": "PASS_DESIGN_AT_TIME_OF_REVIEW",
+    "source_copy_unchanged": true,
+    "exact_inline_ad_spans_checked_independently": true,
+    "main_clean_unchanged_http200": true,
+    "stage": "Historical preapproval read-only design review; superseded by approval and execution_acceptance",
+    "user_approval_pending_at_review": true,
+    "no_copy_transform_or_DB_apply_at_review": true
+  },
+  "approval": {
+    "date": "2026-10-23",
+    "source": "Direct user instruction approving entire R13o package on copy",
+    "scope": "Nine leagues, six exact ad deletions, unresolved stored hrefs preserved; same worktree, no main/24SMI/VPS changes"
+  },
+  "implementation_rulings": [
+    {
+      "decision": "Preserve source text.title for nine text modules; use section_name for three table forms which have no title field",
+      "reason": "Original proposal mistakenly used manager label Текст for text forms, contrary to explicit preserve-source-headings requirement. No HTML, aliases or scope changes."
+    }
+  ],
+  "execution_checkpoint": {
+    "status": "completed_verified",
+    "copy_path": ".cache/r13o/copy/patched.jsonl",
+    "copy_sha256": "7834b90269e613ed9d30c851eeb7f71aa692878a419d8d018054af739595f7b3",
+    "rows": 25630,
+    "converter_tests": 8,
+    "tests_red_green": true,
+    "native_run_passed": "cd83b8809e7a4169b3598d9ffe218317"
+  },
+  "application_scope": "New isolated JSONL copy only; no main DB apply",
+  "prepared_documents": [
+    {
+      "_id": "06de1150-587a-5058-ae8e-a332310afed2",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791953000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/krasnodarskaya-liga",
+      "id": "06de1150-587a-5058-ae8e-a332310afed2",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-22699",
+            "content": "<p>Центральная Краснодарская лига МС КВН &ndash; престижная лига Международного Союза КВН, победитель которой часто попадал в телевизионную <a href=\"kvn/premier-liga\">Премьер-лигу</a>. Чемпионы &laquo;краснодарки&raquo; становились чемпионами <a href=\"kvn/vysshaya-liga\">Высшей лиги КВН</a> &ndash; &laquo;БАК&raquo; и &laquo;Соучастники&raquo;.</p>\n<div>Официальная Межрегиональная лига с 2002 года.</div>\n<div>В 2006 году получила статус Центральной лиги МС КВН.</div>\n<p>В 2022 году приостановила свою деятельность.</p>\n<div>Город проведения: <a href=\"krasnodar.html\">Краснодар</a></div>\n<div>Бессменный редактор: <a href=\"people/mikhail-gulikov.html\">Михаил Гуликов</a></div>\n<div>Редактор лиги: Ильгам Рысаев</div>\n<p>Руководитель лиги: Игорь Морозов</p>\n<h4>Чемпионы лиги</h4>\n<p><strong>Нулевые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2002</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">КГМА</div>\n<div align=\"center\">&laquo;Краснодарский проспект&raquo;</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Краснодар</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2003</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Чеченской республики</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Грозный</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2004</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Дети Новодворской</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/astrakhan.html\">Астрахань</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2005</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/bak.html\">БАК</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/bryuxoveczkaya.html\">Брюховецкая</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2006</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/souchastniki.html\">Соучастники</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/armavir.html\">Армавир</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">7 холмов</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/moscow.html\">Москва</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Эльбрус-экспресс</div>\n<div align=\"center\">Южнее некуда</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Нальчик</div>\n<div align=\"center\">Сочи</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Четыре татарина</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/kazan.html\">Казань</a></div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p></p>\n<p><strong>Десятые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Маленькая страна</div>\n<div align=\"center\">Самая культурная сборная</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Сухум</div>\n<div align=\"center\">Краснодар</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/sbornaya-batayska.html\">Сборная Батайска</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Батайск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/odesskie-mansy.html\">Одесские мансы</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/odessa.html\">Одесса</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Поморы</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Архангельск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Мега</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/mdudikov.html\">Сборная СКФУ</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/stavropol.html\">Ставрополь</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Летняя сборная</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Краснодар</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Подозрительные люди</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Белореченск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/royalflush.html\">Флэш-Рояль</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/rostov-on-don.html\">Ростов-на-Дону</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Город 313</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/vladikavkaz.html\">Владикавказ</a></div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p><strong>Двадцатые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/batya-protiv.html\">Батя против</a></div>\n<div align=\"center\"><a href=\"kvn/team/eto-oni.html\">Это они</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Коломна</div>\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Цвет граната</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Пятигорск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезон не состоялся</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">&nbsp;</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2023</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезон не начался</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">...</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная Краснодарская лига КВН"
+          },
+          "id": "modx-1585-text-22699",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Краснодарская лига КВН",
+      "old_id": {
+        "$numberInt": "1585"
+      },
+      "old_urls": [
+        "/kvn/krasnodarskaya-liga",
+        "/kvn/krasnodarskaya-liga.html",
+        "/kvn/league/krasnodarskaya-liga.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Краснодарская лига МС КВН – престижная лига Международного Союза КВН, победитель которой часто попадал в телевизионную Премьер-лигу . Чемпионы «крас",
+        "meta_title": "Центральная Краснодарская лига КВН",
+        "og_image": null
+      },
+      "slug": "krasnodarskaya-liga",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Флэш-Рояль",
+        "Краснодар",
+        "Соучастники",
+        "Это они",
+        "Поморы",
+        "Сборная СКФУ",
+        "Четыре татарина",
+        "Сборная Батайска",
+        "Батя против",
+        "Мега",
+        "7 холмов",
+        "Южнее некуда",
+        "Город 313",
+        "БАК",
+        "Одесские мансы",
+        "Краснодарский проспект",
+        "Цвет граната",
+        "Самая культурная сборная",
+        "Центральная Краснодарская лига КВН",
+        "Сборная Чечни",
+        "Дети Новодворской",
+        "Эльбрус-экспресс",
+        "Маленькая страна",
+        "Летняя сборная",
+        "Подозрительные люди"
+      ],
+      "team_ids": [],
+      "title": "Центральная Краснодарская лига КВН",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719659095000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "f507ae89-799b-5ff8-b675-6eb9845a66dd",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791953000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/start",
+      "id": "f507ae89-799b-5ff8-b675-6eb9845a66dd",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-23872",
+            "content": "<p>Центральная Лига &laquo;Старт&raquo; &ndash; престижная лига КВН, берущая своё начало от Первой лиги, проводившейся в Воронеже с 1993 по 1997 годы.</p>\n<div>Первая лига (1993-1997), Центральная лига (с 1998 года)</div>\n<div>Город проведения: <a href=\"voronezh.html\">Воронеж</a></div>\n<div>Директор лиги: Арбен Арзуманов</div>\n<p>Редакторы лиги: Леонид Моргунов и <a href=\"people/mikhail-maslennikov.html\">Михаил Масленников</a></p>\n<p>В начале 2024 года было объявлено о прекращении существования лиги&nbsp;&laquo;Старт&raquo;.</p>\n<h4>Чемпионы лиги</h4>\n<p><strong>Девяностые и Нулевые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">1998</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Бывало и Хуже</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/minsk.html\">Минск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">1999</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">&nbsp;</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">&nbsp;</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2000</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">&nbsp;</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">&nbsp;</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2001</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Большой Сочи</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Сочи</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2002</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/sedmoe-nebo.html\">Седьмое небо</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2003</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Новые металлурги</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Липецк</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2004</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">ВИВТ</div>\n<div align=\"center\">Зелёный патруль</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n<div align=\"center\"><a href=\"city/bryansk.html\">Брянск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2005</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Дом Культуры</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/krasnodar.html\">Краснодар</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2006</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Братья по-разному</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/tambov.html\">Тамбов</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Какие люди</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Первая столица</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/kharkiv.html\">Харьков</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Милицейская академия</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p></p>\n<p><strong>Десятые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Курортный тариф</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Анапа</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">БВ</div>\n<div align=\"center\">Сборная Ставрополя</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n<div align=\"center\"><a href=\"city/stavropol.html\">Ставрополь</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Брюховецкой</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/bryuxoveczkaya.html\">Брюховецкая</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Баку</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Баку</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Приказ 390</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Первая олимпийская</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/moscow.html\">Москва</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/hollywood.html\">Голливуд им. Шрёдингера</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/ya-obidelas.html\">Я обиделась</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/novosibirsk.html\">Новосибирск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/kvn-krasnodar.html\">Сборная города Краснодара</a></div>\n<div align=\"center\">Туапсе тоже курорт</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Краснодар</div>\n<div align=\"center\">Туапсе</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Остановите плёнку</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p><strong>Двадцатые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Естественный отбор</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/sbornaya-vgau.html\">Сборная ВГАУ</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Воронеж</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/long-island.html\">Лонг- Айленд</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2023</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Не суть</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Краснодар</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная Лига Старт"
+          },
+          "id": "modx-1587-text-23872",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Лига Старт",
+      "old_id": {
+        "$numberInt": "1587"
+      },
+      "old_urls": [
+        "/kvn/league/start.html",
+        "/kvn/start",
+        "/kvn/start.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Лига «Старт» – престижная лига КВН, берущая своё начало от Первой лиги, проводившейся в Воронеже с 1993 по 1997 годы. Первая лига (1993-1997), Центр",
+        "meta_title": "Центральная Лига Старт",
+        "og_image": null
+      },
+      "slug": "start",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Я обиделась",
+        "Остановите плёнку",
+        "Приказ 390",
+        "Курортный тариф",
+        "Седьмое небо",
+        "Сборная города Краснодара",
+        "Бывало и Хуже",
+        "Сборная ВГАУ",
+        "Первая олимпийская",
+        "Лонг-Айленд",
+        "Сборная Баку",
+        "Сборная Ставрополя",
+        "Новые металлурги",
+        "Лига КВН Старт",
+        "Большой Сочи",
+        "Дом Культуры",
+        "ВИВТ",
+        "Зелёный патруль",
+        "Братья по-разному",
+        "Какие люди",
+        "Первая столица",
+        "Милицейская академия",
+        "БВ",
+        "Сборная Брюховецкой",
+        "Голливуд Шрёдингера",
+        "Туапсе тоже курорт",
+        "Естественный отбор"
+      ],
+      "team_ids": [],
+      "title": "Центральная Лига Старт",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719659011000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "ba8679d2-413a-5b56-b048-2c16bd5ae0fc",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791954000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/tikhookeanskaya",
+      "id": "ba8679d2-413a-5b56-b048-2c16bd5ae0fc",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-30788",
+            "content": "<p>Центральная Тихоокеанская лига КВН &ndash; главная лига Дальнего Востока.</p>\n<div>Официальная Межрегиональная (2007-2009, 2013-2014)</div>\n<div>Центральная (2010-2012, 2015-н.в.)</div>\n<div>Город проведения: <a href=\"khabarovsk.html\">Хабаровск</a></div>\n<div>Редакторы: Евгений Романцов, Виталий Коломыцев</div>\n<p>Бывшие редакторы: Павел Орешин и Ильгам Рысаев (2007-2009), Алексей Петренко (2009-2016), Андрей Минин (2009-2012), Игорь Ласточкин (2013-2014) и Дмитрий Колчин (2015-2016)</p>\n<h4>Чемпионы лиги</h4>\n<p><strong>Нулевые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Железки</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">7-й отдел</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сделано в Хабаровске</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<p>&nbsp;</p>\n<p><strong>Десятые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Будет не больно</div>\n<div align=\"center\">Свобода о. Сахалин</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n<div align=\"center\">Южно-Сахалинск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Азбука</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Благовещенск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Метрополитен</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Азбука</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Благовещенск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Золотой рог</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/vladivostok.html\">Владивосток</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">People</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Благовещенск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">People</div>\n<div align=\"center\">Фраза силы</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Благовещенск</div>\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Хабаровского района</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная магаданцев</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Магадан</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/okean.html\">Океан</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Владивосток</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p><strong>Двадцатые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Женская сборная ТОГУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Хабаровск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/sbornaya-blagoveshhenska.html\">Сборная Благовещенска</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Благовещенск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезон не закончен</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">&hellip;</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2023</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезон не начался</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">...</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная Тихоокеанская лига КВН"
+          },
+          "id": "modx-1588-text-30788",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Тихоокеанская лига КВН",
+      "old_id": {
+        "$numberInt": "1588"
+      },
+      "old_urls": [
+        "/kvn/league/tikhookeanskaya.html",
+        "/kvn/tikhookeanskaya",
+        "/kvn/tikhookeanskaya.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Тихоокеанская лига КВН – главная лига Дальнего Востока. Официальная Межрегиональная (2007-2009, 2013-2014) Центральная (2010-2012, 2015-н.в.) Город",
+        "meta_title": "Центральная Тихоокеанская лига КВН",
+        "og_image": null
+      },
+      "slug": "tikhookeanskaya",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Хабаровск",
+        "Азбука",
+        "Сборная магаданцев",
+        "Сборная Благовещенска",
+        "Женская сборная ТОГУ",
+        "people",
+        "Тихоокеанская лига КВН",
+        "Сборная Железки",
+        "7-й отдел",
+        "Сделано в Хабаровске",
+        "Будет не больно",
+        "Свобода Сахалин",
+        "Метрополитен",
+        "Золотой Рог",
+        "Фраза силы",
+        "Сборная Хабаровского района",
+        "Океан"
+      ],
+      "team_ids": [],
+      "title": "Центральная Тихоокеанская лига КВН",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719659034000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "5b553d01-9860-5ee2-9a13-9cec21c9a975",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791954000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/povolzhye",
+      "id": "5b553d01-9860-5ee2-9a13-9cec21c9a975",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-78711",
+            "content": "<p>Центральная Лига КВН &laquo;Поволжье&raquo; &ndash; мигрирующая лига по городам Приволжского Федерального округа.</p>\n<div>Официальная Межрегиональная (2000-2003)</div>\n<div>Центральная (2004-н.в.)</div>\n<div>Директор лиги: Ильдар Фаттахов</div>\n<div>Редакторы лиги (2023):&nbsp;<a href=\"people/dmitry-bushuev.html\">Дмитрий Бушуев</a>, <a href=\"people/konstantin-voron.html\">Константин Ворончихин</a>, Темур Джафаров</div>\n<p>Города проведения: Казань, Нижний Новгород, Саранск, Чебоксары, Ижевск, Волгоград, Мелеуз, Киров, Уфа, Тольятти, Пенза и Альметьевск.</p>\n<p>Сезон 2023 года пройдёт в городе Альметьевск.</p>\n<h4>Чемпионы лиги</h4>\n<p><strong>Нулевые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2000</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">9 &frac12; людей</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Альметьевск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2001</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/tgngu.html\">ТГНГУ</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/tyumen.html\">Тюмень</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2002</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/region-13.html\">Регион 13</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Саранск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2003</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/malye-narody.html\">Сборная Малых Народов</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/moscow.html\">Москва</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2004</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">ВАГС</div>\n<div align=\"center\">Друзья</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/volgograd.html\">Волгоград</a></div>\n<div align=\"center\"><a href=\"city/perm.html\">Пермь</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2005</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">ГУУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2006</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Свои Секреты</div>\n<div align=\"center\"><a href=\"kvn/team/sok.html\">СОК</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Москва</div>\n<div align=\"center\"><a href=\"city/samara.html\">Самара</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Приора</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Тольятти</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Татары</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/kazan.html\">Казань</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">ИНЭКА</div>\n<div align=\"center\">Сборная Саранска</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Набережные Челны</div>\n<div align=\"center\">Саранск</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p></p>\n<p><strong>Десятые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Мисс Мира</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/penza.html\">Пенза</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Ирина Михална</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/ekb.html\">Екатеринбург</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">С.У.Р.А.</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Пенза</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Полярный экспресс</div>\n<div align=\"center\">СВ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Якутск</div>\n<div align=\"center\">Астана</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">ЧОП &laquo;Шифер&raquo;</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Саранск</div>\n<div align=\"center\">Рузаевка</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная &laquo;Монди СЛПК&raquo;</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Сыктывкар</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Казань</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Казань</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сурский край</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Пенза</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/selivanovi.html\">Семья Селивановых</a></div>\n<div align=\"center\"><a href=\"kvn/team/plekhanovastreet.html\">Улица Плеханова</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Пенза</div>\n<div align=\"center\">Москва</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/devchonki.html\">Девчонки</a></div>\n<div align=\"center\">Шарашкина контора 7 бит</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Клин</div>\n<div align=\"center\">Пенза</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p><strong>Двадцатые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Женская сборная ТОГУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/khabarovsk.html\">Хабаровск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Партия</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/n-novgorod.html\">Нижний Новгород</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Каракуз</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Альметьевск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2023</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезоне не начался</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">&hellip;</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная Лига Поволжье"
+          },
+          "id": "modx-1589-text-78711",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Лига Поволжье",
+      "old_id": {
+        "$numberInt": "1589"
+      },
+      "old_urls": [
+        "/kvn/league/povolzhye.html",
+        "/kvn/povolzhye",
+        "/kvn/povolzhye.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Лига КВН «Поволжье» – мигрирующая лига по городам Приволжского Федерального округа. Официальная Межрегиональная (2000-2003) Центральная (2004-н.в.)",
+        "meta_title": "Центральная Лига Поволжье",
+        "og_image": null
+      },
+      "slug": "povolzhye",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Свои секреты",
+        "Селивановы",
+        "Казань",
+        "Девчонки",
+        "Улица Плеханова",
+        "Друзья",
+        "Татары",
+        "СОК",
+        "9 1/2 людей",
+        "Сура",
+        "Каракуз",
+        "Партия",
+        "ТГНГУ",
+        "Мисс Мира",
+        "ЧОП Шифер",
+        "Сурский край",
+        "Полярный экспресс",
+        "Лига КВН Поволжье",
+        "Малые народы",
+        "ВАГС",
+        "ГУУ",
+        "Приора",
+        "ИНЭКА",
+        "Сборная Саранска",
+        "Ирина Михална",
+        "СВ",
+        "Монди СЛПК",
+        "Шарашкина контора",
+        "Регион-13"
+      ],
+      "team_ids": [],
+      "title": "Центральная Лига Поволжье",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719658981000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791954000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/asia",
+      "id": "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-40440",
+            "content": "<p>Центральная Лига КВН &laquo;Азия&raquo; &ndash; главная лига в Сибири.</p>\n<div>Основана: 1999 год</div>\n<div>Город проведения: <a href=\"krasnoyarsk.html\">Красноярск</a></div>\n<div>Директор лиги: Светлана Неделько</div>\n<p>Редакторы лиги (сезон 2021): <a href=\"people/dmitry-shpenkov.html\">Дмитрий Шпеньков</a>, <a href=\"people/valera-ravdin.html\">Валерий Равдин</a>, Александр Комаровский, <a href=\"people/vladimir-kostur.html\">Владимир Костур</a></p>\n<h4>Чемпионы лиги</h4>\n<p><strong>Девяностые и Нулевые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">1999</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/irkutskie-dekabristyi.html\">Иркутские декабристы</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/irkutsk.html\">Иркутск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2000</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/levyij-bereg.html\">Левый берег</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Красноярск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2001</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Забайкальский вариант</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Улан-Удэ</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2002</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Иркутск.ru</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Иркутск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2003</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Ударная волна</div>\n<div align=\"center\"><a href=\"kvn/team/maximum.html\">(&laquo;МаксимуМ&raquo;)</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/tomsk.html\">Томск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2004</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/territoria-igru.html\">Территория игры</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Красноярск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2005</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Большого Норильска</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Норильск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2006</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/gurany.html\">Гураны</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/chita.html\">Чита</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная ТПУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Томск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сердце Сибири</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/novosibirsk.html\">Новосибирск</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">ИГУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Иркутск</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p></p>\n<p><strong>Десятые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Евразия-Гураны</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Чита</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Гураны</div>\n<div align=\"center\"><a href=\"kvn/team/badcompany.html\">Плохая компания</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Чита</div>\n<div align=\"center\">Красноярск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Азбука</div>\n<div align=\"center\">Сборная КузГТУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Благовещенск</div>\n<div align=\"center\"><a href=\"city/kemerovo.html\">Кемерово</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Сельскохозяйственной Академии</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Иркутск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/zabaykalsky-krai.html\">Сборная Забайкальского края</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Чита</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Школа им. Макаренко</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Иркутск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Кино</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Иркутск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Молодые люди</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Иркутск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Берег Байкала</div>\n<div align=\"center\">Новосиб</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Улан-Удэ</div>\n<div align=\"center\">Новосибирск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Проспект Мира</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Красноярск</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p><strong>Двадцатые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/bezvariantov.html\">Без вариантов</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/perm.html\">Пермь</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/dal-vorota.html\">Дальневосточные ворота</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Улан-Удэ</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/malinki.html\">Малинки</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Новосибирск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">&nbsp;2023</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/tomskaya-sbornaya.html\">Томская сборная</a></div>\n<div align=\"center\"><a href=\"kvn/team/sbornaya-ofisnyix-rabotnikov.html\">Сборная офисных работников</a></div>\n<div align=\"center\"><a href=\"ne-v-forme.html\">Не в форме</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Томск</div>\n<div align=\"center\">Барнаул</div>\n<div align=\"center\">Красноярск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">&nbsp;2024</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезон не завершён</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">...</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная Лига «Азия»"
+          },
+          "id": "modx-1590-text-40440",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Лига «Азия»",
+      "old_id": {
+        "$numberInt": "1590"
+      },
+      "old_urls": [
+        "/kvn/asia",
+        "/kvn/asia.html",
+        "/kvn/league/asia.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Лига КВН «Азия» – главная лига в Сибири. Основана: 1999 год Город проведения: Красноярск Директор лиги: Светлана Неделько Редакторы лиги (сезон 2021",
+        "meta_title": "Центральная Лига «Азия»",
+        "og_image": null
+      },
+      "slug": "asia",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Гураны",
+        "Левый берег",
+        "Сердце Сибири",
+        "Забайкальский край",
+        "Сельскохозяйственная академия",
+        "ИГУ",
+        "Плохая компания",
+        "Территория Игры",
+        "Без вариантов",
+        "МаксимуМ",
+        "Сборная ТПУ",
+        "Азбука",
+        "Иркутские декабристы",
+        "Дальневосточные ворота",
+        "Забайкальский вариант",
+        "Новосиб",
+        "Иркутск.ru",
+        "Проспект Мира",
+        "Молодые люди",
+        "Школа Макаренко",
+        "КВН лига Азия",
+        "Большой Норильск",
+        "Сборная КузГТУ",
+        "Кино",
+        "Берег Байкала"
+      ],
+      "team_ids": [],
+      "title": "Центральная Лига «Азия»",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719658852000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "bec1c73b-c434-5783-96e3-ff8ca8cf603a",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791954000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/southwest",
+      "id": "bec1c73b-c434-5783-96e3-ff8ca8cf603a",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-87157",
+            "content": "<p>Центральная Юго-Западная Лига КВН &ndash; относительно новая лига КВН, базирующаяся в Курске.</p>\n<p>Основана: 2011 год</p>\n<p>Город проведения: <a href=\"city/kursk.html\">Курск</a></p>\n<p>Директор лиги: <a href=\"people/vladimir-tararukin.html\">Владимир Тарарыкин</a></p>\n<p>Редакторы лиги (сезон 2021): Владимир Тарарыкин, <a href=\"people/sergey-malofeev.html\">Сергей Малафеев</a>, Алексей Туркулец</p>\n<h3>Чемпионы лиги</h3>",
+            "title": "Центральная Юго-Западная Лига КВН"
+          },
+          "id": "modx-1591-text-87157",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        },
+        {
+          "data": {
+            "anchor_id": "table",
+            "content": "<table style=\"border-collapse: collapse; width: 99.8361%; height: 182px;\" border=\"1\">\n<tbody>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><strong>Сезон</strong></td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><strong>Команда</strong></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\"><strong>Город</strong></td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2011</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">\n<p>Сборная провинциальных городов</p>\n<p>Разборная Ростова</p>\n</td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">\n<p>Орёл, Курск, Брянск, Липецк</p>\n<p>Ростов-на-Дону</p>\n</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2012</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><a href=\"kvn/team/radio-svoboda.html\">Радио Свобода</a></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Ярославль</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2013</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><a href=\"kvn/team/shurochka.html\">Шухер</a></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Семибратово</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2014</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><a href=\"kvn/team/sbornaya-buvshikh.html\">Сборная Тульской области</a></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Тула</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2015</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><a href=\"kvn/team/proigryivatel.html\">Проигрыватель</a></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Тамбов</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2016</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">ПТЗ</td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Петрозаводск</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2017</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><a href=\"kvn/team/takaya-istoria.html\">Такая история</a></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Орёл</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\">2018</td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><a href=\"kvn/team/mama-budet-rada.html\">Мама будет рада</a></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\">Курск</td>\n</tr>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 20px; text-align: center;\">2019</td>\n<td style=\"width: 33.0588%; height: 20px; text-align: center;\"><a href=\"kvn/team/g-drive.html\">G-Drive</a></td>\n<td style=\"width: 33.0614%; height: 20px; text-align: center;\">Россия</td>\n</tr>\n</tbody>\n</table>",
+            "title": "Чемпионы Юго-Западной лиги (десятые)"
+          },
+          "id": "modx-1591-table",
+          "order": 1,
+          "type": "text_block",
+          "visible": true
+        },
+        {
+          "data": {
+            "anchor_id": "table_2",
+            "content": "<table style=\"border-collapse: collapse; width: 99.8361%; height: 180px;\" border=\"1\">\n<tbody>\n<tr style=\"height: 18px;\">\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><strong>Сезон</strong></td>\n<td style=\"width: 33.0588%; height: 18px; text-align: center;\"><strong>Команда</strong></td>\n<td style=\"width: 33.0614%; height: 18px; text-align: center;\"><strong>Город</strong></td>\n</tr>\n<tr>\n<td style=\"width: 33.0588%; text-align: center;\">2020</td>\n<td style=\"width: 33.0588%; text-align: center;\">\n<p><a href=\"kvn/team/rudn-united.html\">Женская сборная РУДН</a></p>\n<p>Рожала, знаю!</p>\n</td>\n<td style=\"width: 33.0614%; text-align: center;\">\n<p>Москва</p>\n<p>Тула</p>\n</td>\n</tr>\n<tr>\n<td style=\"width: 33.0588%; text-align: center;\">2021</td>\n<td style=\"width: 33.0588%; text-align: center;\"><a href=\"kvn/team/rovenki.html\">Ровеньки</a></td>\n<td style=\"width: 33.0614%; text-align: center;\">Орёл</td>\n</tr>\n<tr>\n<td style=\"width: 33.0588%; text-align: center;\">2022</td>\n<td style=\"width: 33.0588%; text-align: center;\"><a href=\"kvn/team/sbornaya-egorievska.html\">Сборная города Егорьевска</a></td>\n<td style=\"width: 33.0614%; text-align: center;\">Егорьевск</td>\n</tr>\n<tr>\n<td style=\"width: 33.0588%; text-align: center;\">2023</td>\n<td style=\"width: 33.0588%; text-align: center;\"><a href=\"kvn/team/pomorskie.html\">Поморские</a></td>\n<td style=\"width: 33.0614%; text-align: center;\">Архангельск</td>\n</tr>\n<tr>\n<td style=\"width: 33.0588%; text-align: center;\">2024</td>\n<td style=\"width: 33.0588%; text-align: center;\">Сезон не завершен</td>\n<td style=\"width: 33.0614%; text-align: center;\">...</td>\n</tr>\n</tbody>\n</table>",
+            "title": "Чемпионы Юго-Западной лиги (двадцатые)"
+          },
+          "id": "modx-1591-table_2",
+          "order": 2,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Юго-Западная Лига КВН",
+      "old_id": {
+        "$numberInt": "1591"
+      },
+      "old_urls": [
+        "/kvn/league/southwest.html",
+        "/kvn/southwest",
+        "/kvn/southwest.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Юго-Западная Лига КВН – относительно новая лига КВН, базирующаяся в Курске. Основана: 2011 год Город проведения: Курск Директор лиги: Владимир Тарар",
+        "meta_title": "Центральная Юго-Западная Лига КВН",
+        "og_image": null
+      },
+      "slug": "southwest",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Проигрыватель",
+        "Женская сборная РУДН",
+        "Радио Свобода",
+        "G-Drive",
+        "Юго-Западная лига КВН",
+        "Такая история",
+        "Ровеньки",
+        "Мама будет рада",
+        "Сборная бывших",
+        "Шурочка",
+        "Рожала знаю",
+        "Провинциальные города",
+        "Разборная Ростова",
+        "ПТЗ",
+        "Поморские",
+        "Сборная Егорьевска"
+      ],
+      "team_ids": [],
+      "title": "Центральная Юго-Западная Лига КВН",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719659166000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "5f65c970-915b-5395-8371-2a580e5095a1",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791954000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/ural",
+      "id": "5f65c970-915b-5395-8371-2a580e5095a1",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-69061",
+            "content": "<p>Центральная Уральская Лига КВН &ndash; главная лига КВН на Урале, чемпионами которой становились &laquo;Союз&raquo;, &laquo;Наполеон Динамит&raquo;, &laquo;Город N&raquo; и другие.</p>\n<div>Основана: 2001 год, статус официальной лиги получила в 2005 году</div>\n<div>Город проведения: <a href=\"chelyabinsk.html\">Челябинск</a></div>\n<div>Директор лиги: Наталья Давыдова</div>\n<p>Редакторы лиги (сезон 2021):&nbsp;<a href=\"people/mikhail-gulikov.html\">Михаил Гуликов</a>, Ильгам Рысаев, Андрей Жмыхов и Александр Шутов</p>\n<h4>Чемпионы лиги</h4>\n<p><strong>Нулевые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2005</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная КВН Кыргызстана</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/bishkek.html\">Бишкек</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2006</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Нижегородская сборная</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/n-novgorod.html\">Нижний Новгород</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2007</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Провинция</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Камышлов</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2008</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная ЮУрГУ</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Челябинск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2009</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Диаманты</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/ekb.html\">Екатеринбург</a></div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p></p>\n<p><strong>Десятые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2010</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Ирина Михайловна</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Екатеринбург</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2011</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/soyuz.html\">Союз</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/tyumen.html\">Тюмень</a></div>\n<div align=\"center\">Шадринск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2012</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Человек смеющийся</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Екатеринбург</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2013</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сборная Ямала</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Надым</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2014</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/napoleon-dinamit.html\">Наполеон Динамит</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Челябинск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2015</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Театр Уральского Зрителя</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Челябинск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2016</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Восход</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Оренбург</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2017</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Поздравлямба</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Екатеринбург</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2018</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/eurasiache.html\">Сборная казахов Челябинска</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Челябинск</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2019</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/gorod-n.html\">Город N</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Челябинск</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>\n<p><strong>Двадцатые</strong></p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><strong>Город</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2020</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\"><a href=\"kvn/team/gentleman-udachi.html\">Джентльмены удачи</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Курган</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2021</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div style=\"text-align: center;\"><a href=\"kvn/team/rodnya.html\">Дом Культуры &laquo;Родня&raquo;</a></div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Кременкуль</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Проект 63</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\"><a href=\"city/samara.html\">Самара</a></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2023</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Шишка</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">Тольятти</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2024</div>\n</td>\n<td valign=\"top\" width=\"255\">\n<div align=\"center\">Сезон не завершён</div>\n</td>\n<td valign=\"top\" width=\"184\">\n<div align=\"center\">...</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная Уральская Лига КВН"
+          },
+          "id": "modx-1592-text-69061",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная Уральская Лига КВН",
+      "old_id": {
+        "$numberInt": "1592"
+      },
+      "old_urls": [
+        "/kvn/league/ural.html",
+        "/kvn/ural",
+        "/kvn/ural.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная Уральская Лига КВН – главная лига КВН на Урале, чемпионами которой становились «Союз», «Наполеон Динамит», «Город N» и другие. Основана: 2001 год, с",
+        "meta_title": "Центральная Уральская Лига КВН",
+        "og_image": null
+      },
+      "slug": "ural",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Наполеон Динамит",
+        "Союз",
+        "Город N",
+        "Театр Уральского Зрителя",
+        "Сборная Ямала",
+        "Джентльмены удачи",
+        "Диаманты",
+        "Проект 63",
+        "Ирина Михайловна",
+        "Провинция",
+        "Уральская лига КВН",
+        "Сборная Кыргызстана",
+        "Нижегородская сборная",
+        "Сборная ЮУрГУ",
+        "Человек смеющийся",
+        "Восход",
+        "Поздравлямба",
+        "Казахи Челябинска",
+        "Дети неба"
+      ],
+      "team_ids": [],
+      "title": "Центральная Уральская Лига КВН",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719659146000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "c286c963-a2d2-56c5-97d4-5dca87be18e4",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1713791954000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/neva",
+      "id": "c286c963-a2d2-56c5-97d4-5dca87be18e4",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-54580",
+            "content": "<p>Центральная лига МС КВН &laquo;НЕВА&raquo; в городе Санкт-Петербург, получившая статус &laquo;централки&raquo; в сезоне 2022 года.</p>\n<p>Редакторы: <a href=\"people/dmitry-bushuev.html\">Дмитрий Бушуев</a>, <a href=\"people/timofey-kuts.html\">Тимофей Куц</a>, Константин Подольский</p>\n<h4>Чемпионы лиги</h4>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\"><strong>Сезон</strong></div>\n</td>\n<td valign=\"top\" width=\"411\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"110\">\n<div align=\"center\">2022</div>\n</td>\n<td valign=\"top\" width=\"411\">\n<div align=\"center\"><a href=\"kvn/team/macleod.html\">Маклауд</a></div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<p></p>\n<h4>Финалы</h4>\n<div><strong>Финал 2022 года</strong></div>\n<div>Дата: 26 ноября</div>\n<div>Команды: &laquo;Балтийский бульвар&raquo; (Ленинградская область), &laquo;Гаргамель&raquo; (Тында, Санкт-Петербург), &laquo;Женская сборная КГТУ&raquo; (Калининград), &laquo;Маклауд&raquo; (Пинск), &laquo;Негоден&raquo; (ЛЭТИ, Санкт-Петербург), &laquo;Сборная БГТУ им. В.Г. Шухова&raquo; (Белгород)</div>\n<div>Жюри: Алексей Селюжицкий, Дарья Чепасова, Вадим Карев, Алёна Повышева, Сергей Майстров</div>\n<p>Результат игры:</p>\n<div class=\"table-wrap\">\n<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\">\n<tbody>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\"><strong>М</strong></div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\"><strong>Команда</strong></div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\"><strong>Приветствие</strong></div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\"><strong>Муз. номер</strong></div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\"><strong>Итого</strong></div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\">1</div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\">Маклауд</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">5,0</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">5,0</div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\">10,0</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\">2</div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\"><a href=\"kvn/team/negoden.html\">Негоден</a></div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,6</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">5,0</div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\">9,6</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\">3</div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\"><a href=\"kvn/team/gargamel.html\">Гаргамель</a></div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,6</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,8</div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\">9,4</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\">3</div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\">Балтийский бульвар</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,4</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">5,0</div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\">9,4</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\">5</div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\">Сборная БГТУ</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,0</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,2</div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\">8,2</div>\n</td>\n</tr>\n<tr>\n<td valign=\"top\" width=\"53\">\n<div align=\"center\">5</div>\n</td>\n<td valign=\"top\" width=\"329\">\n<div align=\"center\"><a href=\"kvn/team/kgtu.html\">Женская сборная КГТУ</a></div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,0</div>\n</td>\n<td valign=\"top\" width=\"191\">\n<div align=\"center\">4,2</div>\n</td>\n<td valign=\"top\" width=\"192\">\n<div align=\"center\">8,2</div>\n</td>\n</tr>\n</tbody>\n</table>\n</div>\n<div>&nbsp;</div>",
+            "title": "Центральная лига МС КВН «НЕВА»"
+          },
+          "id": "modx-1594-text-54580",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная лига МС КВН «НЕВА»",
+      "old_id": {
+        "$numberInt": "1594"
+      },
+      "old_urls": [
+        "/kvn/league/neva.html",
+        "/kvn/neva",
+        "/kvn/neva.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная лига МС КВН «НЕВА» в городе Санкт-Петербург, получившая статус «централки» в сезоне 2022 года. Редакторы: Дмитрий Бушуев , Тимофей Куц , Константин",
+        "meta_title": "Центральная лига МС КВН «НЕВА»",
+        "og_image": null
+      },
+      "slug": "neva",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "Санкт-Петербург",
+        "Тимофей Куц",
+        "КВН",
+        "Дмитрий Бушуев",
+        "Константин Подольский",
+        "НЕВА"
+      ],
+      "team_ids": [],
+      "title": "Центральная лига МС КВН «НЕВА»",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719659116000"
+        }
+      },
+      "views": 0
+    },
+    {
+      "_id": "e27f7ef7-92cd-5620-88dc-f6062d8025ce",
+      "article_ids": [],
+      "child_kvn_ids": [],
+      "content_type": "kvn",
+      "created_at": {
+        "$date": {
+          "$numberLong": "1719657432000"
+        }
+      },
+      "description": null,
+      "facts": {},
+      "facts_order": [],
+      "full_path": "kvn/league/trempel",
+      "id": "e27f7ef7-92cd-5620-88dc-f6062d8025ce",
+      "level": 2,
+      "modules": [
+        {
+          "data": {
+            "anchor_id": "text-trempel",
+            "content": "<p>Центральная лига МС КВН &laquo;Тремпель&raquo; в городе Белгород, получившая статус &laquo;централки&raquo; в сезоне 2024 года.</p>\n<p>Редакторы: <a href=\"people/evgeniy-gorodnitskiy.html\">Евгений Городникций</a>, <a href=\"people/roman-golovin.html\">Роман Головин</a> и <a href=\"people/alexey-lubenko.html\">Алексей Лубенко</a></p>\n<p><a href=\"https://vk.com/trempelkvn\" target=\"_blank\" rel=\"noopener\">Группа в VK</a></p>\n<h3>История лиги</h3>\n<div>\n<p class=\"western\">В 2021 году на Сочинском фестивале &laquo;КиВиН-2021&raquo; было объявлено об образовании новой официальной лиги МС КВН в Белгороде. Так, появилась новая лига - &laquo;Тремпель&raquo;.</p>\n<p class=\"western\">Первым редакторами лиги стали чемпионы Высшей лиги: Константин Ворон и Никита Трунов (&laquo;Вятка&raquo;) и Аркадий Дьяченко (&laquo;ХАИ&raquo;).</p>\n<p class=\"western\">В первом сезоне &laquo;Веришь Гуд&raquo; и &laquo;Сборная Белгородского ГАУ&raquo; разделили чемпионство. А команда КВН &laquo;Близкие&raquo;, собранная из различных квнщиков Белгорода отправилась покорять Первую и Высшую лиги.</p>\n<p class=\"western\">В 2024 году на Сочинском фестивале &laquo;КиВиН-2024&raquo; лиги был присвоен статус Центральной.</p>\n<h3 class=\"western\">Чемпионы лиги</h3>\n</div>",
+            "title": "Центральная лига МС КВН «Тремпель»"
+          },
+          "id": "modx-2333-text-trempel",
+          "order": 0,
+          "type": "text_block",
+          "visible": true
+        },
+        {
+          "data": {
+            "anchor_id": "table",
+            "content": "<table style=\"border-collapse: collapse; width: 99.8315%;\" border=\"1\">\n<tbody>\n<tr>\n<td style=\"width: 33.0511%; text-align: center;\"><strong>Сезон</strong></td>\n<td style=\"width: 33.0511%; text-align: center;\"><strong>Команда</strong></td>\n<td style=\"width: 33.0538%; text-align: center;\"><strong>Город</strong></td>\n</tr>\n<tr>\n<td style=\"width: 33.0511%; text-align: center;\">2021</td>\n<td style=\"width: 33.0511%; text-align: center;\">\n<p>Веришь Гуд</p>\n<p>Сборная Белгородского ГАУ</p>\n</td>\n<td style=\"width: 33.0538%; text-align: center;\">\n<p>Белгород</p>\n<p>Белгород</p>\n</td>\n</tr>\n<tr>\n<td style=\"width: 33.0511%; text-align: center;\">2022</td>\n<td style=\"width: 33.0511%; text-align: center;\">БеЗкультурная сборная</td>\n<td style=\"width: 33.0538%; text-align: center;\">Белгород</td>\n</tr>\n<tr>\n<td style=\"width: 33.0511%; text-align: center;\">2023</td>\n<td style=\"width: 33.0511%; text-align: center;\">Синтезатор</td>\n<td style=\"width: 33.0538%; text-align: center;\">Борисовка</td>\n</tr>\n<tr>\n<td style=\"width: 33.0511%; text-align: center;\">2024</td>\n<td style=\"width: 33.0511%; text-align: center;\">Сезон не завершён</td>\n<td style=\"width: 33.0538%; text-align: center;\">...</td>\n</tr>\n</tbody>\n</table>",
+            "title": "Таблица"
+          },
+          "id": "modx-2333-table",
+          "order": 1,
+          "type": "text_block",
+          "visible": true
+        }
+      ],
+      "name": "Центральная лига МС КВН «Тремпель»",
+      "old_id": {
+        "$numberInt": "2333"
+      },
+      "old_urls": [
+        "/kvn/league/trempel.html",
+        "/kvn/trempel",
+        "/kvn/trempel.html"
+      ],
+      "parent_id": "febed962-e6b4-4c23-8106-a53830089b32",
+      "person_ids": [],
+      "poster": null,
+      "related_kvn_ids": [],
+      "seo": {
+        "keywords": [],
+        "meta_description": "Центральная лига МС КВН «Тремпель» в городе Белгород, получившая статус «централки» в сезоне 2024 года. Редакторы: Евгений Городникций , Роман Головин и Алексей",
+        "meta_title": "Центральная лига МС КВН «Тремпель»",
+        "og_image": null
+      },
+      "slug": "trempel",
+      "social_links": {},
+      "status": "published",
+      "tags": [
+        "КВН",
+        "КВН Тремпель",
+        "Белгород"
+      ],
+      "team_ids": [],
+      "title": "Центральная лига МС КВН «Тремпель»",
+      "updated_at": {
+        "$date": {
+          "$numberLong": "1719658678000"
+        }
+      },
+      "views": 0
+    }
+  ],
+  "prepared_parent_change": {
+    "after": [
+      "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8",
+      "06de1150-587a-5058-ae8e-a332310afed2",
+      "f507ae89-799b-5ff8-b675-6eb9845a66dd",
+      "ba8679d2-413a-5b56-b048-2c16bd5ae0fc",
+      "5b553d01-9860-5ee2-9a13-9cec21c9a975",
+      "62d75218-48a5-539d-aa80-4090d1befd4b",
+      "bec1c73b-c434-5783-96e3-ff8ca8cf603a",
+      "5f65c970-915b-5395-8371-2a580e5095a1",
+      "c286c963-a2d2-56c5-97d4-5dca87be18e4",
+      "e27f7ef7-92cd-5620-88dc-f6062d8025ce"
+    ],
+    "before": [
+      "cd6d3ed7-e6f3-5be4-a0a5-2640473dc7b8"
+    ],
+    "id": "febed962-e6b4-4c23-8106-a53830089b32",
+    "only_field": "child_kvn_ids"
+  },
+  "execution_acceptance": {
+    "scope": "Approved R13o new projected copy and native SPA/API/React fixture, not full DB or KVN server HTML301",
+    "copy_path": ".cache/r13o/copy/patched.jsonl",
+    "source_sha256": "e352e7a17b8e43660a09a7b6b6397654333aed2b912a64318702c68ab6619001",
+    "copy_sha256": "7834b90269e613ed9d30c851eeb7f71aa692878a419d8d018054af739595f7b3",
+    "source_records": 25621,
+    "final_records": 25630,
+    "new_documents": 9,
+    "existing_parent_fields_changed": [
+      "child_kvn_ids"
+    ],
+    "existing_raw_rows_byte_identical": 25620,
+    "deletions": 0,
+    "modules": 12,
+    "html_tables": 23,
+    "tag_entries": 167,
+    "authored_hrefs": 121,
+    "exact_inline_ad_deletions": 6,
+    "ad_characters_removed": 234,
+    "source_public_text_titles_preserved": 9,
+    "unresolved_stored_hrefs_retained": 6,
+    "resolver_unresolved_keys_before": 72,
+    "resolver_unresolved_keys_after": 61,
+    "exact_residual_set": true,
+    "relation_findings": 0,
+    "canonical_seasons": 122,
+    "tournaments": 5,
+    "participations": 9276,
+    "participation_projection_changes": 0,
+    "native_run_id": "cd83b8809e7a4169b3598d9ffe218317",
+    "canonical_API_SPA_pages": 9,
+    "parent_child_clicks": 9,
+    "breadcrumb_clicks": 9,
+    "authored_incoming_clicks": 9,
+    "resolved_incoming_keys": 17,
+    "pageerrors": 0,
+    "non_view_fixture_records_unchanged": 25630,
+    "fixture_only_source_verified_id_records": 2,
+    "cleanup": "PASS",
+    "main_unchanged": true,
+    "final_scope_review": "PASS",
+    "commit_push_performed_during_implementation": false
+  },
+  "execution_evidence": {
+    ".cache/r13o/prepare-copy.py": "f5c55b0d3554dd217a2aaf62006cb0dc8833b742fe18c82f3b599724843c787f",
+    ".cache/r13o/test-prepare-copy.py": "48271717a2fa17e7471d51fc92c2b9248287b4fae41ec9cf6bd0044128a5ed19",
+    ".cache/r13o/tests-red.log": "68d572e201400571b78dff3bb44c9e555ef6c1548e4d8f02d93c4b8b959755ac",
+    ".cache/r13o/tests-green.log": "1406e541ffce45ebc66a80477ab748453f1ccb19daac692265c4e1ed4c8a4b68",
+    ".cache/r13o/copy/acceptance.json": "c64d93fc5707d3d463b40c997cac12abbbf2c47743651d944368c91fa3a6f505",
+    ".cache/r13o/audit-final.py": "b7709dc31ce4e5bcf0ba77eabae76dfb6f49b8b62779f0bc8f5fd8762faf12f2",
+    ".cache/r13o/audits/summary.json": "e5abf0be8f1059cabbe807d304bb7b3412891bace29b4fd09b9856d7483a546e",
+    ".cache/r13o/audits/structural-audit.json": "e5abf0be8f1059cabbe807d304bb7b3412891bace29b4fd09b9856d7483a546e",
+    ".cache/r13o/native-pages/cd83b8809e7a4169b3598d9ffe218317/closed/leagues-http.json": "9de42c7ffdf4efc64e3609de7ef235fccbe9811b2290dfc836b98c0852dbb38b",
+    ".cache/r13o/native-pages/cd83b8809e7a4169b3598d9ffe218317/closed/leagues-browser.json": "50599e1590dcd2ec1342b611ef839eb18a8ea93fa42f48ce4f5c74c909ae4e26",
+    ".cache/r13o/native-pages/cd83b8809e7a4169b3598d9ffe218317/cleanup.json": "9b2a028d722b1067c4d5db9302f43595d71eafa717a9cff4aaa1dbc1c65e43d7",
+    ".cache/r13o/main-after-acceptance.json": "73e04a8e9705922d43753878df5a77cfaa216184a9f970a480a7cda6ef1a21be",
+    ".cache/r13o/final-scope-review.json": "23550a971d65e16bd0695fadda7b2d6466308abdc65eaae6355dba5e5f46d13e"
+  },
+  "publication": {
+    "authorized_by_user": "2026-10-24",
+    "status": "ready_for_task_commit",
+    "destination_ref": "refs/heads/codex/local-page-builder",
+    "include_documentation": true
+  }
+}

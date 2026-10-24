@@ -2,7 +2,7 @@
   "schema_version": 1,
   "task": "R13n",
   "date": "2026-10-23",
-  "status": "accepted_spa_contract_ready_for_publication",
+  "status": "published_ci_success",
   "approved": true,
   "branch": "codex/local-page-builder",
   "base_commit": "bb3221dee5810871a00e117473167ad4f47e6273",
@@ -465,5 +465,16 @@
     "before": null,
     "id": "febed962-e6b4-4c23-8106-a53830089b32",
     "only_field": "child_kvn_ids"
+  },
+  "publication": {
+    "commit": "aab3d5b0c6943f7c508649ddfa1d9a36c9d923ba",
+    "remote_ref": "refs/heads/codex/local-page-builder",
+    "remote_sha_verified": true,
+    "github_run_id": 39974726532,
+    "github_status": "completed",
+    "github_conclusion": "success",
+    "github_url": "https://github.com/AMnEPka/humorpedia/actions/runs/39974726532",
+    "jobs_success": 5,
+    "browser_scenarios_success": 3
   }
 }
